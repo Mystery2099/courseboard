@@ -9,18 +9,29 @@ import { CLERK_SECRET_KEY } from '$app/env/private';
  */
 export class RealtimeGateway {
 	register(): void {
+		if (!CLERK_SECRET_KEY) {
+			console.error('CLERK_SECRET_KEY is not set; every realtime connection will be rejected.');
+		}
 		globalThis.academicPlatformSocketAuthenticator = (socket, next) => {
 			void this.authenticate(socket).then(
 				() => next(),
-				() => next(new Error('unauthenticated'))
+				(error: unknown) => {
+					// Clients only learn that authentication failed; the reason stays in server logs.
+					const reason = error instanceof Error ? error.message : String(error);
+					console.warn(`Rejected socket handshake ${socket.id}: ${reason}`);
+					next(new Error('unauthenticated'));
+				}
 			);
 		};
 	}
 
 	private async authenticate(socket: Socket): Promise<void> {
+		if (!CLERK_SECRET_KEY) {
+			throw new Error('CLERK_SECRET_KEY is not set.');
+		}
 		const sessionToken: unknown = socket.handshake.auth?.token;
-		if (typeof sessionToken !== 'string' || !CLERK_SECRET_KEY) {
-			throw new Error('Missing session token or Clerk secret key.');
+		if (typeof sessionToken !== 'string' || sessionToken.length === 0) {
+			throw new Error('No session token in handshake.');
 		}
 		const claims = await verifyToken(sessionToken, { secretKey: CLERK_SECRET_KEY });
 		socket.data.clerkUserId = claims.sub;
