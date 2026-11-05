@@ -10,7 +10,11 @@ class MongoClientProvider {
 
 	async connect(): Promise<void> {
 		if (this.client) return;
-		const client = new MongoClient(MONGODB_URI, { appName: 'academic-discussion-platform' });
+		const client = new MongoClient(MONGODB_URI, {
+			appName: 'academic-discussion-platform',
+			// Fail fast so startup errors surface quickly and /api/health returns 503 instead of hanging.
+			serverSelectionTimeoutMS: 5000
+		});
 		await client.connect();
 		this.client = client;
 	}
