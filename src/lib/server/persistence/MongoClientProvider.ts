@@ -4,28 +4,39 @@ import { MONGODB_DATABASE_NAME, MONGODB_URI } from '$app/env/private';
 /**
  * Owns the single MongoClient for this process. The driver pools connections internally,
  * so every repository should obtain its database through this provider.
+ *
+ * Startup never blocks on MongoDB: `initialize()` begins connecting in the background. A client
+ * whose initial connection fails cannot recover, so it is discarded and the next database access
+ * creates a new one. While the cluster is unreachable, operations fail after the server selection
+ * timeout and `/api/health` reports 503; once it is reachable again, the process recovers
+ * without a restart.
  */
 class MongoClientProvider {
 	private client: MongoClient | null = null;
 
-	async connect(): Promise<void> {
-		if (this.client) return;
-		const client = new MongoClient(MONGODB_URI, {
-			appName: 'academic-discussion-platform',
-			// Fail fast so startup errors surface quickly and /api/health returns 503 instead of hanging.
-			serverSelectionTimeoutMS: 5000
-		});
-		await client.connect();
-		this.client = client;
+	initialize(): void {
+		this.getOrCreateClient();
 	}
 
 	getDatabase(): Db {
-		if (!this.client) {
-			throw new Error(
-				'MongoClientProvider.connect() must complete before getDatabase() is called.'
-			);
-		}
-		return this.client.db(MONGODB_DATABASE_NAME);
+		return this.getOrCreateClient().db(MONGODB_DATABASE_NAME);
+	}
+
+	private getOrCreateClient(): MongoClient {
+		if (this.client) return this.client;
+		const client = new MongoClient(MONGODB_URI, {
+			appName: 'academic-discussion-platform',
+			// Fail fast so unreachable-cluster errors surface quickly instead of hanging requests.
+			serverSelectionTimeoutMS: 5000
+		});
+		this.client = client;
+		client.connect().catch((error: unknown) => {
+			const reason = error instanceof Error ? error.message : String(error);
+			console.error(`MongoDB is not reachable; will retry on the next access: ${reason}`);
+			if (this.client === client) this.client = null;
+			void client.close().catch(() => undefined);
+		});
+		return client;
 	}
 
 	async isReachable(): Promise<boolean> {

@@ -3,8 +3,8 @@ import { withClerkHandler } from 'svelte-clerk/server';
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
 import { RealtimeGateway } from '#lib/server/realtime/RealtimeGateway.ts';
 
-export const init: ServerInit = async () => {
-	await mongoClientProvider.connect();
+export const init: ServerInit = () => {
+	mongoClientProvider.initialize();
 	RealtimeGateway.registerIfAttached();
 };
 
