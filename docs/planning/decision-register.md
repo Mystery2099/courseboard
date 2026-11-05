@@ -9,7 +9,7 @@ I want one place where an agent can check whether something is actually decided,
 | Area | What we've settled | Why it matters |
 | --- | --- | --- |
 | Product | Academic course discussion/review platform, not a Discord replacement | The course information needs to be useful beyond conversations |
-| Navigation | Courses and communities are **spaces**, with channels inside them | Familiar navigation without becoming a chat clone |
+| Navigation | Courses are **spaces** with fixed views inside them; general communities are deferred | Familiar navigation without becoming a chat clone |
 | Institutions | Primary school informs discovery, multiple current/past schools supported | Institutions are metadata and filters, not navigation layers |
 | History vs membership | Recording a course and joining/following its space are independent | Joining can't imply enrollment, and old courses shouldn't automatically flood the sidebar |
 | History privacy | Self-reported, **Private** by default; optional **Visible on profile** for signed-in users | No implied school verification |
@@ -17,13 +17,14 @@ I want one place where an agent can check whether something is actually decided,
 | Authentication | Clerk through community-maintained `svelte-clerk` | Confirmed provider; integration remains unverified |
 | Email addresses | Personal email is fine | A school email isn't required or proof of enrollment |
 | Course questions | Signed-in students can read/ask without joining or taking a course | Researching a course should be easy |
-| Reviews | Current design uses a self-reported Taking/Took entry and discloses that association | Eligibility isn't verification; final approval of disclosure is still open |
+| Reviews | A self-reported Taking/Took entry is required, and publishing discloses that association after a warning | Eligibility isn't verification; disclosure confirmed November 5, 2026 |
 | Course channels | Overview, Questions, Reviews, Discussion | Overview combines activity so a quieter course doesn't look empty |
 | Permissions | Regular users, per-space moderators, platform admins | Community owners can wait until later |
 | Visual direction | Blueprint, light/dark, Material 3 Expressive influence | Design tokens live in the handoff |
 | Typography | Space Grotesk headings, Inter UI/replies, Literata longer posts, IBM Plex Mono course codes | Don't substitute font roles arbitrarily |
 | Mobile | One-row floating dock, space/channel switcher, full-screen editor | Old two-row dock designs are superseded; 360px needs to work |
-| Realtime | Socket updates for posts/replies, MongoDB as source of truth | A websocket event doesn't replace a persisted record |
+| Realtime | Socket updates for posts/replies, MongoDB as source of truth | Professor Enke expects WebSockets; an event doesn't replace a persisted record |
+| Markdown | Markdown in posts and replies | Professor Enke treats Markdown support as a given, so it's required rather than optional polish |
 
 ## Authentication decision, November 5, 2026
 
@@ -52,28 +53,34 @@ The provider choice is confirmed, but the integration is not implemented or veri
 | ID | Question | Where we're currently leaning / what it affects |
 | --- | --- | --- |
 | D01 | What's the app called? | Still a placeholder; affects branding, URLs, and metadata |
-| D02 | Can people read spaces while logged out? | Current privacy model assumes signed-in access; affects routing and visibility |
-| D03 | Do past schools appear on profiles without a visible history entry? | Needs a deliberate profile-privacy rule |
-| D04 | Should publishing a review reveal self-reported course participation even if the history entry is private? | Current design warns yes; I still need to confirm that behavior |
-| D05 | Must someone join a general community before posting? | Course spaces don't require joining; communities are undecided |
-| D06 | Are community owners entirely deferred from v1? | Current suggestion is admin-created communities only |
+| D02 | Resolved: no logged-out reading | Logged-out visitors can't read course content or retrieve images |
+| D03 | Resolved: past schools appear only with a visible history entry | Private entries never affect another user's institution filters |
+| D04 | Resolved: yes, after a clear warning | Publishing a review discloses self-reported status and term even if the history entry stays private |
+| D05 | Deferred with general communities | Course spaces don't require joining |
+| D06 | Deferred with general communities | No community owners in the first build |
 | D07 | On desktop, does a new post use a dialog or full page? | Both were explored |
-| D08 | GridFS or object storage for images, and which types/limits? | Affects uploads, data modeling, and hosting |
+| D08 | Resolved: separate MongoDB collection for image binaries | Two images per top-level post, 2 MB each after processing, 100 MB total quota |
 | D09 | Resolved: MongoDB text indexes | Use ordinary indexes for exact course codes and structured filters; defer Atlas Search |
-| D10 | What happens to posts if someone deletes their account? | 'Deleted user' is an option, not a settled policy |
-| D11 | Do moderators need access to previous post versions? | For now, only an 'edited' marker is shown in designs |
-| D12 | When does someone stop counting as 'Here now'? | Five minutes has been suggested |
-| D13 | Do moderators need a separate escalation flow in v1? | Reports might be enough |
-| D14 | Where are we hosting and what's the budget? | Determines available MongoDB and websocket features |
-| D15 | Which exact requirements has Professor Enke approved? | The handout is available; approval hasn't been documented |
+| D10 | Resolved: anonymize retained posts and reviews as Deleted user | Private history and profile data are removed |
+| D11 | Resolved: deferred | Show an edited timestamp only |
+| D12 | Deferred with online presence | No 'Here now' in the first build |
+| D13 | Do moderators need a separate escalation flow in v1? | Current spec has reports and a course-scoped queue only; no escalation planned |
+| D14 | Resolved: Render Free and Atlas Free, strictly free | See assignment delivery decisions below |
+| D15 | Resolved: Professor Enke approved the proposal | See [professor approval](#professor-approval-november-4-5-2026) below |
+| D16 | Should academic history be embedded in `users` or kept in its own collection? | The approved proposal said embedded; the current model leans separate. See the [MongoDB model](../technical/mongodb-model.md#embedding-academic-history) |
 
 ## Easy assumptions that could cause problems
 
-The design currently makes a member directory visible to signed-in users even when someone hides their online status. That's a deliberate difference between **membership visibility** and **presence**, not a promise of anonymity. Likewise, the current mockups assume signed-in users can read posts, but they don't settle whether logged-out visitors can.
-
-The handoff treats 'Here now' as part of v1, whereas our scope discussions have been more cautious about whether presence is essential. **Realtime posts and replies matter more for the lab**; presence should be confirmed or kept small rather than becoming a blocker. The handoff also shows community-owner permissions in one matrix while assigning owners to Later elsewhere, so don't bring those controls into v1 automatically.
+The Blueprint handoff still shows member directories, 'Here now', presence dots, and community-owner permissions. Online presence and general communities are deferred, so don't bring those screens or controls into the first build just because a mockup shows them. **Realtime posts and replies matter for the lab; presence doesn't.**
 
 When we settle a decision, record when, what we chose, what we rejected, why, and what it changes in the data model, UI, API, or tests. Please don't mark something confirmed simply because an agent prefers one option.
+
+## Professor approval, November 4-5, 2026
+
+- On November 3, 2026, I emailed Professor Enke a proposal: a web-based academic discussion platform loosely inspired by Discord, with academic profiles and histories, course posts, comments, profile and experience filtering, moderators and administrators, MongoDB with SvelteKit and TypeScript, embedded academic histories, and filtering, indexing, and aggregation queries.
+- He replied on November 4, 2026: "Your lab sounds good!" We had already discussed it in person, where he said the proposal was good, that he expects WebSockets, and that Markdown support is a given.
+- Treat WebSockets and Markdown as professor requirements. Everything else in the current spec is my own scope.
+- The scope has narrowed since the proposal: general communities and Experience posts are deferred, and the history model may not end up embedded (D16). Mention these changes during the demonstration rather than presenting the original proposal as what was built.
 
 ## Assignment delivery and access decisions, November 5, 2026
 
