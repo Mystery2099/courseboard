@@ -3,10 +3,20 @@ import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
+import type { Plugin } from 'vite';
+import { attachSocketServer } from './server/SocketServerAttacher.js';
+
+const socketServerDevPlugin: Plugin = {
+	name: 'academic-platform-socket-server',
+	configureServer(server) {
+		if (server.httpServer) attachSocketServer(server.httpServer as import('node:http').Server);
+	}
+};
 
 export default defineConfig({
 	plugins: [
 		tailwindcss(),
+		socketServerDevPlugin,
 		sveltekit({
 			compilerOptions: {
 				// Force runes mode for the project, except for libraries. Can be removed in svelte 6.
