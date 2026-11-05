@@ -16,7 +16,7 @@ This is one of the parts of the app where I'd rather be overly careful than disc
 | Private history note | Always private | The owner only; administrators can't read it through the app either |
 | Grade | Deferred | Not stored in the first build |
 | Review course association | Shown with the published review | Readers see it labeled **self-reported**, with a warning before publishing |
-| Following a course | Not shown to other users in the first build | Does **not** imply Taking/Took |
+| Following a course | No member list is planned for the first build | Does **not** imply Taking/Took |
 | Posts and replies | Visible to admitted users | Logged-out visitors can't read anything, including images |
 | Course stats | Calculated from published, nonremoved reviews | Never from history entries or notes |
 | Primary institution | Visible, unless the user hides it | A hidden primary institution doesn't appear in other users' institution filters |

@@ -13,9 +13,12 @@
 | Authentication | Clerk through community-maintained `svelte-clerk` | Confirmed choice; integration and session behavior remain unverified |
 | Database | MongoDB, official Node.js driver | The database this lab is meant to demonstrate |
 | Validation | Zod | Confirmed; infer types from boundary schemas |
-| Realtime | Socket.IO | Posts/replies update without refresh |
+| Realtime | Socket.IO with WebSocket transport | Professor Enke expects WebSockets; posts/replies update without refresh |
 | Testing | Vitest and Playwright | Focus on useful behavior, especially privacy and authorization |
-| Shortcuts | TanStack Hotkeys | Optional UI convenience, not a core dependency |
+| Client data | TanStack Query | Owns the client cache for interactive server data |
+| Markdown | TanStack Markdown, with markdown-it as fallback | Markdown is a professor expectation |
+| Images | Sharp, MongoDB `images` collection | Server-side processing and authorized delivery |
+| Shortcuts | TanStack Hotkeys | Optional UI convenience, deferred with the command palette |
 
 The supplied NoSQL planning materials don't establish exact dependency versions, an implemented repository, a deployed site, or a hosting account. Those should be checked, not guessed.
 
@@ -29,7 +32,7 @@ Verify sign-up, sign-in, protected server routes, logout, and Socket.IO authenti
 
 ## Confirmed tooling updates
 
-Use pnpm instead of Bun. Use Sharp for server-side images. Initial search uses MongoDB text indexes plus ordinary indexes for course codes and structured filters. Markdown library selection remains open, including TanStack Markdown. These choices remain unverified in a deployed application.
+Use pnpm instead of Bun. Use Sharp for server-side images. Initial search uses MongoDB text indexes plus ordinary indexes for course codes and structured filters. Try TanStack Markdown first and fall back to markdown-it. These choices remain unverified in a deployed application.
 
 ## Overall shape
 
@@ -41,19 +44,21 @@ SvelteKit server
   |-- session/auth checks
   |-- validation and permission-aware application services
   |-- MongoDB queries, writes, and review aggregations
-  |-- media/storage adapter (decision still open)
+  |-- image processing (Sharp) and authorized delivery
   `-- Socket.IO authentication, subscriptions, and events
             |
             v
-         MongoDB
-         (courses, histories, memberships, posts, replies, reports)
+         MongoDB Atlas
+         (courses, histories, memberships, posts, replies, reports, images)
 ```
 
 I don't want Svelte components deciding whether a user can access somebody else's history, and I don't want WebSocket state becoming a second, competing database. The server validates changes and stores them, then sends clients the information they're allowed to see. If a client reconnects or misses an event, it can get the real state back from MongoDB.
 
+The [diagrams](diagrams.md) show the system context, request checks, admission, and the realtime write path in more detail.
+
 ## Boundaries I'd like to keep
 
-The exact folder names can change, but the responsibilities shouldn't all end up mashed into one file. Authentication handles sessions and login rules; the catalog handles institutions and courses; histories handle ownership, eligibility, and privacy; spaces handle membership, channels, and directories. Posts and replies belong to content services, while discovery handles searches, statistics owns aggregation pipelines, moderation handles reports and scoped privileges, realtime handles sockets and presence, and media handles validated uploads once storage is decided.
+The exact folder names can change, but the responsibilities shouldn't all end up mashed into one file. Authentication handles sessions, admission, and invitations; the catalog handles institutions and courses; histories handle ownership, eligibility, and privacy; spaces handle following and course views. Posts and replies belong to content services, while discovery handles searches, statistics owns aggregation pipelines, moderation handles reports and scoped privileges, realtime handles sockets and subscriptions, and media handles validated uploads and quota.
 
 I care more about those **clean seams** than whether somebody names the directory `services`, `modules`, or something else. An agent should be able to implement a feature without rewriting unrelated layers, and the permission rules should be in shared server code rather than copied across page components.
 
@@ -61,7 +66,7 @@ I care more about those **clean seams** than whether somebody names the director
 
 After a post or reply is successfully stored, the app can send a small event such as `post.created` or `reply.created` to listeners who are allowed to see it. MongoDB change streams might help, but **don't assume they're available**: the deployment has to support the necessary topology, and any transaction/change-stream choice should be verified before depending on it. Directly publishing from the server service is also an option, but we'd need to think about retries and multiple app instances if we go that route.
 
-The browser shouldn't be able to pick someone else's identity or permissions through an event payload. Incoming items should show up through a notice instead of suddenly rearranging the feed while someone is reading, and reconnection should refetch missed changes. 'Here now' is separate, temporary state; it's not a substitute for the actual membership records, and its expiration rule is still open.
+The browser shouldn't be able to pick someone else's identity or permissions through an event payload. Incoming items should show up through a notice instead of suddenly rearranging the feed while someone is reading, and reconnection should refetch missed changes. Online presence is deferred.
 
 ## MongoDB deserves deliberate design
 
@@ -71,13 +76,13 @@ Anything involving several documents may need a consistency strategy, and transa
 
 ## Hosting, storage, and security
 
-Sessions, socket handshakes, user-generated Markdown, and uploads all need appropriate validation and abuse protections. Image storage is still open: GridFS would demonstrate another MongoDB feature but use database quota, while object storage separates media from the database and brings its own costs and operational concerns. I'd rather make that decision consciously than let an agent pick a vendor without asking.
+Sessions, socket handshakes, user-generated Markdown, and uploads all need appropriate validation and abuse protections. Image binaries go in their own MongoDB collection, which avoids adding another storage provider. A 100 MB quota keeps them well inside Atlas Free's storage limit. Images are served only through endpoints that check access.
 
 We also need a deployment that actually supports persistent Socket.IO connections, along with whatever MongoDB capabilities we decide to rely on. Free-tier limits and provider features can change, so **check them when deploying** instead of treating an old estimate as a guarantee. Secrets stay out of the repo, sample data should be fictional, and we need some kind of documented setup, backup/recovery, and hosted verification process.
 
 ## Markdown candidates reviewed, November 5, 2026
 
-Markdown selection remains open. All candidates must enforce attachment-only images, safe links, disabled raw HTML, bounded input, and the profanity filter's code exemptions.
+Professor Enke treats Markdown support as a given. Whichever library we use must enforce attachment-only images, safe links, disabled raw HTML, bounded input, and the profanity filter's code exemptions.
 
 - [TanStack Markdown](https://tanstack.com/markdown/latest/docs/overview): zero-runtime-dependency parser and HTML renderer, serializable syntax tree, escaped raw HTML and unsafe URL filtering by default. React and Octane adapters exist; Svelte can use the framework-independent HTML path. Deliberately incomplete CommonMark/GFM coverage and a narrower extension surface. Promising for the selected basic syntax; validate attachment policy and untrusted-input behavior before selection.
 - [markdown-it](https://github.com/markdown-it/markdown-it/blob/master/docs/safety.md): established configurable parser with tokens, renderer rules, and raw HTML disabled by default. A strong fallback for predictable user-authored Markdown and custom image rules.
@@ -85,7 +90,7 @@ Markdown selection remains open. All candidates must enforce attachment-only ima
 - [unified/remark/rehype](https://github.com/remarkjs/remark-rehype): flexible syntax-tree processing and explicit sanitization through rehype-sanitize, at the cost of more packages and pipeline configuration.
 - [MDsveX](https://github.com/pngwn/MDsveX): Markdown-to-Svelte preprocessor for authored application content. Its component-compilation role is inappropriate for untrusted student posts.
 
-Recommendation: shortlist TanStack Markdown and markdown-it. Favor TanStack if a small compatibility and security check confirms our basic syntax and attachment restrictions. No library has been installed or benchmarked in this repository.
+Decision: try TanStack Markdown first and switch to markdown-it if integration, syntax compatibility, or security policy becomes cumbersome. No library has been installed or benchmarked in this repository yet.
 
 ## Client data ownership
 

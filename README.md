@@ -3,12 +3,12 @@
 **Course:** CISY 8503, Applied Database Management  
 **Assignment:** NoSQL Database Lab 1  
 **Name:** Still a working title  
-**Status:** Planning and design. The application hasn't been implemented yet.  
+**Status:** Planning and design. Professor Enke approved the proposal on November 4, 2026. The application hasn't been implemented yet.  
 **Last documentation review:** November 5, 2026
 
 For my NoSQL lab, I'm building a course-focused discussion platform where students can keep track of their academic histories, ask questions, discuss classes, and share structured reviews. Discord inspired some of the navigation, but the academic information should stay useful outside an active conversation.
 
-My goal is to finish a polished assignment without turning it into an entire social network. MongoDB needs to do meaningful work: storing academic records, supporting privacy-aware filtering, indexing real queries, and calculating review statistics. Professor Enke also expects WebSockets, so the demonstration should show updates across browser sessions after the data is saved.
+My goal is to finish a polished assignment without turning it into an entire social network. MongoDB needs to do meaningful work: storing academic records, supporting privacy-aware filtering, indexing real queries, and calculating review statistics. Professor Enke expects WebSockets, so the demonstration should show updates across browser sessions after the data is saved. He also treats Markdown support as a given.
 
 ## What I'm building first
 
@@ -81,6 +81,7 @@ The repository currently contains planning documents, assignment materials, and 
 | [Privacy and permissions](docs/product/privacy-and-permissions.md) | Privacy boundaries and role rules, with older scope subject to the current spec |
 | [Architecture](docs/technical/architecture.md) | Application responsibilities, dependency research, caching, and realtime behavior |
 | [MongoDB model](docs/technical/mongodb-model.md) | Candidate documents, indexes, queries, and aggregation work |
+| [Diagrams](docs/technical/diagrams.md) | System context, collections, request checks, admission, realtime, post lifecycle, and review eligibility |
 | [Blueprint handoff](docs/design/blueprint-handoff.md) | Visual and interaction reference, subject to later scope decisions |
 | [Design assets](docs/design/design-assets.md) | Export provenance and which designs count as current |
 | [Roadmap and acceptance](docs/implementation/roadmap-and-acceptance.md) | Build order, verification, and the assignment demonstration |

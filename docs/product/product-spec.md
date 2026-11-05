@@ -1,6 +1,6 @@
 # Academic course platform
 
-**Status:** Confirmed assignment scope, November 5, 2026. Implementation remains unverified. The [decision register](../planning/decision-register.md) records the choices and rationale.
+**Status:** Confirmed assignment scope, November 5, 2026. Professor Enke approved the proposal on November 4, 2026, expects WebSockets, and treats Markdown support as a given. Implementation remains unverified. The [decision register](../planning/decision-register.md) records the choices and rationale.
 
 ## Access and accounts
 

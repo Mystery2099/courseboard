@@ -4,14 +4,15 @@
 
 ## Stage 0: prove the infrastructure
 
-- [ ] Confirm requirements and WebSocket demonstration expectations with Professor Enke.
+- [x] Confirm requirements with Professor Enke. He approved the proposal on November 4, 2026, expects WebSockets, and treats Markdown as a given.
+- [ ] Decide whether academic history is embedded in `users` or kept in its own collection (D16).
 - [ ] Verify Render Free, Atlas Free, and Clerk work without payment details or billable services.
 - [ ] Prove Clerk sign-up, verification, sign-in, protected server routes, logout, and authenticated Socket.IO connections on the deployed host.
 - [ ] Prove application invitation redemption with independent verified-email matching, expiration, revocation, and single-use enforcement.
 - [ ] Set up TanStack Query with account-isolated caching, request-scoped SSR clients, and one owner for interactive server data. Verify initial-data integration and targeted invalidation.
 - [ ] Bootstrap the administrator and link MongoDB profiles through unique Clerk user IDs.
 - [ ] Prove a processed image upload and authorized retrieval through the hosted application.
-- [ ] Verify the selected MongoDB text search, Zod, and Sharp choices, and select the Markdown library after comparison. Use pnpm. Define image input byte and pixel limits.
+- [ ] Verify MongoDB text search, Zod, Sharp, and TanStack Markdown (markdown-it as fallback). Use pnpm. Define image input byte and pixel limits.
 - [ ] Present static UI alternatives for selection before implementing nontrivial interface changes.
 
 ## Stage 1: finish one course workflow
@@ -46,7 +47,7 @@
 - [ ] Verify separate-account privacy, invitation bypass attempts, forged moderation requests, direct image access, and socket authorization.
 - [ ] Document setup, environment variables, backup/recovery, deployment, free-tier limits, and demonstration accounts.
 - [ ] Invite the professor and prepare a repeatable demonstration of documents, indexes, filtering, aggregation, WebSockets, images, and administrative roles.
-- [ ] Obtain approval and submit as instructed.
+- [ ] Demonstrate to Professor Enke, then submit through Blackboard as instructed.
 
 ## Deferred
 
