@@ -1,0 +1,23 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: courseboard
+    runtime: node
+    plan: free
+    region: virginia # Same region as the Atlas cluster (AWS us-east-1)
+    branch: master
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    startCommand: pnpm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: '24'
+      - key: MONGODB_DATABASE_NAME
+        value: academic_platform
+      # Secrets are entered in the Render dashboard, never committed.
+      - key: MONGODB_URI
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: PUBLIC_CLERK_PUBLISHABLE_KEY
+        sync: false

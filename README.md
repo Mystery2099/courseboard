@@ -70,7 +70,9 @@ Clerk handles identity, while MongoDB stores application admission, profiles, ac
 
 Read the [decision register](docs/planning/decision-register.md) and [product spec](docs/product/product-spec.md) first. They capture the choices we've made during planning. The [roadmap](docs/implementation/roadmap-and-acceptance.md) turns those decisions into build stages and acceptance checks.
 
-The repository currently contains planning documents, assignment materials, and design exports. There isn't an application setup command to run yet. The first implementation step is to prove the hosted combination of Clerk, SvelteKit, Socket.IO, Atlas, and one protected image upload before building dependent screens.
+The repository contains planning documents, assignment materials, design exports, and an application scaffold. The scaffold isn't a working product yet: it wires up configuration, the MongoDB connection, Clerk, and the Socket.IO attachment, with no domain features.
+
+To run it locally, copy `.env.example` to `.env`, fill in Clerk and MongoDB values, then run `pnpm install` and `pnpm dev`. For production, use `pnpm build` and `pnpm start`; `render.yaml` describes the Render service. `GET /api/health` reports whether MongoDB is reachable. The first implementation step is to prove the hosted combination of Clerk, SvelteKit, Socket.IO, Atlas, and one protected image upload before building dependent screens.
 
 | Document | What it's for |
 | --- | --- |
