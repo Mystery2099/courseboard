@@ -1,4 +1,4 @@
-import { MongoClient, type Db } from 'mongodb';
+import { MongoClient, type ClientSession, type Db } from 'mongodb';
 import { MONGODB_DATABASE_NAME, MONGODB_URI } from '$app/env/private';
 
 /**
@@ -22,6 +22,11 @@ class MongoClientProvider {
 		return this.getOrCreateClient().db(MONGODB_DATABASE_NAME);
 	}
 
+	/** Starts a session for a multi-document transaction; Atlas clusters support them. */
+	startSession(): ClientSession {
+		return this.getOrCreateClient().startSession();
+	}
+
 	private getOrCreateClient(): MongoClient {
 		if (this.client) return this.client;
 		const client = new MongoClient(MONGODB_URI, {
@@ -30,13 +35,30 @@ class MongoClientProvider {
 			serverSelectionTimeoutMS: 5000
 		});
 		this.client = client;
-		client.connect().catch((error: unknown) => {
-			const reason = error instanceof Error ? error.message : String(error);
-			console.error(`MongoDB is not reachable; will retry on the next access: ${reason}`);
-			if (this.client === client) this.client = null;
-			void client.close().catch(() => undefined);
-		});
+		client.connect().then(
+			() => MongoClientProvider.warnIfTransactionsUnsupported(client),
+			(error: unknown) => {
+				const reason = error instanceof Error ? error.message : String(error);
+				console.error(`MongoDB is not reachable; will retry on the next access: ${reason}`);
+				if (this.client === client) this.client = null;
+				void client.close().catch(() => undefined);
+			}
+		);
 		return client;
+	}
+
+	/** Invitation redemption uses transactions, which a standalone server does not support. */
+	private static async warnIfTransactionsUnsupported(client: MongoClient): Promise<void> {
+		try {
+			const hello = await client.db('admin').command({ hello: 1 });
+			if (!hello.setName && hello.msg !== 'isdbgrid') {
+				console.error(
+					'MongoDB is a standalone server, so transactions are unavailable and invitation redemption will fail. Use a replica set or sharded cluster (Atlas clusters are replica sets).'
+				);
+			}
+		} catch {
+			// Reachability problems are reported by the connection and health checks.
+		}
 	}
 
 	async isReachable(): Promise<boolean> {

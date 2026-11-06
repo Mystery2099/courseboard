@@ -15,5 +15,9 @@ export const variables = defineEnvVars({
 	MONGODB_DATABASE_NAME: {
 		schema: z.string().min(1).default('academic_platform'),
 		description: 'Name of the MongoDB database that holds application collections.'
+	},
+	BOOTSTRAP_ADMINISTRATOR_CLERK_USER_ID: {
+		schema: z.string().startsWith('user_').optional(),
+		description: 'Clerk user ID that is admitted as the first administrator without an invitation.'
 	}
 });

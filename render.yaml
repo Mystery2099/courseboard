@@ -22,3 +22,5 @@ services:
         sync: false
       - key: PUBLIC_CLERK_PUBLISHABLE_KEY
         sync: false
+      - key: BOOTSTRAP_ADMINISTRATOR_CLERK_USER_ID
+        sync: false

@@ -1,11 +1,13 @@
 import type { Socket } from 'socket.io';
 import { verifyToken } from 'svelte-clerk/server';
 import { CLERK_SECRET_KEY } from '$app/env/private';
+import { applicationUserRepository } from '#lib/server/users/ApplicationUserRepository.ts';
 
 /**
  * Publishes the handshake authenticator that the Socket.IO server attached by the host process
  * (see `server/SocketServerAttacher.js`) delegates to. Until `register()` runs, that server
- * rejects every connection. Course/thread subscriptions come later.
+ * rejects every connection. Only admitted, active accounts may connect. Course/thread
+ * subscriptions come later.
  */
 export class RealtimeGateway {
 	register(): void {
@@ -34,7 +36,11 @@ export class RealtimeGateway {
 			throw new Error('No session token in handshake.');
 		}
 		const claims = await verifyToken(sessionToken, { secretKey: CLERK_SECRET_KEY });
+		const user = await applicationUserRepository.findByClerkUserId(claims.sub);
+		if (!user) throw new Error('Account has not been admitted.');
+		if (user.status !== 'active') throw new Error('Account is suspended.');
 		socket.data.clerkUserId = claims.sub;
+		socket.data.userId = user.id;
 	}
 
 	static registerIfAttached(): void {
