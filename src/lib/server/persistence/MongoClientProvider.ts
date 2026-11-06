@@ -1,4 +1,4 @@
-import { MongoClient, type Db } from 'mongodb';
+import { MongoClient, type ClientSession, type Db } from 'mongodb';
 import { MONGODB_DATABASE_NAME, MONGODB_URI } from '$app/env/private';
 
 /**
@@ -20,6 +20,11 @@ class MongoClientProvider {
 
 	getDatabase(): Db {
 		return this.getOrCreateClient().db(MONGODB_DATABASE_NAME);
+	}
+
+	/** Starts a session for a multi-document transaction; Atlas clusters support them. */
+	startSession(): ClientSession {
+		return this.getOrCreateClient().startSession();
 	}
 
 	private getOrCreateClient(): MongoClient {
