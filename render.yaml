@@ -7,7 +7,8 @@ services:
     region: virginia # Same region as the Atlas cluster (AWS us-east-1)
     branch: master
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
-    startCommand: pnpm start
+    # Start Node directly: `pnpm start` would make Corepack download pnpm on every cold start.
+    startCommand: node server/ProductionServer.js
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
