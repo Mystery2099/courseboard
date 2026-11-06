@@ -1,6 +1,7 @@
 import { ObjectId } from 'mongodb';
 import { clerkClient } from 'svelte-clerk/server';
 import { BOOTSTRAP_ADMINISTRATOR_CLERK_USER_ID } from '$app/env/private';
+import { DatabaseIndexInitializer } from '#lib/server/persistence/DatabaseIndexInitializer.ts';
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
 import {
@@ -36,6 +37,7 @@ export class AdmissionService {
 	async resolveCurrentUser(clerkUserId: string): Promise<ApplicationUser | null> {
 		const user = await this.users.findByClerkUserId(clerkUserId);
 		if (user || clerkUserId !== BOOTSTRAP_ADMINISTRATOR_CLERK_USER_ID) return user;
+		await DatabaseIndexInitializer.ensureIndexes();
 		await this.users.insertIfAbsent(clerkUserId, 'administrator', new Date());
 		return this.users.findByClerkUserId(clerkUserId);
 	}
@@ -67,11 +69,14 @@ export class AdmissionService {
 
 	/**
 	 * Claims the invitation and creates the user in one transaction, so an invitation is never
-	 * consumed without admitting someone and a user is never admitted twice.
+	 * consumed without admitting someone and a user is never admitted twice. Transactions require a
+	 * replica set or sharded cluster; Atlas clusters are replica sets.
 	 */
 	async redeemInvitation(token: string, clerkUserId: string): Promise<RedemptionResult> {
 		const verifiedEmails = await this.findVerifiedEmailAddresses(clerkUserId);
 		const tokenHash = hashInvitationToken(token);
+		// The unique clerkUserId index is what prevents concurrent redemptions from admitting twice.
+		await DatabaseIndexInitializer.ensureIndexes();
 		const session = mongoClientProvider.startSession();
 		try {
 			return await session.withTransaction(async () => {
