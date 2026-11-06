@@ -50,28 +50,55 @@
 {/if}
 {#if form?.revokeError}<p class="mt-4 text-sm" role="alert">{form.revokeError}</p>{/if}
 
-<table class="mt-8 w-full text-left text-sm">
+<h2 class="mt-8 text-lg font-semibold">Pending</h2>
+<p class="text-sm opacity-70">Every invitation that can still be redeemed.</p>
+{#if data.hasMorePendingInvitations}
+	<p class="mt-2 text-sm" role="alert">
+		Only the newest {data.pendingInvitations.length} pending invitations are shown.
+	</p>
+{/if}
+<table class="mt-2 w-full text-left text-sm">
 	<thead>
-		<tr><th class="py-2">Email</th><th>Status</th><th>Created</th><th>Expires</th><th></th></tr>
+		<tr><th class="py-2">Email</th><th>Created</th><th>Expires</th><th></th></tr>
 	</thead>
 	<tbody>
-		{#each data.invitations as invitation (invitation.id)}
+		{#each data.pendingInvitations as invitation (invitation.id)}
+			<tr class="border-t">
+				<td class="py-2">{invitation.email}</td>
+				<td>{dateFormatter.format(invitation.createdAt)}</td>
+				<td>{dateFormatter.format(invitation.expiresAt)}</td>
+				<td>
+					<form method="POST" action="?/revoke" use:enhance>
+						<input type="hidden" name="invitationId" value={invitation.id} />
+						<button type="submit" class="underline">Revoke</button>
+					</form>
+				</td>
+			</tr>
+		{:else}
+			<tr><td colspan="4" class="py-2 opacity-70">No pending invitations.</td></tr>
+		{/each}
+	</tbody>
+</table>
+
+<h2 class="mt-8 text-lg font-semibold">Recent history</h2>
+<p class="text-sm opacity-70">The latest invitations that were used, revoked, or expired.</p>
+<table class="mt-2 w-full text-left text-sm">
+	<thead>
+		<tr><th class="py-2">Email</th><th>Status</th><th>Created</th><th>Expires</th></tr>
+	</thead>
+	<tbody>
+		{#each data.closedInvitations as invitation (invitation.id)}
 			<tr class="border-t">
 				<td class="py-2">{invitation.email}</td>
 				<td>{invitation.status}</td>
 				<td>{dateFormatter.format(invitation.createdAt)}</td>
 				<td>{dateFormatter.format(invitation.expiresAt)}</td>
-				<td>
-					{#if invitation.status === 'pending'}
-						<form method="POST" action="?/revoke" use:enhance>
-							<input type="hidden" name="invitationId" value={invitation.id} />
-							<button type="submit" class="underline">Revoke</button>
-						</form>
-					{/if}
-				</td>
 			</tr>
 		{:else}
-			<tr><td colspan="5" class="py-2 opacity-70">No invitations yet.</td></tr>
+			<tr
+				><td colspan="4" class="py-2 opacity-70">No used, revoked, or expired invitations yet.</td
+				></tr
+			>
 		{/each}
 	</tbody>
 </table>

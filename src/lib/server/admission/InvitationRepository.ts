@@ -8,6 +8,14 @@ export type InvitationSummary = Pick<
 >;
 
 export class InvitationRepository {
+	private static readonly SUMMARY_PROJECTION = {
+		email: 1,
+		createdAt: 1,
+		expiresAt: 1,
+		revokedAt: 1,
+		redeemedAt: 1
+	} as const;
+
 	private collection(): Collection<InvitationDocument> {
 		return mongoClientProvider
 			.getDatabase()
@@ -25,15 +33,31 @@ export class InvitationRepository {
 		await this.collection().insertOne(invitation as InvitationDocument);
 	}
 
-	async findRecent(limit: number): Promise<InvitationSummary[]> {
+	/**
+	 * Every invitation that can still be redeemed, newest first. Pending invitations expire after
+	 * seven days, so this set stays small; `limit` is a safety ceiling, not a page size.
+	 */
+	async findPending(now: Date, limit: number): Promise<InvitationSummary[]> {
 		return this.collection()
 			.find(
-				{},
+				{ redeemedAt: null, revokedAt: null, expiresAt: { $gt: now } },
+				{ projection: InvitationRepository.SUMMARY_PROJECTION, sort: { createdAt: -1 }, limit }
+			)
+			.toArray();
+	}
+
+	/** The most recent invitations that were redeemed, revoked, or have expired. */
+	async findRecentClosed(now: Date, limit: number): Promise<InvitationSummary[]> {
+		return this.collection()
+			.find(
 				{
-					projection: { email: 1, createdAt: 1, expiresAt: 1, revokedAt: 1, redeemedAt: 1 },
-					sort: { createdAt: -1 },
-					limit
-				}
+					$or: [
+						{ redeemedAt: { $ne: null } },
+						{ revokedAt: { $ne: null } },
+						{ expiresAt: { $lte: now } }
+					]
+				},
+				{ projection: InvitationRepository.SUMMARY_PROJECTION, sort: { createdAt: -1 }, limit }
 			)
 			.toArray();
 	}

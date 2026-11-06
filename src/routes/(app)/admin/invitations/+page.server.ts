@@ -3,26 +3,42 @@ import { z } from 'zod';
 import { AccessGuard } from '#lib/server/access/AccessGuard.ts';
 import { admissionService } from '#lib/server/admission/AdmissionService.ts';
 import { determineInvitationStatus } from '#lib/server/admission/Invitation.ts';
-import { invitationRepository } from '#lib/server/admission/InvitationRepository.ts';
+import {
+	invitationRepository,
+	type InvitationSummary
+} from '#lib/server/admission/InvitationRepository.ts';
 import type { Actions, PageServerLoad } from './$types';
 
-const RECENT_INVITATION_LIMIT = 50;
+/** Safety ceiling; pending invitations expire after seven days, so this is not a page size. */
+const PENDING_INVITATION_LIMIT = 1000;
+const CLOSED_INVITATION_LIMIT = 50;
 
 const createInvitationSchema = z.object({ email: z.email().max(254) });
 const revokeInvitationSchema = z.object({ invitationId: z.string().regex(/^[a-f0-9]{24}$/) });
 
+function toInvitationRow(invitation: InvitationSummary, now: Date) {
+	return {
+		id: invitation._id.toHexString(),
+		email: invitation.email,
+		createdAt: invitation.createdAt,
+		expiresAt: invitation.expiresAt,
+		status: determineInvitationStatus(invitation, now)
+	};
+}
+
 export const load: PageServerLoad = async ({ locals }) => {
 	AccessGuard.requireAdministrator(locals);
 	const now = new Date();
-	const invitations = await invitationRepository.findRecent(RECENT_INVITATION_LIMIT);
+	const [pending, closed] = await Promise.all([
+		invitationRepository.findPending(now, PENDING_INVITATION_LIMIT + 1),
+		invitationRepository.findRecentClosed(now, CLOSED_INVITATION_LIMIT)
+	]);
 	return {
-		invitations: invitations.map((invitation) => ({
-			id: invitation._id.toHexString(),
-			email: invitation.email,
-			createdAt: invitation.createdAt,
-			expiresAt: invitation.expiresAt,
-			status: determineInvitationStatus(invitation, now)
-		}))
+		pendingInvitations: pending
+			.slice(0, PENDING_INVITATION_LIMIT)
+			.map((invitation) => toInvitationRow(invitation, now)),
+		hasMorePendingInvitations: pending.length > PENDING_INVITATION_LIMIT,
+		closedInvitations: closed.map((invitation) => toInvitationRow(invitation, now))
 	};
 };
 
