@@ -50,7 +50,10 @@ export async function readApiJson(request: Request): Promise<unknown> {
 }
 
 export class ApiInputError extends Error {
-	constructor(readonly status: number, message: string) {
+	constructor(
+		readonly status: number,
+		message: string
+	) {
 		super(message);
 	}
 }

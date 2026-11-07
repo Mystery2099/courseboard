@@ -40,23 +40,39 @@ describe('invitation service boundary', () => {
 		const invitations = new InvitationRepository();
 		const createdAt = new Date('2026-11-07T12:00:00Z');
 		const expiresAt = new Date('2099-11-14T12:00:00Z');
-		vi.spyOn(invitations, 'findPending').mockResolvedValue([{
-			_id: new ObjectId(administrator.id), email: 'student@example.edu',
-			createdAt, expiresAt, revokedAt: null, redeemedAt: null
-		}]);
+		vi.spyOn(invitations, 'findPending').mockResolvedValue([
+			{
+				_id: new ObjectId(administrator.id),
+				email: 'student@example.edu',
+				createdAt,
+				expiresAt,
+				revokedAt: null,
+				redeemedAt: null
+			}
+		]);
 		vi.spyOn(invitations, 'findRecentClosed').mockResolvedValue([]);
 		const service = new AdmissionService(new ApplicationUserRepository(), invitations);
 
 		expect(await service.listInvitations(administrator)).toEqual({
-			pendingInvitations: [{ id: administrator.id, email: 'student@example.edu',
-				createdAt: createdAt.toISOString(), expiresAt: expiresAt.toISOString(), status: 'pending' }],
+			pendingInvitations: [
+				{
+					id: administrator.id,
+					email: 'student@example.edu',
+					createdAt: createdAt.toISOString(),
+					expiresAt: expiresAt.toISOString(),
+					status: 'pending'
+				}
+			],
 			hasMorePendingInvitations: false,
 			closedInvitations: []
 		});
 	});
 
 	it('requires a signed-in identity before redeeming', async () => {
-		const service = new AdmissionService(new ApplicationUserRepository(), new InvitationRepository());
+		const service = new AdmissionService(
+			new ApplicationUserRepository(),
+			new InvitationRepository()
+		);
 		await expect(service.redeemInvitation('a'.repeat(43), null)).rejects.toThrow('Sign in first.');
 	});
 });

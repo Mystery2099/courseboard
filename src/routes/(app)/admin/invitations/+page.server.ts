@@ -32,7 +32,10 @@ export const actions: Actions = {
 		const parsed = revokeInvitationSchema.safeParse(Object.fromEntries(await request.formData()));
 		if (!parsed.success) return fail(400, { revokeError: 'Unknown invitation.' });
 
-		const revoked = await admissionService.revokeInvitation(parsed.data.invitationId, administrator);
+		const revoked = await admissionService.revokeInvitation(
+			parsed.data.invitationId,
+			administrator
+		);
 		if (!revoked) return fail(409, { revokeError: 'Only unused invitations can be revoked.' });
 	}
 };

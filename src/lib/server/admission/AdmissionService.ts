@@ -22,7 +22,11 @@ import {
 	determineInvitationStatus,
 	normalizeEmailAddress
 } from './Invitation.ts';
-import { invitationRepository, type InvitationRepository, type InvitationSummary } from './InvitationRepository.ts';
+import {
+	invitationRepository,
+	type InvitationRepository,
+	type InvitationSummary
+} from './InvitationRepository.ts';
 import { generateInvitationToken, hashInvitationToken } from './InvitationToken.ts';
 
 /**
@@ -73,7 +77,10 @@ export class AdmissionService {
 
 	revokeInvitation(invitationId: string, actor: ApplicationUser | null): Promise<boolean> {
 		AccessPolicy.requireAdministrator(actor);
-		return this.invitations.revoke(new ObjectId(invitationIdSchema.parse(invitationId)), new Date());
+		return this.invitations.revoke(
+			new ObjectId(invitationIdSchema.parse(invitationId)),
+			new Date()
+		);
 	}
 
 	async listInvitations(actor: ApplicationUser | null): Promise<InvitationListResponse> {
@@ -91,7 +98,9 @@ export class AdmissionService {
 			status: determineInvitationStatus(invitation, now)
 		});
 		return {
-			pendingInvitations: pending.slice(0, AdmissionService.PENDING_INVITATION_LIMIT).map(toSummary),
+			pendingInvitations: pending
+				.slice(0, AdmissionService.PENDING_INVITATION_LIMIT)
+				.map(toSummary),
 			hasMorePendingInvitations: pending.length > AdmissionService.PENDING_INVITATION_LIMIT,
 			closedInvitations: closed.map(toSummary)
 		};
