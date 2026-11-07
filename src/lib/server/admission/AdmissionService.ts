@@ -112,7 +112,9 @@ export class AdmissionService {
 		const session = mongoClientProvider.startSession();
 		try {
 			return await session.withTransaction(async () => {
-				if (await this.users.findByClerkUserId(clerkUserId, session)) {
+				const existingUser = await this.users.findByClerkUserId(clerkUserId, session);
+				if (existingUser) {
+					AccessPolicy.requireAdmittedUser(existingUser);
 					return { kind: 'already-admitted' } as const;
 				}
 				const now = new Date();

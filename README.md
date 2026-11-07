@@ -58,7 +58,7 @@ Exact versions, the production runtime, and the deployed integrations still need
 
 The confirmed direction is one repository and one deployable application with a clear client/server boundary. Core reads and writes have an explicit HTTP API backed by reusable application services and persistence repositories. The server owns business rules, permissions, validation, and database access; clients own presentation and interaction. Web loads and optional form actions reuse those services, and server-rendered pages can call them directly without loopback HTTP.
 
-Future mobile or desktop clients should reuse the same API and realtime contracts, but only the web client is in assignment scope. No separate backend framework, deployment, microservices, or speculative package split is needed. The existing server modules are a starting point; invitation flows currently use page-specific handlers, and a reusable domain API remains implementation work. See the [architecture decision](docs/technical/architecture.md#confirmed-clientserver-decision-november-7-2026).
+Future mobile or desktop clients should reuse the same API and realtime contracts, but only the web client is in assignment scope. No separate backend framework, deployment, microservices, or speculative package split is needed. Invitations now have service-backed HTTP endpoints alongside the web handlers, shared request/response contracts, and transport-independent access checks. Direct-handler tests do not establish deployed authentication or native-client integration. See the [architecture decision and API](docs/technical/architecture.md#confirmed-clientserver-decision-november-7-2026).
 
 ## Performance, privacy, and free hosting
 

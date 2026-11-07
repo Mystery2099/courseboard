@@ -14,7 +14,7 @@
 - [ ] Prove a processed image upload and authorized retrieval through the hosted application.
 - [ ] Verify MongoDB text search, Zod, Sharp, and TanStack Markdown (markdown-it as fallback). Use pnpm. Define image input byte and pixel limits.
 - [ ] Present static UI alternatives for selection before implementing nontrivial interface changes.
-- [ ] Establish client-independent HTTP request/response contracts, thin transport adapters, server-owned application services, and persistence repositories in one deployable application. Expose existing invitation operations through the same service-backed API; page loads/actions may call services directly.
+- [x] Establish the invitation reference boundary: client-independent HTTP contracts, thin transport adapters, service-owned permissions/listing, and persistence repositories in one deployable application. Page loads/actions call the same services directly. Focused service and route-handler tests cover the boundary; hosted integration is still a separate Stage 0 check.
 
 ## Stage 1: finish one course workflow
 
