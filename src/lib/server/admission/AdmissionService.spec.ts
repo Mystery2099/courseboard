@@ -75,4 +75,22 @@ describe('invitation service boundary', () => {
 		);
 		await expect(service.redeemInvitation('a'.repeat(43), null)).rejects.toThrow('Sign in first.');
 	});
+
+	it('stores only the token hash and records the authenticated administrator', async () => {
+		const invitations = new InvitationRepository();
+		const insert = vi.spyOn(invitations, 'insert').mockResolvedValue();
+		const revoke = vi.spyOn(invitations, 'revoke').mockResolvedValue(true);
+		const service = new AdmissionService(new ApplicationUserRepository(), invitations);
+		const result = await service.createInvitation('Student@Example.EDU', administrator);
+
+		expect(result.email).toBe('student@example.edu');
+		expect(result.expiresAt).toBe(new Date(result.expiresAt).toISOString());
+		expect(insert).toHaveBeenCalledWith(expect.objectContaining({
+			createdByUserId: new ObjectId(administrator.id),
+			tokenHash: expect.stringMatching(/^[a-f0-9]{64}$/)
+		}));
+		expect(JSON.stringify(insert.mock.calls)).not.toContain(result.token);
+		await expect(service.revokeInvitation(administrator.id, administrator)).resolves.toBe(true);
+		expect(revoke).toHaveBeenCalledWith(new ObjectId(administrator.id), expect.any(Date));
+	});
 });
