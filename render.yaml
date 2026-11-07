@@ -6,6 +6,8 @@ services:
     plan: free
     region: virginia # Same region as the Atlas cluster (AWS us-east-1)
     branch: master
+    # Deploy only after the GitHub Actions checks on the commit pass.
+    autoDeployTrigger: checksPass
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
     # Start Node directly: `pnpm start` would make Corepack download pnpm on every cold start.
     startCommand: node server/ProductionServer.js
