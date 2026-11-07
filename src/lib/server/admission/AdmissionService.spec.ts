@@ -85,10 +85,12 @@ describe('invitation service boundary', () => {
 
 		expect(result.email).toBe('student@example.edu');
 		expect(result.expiresAt).toBe(new Date(result.expiresAt).toISOString());
-		expect(insert).toHaveBeenCalledWith(expect.objectContaining({
-			createdByUserId: new ObjectId(administrator.id),
-			tokenHash: expect.stringMatching(/^[a-f0-9]{64}$/)
-		}));
+		expect(insert).toHaveBeenCalledWith(
+			expect.objectContaining({
+				createdByUserId: new ObjectId(administrator.id),
+				tokenHash: expect.stringMatching(/^[a-f0-9]{64}$/)
+			})
+		);
 		expect(JSON.stringify(insert.mock.calls)).not.toContain(result.token);
 		await expect(service.revokeInvitation(administrator.id, administrator)).resolves.toBe(true);
 		expect(revoke).toHaveBeenCalledWith(new ObjectId(administrator.id), expect.any(Date));
