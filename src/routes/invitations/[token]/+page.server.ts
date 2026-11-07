@@ -1,4 +1,5 @@
 import { error, fail, redirect } from '@sveltejs/kit';
+import { AccessDeniedError } from '#lib/server/access/AccessPolicy.ts';
 import { admissionService } from '#lib/server/admission/AdmissionService.ts';
 import { invitationTokenSchema } from '#lib/server/admission/InvitationToken.ts';
 import type { Actions, PageServerLoad } from './$types';
@@ -21,7 +22,12 @@ export const actions: Actions = {
 		const { userId } = locals.auth();
 		if (!userId) return fail(401, { message: 'Sign in before accepting the invitation.' });
 
-		const result = await admissionService.redeemInvitation(token, userId);
+		const result = await admissionService
+			.redeemInvitation(token, userId)
+			.catch((cause: unknown) => {
+				if (cause instanceof AccessDeniedError) error(403, cause.message);
+				throw cause;
+			});
 		if (result.kind === 'admitted' || result.kind === 'already-admitted') {
 			redirect(303, '/explore');
 		}

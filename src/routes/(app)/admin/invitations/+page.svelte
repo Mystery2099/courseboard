@@ -31,7 +31,7 @@
 	<div class="mt-4 rounded border p-4 text-sm">
 		<p>
 			Invitation for {form.createdInvitation.email}, valid until {dateFormatter.format(
-				form.createdInvitation.expiresAt
+				new Date(form.createdInvitation.expiresAt)
 			)}:
 		</p>
 		<input
@@ -65,8 +65,8 @@
 		{#each data.pendingInvitations as invitation (invitation.id)}
 			<tr class="border-t">
 				<td class="py-2">{invitation.email}</td>
-				<td>{dateFormatter.format(invitation.createdAt)}</td>
-				<td>{dateFormatter.format(invitation.expiresAt)}</td>
+				<td>{dateFormatter.format(new Date(invitation.createdAt))}</td>
+				<td>{dateFormatter.format(new Date(invitation.expiresAt))}</td>
 				<td>
 					<form method="POST" action="?/revoke" use:enhance>
 						<input type="hidden" name="invitationId" value={invitation.id} />
@@ -91,8 +91,8 @@
 			<tr class="border-t">
 				<td class="py-2">{invitation.email}</td>
 				<td>{invitation.status}</td>
-				<td>{dateFormatter.format(invitation.createdAt)}</td>
-				<td>{dateFormatter.format(invitation.expiresAt)}</td>
+				<td>{dateFormatter.format(new Date(invitation.createdAt))}</td>
+				<td>{dateFormatter.format(new Date(invitation.expiresAt))}</td>
 			</tr>
 		{:else}
 			<tr

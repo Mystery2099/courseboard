@@ -245,6 +245,6 @@ TanStack Virtual and TanStack Table remain optional candidates, not initial inst
 - Share deliberate request/response contracts where useful, not MongoDB documents or server internals. Clients own presentation and interaction, never database access or authorization decisions.
 - Persist changes through authenticated HTTP and publish authorized Socket.IO notices afterward, using the same permission policy.
 - Rejected for now: separate backend frameworks/deployments, microservices, speculative package splitting, and implementing native clients. Logical boundaries provide flexibility without extra infrastructure.
-- Implementation impact: add domain endpoints as features are built and expose existing invitation operations through the same service-backed boundary. Existing page actions are not yet a reusable domain API. Test service rules and direct API authorization independently of the UI. No data-model or visual redesign is required.
+- Implementation impact: add domain endpoints as features are built. Invitation operations now have service-backed HTTP endpoints alongside thin web adapters, client-safe contracts, and shared access policy. Focused tests cover service rules and direct API handlers independently of the UI; hosted integration remains unverified. No data-model or visual redesign is required.
 
 See [technical architecture](../technical/architecture.md#confirmed-clientserver-decision-november-7-2026) for responsibilities and implementation gaps.

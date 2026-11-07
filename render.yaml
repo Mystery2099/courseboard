@@ -15,6 +15,9 @@ services:
     envVars:
       - key: NODE_VERSION
         value: '24'
+      # Render terminates TLS; the request origin must use the public HTTPS scheme for same-origin checks.
+      - key: PROTOCOL_HEADER
+        value: x-forwarded-proto
       - key: MONGODB_DATABASE_NAME
         value: academic_platform
       # Secrets are entered in the Render dashboard, never committed.

@@ -50,7 +50,20 @@ This does not require a separate backend framework, separate deployments, micros
 - Share request/response schemas and types where useful, not MongoDB documents or server internals. Return deliberately serialized, privacy-aware response fields rather than raw database records.
 - Socket authentication and subscriptions reuse the same server-owned permission policy. Persist changes through authenticated HTTP, then emit authorized notices; realtime is not a competing business-rule or persistence path.
 
-**Current implementation:** `src/lib/server/` already separates services, repositories, access checks, and persistence. Invitation workflows currently use page-specific loads and form actions. `/api/health` is infrastructure, not a domain API. The reusable domain HTTP API and consistent client contracts above remain implementation work, not verified capabilities.
+**Current implementation:** `src/lib/server/` separates services, repositories, access policy, and persistence. Invitation listing, creation, revocation, and redemption have HTTP endpoints backed by the same admission service as the web loads/actions. Services enforce administration permissions, HTTP and realtime share account-access policy, and `src/lib/contracts/InvitationContract.ts` defines client-safe invitation inputs and response types. Dates cross this boundary as ISO strings. Focused tests cover service access and direct route handlers; deployed authentication and end-to-end integration remain unverified. Other domain APIs will be added with their features.
+
+### Invitation HTTP API
+
+| Method and path | Access | Result |
+| --- | --- | --- |
+| `GET /api/invitations` | Active administrator | Bounded pending/recent-closed lists, with `hasMorePendingInvitations` |
+| `POST /api/invitations` | Active administrator | JSON `{ email }`; returns token, email, and ISO expiry with status 201 |
+| `POST /api/invitations/{invitationId}/revoke` | Active administrator | JSON `{}`; returns `{ revoked: true }`, or 409 when unavailable |
+| `POST /api/invitations/redeem` | Signed-in identity; admission not required | JSON `{ token }`; returns `{ kind: 'admitted' }` or `{ kind: 'already-admitted' }` |
+
+Authentication uses the existing Clerk request middleware; actor identity and roles are never taken from request bodies. Writes require `application/json` and reject a supplied Origin that differs from the request origin. No cross-origin browser API access is enabled. Native-client authentication remains to be integration-tested; these endpoints do not imply a native client exists.
+
+Route-handler errors use `{ error: { code, message } }`: 400 for invalid input/JSON, 401 for missing identity, 403 for denied access or redemption email mismatch, 409 for revocation conflicts, 410 for unavailable redemption, 415 for non-JSON writes, and a generic 500 for unexpected failures. Responses use `Cache-Control: no-store`, including the one-time creation token. Creation returns the token rather than a host-specific URL; the web adapter constructs the invitation link. Framework/middleware failures before the handlers are outside this error contract.
 
 ### Deployment context
 

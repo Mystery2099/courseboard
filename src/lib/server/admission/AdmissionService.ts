@@ -1,4 +1,13 @@
 import { ObjectId } from 'mongodb';
+import {
+	createInvitationSchema,
+	invitationIdSchema,
+	invitationTokenSchema,
+	type CreatedInvitationResponse,
+	type InvitationListResponse,
+	type RedemptionResult
+} from '#lib/contracts/InvitationContract.ts';
+import { AccessPolicy } from '#lib/server/access/AccessPolicy.ts';
 import { clerkClient } from 'svelte-clerk/server';
 import { BOOTSTRAP_ADMINISTRATOR_CLERK_USER_ID } from '$app/env/private';
 import { DatabaseIndexInitializer } from '#lib/server/persistence/DatabaseIndexInitializer.ts';
@@ -13,14 +22,12 @@ import {
 	determineInvitationStatus,
 	normalizeEmailAddress
 } from './Invitation.ts';
-import { invitationRepository, type InvitationRepository } from './InvitationRepository.ts';
+import {
+	invitationRepository,
+	type InvitationRepository,
+	type InvitationSummary
+} from './InvitationRepository.ts';
 import { generateInvitationToken, hashInvitationToken } from './InvitationToken.ts';
-
-export type RedemptionResult =
-	| { kind: 'admitted' }
-	| { kind: 'already-admitted' }
-	| { kind: 'email-mismatch' }
-	| { kind: 'unavailable' };
 
 /**
  * Decides who may use the application. A Clerk account alone grants nothing: admission requires
@@ -28,6 +35,9 @@ export type RedemptionResult =
  * addresses, except for the configured bootstrap administrator.
  */
 export class AdmissionService {
+	private static readonly PENDING_INVITATION_LIMIT = 1000;
+	private static readonly CLOSED_INVITATION_LIMIT = 50;
+
 	constructor(
 		private readonly users: ApplicationUserRepository,
 		private readonly invitations: InvitationRepository
@@ -44,27 +54,56 @@ export class AdmissionService {
 
 	async createInvitation(
 		emailAddress: string,
-		createdByUserId: string
-	): Promise<{ token: string; email: string; expiresAt: Date }> {
+		actor: ApplicationUser | null
+	): Promise<CreatedInvitationResponse> {
+		const administrator = AccessPolicy.requireAdministrator(actor);
+		const input = createInvitationSchema.parse({ email: emailAddress });
 		const token = generateInvitationToken();
 		const now = new Date();
-		const email = normalizeEmailAddress(emailAddress);
+		const email = normalizeEmailAddress(input.email);
 		const expiresAt = new Date(now.getTime() + INVITATION_VALIDITY_MILLISECONDS);
 		await this.invitations.insert({
 			email,
 			tokenHash: hashInvitationToken(token),
-			createdByUserId: new ObjectId(createdByUserId),
+			createdByUserId: new ObjectId(administrator.id),
 			createdAt: now,
 			expiresAt,
 			revokedAt: null,
 			redeemedAt: null,
 			redeemedByClerkUserId: null
 		});
-		return { token, email, expiresAt };
+		return { token, email, expiresAt: expiresAt.toISOString() };
 	}
 
-	revokeInvitation(invitationId: string): Promise<boolean> {
-		return this.invitations.revoke(new ObjectId(invitationId), new Date());
+	revokeInvitation(invitationId: string, actor: ApplicationUser | null): Promise<boolean> {
+		AccessPolicy.requireAdministrator(actor);
+		return this.invitations.revoke(
+			new ObjectId(invitationIdSchema.parse(invitationId)),
+			new Date()
+		);
+	}
+
+	async listInvitations(actor: ApplicationUser | null): Promise<InvitationListResponse> {
+		AccessPolicy.requireAdministrator(actor);
+		const now = new Date();
+		const [pending, closed] = await Promise.all([
+			this.invitations.findPending(now, AdmissionService.PENDING_INVITATION_LIMIT + 1),
+			this.invitations.findRecentClosed(now, AdmissionService.CLOSED_INVITATION_LIMIT)
+		]);
+		const toSummary = (invitation: InvitationSummary) => ({
+			id: invitation._id.toHexString(),
+			email: invitation.email,
+			createdAt: invitation.createdAt.toISOString(),
+			expiresAt: invitation.expiresAt.toISOString(),
+			status: determineInvitationStatus(invitation, now)
+		});
+		return {
+			pendingInvitations: pending
+				.slice(0, AdmissionService.PENDING_INVITATION_LIMIT)
+				.map(toSummary),
+			hasMorePendingInvitations: pending.length > AdmissionService.PENDING_INVITATION_LIMIT,
+			closedInvitations: closed.map(toSummary)
+		};
 	}
 
 	/**
@@ -72,7 +111,9 @@ export class AdmissionService {
 	 * consumed without admitting someone and a user is never admitted twice. Transactions require a
 	 * replica set or sharded cluster; Atlas clusters are replica sets.
 	 */
-	async redeemInvitation(token: string, clerkUserId: string): Promise<RedemptionResult> {
+	async redeemInvitation(token: string, identity: string | null): Promise<RedemptionResult> {
+		const clerkUserId = AccessPolicy.requireIdentity(identity);
+		invitationTokenSchema.parse(token);
 		const verifiedEmails = await this.findVerifiedEmailAddresses(clerkUserId);
 		const tokenHash = hashInvitationToken(token);
 		// The unique clerkUserId index is what prevents concurrent redemptions from admitting twice.
@@ -80,7 +121,9 @@ export class AdmissionService {
 		const session = mongoClientProvider.startSession();
 		try {
 			return await session.withTransaction(async () => {
-				if (await this.users.findByClerkUserId(clerkUserId, session)) {
+				const existingUser = await this.users.findByClerkUserId(clerkUserId, session);
+				if (existingUser) {
+					AccessPolicy.requireAdmittedUser(existingUser);
 					return { kind: 'already-admitted' } as const;
 				}
 				const now = new Date();

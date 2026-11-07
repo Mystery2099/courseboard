@@ -1,10 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { z } from 'zod';
+export { invitationTokenSchema } from '#lib/contracts/InvitationContract.ts';
 
 const TOKEN_BYTE_LENGTH = 32;
-
-/** 32 random bytes encoded as unpadded base64url. */
-export const invitationTokenSchema = z.string().regex(/^[A-Za-z0-9_-]{43}$/);
 
 export function generateInvitationToken(): string {
 	return randomBytes(TOKEN_BYTE_LENGTH).toString('base64url');
