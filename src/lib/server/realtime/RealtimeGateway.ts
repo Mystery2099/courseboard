@@ -1,4 +1,5 @@
 import type { Socket } from 'socket.io';
+import { AccessPolicy } from '#lib/server/access/AccessPolicy.ts';
 import { verifyToken } from 'svelte-clerk/server';
 import { CLERK_SECRET_KEY } from '$app/env/private';
 import { applicationUserRepository } from '#lib/server/users/ApplicationUserRepository.ts';
@@ -36,9 +37,9 @@ export class RealtimeGateway {
 			throw new Error('No session token in handshake.');
 		}
 		const claims = await verifyToken(sessionToken, { secretKey: CLERK_SECRET_KEY });
-		const user = await applicationUserRepository.findByClerkUserId(claims.sub);
-		if (!user) throw new Error('Account has not been admitted.');
-		if (user.status !== 'active') throw new Error('Account is suspended.');
+		const user = AccessPolicy.requireAdmittedUser(
+			await applicationUserRepository.findByClerkUserId(claims.sub)
+		);
 		socket.data.clerkUserId = claims.sub;
 		socket.data.userId = user.id;
 	}
