@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { RequestEvent } from '@sveltejs/kit';
 import { admissionService } from '#lib/server/admission/AdmissionService.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
 import { GET, POST } from './+server.ts';
@@ -14,12 +15,16 @@ const administrator: ApplicationUser = {
 	status: 'active'
 };
 
-function requestEvent(user: ApplicationUser | null, request?: Request, signedIn = true) {
+function requestEvent<Event extends RequestEvent = Parameters<typeof GET>[0]>(
+	user: ApplicationUser | null,
+	request?: Request,
+	signedIn = true
+) {
 	return {
 		locals: { currentUser: user, auth: () => ({ userId: signedIn ? 'identity' : null }) },
 		request: request ?? new Request('https://example.test/api/invitations'),
 		params: { invitationId: administrator.id }
-	} as unknown as Parameters<typeof GET>[0];
+	} as unknown as Event;
 }
 
 function jsonRequest(body: string, origin = 'https://example.test') {
