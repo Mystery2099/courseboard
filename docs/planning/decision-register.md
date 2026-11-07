@@ -1,6 +1,6 @@
 # Decisions, proposals, and things we haven't settled
 
-**Last reviewed:** November 5, 2026
+**Last reviewed:** November 7, 2026
 
 I want one place where an agent can check whether something is actually decided, because otherwise a suggestion from an old design conversation can quietly turn into a requirement. **Confirmed** means I've chosen it or it's an explicit canonical design rule; **proposed** means it's our current technical direction; **open** means we still need to decide. If Claude's handoff explicitly calls something open, don't treat an example screen as having decided it.
 
@@ -25,6 +25,7 @@ I want one place where an agent can check whether something is actually decided,
 | Mobile | One-row floating dock, space/channel switcher, full-screen editor | Old two-row dock designs are superseded; 360px needs to work |
 | Realtime | Socket updates for posts/replies, MongoDB as source of truth | Professor Enke expects WebSockets; an event doesn't replace a persisted record |
 | Markdown | Markdown in posts and replies | Professor Enke treats Markdown support as a given, so it's required rather than optional polish |
+| Client/server architecture | One repository and deployable application, explicit HTTP API, reusable server-owned services | Future clients can reuse capabilities without adding native clients or backend infrastructure to assignment scope |
 
 ## Authentication decision, November 5, 2026
 
@@ -208,12 +209,12 @@ Clerk's native invitation flow automatically verifies the invited email when its
 ## UI dependency direction, November 5, 2026
 
 - Use Tailwind CSS, Bits UI, selective shadcn-svelte components customized for Blueprint, and Lucide icons imported individually.
-- Use TanStack Query from the start for client-side server-data caching. Keep SvelteKit form actions and Zod for submissions and validation. Defer Superforms until a concrete workflow justifies it. Avoid competing sources of truth for the same client data.
+- Use TanStack Query from the start for client-side server-data caching and Zod for boundary validation. Form actions may remain web adapters; the November 7 client/server decision requires a client-independent HTTP API for core operations. Defer Superforms until a concrete workflow justifies it. Avoid competing sources of truth for the same client data.
 - TanStack Virtual and TanStack Table are potentially useful, optional dependencies. Evaluate Virtual for measured long-list rendering bottlenecks and Table for admin tables that need sorting or filtering. Do not add either automatically.
 
 ## Client data caching decision, November 5, 2026
 
-Use TanStack Query from the start. Query owns the client cache for interactive server data such as course lists, threads, and replies. SvelteKit remains responsible for routing, server authorization, initial loading where appropriate, and form actions. Initial data for Query-managed views must feed the same cache rather than create a competing mutable store.
+Use TanStack Query from the start. Query owns the client cache for interactive server data such as course lists, threads, and replies, fetched through the HTTP API. SvelteKit handles routing and initial loading where appropriate; web loads and optional form actions use the same application services as API handlers. Initial data for Query-managed views must feed the same cache rather than create a competing mutable store.
 
 Use targeted cache updates or invalidation after successful writes. Incoming socket notices must preserve the agreed new-item notice behavior rather than immediately reorder visible lists. On reconnect, refetch relevant persisted data. Isolate caches by authenticated account, clear them on logout/account changes, and never share a user's server-side QueryClient across requests. Authorization remains server-side regardless of cached data.
 
@@ -235,3 +236,15 @@ TanStack Virtual and TanStack Table remain optional candidates, not initial inst
 - Show a clearly marked pending reply immediately during submission. On failure, preserve the text with Retry. Reviews, moderation actions, and permission changes wait for server confirmation. Ensure retries cannot duplicate an already accepted reply.
 - Within the same admitted account, display cached content while refreshing and reconcile changes afterward. Show a quiet refresh/error indication. Cached content never authorizes actions. Clear caches on logout/account changes.
 - Show static skeletons only when no content is available. Avoid shimmer/pulse animation and preserve content dimensions to reduce layout jumps.
+
+## Client/server architecture decision, November 7, 2026
+
+- Confirmed: one repository, one deployable application, clear client/server responsibilities, and an explicit HTTP API for core reads and writes. Keep SvelteKit as the web/server host.
+- Rationale: future mobile/desktop clients should reuse server capabilities without depending on web-page form submissions. Only the web client is in assignment scope.
+- Application services own business rules and permissions; repositories own persistence. HTTP handlers, web loads/form actions, and realtime adapters reuse those rules. Server-rendered pages may call services directly without loopback HTTP.
+- Share deliberate request/response contracts where useful, not MongoDB documents or server internals. Clients own presentation and interaction, never database access or authorization decisions.
+- Persist changes through authenticated HTTP and publish authorized Socket.IO notices afterward, using the same permission policy.
+- Rejected for now: separate backend frameworks/deployments, microservices, speculative package splitting, and implementing native clients. Logical boundaries provide flexibility without extra infrastructure.
+- Implementation impact: add domain endpoints as features are built and expose existing invitation operations through the same service-backed boundary. Existing page actions are not yet a reusable domain API. Test service rules and direct API authorization independently of the UI. No data-model or visual redesign is required.
+
+See [technical architecture](../technical/architecture.md#confirmed-clientserver-decision-november-7-2026) for responsibilities and implementation gaps.

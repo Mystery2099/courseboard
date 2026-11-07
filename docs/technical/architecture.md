@@ -36,6 +36,24 @@ Use pnpm instead of Bun. Use Sharp for server-side images. Initial search uses M
 
 ## Overall shape
 
+### Confirmed client/server decision, November 7, 2026
+
+Use one repository and one deployable application with clearly separated client/server responsibilities and an explicit HTTP API for core application reads and writes. Keep SvelteKit as the web/server host. Future mobile or desktop clients should use the same API and realtime contracts without imitating web-page form submissions. Only the web client is in assignment scope.
+
+This does not require a separate backend framework, separate deployments, microservices, or a speculative package split. The boundary is logical, not an infrastructure requirement.
+
+- Clients own presentation and interaction. They never access MongoDB directly or decide authorization.
+- Application services own business rules and permission enforcement, including admission, review eligibility, privacy, and moderation. Accept authenticated application identity/context rather than page events or form data.
+- HTTP handlers validate transport inputs and translate service results into explicit response models and errors. Repositories own persistence queries and mappings.
+- Expose core operations through client-independent HTTP endpoints as features are built. Web loads and optional form actions remain thin adapters to the same services, not the only interface to core functionality or a second implementation of its rules.
+- Server-rendered pages may call services directly without making loopback HTTP requests to their own API.
+- Share request/response schemas and types where useful, not MongoDB documents or server internals. Return deliberately serialized, privacy-aware response fields rather than raw database records.
+- Socket authentication and subscriptions reuse the same server-owned permission policy. Persist changes through authenticated HTTP, then emit authorized notices; realtime is not a competing business-rule or persistence path.
+
+**Current implementation:** `src/lib/server/` already separates services, repositories, access checks, and persistence. Invitation workflows currently use page-specific loads and form actions. `/api/health` is infrastructure, not a domain API. The reusable domain HTTP API and consistent client contracts above remain implementation work, not verified capabilities.
+
+### Deployment context
+
 ```text
 Browser (phone, tablet, desktop)
   | SvelteKit navigation and HTTP requests
@@ -94,7 +112,7 @@ Decision: try TanStack Markdown first and switch to markdown-it if integration, 
 
 ## Client data ownership
 
-Use TanStack Query from the start for interactive server-data caching. SvelteKit handles routing, server authorization, initial data loading where appropriate, and form actions with Zod validation. Feed initial data into the Query cache for Query-managed views instead of keeping two independently mutable copies. Verify the selected Svelte adapter's SSR integration before implementation.
+Use TanStack Query from the start for interactive server-data caching, fetching core application data through the HTTP API. SvelteKit handles routing and initial data loading where appropriate. Server loads and optional form actions remain thin adapters to the same application services used by API handlers, with Zod boundary validation. Feed initial data into the Query cache for Query-managed views instead of keeping two independently mutable copies. Verify the selected Svelte adapter's SSR integration before implementation.
 
 Target cache updates or invalidation after writes. Socket events queue new-item notices without shifting content under readers. Refetch relevant data after reconnecting. Keep caches isolated by account, clear on logout/account changes, and scope server-side QueryClient instances to individual requests. Cached data never replaces authorization.
 

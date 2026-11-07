@@ -54,6 +54,12 @@ TanStack Virtual is available for growing browsing lists where virtualization he
 
 Exact versions, the production runtime, and the deployed integrations still need checking. Clerk's Svelte integration is community-maintained, and production MFA requires a paid plan, so MFA is deferred. Google login is still undecided.
 
+## Client/server architecture
+
+The confirmed direction is one repository and one deployable application with a clear client/server boundary. Core reads and writes have an explicit HTTP API backed by reusable application services and persistence repositories. The server owns business rules, permissions, validation, and database access; clients own presentation and interaction. Web loads and optional form actions reuse those services, and server-rendered pages can call them directly without loopback HTTP.
+
+Future mobile or desktop clients should reuse the same API and realtime contracts, but only the web client is in assignment scope. No separate backend framework, deployment, microservices, or speculative package split is needed. The existing server modules are a starting point; invitation flows currently use page-specific handlers, and a reusable domain API remains implementation work. See the [architecture decision](docs/technical/architecture.md#confirmed-clientserver-decision-november-7-2026).
+
 ## Performance, privacy, and free hosting
 
 I care about low memory usage, fast transitions and loading, and perceived responsiveness. Show cached content while refreshing, use static skeletons when there's nothing to show, and avoid shimmer or pulse animations. Keep queries and responses bounded, preserve reading position, and don't let infinite scrolling grow memory indefinitely.

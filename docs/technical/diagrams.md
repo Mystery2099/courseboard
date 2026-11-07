@@ -6,13 +6,18 @@
 
 What runs where, and which service owns what. Clerk owns identity, MongoDB owns everything the application decides, and the browser never talks to MongoDB directly.
 
+Updated November 7, 2026: one repository and one deployable application, with a client-independent HTTP API and reusable server services. Native clients below are future possibilities, not assignment deliverables. The API boundary is planned; existing invitation flows still use web-page handlers.
+
 ```mermaid
 flowchart LR
     browser["Browser<br/>phone, tablet, desktop"]
+    native["Future mobile/desktop clients<br/>not in assignment scope"]
 
     subgraph render["Render Free"]
         app["SvelteKit server<br/>Node runtime"]
         sockets["Socket.IO<br/>same process"]
+        services["Application services<br/>business rules and permissions"]
+        repositories["Repositories<br/>persistence queries and mappings"]
     end
 
     clerk["Clerk<br/>accounts, sessions,<br/>email verification"]
@@ -21,11 +26,16 @@ flowchart LR
 
     dns -. domain .-> app
     browser -- "pages, API calls, uploads" --> app
+    native -- "same HTTP API and uploads" --> app
+    native <-- "WebSocket notices" --> sockets
     browser <-- "WebSocket notices" --> sockets
     browser -- "sign-in UI" --> clerk
     app -- "verify session" --> clerk
     sockets -- "verify handshake" --> clerk
-    app -- "official Node.js driver" --> atlas
+    app -- "API handlers and web adapters" --> services
+    services --> repositories
+    repositories -- "official Node.js driver" --> atlas
+    sockets -. "shared permission policy" .-> services
     sockets -. "notices published after a successful write" .- app
 ```
 

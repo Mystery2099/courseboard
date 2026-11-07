@@ -14,6 +14,7 @@
 - [ ] Prove a processed image upload and authorized retrieval through the hosted application.
 - [ ] Verify MongoDB text search, Zod, Sharp, and TanStack Markdown (markdown-it as fallback). Use pnpm. Define image input byte and pixel limits.
 - [ ] Present static UI alternatives for selection before implementing nontrivial interface changes.
+- [ ] Establish client-independent HTTP request/response contracts, thin transport adapters, server-owned application services, and persistence repositories in one deployable application. Expose existing invitation operations through the same service-backed API; page loads/actions may call services directly.
 
 ## Stage 1: finish one course workflow
 
@@ -22,6 +23,7 @@
 - [ ] Implement private-by-default history entries, repeated attempts, season/year terms, private notes, and profile visibility.
 - [ ] Implement questions, discussions, one-level replies, accepted answers, and locked discussions.
 - [ ] Verify that membership, history, and content remain independent and unauthorized reads/writes fail on the server.
+- [ ] Expose core workflow reads/writes through the HTTP API without requiring web-page form submissions. Test service rules and direct authorized/unauthorized API requests independently of the UI. Web adapters reuse those services; native mobile/desktop clients are not required.
 
 ## Stage 2: reviews and discovery
 
