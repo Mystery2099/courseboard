@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { ZodError } from 'zod';
-import type { ApiErrorResponse } from '#lib/contracts/InvitationContract.ts';
+import type { ApiErrorResponse } from '#lib/contracts/ApiContract.ts';
 import { AccessDeniedError, AccessPolicy } from '#lib/server/access/AccessPolicy.ts';
 
 export function apiError(status: number, code: string, message: string): Response {
@@ -22,7 +22,7 @@ export async function apiResponse(operation: () => Promise<Response>): Promise<R
 			return apiError(cause.code === 'unauthenticated' ? 401 : 403, cause.code, cause.message);
 		}
 		if (cause instanceof ZodError) {
-			return apiError(400, 'invalid-input', 'Check the supplied invitation details.');
+			return apiError(400, 'invalid-input', 'Check the supplied request details.');
 		}
 		console.error('Unexpected API failure:', cause);
 		return apiError(500, 'internal-error', 'The request could not be completed.');
