@@ -68,23 +68,24 @@ Read the [product spec](docs/product/product-spec.md) and [decision register](do
 
 The repository contains planning documents, assignment materials, design exports, and an application scaffold. The app isn't a working product yet: it sets up configuration, the MongoDB connection, Clerk, and Socket.IO, and invitations are the only feature so far.
 
-To run it locally, copy `.env.example` to `.env`, fill in Clerk and MongoDB values, then run `pnpm install` and `pnpm dev`. For production, use `pnpm build` and `pnpm start`; `render.yaml` describes the Render service. GitHub Actions runs linting, type checks, server tests, and the build on every pull request and push to `master`; Render deploys `master` only after those checks pass. `GET /api/health` reports whether MongoDB is reachable. The first implementation step is to prove the hosted combination of Clerk, SvelteKit, Socket.IO, Atlas, and one protected image upload before building dependent screens.
+To run it locally, copy `.env.example` to `.env`, fill in Clerk and MongoDB values, then run `pnpm install` and `pnpm dev`. For production, use `pnpm build` and `pnpm start`; `render.yaml` describes the Render service. GitHub Actions runs a dependency audit, linting, type checks, server tests, and the build on every pull request and push to `master`; Render deploys `master` only after those checks pass. `GET /api/health` reports whether MongoDB is reachable. The first implementation step is to prove the hosted combination of Clerk, SvelteKit, Socket.IO, Atlas, and one protected image upload before building dependent screens.
 
 | Document | What it's for |
 | --- | --- |
 | [Course materials](docs/course/) | Professor Enke's handout, syllabus, lab checklist, and self-review questions, kept as provided |
 | [Assignment requirements](docs/planning/assignment-and-scope.md) | The lab handout, how the app covers it, and Professor Enke's approval |
 | [Decision register](docs/planning/decision-register.md) | What we decided, why, what we turned down, and open questions |
-| [Needs assessment](docs/planning/needs-assessment.md) | The reasoning behind the original project plan; parts are out of date |
+| [Needs assessment](docs/planning/needs-assessment.md) | The problem, users, requirements, and risks, with the [first version](docs/planning/needs-assessment-original.md) kept for comparison |
 | [Product spec](docs/product/product-spec.md) | Current behavior, privacy and permissions, moderation, and first-release scope |
 | [Architecture](docs/technical/architecture.md) | Client/server structure, the HTTP API, caching, and realtime behavior |
 | [MongoDB model](docs/technical/mongodb-model.md) | Candidate documents, indexes, queries, and aggregation work |
+| [Security and recovery](docs/technical/security-and-recovery.md) | OWASP Top 10 coverage, abuse limits, backups, and recovery |
 | [Diagrams](docs/technical/diagrams.md) | System context, collections, request checks, admission, realtime, post lifecycle, and review eligibility |
 | [Blueprint handoff](docs/design/blueprint-handoff.md) | Design tokens, components, layout, interactions, and which artboards are current |
 | [Roadmap and acceptance](docs/implementation/roadmap-and-acceptance.md) | Build order, verification, and the assignment demonstration |
 
 ## When documents disagree
 
-The assignment and requirements Professor Enke explicitly approves come first. Newer decisions I've made supersede older proposals. Use the product spec and decision register for behavior and scope, and the Blueprint handoff for visual details that haven't been superseded. The needs assessment and some screenshots still show deferred features; a screen export doesn't make a feature required, implemented, or tested.
+The assignment and requirements Professor Enke explicitly approves come first. Newer decisions I've made supersede older proposals. Use the product spec and decision register for behavior and scope, and the Blueprint handoff for visual details that haven't been superseded. The original needs assessment and some screenshots still show deferred features; a screen export doesn't make a feature required, implemented, or tested.
 
 This is separate from my PostgreSQL Capstone Ticket System and TicketTinker. Their requirements and architectures don't carry over automatically.

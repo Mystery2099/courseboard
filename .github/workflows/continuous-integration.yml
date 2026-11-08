@@ -25,6 +25,8 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - run: pnpm audit --prod --audit-level high
+
       # The build validates environment variables; placeholders satisfy the schema without real secrets.
       - run: cp .env.example .env
 

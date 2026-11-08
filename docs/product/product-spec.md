@@ -8,7 +8,7 @@ Use Clerk through community-maintained `svelte-clerk`, initially with email/pass
 
 Application access requires an individual, single-use invitation stored in MongoDB. Invitations match an independently verified Clerk email, expire after seven days, and can be revoked and replaced. An admin screen produces copyable links for manual delivery. Redeem atomically. A forwarded invitation alone cannot prove email ownership. After admission, verified email changes preserve access through the same Clerk user ID, and roles and suspension stay tied to that identity.
 
-An authenticated account without admission cannot access academic content. Bootstrap the first administrator using my explicitly configured Clerk user ID. Invitations create regular users. Only existing admins grant elevated permissions.
+The sign-in page briefly explains what the platform is for and that access is by invitation, since logged-out visitors can't see anything else. An authenticated account without admission cannot access academic content. Bootstrap the first administrator using my explicitly configured Clerk user ID. Invitations create regular users. Only existing admins grant elevated permissions.
 
 Onboarding requires username, display name, and primary institution. History and course following are optional. Use initials with consistent generated colors for avatars; defer avatar uploads and require neither a photo nor a bio. Users have a unique username and an editable display name. Username changes are deferred. Email addresses stay private. Prepare separate fictional user, moderator, and admin demonstration accounts, and invite the professor to create his own account.
 

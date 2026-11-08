@@ -1,6 +1,6 @@
 # Decisions and open questions
 
-**Last reviewed:** November 7, 2026
+**Last reviewed:** November 8, 2026
 
 I want one place to check whether something is actually decided, because otherwise a suggestion from an old design conversation can quietly turn into a requirement. The [product spec](../product/product-spec.md) describes how the app behaves; this file records what I chose, why, and what I turned down. Nothing is confirmed until I've actually chosen it, and an example screen doesn't decide anything on its own.
 
@@ -31,6 +31,9 @@ When we settle something, add it here with what we chose, what we rejected, and 
 | Deletion | Account deletion anonymizes retained posts and reviews as Deleted user and removes private data | Discussions stay readable without keeping private history |
 | Client data | TanStack Query from the start, isolated per account | One owner for interactive server data |
 | Package manager | pnpm | My preferred package manager |
+| Security standard | OWASP Top 10 (2021), CSP and security headers, in-memory rate limits, `pnpm audit` in CI (November 8, 2026) | Answers the self-review security questions. See the [security and recovery plan](../technical/security-and-recovery.md) |
+| Backups | Manual `mongodump` exports kept off the repository, with a tested restore (November 8, 2026) | Atlas Free has no automated backups, and the exports contain email addresses |
+| Sign-in page | Briefly explains the platform and that access is by invitation (November 8, 2026) | It's the only page logged-out visitors can see |
 | Visual direction | Blueprint, light/dark, Material 3 Expressive influence | Kept over a true-black/minimal style. Tokens live in the [handoff](../design/blueprint-handoff.md) |
 | Typography | Space Grotesk headings, Inter UI/replies, Literata longer posts, IBM Plex Mono course codes | Don't substitute font roles arbitrarily |
 | Mobile | One-row floating dock, space/channel switcher, full-screen editor | Old two-row dock designs are superseded; 360px needs to work |
@@ -45,6 +48,7 @@ When we settle something, add it here with what we chose, what we rejected, and 
 - **Other Markdown libraries:** Marked doesn't sanitize its output; unified/remark/rehype needs more packages and pipeline configuration; MDsveX compiles Markdown into Svelte components, which is wrong for untrusted student posts.
 - **Separate backend, microservices, multiple packages, native clients:** keeping the layers separate in one app gives the same flexibility without extra infrastructure.
 - **Post edit history:** posts only show an edited timestamp.
+- **Automated backups through GitHub Actions:** they would store user data, including email addresses, as build artifacts.
 
 ## Open questions
 

@@ -6,8 +6,9 @@
 
 - [x] Confirm requirements with Professor Enke. He approved the proposal on November 4, 2026, expects WebSockets, and treats Markdown as a given.
 - [ ] Decide whether academic history is embedded in `users` or kept in its own collection (D16).
-- [ ] Revise the needs assessment to match the current scope, keeping the original as the first version. Lead with the underlying problem rather than its symptoms, and explain what changed since the proposal and why.
-- [ ] Write the security and data recovery plan (a course objective): risks mapped to the OWASP Top 10, security headers and CSP, rate limits on invitation redemption, uploads, and posting, dependency auditing, secrets handling, and how MongoDB data is backed up and restored on Atlas Free.
+- [x] Revise the [needs assessment](../planning/needs-assessment.md) to match the current scope, keeping the original as the first version.
+- [x] Write the [security and recovery plan](../technical/security-and-recovery.md) and add a dependency audit to CI.
+- [ ] Add security headers and a Content Security Policy.
 - [ ] Verify Render Free, Atlas Free, and Clerk work without payment details or billable services.
 - [ ] Prove Clerk sign-up, verification, sign-in, protected server routes, logout, and authenticated Socket.IO connections on the deployed host.
 - [ ] Prove application invitation redemption with independent verified-email matching, expiration, revocation, and single-use enforcement.
@@ -39,6 +40,7 @@
 - [ ] Implement safe Markdown rendering, formatting help, and account-isolated local drafts without a toolbar or preview.
 - [ ] Implement two-image post attachments, server validation/processing, metadata stripping, authorized delivery, and atomic quota enforcement.
 - [ ] Implement reports, scoped moderation, locking, removal/restoration, audit records, and suspension with active socket disconnection.
+- [ ] Rate-limit invitation redemption, image uploads, and creating posts, replies, and reports.
 - [ ] Implement administrator-managed profanity terms/exceptions and code exemptions.
 - [ ] Publish persisted changes through Socket.IO WebSockets, buffer new-item notices, and refetch on reconnect.
 - [ ] Implement author deletion and coordinated account deletion, including private data cleanup and documented retained content.
@@ -54,10 +56,11 @@
   - A forged request or socket message can't grant moderation rights, and a moderator in one course can't moderate another.
   - A logged-out visitor, or a signed-in account without admission, can't load a course page, API response, image, or socket subscription. A forwarded invitation link doesn't get around this.
   - User Markdown or image metadata can't inject scripts into another person's browser.
-- [ ] Make the sign-in page explain what the platform is for, since logged-out visitors can't see anything else, and give new users enough guidance to find courses, record history, and post.
+- [ ] Make the sign-in page explain what the platform is for and that access is by invitation, and give new users enough guidance to find courses, record history, and post.
 - [ ] Run a few informal usability checks with students, mainly searching for a course, editing history, and posting on a phone.
-- [ ] Self-review the app with the [self-review questions](../course/lab-self-review-questions.md) after first using it and again after several sessions. Record each peer evaluation with my response and what I changed.
-- [ ] Document setup, environment variables, deployment, free-tier limits, and demonstration accounts. Test a restore from backup at least once.
+- [ ] Self-review the app with the [self-review questions](../course/lab-self-review-questions.md) after first using it and again after several sessions. Record the answers, and any peer evaluations with my response and what I changed, in `docs/reviews/`.
+- [ ] Document setup, environment variables, deployment, free-tier limits, and demonstration accounts.
+- [ ] Test a restore from backup, following the recovery plan.
 - [ ] Invite the professor and prepare a repeatable demonstration of documents, indexes, filtering, aggregation, WebSockets, images, and administrative roles.
 - [ ] Demonstrate to Professor Enke, then submit through Blackboard with a cover page (my name, the professor's name, and a description of the lab). The syllabus allows at most two submissions a week, so plan around other assignments.
 
