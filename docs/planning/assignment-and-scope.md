@@ -2,13 +2,17 @@
 
 ## What the lab actually requires
 
-The original NoSQL Database Lab 1 handout says:
+The [NoSQL Database Lab 1 handout](../course/NoSQL%20Database%20Lab%201.md) says:
 
-> Create a database management system that allows for the storage and manipulation of user entered academic histories and opinions. Assuming that this is being implemented in a social media setting, this lab also requires user filtering and commenting. Your solution should be web hosted and demonstrate a variety of administrative roles.
+> In this lab, you are being asked to create a database management system that allows for the storage and manipulation of user entered academic histories and opinions. Assuming that this is being implemented in a social media setting, this lab also requires user filtering and commenting. Your solution should be web hosted and demonstrate a variety of administrative roles.
 
-It also tells me to discuss the database choice and implementation with Professor Enke, get his approval on the system requirements, then demonstrate and discuss the finished work before submitting the files through Blackboard once approved. This is one of the two required database labs, so I want the result to demonstrate MongoDB properly without letting the project become an entire social network.
+It also tells me to discuss the database choice and implementation with Professor Enke, get his approval on the system requirements, then demonstrate and discuss the finished work before submitting all the files I've created through Blackboard once approved. This is one of the two required database labs, so I want the result to demonstrate MongoDB properly without letting the project become an entire social network.
 
 The handout doesn't require Discord-like navigation, an expressive design system, a rich post editor, or half the other things we've explored. Those are **my project choices**, and I want that distinction to stay clear when deciding what belongs in the first build. The [product spec](../product/product-spec.md) has the current scope.
+
+## What every lab needs
+
+Professor Enke's [lab checklist](../course/lab-checklist.md) applies to all labs: his approval, a needs assessment (with revisions as the project evolves), self-evaluations that record my response to each peer evaluation, working functionality that meets the client's demands, secure coding, an appropriate interface, deployment readiness, and a demonstration before submission. The [self-review questions](../course/lab-self-review-questions.md) cover goals, audience, accessibility, UI/UX, and security. The [syllabus](../course/CISY%208503%20Fall%2025%20syllabus.docx) also lists a security and data recovery plan as a course objective and requires a cover page on every submission. The [roadmap](../implementation/roadmap-and-acceptance.md) tracks each of these.
 
 ## Connecting the assignment to the app
 

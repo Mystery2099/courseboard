@@ -72,6 +72,7 @@ To run it locally, copy `.env.example` to `.env`, fill in Clerk and MongoDB valu
 
 | Document | What it's for |
 | --- | --- |
+| [Course materials](docs/course/) | Professor Enke's handout, syllabus, lab checklist, and self-review questions, kept as provided |
 | [Assignment requirements](docs/planning/assignment-and-scope.md) | The lab handout, how the app covers it, and Professor Enke's approval |
 | [Decision register](docs/planning/decision-register.md) | What we decided, why, what we turned down, and open questions |
 | [Needs assessment](docs/planning/needs-assessment.md) | The reasoning behind the original project plan; parts are out of date |
