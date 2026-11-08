@@ -33,12 +33,10 @@ General communities, Experience posts, presence, a notification inbox, Focus mod
 
 ## Tools we've chosen
 
-These are decisions for the implementation, not a list of integrations that already work.
-
 | Part | Choice | Why I'm using it |
 | --- | --- | --- |
 | Application | SvelteKit, Svelte, TypeScript | The web app and its server-side routes |
-| Package manager | pnpm | Use this instead of the earlier Bun plan |
+| Package manager | pnpm | My preferred package manager |
 | Authentication | Clerk through community-maintained `svelte-clerk` | Prebuilt authentication and account-management UI |
 | Database | MongoDB Atlas Free, official Node.js driver | The database this lab is meant to demonstrate |
 | Validation | Zod | Validate boundary inputs and infer types from schemas |
@@ -52,52 +50,40 @@ These are decisions for the implementation, not a list of integrations that alre
 
 TanStack Virtual is available for growing browsing lists where virtualization helps. It doesn't limit cached data, so we'll bound retained pages separately. TanStack Table is a possible addition for richer admin tables. Superforms can wait until form handling actually needs it.
 
-Exact versions, the production runtime, and the deployed integrations still need checking. Clerk's Svelte integration is community-maintained, and production MFA requires a paid plan, so MFA is deferred. Google login is still undecided.
+I still need to check exact versions, the production runtime, and how everything behaves once deployed. Clerk's Svelte integration is community-maintained, and production MFA requires a paid plan, so MFA is deferred. Google login is still undecided.
 
 ## Client/server architecture
 
-The confirmed direction is one repository and one deployable application with a clear client/server boundary. Core reads and writes have an explicit HTTP API backed by reusable application services and persistence repositories. The server owns business rules, permissions, validation, and database access; clients own presentation and interaction. Web loads and optional form actions reuse those services, and server-rendered pages can call them directly without loopback HTTP.
+Everything lives in one repository and deploys as one application, but with a clear line between client and server. Core reads and writes go through an HTTP API backed by application services and repositories. The server owns business rules, permissions, validation, and database access; the client only handles presentation and interaction. Web pages reuse the same services, and server-rendered pages call them directly instead of making HTTP requests to their own API.
 
-Future mobile or desktop clients should reuse the same API and realtime contracts, but only the web client is in assignment scope. No separate backend framework, deployment, microservices, or speculative package split is needed. Invitations now have service-backed HTTP endpoints alongside the web handlers, shared request/response contracts, and transport-independent access checks. Direct-handler tests do not establish deployed authentication or native-client integration. See the [architecture decision and API](docs/technical/architecture.md#confirmed-clientserver-decision-november-7-2026).
+That way a mobile or desktop client could use the same API later, although only the web client is part of the assignment. I don't need a separate backend framework, microservices, or multiple packages for this. Invitations are the first feature built this way. See the [architecture](docs/technical/architecture.md).
 
-## Performance, privacy, and free hosting
+## Priorities
 
-I care about low memory usage, fast transitions and loading, and perceived responsiveness. Show cached content while refreshing, use static skeletons when there's nothing to show, and avoid shimmer or pulse animations. Keep queries and responses bounded, preserve reading position, and don't let infinite scrolling grow memory indefinitely.
-
-The design stays **Blueprint**, including its light/dark themes and typography. The simplified scope doesn't mean replacing the design with a different visual system.
-
-Everything must stay free, without a payment method or overage billing. Render's cold starts are an accepted tradeoff. Cloudflare stays the DNS provider for my domain; the application doesn't need to run there. Plan to keep the site usable for at least about a month, provisionally a month after grading.
-
-Images are limited to two per post, at most 2 MB each after processing, with a 100 MB application-wide image quota. Process them on the server, strip metadata, and preserve readable screenshots. At the quota, existing content keeps working and new uploads fail clearly. Image delivery checks access just like other content.
-
-Clerk handles identity, while MongoDB stores application admission, profiles, academic records, content, and permissions. A Clerk account alone doesn't grant application access. Server checks apply to routes, APIs, images, and sockets. Administrators don't get permission to read another student's private history or notes through the app.
+I care about low memory usage, fast transitions and loading, and perceived responsiveness. Privacy has to hold on the server, not just in the UI: a Clerk account alone doesn't grant access, and even administrators can't read another student's private history through the app. Everything must stay free, without a payment method or overage billing, and Render's cold starts are an accepted tradeoff. The design stays **Blueprint**, including its light/dark themes and typography.
 
 ## Where to start
 
-Read the [decision register](docs/planning/decision-register.md) and [product spec](docs/product/product-spec.md) first. They capture the choices we've made during planning. The [roadmap](docs/implementation/roadmap-and-acceptance.md) turns those decisions into build stages and acceptance checks.
+Read the [product spec](docs/product/product-spec.md) and [decision register](docs/planning/decision-register.md) first. The spec describes how the app should behave, and the register records why. The [roadmap](docs/implementation/roadmap-and-acceptance.md) turns those decisions into build stages and acceptance checks.
 
-The repository contains planning documents, assignment materials, design exports, and an application scaffold. The scaffold isn't a working product yet: it wires up configuration, the MongoDB connection, Clerk, and the Socket.IO attachment, with no domain features.
+The repository contains planning documents, assignment materials, design exports, and an application scaffold. The app isn't a working product yet: it sets up configuration, the MongoDB connection, Clerk, and Socket.IO, and invitations are the only feature so far.
 
 To run it locally, copy `.env.example` to `.env`, fill in Clerk and MongoDB values, then run `pnpm install` and `pnpm dev`. For production, use `pnpm build` and `pnpm start`; `render.yaml` describes the Render service. GitHub Actions runs linting, type checks, server tests, and the build on every pull request and push to `master`; Render deploys `master` only after those checks pass. `GET /api/health` reports whether MongoDB is reachable. The first implementation step is to prove the hosted combination of Clerk, SvelteKit, Socket.IO, Atlas, and one protected image upload before building dependent screens.
 
 | Document | What it's for |
 | --- | --- |
-| [Assignment and scope](docs/planning/assignment-and-scope.md) | The lab requirements and the distinction between required and added features |
-| [Decision register](docs/planning/decision-register.md) | Confirmed decisions, their rationale, and remaining questions |
-| [Needs assessment](docs/planning/needs-assessment.md) | The reasoning behind the original project plan |
-| [Product spec](docs/product/product-spec.md) | Current behavior, privacy, moderation, and first-release scope |
-| [Privacy and permissions](docs/product/privacy-and-permissions.md) | Privacy boundaries and role rules, with older scope subject to the current spec |
-| [Architecture](docs/technical/architecture.md) | Application responsibilities, dependency research, caching, and realtime behavior |
+| [Assignment requirements](docs/planning/assignment-and-scope.md) | The lab handout, how the app covers it, and Professor Enke's approval |
+| [Decision register](docs/planning/decision-register.md) | What we decided, why, what we turned down, and open questions |
+| [Needs assessment](docs/planning/needs-assessment.md) | The reasoning behind the original project plan; parts are out of date |
+| [Product spec](docs/product/product-spec.md) | Current behavior, privacy and permissions, moderation, and first-release scope |
+| [Architecture](docs/technical/architecture.md) | Client/server structure, the HTTP API, caching, and realtime behavior |
 | [MongoDB model](docs/technical/mongodb-model.md) | Candidate documents, indexes, queries, and aggregation work |
 | [Diagrams](docs/technical/diagrams.md) | System context, collections, request checks, admission, realtime, post lifecycle, and review eligibility |
-| [Blueprint handoff](docs/design/blueprint-handoff.md) | Visual and interaction reference, subject to later scope decisions |
-| [Design assets](docs/design/design-assets.md) | Export provenance and which designs count as current |
+| [Blueprint handoff](docs/design/blueprint-handoff.md) | Design tokens, components, layout, interactions, and which artboards are current |
 | [Roadmap and acceptance](docs/implementation/roadmap-and-acceptance.md) | Build order, verification, and the assignment demonstration |
 
 ## When documents disagree
 
-The assignment and requirements Professor Enke explicitly approves come first. Newer decisions I've made supersede older proposals. Use the current product spec and decision register for behavior and scope, and the Blueprint handoff for visual details that haven't been superseded.
-
-Some older documents and screenshots still show deferred features. A screen export doesn't make a feature required, implemented, or tested. Design PNGs are present under `docs/design/`, but don't assume they include every canonical artboard or the editable Claude canvas.
+The assignment and requirements Professor Enke explicitly approves come first. Newer decisions I've made supersede older proposals. Use the product spec and decision register for behavior and scope, and the Blueprint handoff for visual details that haven't been superseded. The needs assessment and some screenshots still show deferred features; a screen export doesn't make a feature required, implemented, or tested.
 
 This is separate from my PostgreSQL Capstone Ticket System and TicketTinker. Their requirements and architectures don't carry over automatically.

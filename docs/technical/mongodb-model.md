@@ -1,7 +1,5 @@
 # MongoDB model and the queries it needs to support
 
-> Scope update, November 5, 2026: the [current product spec](../product/product-spec.md) and [decision register](../planning/decision-register.md) supersede older scope and open decisions below. General communities, Experience posts, grades, Home, presence, advanced desktop views, and MFA are deferred. Access requires admission and login, including images.
-
 **Candidate design, not a finalized schema.** I want to be able to explain *why* I modeled the data this way when I demonstrate the lab, so the decisions should come from the actual queries and privacy rules rather than copying a relational schema into MongoDB or embedding absolutely everything.
 
 ## A few rules before choosing collections
@@ -26,7 +24,7 @@ Embedding can be useful when the data is small, bounded, and really owned by one
 | `moderatorAssignments` | `_id`, spaceId, userId, assignedBy | Separate global admins from space moderators |
 | `images` | `_id`, uploaderId, postId, binary data, MIME type, byte size, dimensions, alt text, state | Binaries stay in their own collection so post queries never load them |
 
-These are starting points, not instructions to create eleven collections immediately. We still need to decide whether histories should be embedded (D16) and whether moderator assignments deserve a separate collection. Invitations, profanity terms, and moderation audit records will also need small collections.
+These are starting points; I don't plan on creating all eleven right away. We still need to decide whether histories should be embedded (D16) and whether moderator assignments deserve a separate collection. Invitations, profanity terms, and moderation audit records will also need small collections.
 
 ## Indexes worth considering
 

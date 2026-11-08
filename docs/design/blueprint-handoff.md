@@ -1,12 +1,12 @@
 # Blueprint design handoff
 
-> Scope update, November 5, 2026: the [current product spec](../product/product-spec.md) and [decision register](../planning/decision-register.md) supersede older scope and open decisions below. General communities, Experience posts, grades, Home, presence, advanced desktop views, and MFA are deferred. Access requires admission and login, including images.
-
 Nov 3, 2026 · @Mathew Kennedy-Brewer
 
 ## Overview
 
-This is the detailed reference for the Blueprint designs I worked through with Claude for the academic discussion platform. I wanted a recognizable visual identity, both light and dark themes, and some Material 3 Expressive influence without making the app feel like a generic Material demo. The tables and numbers here are the actual handoff details, so they should be followed where the designs are canonical; the open questions are still open, regardless of what a particular artboard happens to show.
+This is the detailed reference for the Blueprint designs I worked through with Claude for the academic discussion platform. I wanted a recognizable visual identity, both light and dark themes, and some Material 3 Expressive influence without making the app feel like a generic Material demo. The tables and numbers here are the actual handoff details, so they should be followed where the designs are canonical; an artboard doesn't settle anything listed as open in the [decision register](../planning/decision-register.md).
+
+**This file is the visual reference, not the scope.** It was written before the November 5 scope decisions, so some screens and components here (Home, communities, Experience posts, presence and “Here now”, Focus, split panes, the command bar, the member list) are deferred. The [product spec](../product/product-spec.md) decides behavior and scope, including privacy and permissions; use this file for tokens, components, layout, and interaction details that haven't been superseded.
 
 **Where the designs actually live** (in Claude Design):
 
@@ -16,11 +16,13 @@ This is the detailed reference for the Blueprint designs I worked through with C
 | Blueprint · Mobile & Desktop | Course space, thread, editor, combined desktop overview, split-pane discussion, Focus, command bar, Search tab | Canonical artboards listed on its orange note. Others there are superseded studies |
 | Exploration | Early sketches, channel models, palette lab | Reference only |
 
-**Reading the artboards:** Claude set them up with Tweaks for `theme` (light/dark), `device` (390 × 844 or 360 × 640), and their applicable `state`, `kind`, `mode`, and `step` values. That's useful because light, dark, and small-phone variants come from the same source rather than being entirely separate drawings. Play mode connects some of the screens, but any link using `#` is still a placeholder, not a functioning route.
+The 62 PNGs in `docs/design/` are exports from Screens v1. They don't include every canonical artboard from the Mobile & Desktop page, so I still need to export those. They're static snapshots: they don't show every state or responsive variation, and they don't prove a feature is implemented. When a screenshot and this file disagree, check whether the screenshot was superseded.
+
+**Reading the artboards:** they have Tweaks for `theme` (light/dark), `device` (390 × 844 or 360 × 640), and their applicable `state`, `kind`, `mode`, and `step` values. That's useful because light, dark, and small-phone variants come from the same source rather than being entirely separate drawings. Play mode connects some of the screens, but any link using `#` is still a placeholder, not a functioning route.
 
 ## Consistency review
 
-We found nine inconsistencies while reviewing the designs. Claude fixed eight of them on the canvas, while the last one is a rule for implementation rather than another round of redrawing. I'm leaving the details here because I don't want an agent copying an older screen and accidentally reintroducing something we already decided to change.
+We found nine inconsistencies while reviewing the designs. Eight were fixed on the canvas, while the last one is a rule for implementation rather than another round of redrawing. I'm leaving the details here so nobody copies an older screen and accidentally reintroduces something we already decided to change.
 
 | Area | Problem found | Fix applied |
 | --- | --- | --- |
@@ -42,7 +44,7 @@ I kept the Material 3-style role names because they map cleanly onto shadcn-svel
 
 ### Color roles
 
-Claude's design review checked the color pairings against WCAG 2.1 AA, with dark `outline` on `surface` reported as the lowest contrast at 3.05:1; that's for borders, not body text. We still need to check the *implemented* interface rather than treating a design-token check as proof that every real component is accessible.
+The color pairings were checked against WCAG 2.1 AA during design, with dark `outline` on `surface` reported as the lowest contrast at 3.05:1; that's for borders, not body text. We still need to check the *implemented* interface rather than treating a design-token check as proof that every real component is accessible.
 
 | Token | Light | Dark | Used for |
 | --- | --- | --- | --- |
@@ -101,7 +103,7 @@ Mobile form inputs should be at least 16px so iOS doesn't zoom the page every ti
 
 ## Component inventory
 
-Most of the basic controls can come from shadcn-svelte/Bits UI with the Blueprint styling applied, while the more app-specific pieces—like the dock, space switcher, and post cards—need their own components. I'd build the reusable primitives first rather than hardcode a slightly different button, chip, or field into every screen.
+Most of the basic controls can come from shadcn-svelte/Bits UI with the Blueprint styling applied, while the more app-specific pieces, like the dock, space switcher, and post cards, need their own components. I'd build the reusable primitives first rather than hardcode a slightly different button, chip, or field into every screen.
 
 ### Primitives (shadcn-svelte / Bits UI)
 
@@ -172,9 +174,7 @@ I'm treating 360px as the starting point, not as a tiny edge case to fix after d
 
 ## Screens and flows
 
-Claude organized the app into 18 screen groups. Home is the main jumping-off point, while the mobile dock or desktop rail/command bar should make the rest of the app easy to reach without burying everything in menus.
-
-&#91;embedded content: main navigation flow · 9 screens\]
+The app is organized into 18 screen groups. Home is the main jumping-off point, while the mobile dock or desktop rail/command bar should make the rest of the app easy to reach without burying everything in menus.
 
 Most sheets and dialogs are overlays rather than separate routes; the mobile editor is the exception because it needs the whole screen.
 
@@ -224,7 +224,7 @@ Most sheets and dialogs are overlays rather than separate routes; the mobile edi
 
 - **Phone:** full screen, nothing floating. Header: close (keeps the draft) · title and “Draft saved” · Post. Then a space/channel picker, an optional type selector, title, body, image strip, and a toolbar riding the keyboard.
 - **Reviews:** structured fields (status, workload, would retake, term) sit behind one summary chip that opens a sheet, so the writing area stays large.
-- **Desktop:** inline reply box with toolbar. Ctrl+Enter sends. New posts open in a centered dialog or full page (see Open decisions).
+- **Desktop:** inline reply box with toolbar. Ctrl+Enter sends. New posts open in a centered dialog or full page (D07 in the [decision register](../planning/decision-register.md)).
 - **Images:** a local preview appears immediately, then the progress ring, then done or failed (Retry). Posting waits on uploads that are still running, and failed ones must be retried or removed. ALT text is offered on every image.
 - **Drafts:** saved per target (new post per channel, reply per thread) after typing stops and when leaving the screen. Coming back offers “You have an unsent reply · Resume / Discard.” A failed send keeps the text as a draft and shows an error toast with Retry.
 - **Edit and delete:** editing reuses the editor and adds “edited” to the meta line. Deleting asks for confirmation. Replies stay under “original post deleted.”
@@ -255,98 +255,3 @@ The accessibility target is WCAG 2.1 AA. The palette was checked during design, 
 - **Forms:** errors sit next to their field and are linked with `aria-describedby`. After a failed submit, focus moves to the first invalid field. Messages say how to fix the problem (“Needs at least 10 characters (5 more to go)”).
 - **Images:** ALT text prompted on upload. Diagrams in posts need ALT, or they show an “image has no description” hint to the author.
 
-## Privacy and permissions
-
-I want to keep three things completely separate: **space membership**, **self-reported academic history**, and **published posts**. Following a course shouldn't change a private history entry, publishing something shouldn't silently change profile privacy, and the app absolutely shouldn't assume that joining a course means someone took it.
-
-### What others can see
-
-| Data | Default | Who can see it | Where it appears |
-| --- | --- | --- | --- |
-| History entry (course, status, term) | Private | Only you, or anyone signed in if set to Visible | Your profile, member rows, member preview card |
-| Grade | Always private | Only you | Your own history only. Never in stats |
-| Private note on an entry | Always private | Only you | Your own history only |
-| Review author’s course status | Shown on the review | Anyone who can see the review | Review chip “Took it · Fall ’25 · self-reported”. Writing a review discloses that one course, even if the entry is private |
-| Experience post status | Shown on the post | Anyone who can see the post | “Taking it · self-reported” |
-| Space membership | Visible to signed-in users | Anyone signed in | Member lists. Joining reveals nothing about history |
-| Online presence | On | Signed-in members of the space | “Here now” group and dots. Turning it off hides you from Here now only. You stay in member lists |
-| Posts and replies | Visible | Anyone signed in | Unaffected by history privacy |
-| Schools on profile | Primary school shown | Anyone signed in | Profile chips. Past schools follow their entries’ visibility (see Open decisions) |
-| Course aggregate stats | — | Anyone signed in | Built from reviews only (workload, would retake, counts). Never from history entries or grades |
-
-**UI rules:**
-
-- **Others’ profiles:** never show visibility labels, and never show a hint of how many entries are hidden (“Some entries are private” is fine; “11 hidden” is not).
-- **Preview as others:** your own profile always offers it.
-- **Member rows:** show academic status only from a Visible entry, otherwise just the name.
-
-### Roles and what they can do
-
-There isn't much point showing a regular user a row of moderator controls they can never use, but the server still needs to enforce the rules regardless of what the UI hides. When somebody tries something reasonable but blocked—like reviewing a course before adding a qualifying history entry—give them an explanation instead of making it fail mysteriously.
-
-| Action | User | Space moderator | Community owner | Platform admin |
-| --- | --- | --- | --- | --- |
-| Read spaces, join, follow | Yes | Yes | Yes | Yes |
-| Ask, discuss, reply | Yes, no join needed | Yes | Yes | Yes |
-| Write a review or experience | With a Taking/Took history entry for that course | Same | Same | Same |
-| Edit or delete own posts | Yes | Yes | Yes | Yes |
-| Report content | Yes | Yes | Yes | Yes |
-| Pin, remove posts, dismiss reports in a space | No | In their spaces | In their community | Everywhere |
-| Escalate to admins | No | Yes | Yes | — |
-| Add community channels | No | In their community (open) | Yes | Yes |
-| Assign moderators | No | No | Their community (open) | Yes, all spaces |
-| Suspend accounts | No | No | No | Yes |
-| Manage the course catalog, approve requests | No | No | No | Yes |
-| Create communities | No (later) | No | — | Yes |
-
-Course spaces have no owner. Their moderators are assigned by admins.
-
-## Scope: first build vs. later
-
-The first build needs to demonstrate MongoDB documents, meaningful queries and indexes, aggregation, and WebSocket-backed discussions. We've designed more than that, which is fine, but I don't want the implementation blocked by features marked Later just because they're already pretty in the canvas.
-
-| Feature | Tier | What it demonstrates / note |
-| --- | --- | --- |
-| Email sign-up, sign-in, validation errors | v1 | Users collection, unique indexes on email and username |
-| Onboarding: school + this term’s courses | v1 | The profile and spaces steps can be skipped or merged |
-| Academic history (add, edit, visibility, status) | v1 | Embedded vs. referenced entries, per-entry visibility in queries |
-| Profiles: own, others, private | v1 | Projection that respects visibility |
-| Course and community spaces, join/leave, fixed course channels | v1 | Membership documents, compound indexes |
-| Posts (question, discussion, experience, review) and one-level replies | v1 | Core documents. Reviews carry structured fields |
-| Course stats (workload, would retake, counts) | v1 | Aggregation pipeline over reviews |
-| Markdown editor with preview, image upload with states | v1 | Store Markdown, sanitize on render. Images in GridFS or object storage (open) |
-| Search with school filter | v1 | Text index or Atlas Search (open) |
-| Real-time new posts and replies, “Here now” count | v1 | WebSockets, ideally fed by change streams |
-| Report, mod queue, remove post, admin report review | v1 | Reports collection, role checks |
-| Light/dark theme, 360px layouts, all empty/loading/error states | v1 | — |
-| Desktop split pane (fixed list width) and Focus mode | v1 if time | Layout only, no new data |
-| Drafts in local storage + resume banner | v1 if time | Server-side drafts are Later |
-| Command bar (Ctrl/Cmd+K) | v1 if time | Reuses the search endpoint. The mobile Search tab is v1 |
-| Member list panel and member preview card | v1 if time | Needs the visibility projection that v1 already builds |
-| Resizable panes, thread map, reading-position memory | Later | Pure frontend polish |
-| Swipe on the space chip, tilted-button spring, shape morphs | Later | Tap paths already cover them |
-| Admin users table and suspensions | Later (minimal: one flag) | A `suspended` field with an admin-only toggle is enough at first |
-| Course requests from students | Later | Admins seed the catalog by hand at first |
-| Community owners and owner-assigned moderators | Later | v1: admins create communities and assign moderators |
-| Data export (JSON), post-font setting, text-size setting | Later | — |
-| Notification levels per space (All / Highlights / Off) | Later | v1: in-app unread counts only |
-
-**Explicitly not planned:** direct messages, voice, a notification center or email, custom roles, polls, SSO, verified enrollment.
-
-## Open decisions
-
-These questions still need an actual decision from me. They're not permission for an agent to pick whichever option seems convenient and quietly act like we've always planned it that way.
-
-- [ ] **App name.** Every screen shows the placeholder ‹app name›.
-- [ ] **Logged-out access.** Can anyone read spaces without signing in? The two-option visibility (Private / Visible to signed-in users) assumes no. If yes, decide whether “Visible” includes logged-out visitors.
-- [ ] **Past schools on profiles.** Show them always, or only when that school has at least one Visible entry?
-- [ ] **Review disclosure.** Confirm that writing a review publicly shows that one course even when its history entry is private (the current copy says so).
-- [ ] **Course-space membership vs. posting.** Anyone signed in can post in any course space without joining (current design). Confirm this also holds for communities, or whether communities require joining first.
-- [ ] **Community owners in v1.** Defer them entirely (admins create communities), or allow owners with no extra tools?
-- [ ] **Desktop new-post surface.** A centered dialog or a full page? Mobile is full screen either way.
-- [ ] **Image storage.** GridFS (shows off MongoDB) or object storage? Also the size limit and allowed types.
-- [ ] **Search engine.** A MongoDB text index (simple, self-hosted) or Atlas Search (better ranking, needs Atlas)?
-- [ ] **Deleted accounts.** Keep posts as “deleted user” (current copy) or delete them too?
-- [ ] **Edit history.** Show only “edited”, or let moderators see previous versions?
-- [ ] **“Here now” window.** How many minutes of inactivity before someone drops out (suggested 5)?
-- [ ] **Moderator escalation.** Does “Escalate to admins” need its own UI in v1, or is reporting enough?

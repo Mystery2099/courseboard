@@ -1,6 +1,6 @@
 # Needs Assessment: Academic Discussion Platform
 
-> Scope update, November 5, 2026: the [current product spec](../product/product-spec.md) and [decision register](../planning/decision-register.md) supersede older scope and open decisions below. General communities, Experience posts, grades, Home, presence, advanced desktop views, and MFA are deferred. Access requires admission and login, including images.
+> **Scope update, November 5, 2026:** some of this is out of date. The [product spec](../product/product-spec.md) and [decision register](../planning/decision-register.md) take priority. General communities, Experience posts, grades, Home, presence, advanced desktop views, and MFA are deferred, and everything (images included) requires an invitation and login.
 
 **Course:** CISY 8503 Applied Database Management  
 **Lab:** NoSQL Database Lab  
@@ -110,7 +110,7 @@ The project still needs some technical and product decisions before implementati
 
 ### Planning references
 
-- My course notes, *Software Needs Assessment*, supplied for this project.
+- My course notes, *Software Needs Assessment*.
 - Claude Design, *Blueprint Design Handoff* (November 3, 2026), and the accompanying UX export. These are design and planning artifacts, not findings from a user study.
 
-**Open items to resolve:** professor approval of the precise lab requirements; application name; logged-out reading; general community posting rules; image provider and limits; MongoDB search approach; account deletion policy; final moderator escalation behavior. See the design handoff for the full open-decision list.
+**Open items to resolve:** professor approval of the precise lab requirements; application name; logged-out reading; general community posting rules; image provider and limits; MongoDB search approach; account deletion policy; final moderator escalation behavior. Most of these are settled now; see the [decision register](decision-register.md).

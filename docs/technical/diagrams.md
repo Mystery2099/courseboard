@@ -6,7 +6,7 @@
 
 What runs where, and which service owns what. Clerk owns identity, MongoDB owns everything the application decides, and the browser never talks to MongoDB directly.
 
-Updated November 7, 2026: one repository and one deployable application, with a client-independent HTTP API and reusable server services. Native clients below are future possibilities, not assignment deliverables. Invitations implement this boundary alongside thin web handlers; other domain APIs and hosted integration remain future work.
+Updated November 7, 2026: one repository and one deployable application, with an HTTP API in front of the server services. The native clients below are possible future additions, not part of the assignment. So far only invitations use the API.
 
 ```mermaid
 flowchart LR

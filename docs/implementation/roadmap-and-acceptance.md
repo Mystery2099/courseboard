@@ -13,8 +13,7 @@
 - [ ] Bootstrap the administrator and link MongoDB profiles through unique Clerk user IDs.
 - [ ] Prove a processed image upload and authorized retrieval through the hosted application.
 - [ ] Verify MongoDB text search, Zod, Sharp, and TanStack Markdown (markdown-it as fallback). Use pnpm. Define image input byte and pixel limits.
-- [ ] Present static UI alternatives for selection before implementing nontrivial interface changes.
-- [x] Establish the invitation reference boundary: client-independent HTTP contracts, thin transport adapters, service-owned permissions/listing, and persistence repositories in one deployable application. Page loads/actions call the same services directly. Focused service and route-handler tests cover the boundary; hosted integration is still a separate Stage 0 check.
+- [x] Build invitations as the first feature on the client/server structure: HTTP endpoints, application services, and repositories, with web pages calling the same services. Services and route handlers have tests; the hosted checks above still apply.
 
 ## Stage 1: finish one course workflow
 
@@ -46,15 +45,14 @@
 
 - [ ] Verify core flows at 360 × 640, larger phones, tablet, and desktop with keyboard and touch access.
 - [ ] Complete loading, empty, offline, validation, permission, upload-failure, and failed-submission states.
-- [ ] Verify separate-account privacy, invitation bypass attempts, forged moderation requests, direct image access, and socket authorization.
+- [ ] Verify privacy and permissions with separate accounts. At minimum:
+  - Another student can't retrieve my private course or note through a direct ID, profile, search result, or statistic, and neither can an administrator.
+  - Following a course doesn't create a history entry or expose one that already exists, and publishing a review doesn't change a history entry's visibility.
+  - A `Planning` entry can't be used to publish a review.
+  - A forged request or socket message can't grant moderation rights, and a moderator in one course can't moderate another.
+  - A logged-out visitor, or a signed-in account without admission, can't load a course page, API response, image, or socket subscription. A forwarded invitation link doesn't get around this.
+  - User Markdown or image metadata can't inject scripts into another person's browser.
 - [ ] Document setup, environment variables, backup/recovery, deployment, free-tier limits, and demonstration accounts.
 - [ ] Invite the professor and prepare a repeatable demonstration of documents, indexes, filtering, aggregation, WebSockets, images, and administrative roles.
 - [ ] Demonstrate to Professor Enke, then submit through Blackboard as instructed.
 
-## Deferred
-
-General communities, Experience posts, grade storage, Home feed, presence, notification inboxes/emails, cross-course unread counters, Focus, split-pane reading, command palette, username changes, post-version history, configurable channels, student-created courses, imports, voting, reputation, fuzzy search, autocomplete, and MFA. Google login remains undecided.
-
-## Session reporting
-
-Report what changed, validation performed, what is usable, and remaining blockers. Distinguish plans, mockups, and unverified integrations from implemented behavior.
