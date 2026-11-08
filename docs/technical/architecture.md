@@ -37,7 +37,7 @@ Authentication uses the existing Clerk request middleware; actor identity and ro
 | `DELETE /api/courses/{courseId}/following` | Admitted user | JSON `{}`; returns `{ isFollowed: false }` |
 | `GET /api/following` | Admitted user | The caller's followed courses, most recent first |
 | `GET /api/admin/catalog/courses` | Active administrator | The whole catalog with institution names, bounded, with `hasMoreCourses` |
-| `POST /api/admin/catalog/demo-data` | Active administrator | JSON `{}`; loads the fictional demo catalog and returns how many institutions and courses were added |
+| `POST /api/admin/catalog/demo-data` | Active administrator | JSON `{}`; loads the demo catalog and returns how many institutions and courses were added |
 
 Following never reads or writes academic history. Opening a course page records it as the user's last visited course, and `/` resumes it after sign-in when it still exists.
 

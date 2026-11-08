@@ -16,8 +16,8 @@
 	</form>
 </div>
 <p class="mt-2 text-sm text-slate-600">
-	The demo catalog adds fictional institutions and courses. Entries that already exist are left
-	unchanged, so it's safe to load again.
+	The demo catalog adds Alfred State College and two fictional schools, with their courses. Entries
+	that already exist are left unchanged, so it's safe to load again.
 </p>
 {#if form?.demoCatalogLoad}
 	<p class="mt-4 text-sm" role="status">
