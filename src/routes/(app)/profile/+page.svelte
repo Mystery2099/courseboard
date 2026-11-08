@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { SignOutButton, UserButton } from 'svelte-clerk';
+	import { SignOutButton, UserButton, useClerkContext } from 'svelte-clerk';
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
+
+	const clerkContext = useClerkContext();
+	const imageUrl = $derived(clerkContext.user?.hasImage ? clerkContext.user.imageUrl : null);
 
 	let isEditingDisplayName = $state(false);
 	let isSaving = $state(false);
@@ -14,7 +17,12 @@
 
 <main class="mx-auto max-w-3xl px-4 py-8">
 	<div class="flex items-center gap-4">
-		<UserAvatar username={data.profile.username} displayName={data.profile.displayName} size={72} />
+		<UserAvatar
+			username={data.profile.username}
+			displayName={data.profile.displayName}
+			{imageUrl}
+			size={72}
+		/>
 		<div class="min-w-0">
 			<h1 class="truncate text-3xl font-semibold">{data.profile.displayName}</h1>
 			<p class="text-slate-600">
@@ -87,7 +95,10 @@
 
 	<section class="mt-4 rounded-[20px] border bg-white p-4">
 		<h2 class="text-lg font-semibold">Account</h2>
-		<p class="mt-2 text-sm text-slate-600">Email, password, and sign-in settings.</p>
+		<p class="mt-2 text-sm text-slate-600">
+			Profile photo, email, password, and sign-in settings. Open the account menu and choose Manage
+			account.
+		</p>
 		<div class="mt-3 flex items-center gap-4">
 			<UserButton />
 			<SignOutButton class="rounded-full border px-4 py-1.5" />

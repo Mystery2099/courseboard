@@ -20,7 +20,7 @@
 		isExploreCurrent: boolean;
 		isProfileCurrent: boolean;
 		isAdministrator: boolean;
-		profile: { username: string; displayName: string };
+		profile: { username: string; displayName: string; imageUrl: string | null };
 	} = $props();
 </script>
 
@@ -86,7 +86,11 @@
 			aria-current={isProfileCurrent ? 'page' : undefined}
 			class={['rounded-full', isProfileCurrent && 'ring-3 ring-blue-700 ring-offset-2']}
 		>
-			<UserAvatar username={profile.username} displayName={profile.displayName} />
+			<UserAvatar
+				username={profile.username}
+				displayName={profile.displayName}
+				imageUrl={profile.imageUrl}
+			/>
 		</a>
 	</nav>
 </Tooltip.Provider>
