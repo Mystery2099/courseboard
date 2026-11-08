@@ -17,14 +17,14 @@ Embedding can be useful when the data is small, bounded, and really owned by one
 | `courses` | `_id`, institutionId, code, normalizedCode, title, description, spaceId | Don't identify courses by code alone |
 | `spaces` | `_id`, courseId | One canonical space per course, created in the same transaction as the course, which stores its `spaceId`. Routes use the course id, so there's no slug; views are fixed, and general communities are deferred |
 | `memberships` | `_id`, userId, spaceId, courseId, followedAt | Following a course; independent of academic history. `courseId` is copied from the space so the followed-course list joins courses directly |
-| `academicHistories` | `_id`, userId, courseId, status, term, visibility, privateNote | Separate collection or embedded in `users`; see D16 below. Grades are deferred |
+| `academicHistories` | `_id`, userId, courseId, status, term, visibility, privateNote | Its own collection, not embedded in `users`; see [below](#why-academic-history-has-its-own-collection). `privateNote` is only ever returned to the owner. Grades are deferred |
 | `posts` | `_id`, spaceId, courseId, kind (`question`/`discussion`/`review`), authorId, title, bodyMarkdown, optional reviewData, imageIds, state, timestamps | Review structure belongs with review posts; one review per user per course |
 | `replies` | `_id`, postId, optional parentReplyId, authorId, bodyMarkdown, timestamps | One-level nesting at most |
 | `reports` | `_id`, reporterId, target, spaceId, reason, state, actions | Must support space-scoped moderation |
 | `moderatorAssignments` | `_id`, spaceId, userId, assignedBy | Separate global admins from space moderators |
 | `images` | `_id`, uploaderId, postId, binary data, MIME type, byte size, dimensions, alt text, state | Binaries stay in their own collection so post queries never load them |
 
-These are starting points; I don't plan on creating all eleven right away. We still need to decide whether histories should be embedded (D16) and whether moderator assignments deserve a separate collection. Invitations, profanity terms, and moderation audit records will also need small collections.
+These are starting points; I don't plan on creating all eleven right away. We still need to decide whether moderator assignments deserve a separate collection. Invitations, profanity terms, and moderation audit records will also need small collections.
 
 ## Indexes worth considering
 
@@ -33,7 +33,7 @@ These are starting points; I don't plan on creating all eleven right away. We st
 - **Courses (built):** unique `(institutionId, normalizedCode)`, which also serves browsing one school's courses in code order with a code cursor. Revisit if campuses or cross-listed courses need separate entries.
 - **Spaces (built):** unique `courseId`.
 - **Memberships (built):** unique `(userId, spaceId)` for following and follow-state checks, plus `(userId, followedAt)` for the followed-course list, which joins courses and institutions with `$lookup`.
-- **Histories:** `(userId, term)` for an owner's history, with a visibility-aware index only if public filtering actually needs it; repeated attempts complicate uniqueness.
+- **Histories:** `(userId, courseId)` for an owner's history and review-eligibility checks, and `(courseId, visibility)` for people filtering if query plans show it's needed. Repeated attempts mean neither is unique.
 - **Posts:** indexes supporting `(spaceId, kind, lastActivityAt)` and course review queries such as `(courseId, kind, createdAt)`. A unique partial index on `(courseId, authorId)` where `kind = review` enforces one review per user per course.
 - **Replies:** `(postId, createdAt)` plus parent lookup if needed.
 - **Reports:** `(spaceId, state, createdAt)` for moderation queues.
@@ -57,9 +57,9 @@ I don't want every imaginable index created 'just in case.' Seed believable fict
 
 A useful lab demonstration would match visible, nonremoved posts where `kind = review` and `courseId` matches the chosen course, then group those reviews to calculate the review count, average workload (1 to 5), and percentage of people who said they'd take it again (yes/no). If a field can ever be missing, exclude it from that average and show the actual denominator rather than pretending everybody answered. **Private history and notes must never be involved.**
 
-## Embedding academic history
+## Why academic history has its own collection
 
-My approved proposal to Professor Enke said I'd like to explore **embedded documents for academic histories**. The current model leans toward a separate `academicHistories` collection. This is decision D16, and I need to be able to explain whichever one I choose.
+My approved proposal to Professor Enke said I'd like to explore **embedded documents for academic histories**. I compared that with a separate `academicHistories` collection and chose the separate collection (November 8, 2026). This is the comparison I'll walk through in the demonstration.
 
 | | Embedded array in `users` | Separate `academicHistories` collection |
 | --- | --- | --- |
@@ -71,7 +71,9 @@ My approved proposal to Professor Enke said I'd like to explore **embedded docum
 | Editing one entry | Array filters or positional updates | Ordinary single-document updates |
 | Risk | A careless `find` on `users` returns private notes | Less risk of returning private data by accident |
 
-Embedding demonstrates a more document-oriented design and keeps the proposal's promise. The risk is manageable if every read of another user's profile goes through one projection or pipeline that strips private entries and notes. Decide this before Stage 1, and record the choice and reasoning in the decision register.
+Embedding would have kept the proposal's promise and made an owner's history one read. What decided it is that `users` is read on every authenticated request and by admin user lists. With embedded entries, each of those queries would have to project out private notes, and forgetting once would leak them. A separate collection keeps private data out of every query that doesn't ask for it. Entries also behave like independent records: each has its own visibility, a course can have several attempts, reviews check eligibility against them, and account deletion removes them without touching the profile.
+
+The demonstration still shows embedding where it fits: review details embedded in review posts, and a user's institutions on their profile. Both are small and owned by one document.
 
 ## Edge cases we shouldn't ignore
 
