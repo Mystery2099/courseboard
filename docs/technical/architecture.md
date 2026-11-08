@@ -59,8 +59,11 @@ An admitted account without a profile is sent to onboarding by every web page. O
 | `PUT /api/history/{entryId}` | Owner | JSON `{ status, term, visibility, privateNote }`; replaces those fields. The course can't change |
 | `DELETE /api/history/{entryId}` | Owner | No body; returns 204 |
 | `GET /api/users/{username}/history` | Admitted user | Only that user's visible entries: course, status, and term. 404 for an unknown username |
+| `GET /api/users/{username}` | Admitted user | That user's display name, username, Clerk photo URL or null, primary institution, and `isOwnProfile`. Never email or role. 404 for an unknown username |
 
 `status` is `planning`, `taking`, or `took`; `term` is `{ season, year }` with `season` one of `winter`, `spring`, `summer`, `fall`, and only Planning may send `null`. Another user's entry answers 404 exactly like a missing one. Someone with only private entries looks the same as someone with none, and administrators get no exception.
+
+Profile pages for other students live at `/users/{username}`. They show the person's visible entries grouped by term and school. Schools other than the primary institution appear only through visible entries. Opening your own page shows it as others see it, with a link back to editing. Photos are read from Clerk on the server for each view, and initials are shown if Clerk can't be reached. Hiding the primary institution isn't built yet.
 
 Following never reads or writes academic history. After a course page renders, the browser records it as the user's last visited course; it isn't recorded during the server load, so hover preloading doesn't count as a visit. `/` resumes that course after sign-in when it still exists.
 
