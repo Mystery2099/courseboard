@@ -10,7 +10,8 @@ const student: ApplicationUser = {
 	id: '000000000000000000000001',
 	clerkUserId: 'student',
 	role: 'member',
-	status: 'active'
+	status: 'active',
+	profile: null
 };
 const courseId = '000000000000000000000002';
 const spaceId = new ObjectId('000000000000000000000003');

@@ -12,7 +12,8 @@ const administrator: ApplicationUser = {
 	id: '000000000000000000000001',
 	clerkUserId: 'administrator',
 	role: 'administrator',
-	status: 'active'
+	status: 'active',
+	profile: null
 };
 
 function requestEvent<Event extends RequestEvent = Parameters<typeof GET>[0]>(

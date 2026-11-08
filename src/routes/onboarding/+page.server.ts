@@ -12,6 +12,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return courseCatalogService.listInstitutions(user);
 };
 
+type OnboardingFieldErrors = Partial<
+	Record<'primaryInstitutionId' | 'username' | 'displayName', string>
+>;
+
+function rejectOnboarding(
+	status: number,
+	submitted: Record<keyof OnboardingFieldErrors, string>,
+	errors: OnboardingFieldErrors
+) {
+	return fail(status, { submitted, errors });
+}
+
 export const actions: Actions = {
 	default: async ({ locals, request }) => {
 		const user = AccessGuard.requireAdmittedUser(locals);
@@ -24,24 +36,20 @@ export const actions: Actions = {
 		const parsed = completeOnboardingSchema.safeParse(submitted);
 		if (!parsed.success) {
 			const fieldErrors = z.flattenError(parsed.error).fieldErrors;
-			return fail(400, {
-				submitted,
-				errors: {
-					primaryInstitutionId: fieldErrors.primaryInstitutionId && 'Choose your school.',
-					username: fieldErrors.username?.[0],
-					displayName: fieldErrors.displayName?.[0]
-				}
+			return rejectOnboarding(400, submitted, {
+				primaryInstitutionId: fieldErrors.primaryInstitutionId && 'Choose your school.',
+				username: fieldErrors.username?.[0],
+				displayName: fieldErrors.displayName?.[0]
 			});
 		}
 
 		const result = await userProfileService.completeOnboarding(parsed.data, user);
 		if (result.kind === 'username-unavailable') {
-			return fail(409, { submitted, errors: { username: 'That username is taken.' } });
+			return rejectOnboarding(409, submitted, { username: 'That username is taken.' });
 		}
 		if (result.kind === 'institution-not-found') {
-			return fail(404, {
-				submitted,
-				errors: { primaryInstitutionId: 'That school is no longer available. Choose another.' }
+			return rejectOnboarding(404, submitted, {
+				primaryInstitutionId: 'That school is no longer available. Choose another.'
 			});
 		}
 		redirect(303, '/explore');
