@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import Check from 'lucide-svelte/icons/check';
+	import HistoryEntryEditorDialog from '#lib/components/history/HistoryEntryEditorDialog.svelte';
 	import {
 		COURSE_CHANNELS,
 		COURSE_CHANNEL_LABELS,
@@ -12,6 +13,15 @@
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
+
+	let isHistoryEditorOpen = $state(false);
+	let wasAddedToHistory = $state(false);
+	const historyCourse = $derived({
+		id: data.course.id,
+		code: data.course.code,
+		title: data.course.title,
+		institution: data.course.institution
+	});
 
 	const currentChannel = $derived(findCourseChannel(page.route.id));
 
@@ -60,19 +70,34 @@
 			</p>
 			<h1 class="mt-1 text-3xl font-semibold">{data.course.title}</h1>
 			<p class="mt-2 text-slate-700">{data.course.description}</p>
-			<form method="POST" action={followActionUrl} use:enhance class="mt-4">
+			<div class="mt-4 flex flex-wrap gap-2">
+				<form method="POST" action={followActionUrl} use:enhance>
+					<button
+						type="submit"
+						class={[
+							'inline-flex items-center gap-1 rounded-full px-5 py-2 font-semibold',
+							data.course.isFollowed ? 'bg-indigo-100' : 'bg-blue-700 text-white'
+						]}
+					>
+						{#if data.course.isFollowed}<Check size={18} /> Following{:else}Follow{/if}
+					</button>
+				</form>
 				<button
-					type="submit"
-					class={[
-						'inline-flex items-center gap-1 rounded-full px-5 py-2 font-semibold',
-						data.course.isFollowed ? 'bg-indigo-100' : 'bg-blue-700 text-white'
-					]}
+					type="button"
+					class="rounded-full border px-5 py-2"
+					onclick={() => {
+						wasAddedToHistory = false;
+						isHistoryEditorOpen = true;
+					}}>Add to my history</button
 				>
-					{#if data.course.isFollowed}<Check size={18} /> Following{:else}Follow{/if}
-				</button>
-			</form>
+			</div>
 			{#if page.form?.followingError}
 				<p class="mt-2 text-sm" role="alert">{page.form.followingError}</p>
+			{/if}
+			{#if wasAddedToHistory}
+				<p class="mt-2 text-sm text-slate-600" role="status">
+					Added to your history. Following is separate and hasn't changed.
+				</p>
 			{/if}
 			<nav aria-label="Channels" class="mt-4 flex gap-2 overflow-x-auto desktop:hidden">
 				{#each COURSE_CHANNELS as channel (channel)}
@@ -92,3 +117,9 @@
 		</main>
 	</div>
 </div>
+
+<HistoryEntryEditorDialog
+	bind:open={isHistoryEditorOpen}
+	presetCourse={historyCourse}
+	onSaved={() => (wasAddedToHistory = true)}
+/>

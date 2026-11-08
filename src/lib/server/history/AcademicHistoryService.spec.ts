@@ -39,9 +39,11 @@ function createService() {
 	vi.spyOn(courses, 'findById').mockResolvedValue({
 		_id: courseId,
 		code: course.code,
+		normalizedCode: 'CISY8503',
 		title: course.title,
 		institutionId: course.institutionId,
-		description: ''
+		description: '',
+		spaceId: new ObjectId('000000000000000000000006')
 	});
 	vi.spyOn(entries, 'countByUser').mockResolvedValue(0);
 	vi.spyOn(entries, 'findOwnEntry').mockResolvedValue(storedEntry);
@@ -126,9 +128,11 @@ describe('academic history service', () => {
 		const { service, entries, users } = createService();
 		const ownerId = new ObjectId('000000000000000000000005');
 		vi.spyOn(users, 'findIdByUsername').mockResolvedValue(ownerId);
-		const findVisible = vi.spyOn(entries, 'findVisibleEntries').mockResolvedValue([
-			{ _id: entryId, course, status: 'took', term: { season: 'spring', year: 2026 } }
-		]);
+		const findVisible = vi
+			.spyOn(entries, 'findVisibleEntries')
+			.mockResolvedValue([
+				{ _id: entryId, course, status: 'took', term: { season: 'spring', year: 2026 } }
+			]);
 
 		const history = await service.listVisibleEntries('Alex_M', student);
 

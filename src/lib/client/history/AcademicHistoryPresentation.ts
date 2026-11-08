@@ -75,7 +75,9 @@ export function groupHistoryEntries<Entry extends DisplayedHistoryEntry>(
 		group.entries.push(entry);
 	}
 	return [...groups.values()]
-		.sort((first, second) => second.order - first.order || first.heading.localeCompare(second.heading))
+		.sort(
+			(first, second) => second.order - first.order || first.heading.localeCompare(second.heading)
+		)
 		.map(({ key, heading, entries: groupEntries }) => ({
 			key,
 			heading,

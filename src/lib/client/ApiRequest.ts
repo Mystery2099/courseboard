@@ -47,7 +47,11 @@ export class ApiRequest {
 			const { error } = (await response.json()) as ApiErrorResponse;
 			return new ApiRequestError(response.status, error.code, error.message);
 		} catch {
-			return new ApiRequestError(response.status, 'unavailable', 'Something went wrong. Try again.');
+			return new ApiRequestError(
+				response.status,
+				'unavailable',
+				'Something went wrong. Try again.'
+			);
 		}
 	}
 }

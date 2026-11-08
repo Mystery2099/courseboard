@@ -42,10 +42,11 @@
 	const queryClient = useQueryClient();
 	const initial = untrack(() => {
 		const term = editedEntry ? editedEntry.term : currentTerm();
+		const season: TermSeason | '' = term?.season ?? '';
 		return {
 			course: editedEntry?.course ?? presetCourse,
 			status: editedEntry?.status ?? 'taking',
-			season: term?.season ?? '',
+			season,
 			year: term?.year ?? currentTerm().year,
 			visibility: editedEntry?.visibility ?? 'private',
 			privateNote: editedEntry?.privateNote ?? ''
@@ -228,8 +229,7 @@
 			class="min-h-20 rounded-2xl border-slate-300 px-4 py-2"
 			bind:value={privateNote}
 			maxlength={PRIVATE_NOTE_MAX_LENGTH}
-			aria-invalid={fieldErrors.privateNote ? 'true' : undefined}
-		></textarea>
+			aria-invalid={fieldErrors.privateNote ? 'true' : undefined}></textarea>
 		{#if fieldErrors.privateNote}
 			<p class="text-sm text-red-700" role="alert">{fieldErrors.privateNote}</p>
 		{/if}
