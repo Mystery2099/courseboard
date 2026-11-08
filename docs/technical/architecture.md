@@ -13,7 +13,7 @@ Confirmed November 7, 2026: one repository and one deployable application with c
 - Shared request/response types are fine; MongoDB documents and server internals stay on the server. Responses return deliberately chosen, privacy-aware fields rather than raw database records.
 - Socket authentication and subscriptions use the same permission checks. Changes are saved through HTTP first, then announced over the socket.
 
-**Current implementation:** `src/lib/server/` separates services, repositories, access policy, and persistence. Invitations are the first feature built this way: listing, creation, revocation, and redemption have HTTP endpoints that use the same admission service as the web pages. HTTP and realtime share the same account-access checks, and `src/lib/contracts/InvitationContract.ts` defines the invitation request and response types the client sees. Dates are sent as ISO strings. Other APIs will be added along with their features.
+**Current implementation:** `src/lib/server/` separates services, repositories, access policy, and persistence. Invitations were the first feature built this way, followed by the course catalog and following. Both have HTTP endpoints that use the same services as the web pages. HTTP and realtime share the same account-access checks, and `src/lib/contracts/` defines the request and response types the client sees. Dates are sent as ISO strings. Other APIs will be added along with their features.
 
 ### Invitation HTTP API
 
@@ -24,9 +24,25 @@ Confirmed November 7, 2026: one repository and one deployable application with c
 | `POST /api/invitations/{invitationId}/revoke` | Active administrator | JSON `{}`; returns `{ revoked: true }`, or 409 when unavailable |
 | `POST /api/invitations/redeem` | Signed-in identity; admission not required | JSON `{ token }`; returns `{ kind: 'admitted' }` or `{ kind: 'already-admitted' }` |
 
-Authentication uses the existing Clerk request middleware; actor identity and roles are never taken from request bodies. Writes require `application/json` and reject a supplied Origin that differs from the request origin. No cross-origin browser API access is enabled.
+Authentication uses the existing Clerk request middleware; actor identity and roles are never taken from request bodies. Writes reject a supplied Origin that differs from the request origin, and writes with a body require `application/json`; bodyless `DELETE` is safe because HTML forms can't send it and cross-origin fetches need a preflight. No cross-origin browser API access is enabled.
 
-Errors use `{ error: { code, message } }`: 400 for invalid input/JSON, 401 for missing identity, 403 for denied access or redemption email mismatch, 409 for revocation conflicts, 410 for unavailable redemption, 415 for non-JSON writes, and a generic 500 for unexpected failures. Responses use `Cache-Control: no-store`, including the one-time creation token. Creation returns the token rather than a host-specific URL; the web page builds the invitation link.
+### Course catalog HTTP API
+
+| Method and path | Access | Result |
+| --- | --- | --- |
+| `GET /api/institutions` | Admitted user | Institutions ordered by name |
+| `GET /api/courses?institutionId=…&after=…` | Admitted user | One page of an institution's courses in code order, each with `isFollowed`; pass `nextCursor` as `after` for the next page |
+| `GET /api/courses/{courseId}` | Admitted user | Course detail with its institution and `isFollowed` |
+| `PUT /api/courses/{courseId}/following` | Admitted user | JSON `{}`; follows the course and returns `{ isFollowed: true }`. Repeating it changes nothing |
+| `DELETE /api/courses/{courseId}/following` | Admitted user | No body; returns `{ isFollowed: false }` |
+| `GET /api/following` | Admitted user | The caller's followed courses, most recent first |
+| `PUT /api/courses/{courseId}/visit` | Admitted user | JSON `{}`; records the course as the caller's last visited one and returns `{ recorded: true }` |
+| `GET /api/admin/catalog/courses` | Active administrator | The whole catalog with institution names, bounded, with `hasMoreCourses` |
+| `POST /api/admin/catalog/demo-data` | Active administrator | JSON `{}`; loads the demo catalog and returns how many institutions and courses were added |
+
+Following never reads or writes academic history. After a course page renders, the browser records it as the user's last visited course; it isn't recorded during the server load, so hover preloading doesn't count as a visit. `/` resumes that course after sign-in when it still exists.
+
+Errors use `{ error: { code, message } }`: 400 for invalid input/JSON, 401 for missing identity, 403 for denied access or redemption email mismatch, 404 for an unknown course or institution, 409 for revocation conflicts, 410 for unavailable redemption, 415 for non-JSON writes, and a generic 500 for unexpected failures. Responses use `Cache-Control: no-store`, including the one-time creation token. Creation returns the token rather than a host-specific URL; the web page builds the invitation link.
 
 ## Deployment context
 

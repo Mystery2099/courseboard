@@ -27,3 +27,8 @@ test-results
 # Agent config
 AGENTS.md
 CLAUDE.md
+.junie/skills/context-search/SKILL.md
+.claude/settings.json
+.codex/agents/context-explorer.toml
+.codex/config.toml
+.codex/rules/jbcontext.rules

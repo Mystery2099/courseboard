@@ -65,6 +65,18 @@ export class ApplicationUserRepository {
 		);
 	}
 
+	async updateLastVisitedCourse(userId: ObjectId, courseId: ObjectId): Promise<void> {
+		await this.collection().updateOne({ _id: userId }, { $set: { lastVisitedCourseId: courseId } });
+	}
+
+	async findLastVisitedCourseId(userId: ObjectId): Promise<ObjectId | null> {
+		const document = await this.collection().findOne(
+			{ _id: userId },
+			{ projection: { lastVisitedCourseId: 1 } }
+		);
+		return document?.lastVisitedCourseId ?? null;
+	}
+
 	private static toApplicationUser(
 		document: Pick<ApplicationUserDocument, '_id' | 'clerkUserId' | 'role' | 'status'>
 	): ApplicationUser {

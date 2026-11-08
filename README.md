@@ -3,8 +3,8 @@
 **Course:** CISY 8503, Applied Database Management  
 **Assignment:** NoSQL Database Lab 1  
 **Name:** Still a working title  
-**Status:** Planning and design. Professor Enke approved the proposal on November 4, 2026. The application hasn't been implemented yet.  
-**Last documentation review:** November 5, 2026
+**Status:** Early implementation. Professor Enke approved the proposal on November 4, 2026. Invitations, course discovery, and following work; the rest of the first build is still planned.  
+**Last documentation review:** November 8, 2026
 
 For my NoSQL lab, I'm building a course-focused discussion platform where students can keep track of their academic histories, ask questions, discuss classes, and share structured reviews. Discord inspired some of the navigation, but the academic information should stay useful outside an active conversation.
 
@@ -56,7 +56,7 @@ I still need to check exact versions, the production runtime, and how everything
 
 Everything lives in one repository and deploys as one application, but with a clear line between client and server. Core reads and writes go through an HTTP API backed by application services and repositories. The server owns business rules, permissions, validation, and database access; the client only handles presentation and interaction. Web pages reuse the same services, and server-rendered pages call them directly instead of making HTTP requests to their own API.
 
-That way a mobile or desktop client could use the same API later, although only the web client is part of the assignment. I don't need a separate backend framework, microservices, or multiple packages for this. Invitations are the first feature built this way. See the [architecture](docs/technical/architecture.md).
+That way a mobile or desktop client could use the same API later, although only the web client is part of the assignment. I don't need a separate backend framework, microservices, or multiple packages for this. Invitations and the course catalog are built this way. See the [architecture](docs/technical/architecture.md).
 
 ## Priorities
 
@@ -66,7 +66,7 @@ I care about low memory usage, fast transitions and loading, and perceived respo
 
 Read the [product spec](docs/product/product-spec.md) and [decision register](docs/planning/decision-register.md) first. The spec describes how the app should behave, and the register records why. The [roadmap](docs/implementation/roadmap-and-acceptance.md) turns those decisions into build stages and acceptance checks.
 
-The repository contains planning documents, assignment materials, design exports, and an application scaffold. The app isn't a working product yet: it sets up configuration, the MongoDB connection, Clerk, and Socket.IO, and invitations are the only feature so far.
+The repository contains planning documents, assignment materials, design exports, and an application scaffold. The app isn't a working product yet. Besides configuration, the MongoDB connection, Clerk, and Socket.IO, it has invitations, course discovery and following, and last-course navigation. An administrator loads the demo catalog, centered on Alfred State College, from **Admin → Course catalog**; it's safe to load repeatedly.
 
 To run it locally, copy `.env.example` to `.env`, fill in Clerk and MongoDB values, then run `pnpm install` and `pnpm dev`. For production, use `pnpm build` and `pnpm start`; `render.yaml` describes the Render service. GitHub Actions runs a dependency audit, linting, type checks, server tests, and the build on every pull request and push to `master`; Render deploys `master` only after those checks pass. `GET /api/health` reports whether MongoDB is reachable. The first implementation step is to prove the hosted combination of Clerk, SvelteKit, Socket.IO, Atlas, and one protected image upload before building dependent screens.
 

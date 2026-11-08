@@ -12,11 +12,11 @@ Embedding can be useful when the data is small, bounded, and really owned by one
 
 | Collection | Likely fields | What to watch |
 | --- | --- | --- |
-| `users` | `_id`, clerkUserId, display name, username, primaryInstitutionId, institutions, settings | Application profile linked to Clerk; credentials stay in Clerk |
+| `users` | `_id`, clerkUserId, display name, username, primaryInstitutionId, institutions, settings, lastVisitedCourseId | Application profile linked to Clerk; credentials stay in Clerk. `lastVisitedCourseId` lets sign-in resume the last course |
 | `institutions` | `_id`, name, normalized name, optional identifiers | Used for course identity and discovery |
-| `courses` | `_id`, institutionId, code, normalizedCode, title, metadata | Don't identify courses by code alone |
-| `spaces` | `_id`, courseId, slug, name | One canonical space per course, created with the course; views are fixed, and general communities are deferred |
-| `memberships` | `_id`, userId, spaceId, joinedAt | Following a course; independent of academic history |
+| `courses` | `_id`, institutionId, code, normalizedCode, title, description, spaceId | Don't identify courses by code alone |
+| `spaces` | `_id`, courseId | One canonical space per course, created in the same transaction as the course, which stores its `spaceId`. Routes use the course id, so there's no slug; views are fixed, and general communities are deferred |
+| `memberships` | `_id`, userId, spaceId, courseId, followedAt | Following a course; independent of academic history. `courseId` is copied from the space so the followed-course list joins courses directly |
 | `academicHistories` | `_id`, userId, courseId, status, term, visibility, privateNote | Separate collection or embedded in `users`; see D16 below. Grades are deferred |
 | `posts` | `_id`, spaceId, courseId, kind (`question`/`discussion`/`review`), authorId, title, bodyMarkdown, optional reviewData, imageIds, state, timestamps | Review structure belongs with review posts; one review per user per course |
 | `replies` | `_id`, postId, optional parentReplyId, authorId, bodyMarkdown, timestamps | One-level nesting at most |
@@ -29,10 +29,10 @@ These are starting points; I don't plan on creating all eleven right away. We st
 ## Indexes worth considering
 
 - **Users:** unique `clerkUserId` linking the application profile to Clerk, plus a unique normalized username if owned by the application. Clerk owns credentials and authentication email.
-- **Institutions:** a normalized unique name or official identifier, depending on the catalog source.
-- **Courses:** perhaps unique `(institutionId, normalizedCode)`, but only after checking how the catalog handles repeats, campuses, and cross-listed courses.
-- **Spaces:** uniqueness for canonical course spaces and appropriately scoped slugs.
-- **Memberships:** unique `(userId, spaceId)`.
+- **Institutions (built):** unique `normalizedName`.
+- **Courses (built):** unique `(institutionId, normalizedCode)`, which also serves browsing one school's courses in code order with a code cursor. Revisit if campuses or cross-listed courses need separate entries.
+- **Spaces (built):** unique `courseId`.
+- **Memberships (built):** unique `(userId, spaceId)` for following and follow-state checks, plus `(userId, followedAt)` for the followed-course list, which joins courses and institutions with `$lookup`.
 - **Histories:** `(userId, term)` for an owner's history, with a visibility-aware index only if public filtering actually needs it; repeated attempts complicate uniqueness.
 - **Posts:** indexes supporting `(spaceId, kind, lastActivityAt)` and course review queries such as `(courseId, kind, createdAt)`. A unique partial index on `(courseId, authorId)` where `kind = review` enforces one review per user per course.
 - **Replies:** `(postId, createdAt)` plus parent lookup if needed.

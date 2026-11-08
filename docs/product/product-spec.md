@@ -14,7 +14,7 @@ Onboarding requires username, display name, and primary institution. History and
 
 ## Courses and navigation
 
-Admins manage fictional institutions and courses. Each course belongs to an institution and automatically gets one canonical discussion space. Course codes alone are not globally unique. Defer student course creation, course requests, and catalog imports.
+Admins manage institutions and courses. Demo data centers on Alfred State College, alongside fictional schools; people and posts stay fictional. Each course belongs to an institution and automatically gets one canonical discussion space. Course codes alone are not globally unique. Defer student course creation, course requests, and catalog imports.
 
 Each course has Overview, Questions, Reviews, and Discussion. Overview combines activity from the other views and has no separate post type. Defer configurable channels and general communities.
 
@@ -118,6 +118,6 @@ Show same-account cached content while refreshing, with quiet refresh/error feed
 
 ## Hosting and design
 
-Host the app on Render Free and the database on Atlas Free, independently of my personal server. Keep Cloudflare for domain DNS. No payment method or overage billing. Use fictional demonstration data. Keep the hosted app usable for at least about one month, provisionally one month after grading, and document export/recovery and free-tier inactivity behavior.
+Host the app on Render Free and the database on Atlas Free, independently of my personal server. Keep Cloudflare for domain DNS. No payment method or overage billing. Use fictional demonstration people and content. Keep the hosted app usable for at least about one month, provisionally one month after grading, and document export/recovery and free-tier inactivity behavior.
 
 Build responsive, accessible core workflows and complete loading, error, empty, and permission states. Keep the Blueprint visual direction, including its documented light/dark themes and typography. Historical Home, Experience, presence, toolbar/preview, Focus, split-pane, and command-palette designs are deferred or superseded.
