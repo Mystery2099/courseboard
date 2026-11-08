@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { DropdownMenu } from 'bits-ui';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import CourseCodeTile from '#lib/components/CourseCodeTile.svelte';
 	import type { PageProps } from './$types';
@@ -18,24 +19,36 @@
 		<div class="mt-6 flex items-center justify-between gap-4">
 			<h2 class="text-xl font-semibold">Courses at {data.catalog.institution.name}</h2>
 			{#if data.institutions.length > 1}
-				<details class="relative shrink-0">
-					<summary class="cursor-pointer list-none rounded-full border px-4 py-1.5"
-						>Change ▾</summary
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger class="shrink-0 rounded-full border px-4 py-1.5"
+						>Change ▾</DropdownMenu.Trigger
 					>
-					<ul class="absolute right-0 z-10 mt-2 w-64 rounded-2xl border bg-white p-2 shadow-lg">
-						{#each data.institutions as institution (institution.id)}
-							<li>
-								<a
-									href="{resolve('/(app)/explore')}?{new URLSearchParams({
-										institutionId: institution.id
-									})}"
-									aria-current={institution.id === data.catalog.institution.id ? 'page' : undefined}
-									class="block rounded-xl px-3 py-2 hover:bg-slate-100">{institution.name}</a
-								>
-							</li>
-						{/each}
-					</ul>
-				</details>
+					<DropdownMenu.Portal>
+						<DropdownMenu.Content
+							align="end"
+							sideOffset={8}
+							class="z-10 w-64 rounded-2xl border bg-white p-2 shadow-lg"
+						>
+							{#each data.institutions as institution (institution.id)}
+								<DropdownMenu.Item>
+									{#snippet child({ props })}
+										<a
+											{...props}
+											href="{resolve('/(app)/explore')}?{new URLSearchParams({
+												institutionId: institution.id
+											})}"
+											aria-current={institution.id === data.catalog?.institution.id
+												? 'page'
+												: undefined}
+											class="block rounded-xl px-3 py-2 data-highlighted:bg-slate-100"
+											>{institution.name}</a
+										>
+									{/snippet}
+								</DropdownMenu.Item>
+							{/each}
+						</DropdownMenu.Content>
+					</DropdownMenu.Portal>
+				</DropdownMenu.Root>
 			{/if}
 		</div>
 

@@ -20,8 +20,8 @@
 
 ## Stage 1: finish one course workflow
 
-- [ ] Seed fictional institutions, courses, histories, roles, and content repeatably. Course creation automatically creates its canonical space.
-- [ ] Implement primary-institution onboarding, unique usernames, editable display names, course discovery, following, and last-course navigation.
+- [ ] Seed fictional institutions, courses, histories, roles, and content repeatably. Course creation automatically creates its canonical space. *Done for institutions and courses: an administrator loads the demo catalog from the admin page, and each course's space is created in the same transaction.*
+- [ ] Implement primary-institution onboarding, unique usernames, editable display names, course discovery, following, and last-course navigation. *Discovery, following, and last-course navigation are done; onboarding and profile fields remain.*
 - [ ] Implement private-by-default history entries, repeated attempts, season/year terms, private notes, and profile visibility.
 - [ ] Implement questions, discussions, one-level replies, accepted answers, and locked discussions.
 - [ ] Verify that membership, history, and content remain independent and unauthorized reads/writes fail on the server.
