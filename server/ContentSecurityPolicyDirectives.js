@@ -1,7 +1,7 @@
 const CLOUDFLARE_TURNSTILE_ORIGIN = 'https://challenges.cloudflare.com';
 const CLERK_IMAGE_ORIGIN = 'https://img.clerk.com';
 const CLERK_BOT_PROTECTION_SCRIPT_ORIGIN = 'https://cdn.protect.clerk.com';
-// Bot-protection probes use generated subdomains and several ports.
+// Bot protection probes and frames use generated subdomains and several ports.
 const CLERK_BOT_PROTECTION_PROBE_SOURCE = 'https://*.protect.clerk.com:*';
 
 /**
@@ -49,7 +49,7 @@ export function buildContentSecurityPolicyDirectives(clerkPublishableKey) {
 		'img-src': ['self', 'data:', CLERK_IMAGE_ORIGIN],
 		'style-src': ['self', 'unsafe-inline'],
 		'font-src': ['self'],
-		'frame-src': [CLOUDFLARE_TURNSTILE_ORIGIN],
+		'frame-src': [CLERK_BOT_PROTECTION_PROBE_SOURCE, CLOUDFLARE_TURNSTILE_ORIGIN],
 		'worker-src': ['self', 'blob:'],
 		'object-src': ['none'],
 		'base-uri': ['self'],

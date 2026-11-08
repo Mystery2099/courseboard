@@ -40,5 +40,5 @@ These come from Stage 0 of the roadmap. Each needs the deployed site and, where 
 ## Testing notes
 
 - **The CSP is fixed at build time.** It takes Clerk's Frontend API host from `PUBLIC_CLERK_PUBLISHABLE_KEY` during `pnpm build`, so changing Clerk keys needs a rebuild. Render rebuilds when environment variables change. CI builds with the placeholder key and logs a warning; that build is never deployed.
-- **Clerk needs extra CSP sources:** its Frontend API host, `cdn.protect.clerk.com` for the bot-protection script, `*.protect.clerk.com` on any port for its probes, `img.clerk.com`, and `challenges.cloudflare.com`. They're in [`server/ContentSecurityPolicyDirectives.js`](../../server/ContentSecurityPolicyDirectives.js).
+- **Clerk needs extra CSP sources:** its Frontend API host, `cdn.protect.clerk.com` for the bot-protection script, `*.protect.clerk.com` on any port for its probes and frames, `img.clerk.com`, and `challenges.cloudflare.com`. They're in [`server/ContentSecurityPolicyDirectives.js`](../../server/ContentSecurityPolicyDirectives.js).
 - **Running the production build over plain HTTP locally:** adapter-node assumes HTTPS unless `PROTOCOL_HEADER` names a header, so Clerk's handshake redirects to `https://localhost` and fails. Start with `PROTOCOL_HEADER=x-local-proto` and send `x-local-proto: http` on requests to localhost, or use `pnpm dev`.

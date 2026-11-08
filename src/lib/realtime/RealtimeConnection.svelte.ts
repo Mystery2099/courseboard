@@ -2,9 +2,9 @@ import { io, type Socket } from 'socket.io-client';
 
 export type RealtimeConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'rejected';
 
-/** Sent by the server while it is still starting; every other handshake error is final. */
+/** Sent by the server while it is still starting. */
 const SERVER_UNAVAILABLE_ERROR = 'unavailable';
-const UNAVAILABLE_RETRY_DELAY_MILLISECONDS = 5_000;
+const RETRY_DELAY_MILLISECONDS = 5_000;
 
 /**
  * The browser's authenticated Socket.IO connection. The Clerk session token is requested on every
@@ -16,14 +16,21 @@ export class RealtimeConnection {
 
 	private readonly socket: Socket;
 	private retryTimer: ReturnType<typeof setTimeout> | undefined;
+	private lastTokenRequestFailed = false;
 
 	constructor(sessionTokenProvider: () => Promise<string | null>) {
 		this.socket = io({
 			transports: ['websocket'],
 			auth: (provideCredentials) => {
 				sessionTokenProvider().then(
-					(token) => provideCredentials({ token }),
-					() => provideCredentials({ token: null })
+					(token) => {
+						this.lastTokenRequestFailed = false;
+						provideCredentials({ token });
+					},
+					() => {
+						this.lastTokenRequestFailed = true;
+						provideCredentials({ token: null });
+					}
 				);
 			}
 		});
@@ -43,12 +50,11 @@ export class RealtimeConnection {
 			this.status = 'disconnected';
 			return;
 		}
-		if (error.message === SERVER_UNAVAILABLE_ERROR) {
+		// The server denied the handshake. Retry only when the cause may be temporary; an invalid
+		// or unadmitted session stays rejected.
+		if (error.message === SERVER_UNAVAILABLE_ERROR || this.lastTokenRequestFailed) {
 			this.status = 'disconnected';
-			this.retryTimer = setTimeout(
-				() => this.socket.connect(),
-				UNAVAILABLE_RETRY_DELAY_MILLISECONDS
-			);
+			this.retryTimer = setTimeout(() => this.socket.connect(), RETRY_DELAY_MILLISECONDS);
 			return;
 		}
 		this.status = 'rejected';
