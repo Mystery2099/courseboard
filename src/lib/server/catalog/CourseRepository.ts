@@ -58,12 +58,16 @@ export class CourseRepository {
 		return course?.spaceId ?? null;
 	}
 
-	async existsByCode(institutionId: ObjectId, normalizedCode: string): Promise<boolean> {
+	async findIdByCode(
+		institutionId: ObjectId,
+		normalizedCode: string,
+		session: ClientSession
+	): Promise<ObjectId | null> {
 		const course = await this.collection().findOne(
 			{ institutionId, normalizedCode },
-			{ projection: { _id: 1 } }
+			{ projection: { _id: 1 }, session }
 		);
-		return course !== null;
+		return course?._id ?? null;
 	}
 
 	async insert(course: CourseDocument, session: ClientSession): Promise<void> {
