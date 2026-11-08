@@ -12,7 +12,7 @@ Embedding can be useful when the data is small, bounded, and really owned by one
 
 | Collection | Likely fields | What to watch |
 | --- | --- | --- |
-| `users` | `_id`, clerkUserId, display name, username, primaryInstitutionId, institutions, settings, lastVisitedCourseId | Application profile linked to Clerk; credentials stay in Clerk. `lastVisitedCourseId` lets sign-in resume the last course |
+| `users` | `_id`, clerkUserId, role, status, username, displayName, primaryInstitutionId, onboardedAt, lastVisitedCourseId | Application profile linked to Clerk; credentials stay in Clerk. Onboarding sets the username, display name, and primary institution together. `lastVisitedCourseId` lets sign-in resume the last course |
 | `institutions` | `_id`, name, normalized name, optional identifiers | Used for course identity and discovery |
 | `courses` | `_id`, institutionId, code, normalizedCode, title, description, spaceId | Don't identify courses by code alone |
 | `spaces` | `_id`, courseId | One canonical space per course, created in the same transaction as the course, which stores its `spaceId`. Routes use the course id, so there's no slug; views are fixed, and general communities are deferred |
@@ -28,7 +28,7 @@ These are starting points; I don't plan on creating all eleven right away. We st
 
 ## Indexes worth considering
 
-- **Users:** unique `clerkUserId` linking the application profile to Clerk, plus a unique normalized username if owned by the application. Clerk owns credentials and authentication email.
+- **Users (built):** unique `clerkUserId` linking the application profile to Clerk, and a unique `username`, stored lowercase. The username index is partial, covering only documents that have one, because accounts that haven't finished onboarding don't. Clerk owns credentials and authentication email.
 - **Institutions (built):** unique `normalizedName`.
 - **Courses (built):** unique `(institutionId, normalizedCode)`, which also serves browsing one school's courses in code order with a code cursor. Revisit if campuses or cross-listed courses need separate entries.
 - **Spaces (built):** unique `courseId`.

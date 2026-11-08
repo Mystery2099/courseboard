@@ -8,8 +8,7 @@ export type AccountStatus = 'active' | 'suspended';
 
 /**
  * An admitted application account, linked to its Clerk identity by `clerkUserId`. Credentials and
- * email addresses stay in Clerk. Onboarding adds profile fields (username, display name, primary
- * institution) in Stage 1.
+ * email addresses stay in Clerk. Profile fields are absent until onboarding sets them together.
  */
 export interface ApplicationUserDocument {
 	_id: ObjectId;
@@ -19,8 +18,19 @@ export interface ApplicationUserDocument {
 	/** Null for the bootstrap administrator, who is admitted without an invitation. */
 	admittedByInvitationId: ObjectId | null;
 	admittedAt: Date;
+	/** Lowercase and unique among onboarded users. Changing it is deferred. */
+	username?: string;
+	displayName?: string;
+	primaryInstitutionId?: ObjectId;
+	onboardedAt?: Date;
 	/** The course page opened most recently, resumed after sign-in. Absent until the first visit. */
 	lastVisitedCourseId?: ObjectId;
+}
+
+export interface ApplicationUserProfile {
+	username: string;
+	displayName: string;
+	primaryInstitutionId: string;
 }
 
 /** The fields request handling needs about the current user. */
@@ -29,4 +39,6 @@ export interface ApplicationUser {
 	clerkUserId: string;
 	role: UserRole;
 	status: AccountStatus;
+	/** Null until onboarding is complete. */
+	profile: ApplicationUserProfile | null;
 }

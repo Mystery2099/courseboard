@@ -13,7 +13,7 @@ Confirmed November 7, 2026: one repository and one deployable application with c
 - Shared request/response types are fine; MongoDB documents and server internals stay on the server. Responses return deliberately chosen, privacy-aware fields rather than raw database records.
 - Socket authentication and subscriptions use the same permission checks. Changes are saved through HTTP first, then announced over the socket.
 
-**Current implementation:** `src/lib/server/` separates services, repositories, access policy, and persistence. Invitations were the first feature built this way, followed by the course catalog and following. Both have HTTP endpoints that use the same services as the web pages. HTTP and realtime share the same account-access checks, and `src/lib/contracts/` defines the request and response types the client sees. Dates are sent as ISO strings. Other APIs will be added along with their features.
+**Current implementation:** `src/lib/server/` separates services, repositories, access policy, and persistence. Invitations were the first feature built this way, followed by the course catalog and following, then onboarding and profiles. Each has HTTP endpoints that use the same services as the web pages. HTTP and realtime share the same account-access checks, and `src/lib/contracts/` defines the request and response types the client sees. Dates are sent as ISO strings. Other APIs will be added along with their features.
 
 ### Invitation HTTP API
 
@@ -25,6 +25,16 @@ Confirmed November 7, 2026: one repository and one deployable application with c
 | `POST /api/invitations/redeem` | Signed-in identity; admission not required | JSON `{ token }`; returns `{ kind: 'admitted' }` or `{ kind: 'already-admitted' }` |
 
 Authentication uses the existing Clerk request middleware; actor identity and roles are never taken from request bodies. Writes reject a supplied Origin that differs from the request origin, and writes with a body require `application/json`; bodyless `DELETE` is safe because HTML forms can't send it and cross-origin fetches need a preflight. No cross-origin browser API access is enabled.
+
+### Profile HTTP API
+
+| Method and path | Access | Result |
+| --- | --- | --- |
+| `GET /api/profile` | Admitted user | The caller's username, display name, and primary institution, or 409 `onboarding-required` |
+| `POST /api/profile` | Admitted user | JSON `{ primaryInstitutionId, username, displayName }`; completes onboarding with status 201. 409 when the username is taken or the profile already exists, 404 for an unknown institution |
+| `PATCH /api/profile` | Admitted user with a profile | JSON `{ displayName }`; returns the updated profile. The username can't be changed |
+
+An admitted account without a profile is sent to onboarding by every web page. On a fresh database there are no schools to choose, so onboarding offers administrators the demo catalog load that otherwise lives under **Admin → Course catalog**. Usernames are lowercase, unique, and can't be changed; a few names that look like staff or system accounts are reserved.
 
 ### Course catalog HTTP API
 

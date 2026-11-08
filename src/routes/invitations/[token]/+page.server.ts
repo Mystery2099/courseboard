@@ -12,7 +12,7 @@ function parseToken(rawToken: string): string {
 
 export const load: PageServerLoad = ({ locals, params }) => {
 	parseToken(params.token);
-	if (locals.currentUser) redirect(303, '/explore');
+	if (locals.currentUser) redirect(303, '/');
 	return { isSignedIn: locals.auth().userId !== null };
 };
 
@@ -29,7 +29,7 @@ export const actions: Actions = {
 				throw cause;
 			});
 		if (result.kind === 'admitted' || result.kind === 'already-admitted') {
-			redirect(303, '/explore');
+			redirect(303, '/');
 		}
 		if (result.kind === 'email-mismatch') {
 			return fail(403, {

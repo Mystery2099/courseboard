@@ -11,7 +11,8 @@ const administrator: ApplicationUser = {
 	id: '000000000000000000000001',
 	clerkUserId: 'administrator',
 	role: 'administrator',
-	status: 'active'
+	status: 'active',
+	profile: null
 };
 
 afterEach(() => vi.restoreAllMocks());

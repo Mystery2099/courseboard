@@ -3,20 +3,24 @@
 	import { Tooltip } from 'bits-ui';
 	import Compass from 'lucide-svelte/icons/compass';
 	import Shield from 'lucide-svelte/icons/shield';
-	import { UserButton } from 'svelte-clerk';
 	import type { FollowedCourseResponse } from '#lib/contracts/CourseFollowingContract.ts';
 	import CourseCodeTile from './CourseCodeTile.svelte';
+	import UserAvatar from './UserAvatar.svelte';
 
 	let {
 		followedCourses,
 		currentCourseId,
 		isExploreCurrent,
-		isAdministrator
+		isProfileCurrent,
+		isAdministrator,
+		profile
 	}: {
 		followedCourses: FollowedCourseResponse[];
 		currentCourseId: string | null;
 		isExploreCurrent: boolean;
+		isProfileCurrent: boolean;
 		isAdministrator: boolean;
+		profile: { username: string; displayName: string };
 	} = $props();
 </script>
 
@@ -76,6 +80,13 @@
 				<Shield size={22} />
 			</a>
 		{/if}
-		<UserButton />
+		<a
+			href={resolve('/(app)/profile')}
+			aria-label="Your profile"
+			aria-current={isProfileCurrent ? 'page' : undefined}
+			class={['rounded-full', isProfileCurrent && 'ring-3 ring-blue-700 ring-offset-2']}
+		>
+			<UserAvatar username={profile.username} displayName={profile.displayName} />
+		</a>
 	</nav>
 </Tooltip.Provider>

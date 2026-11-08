@@ -2,9 +2,10 @@ import { redirect } from '@sveltejs/kit';
 import { courseNavigationService } from '#lib/server/catalog/CourseNavigationService.ts';
 import type { PageServerLoad } from './$types';
 
-/** Admitted users resume their last course, or start with discovery. */
+/** Admitted users finish onboarding, then resume their last course or start with discovery. */
 export const load: PageServerLoad = async ({ locals }) => {
 	if (locals.currentUser?.status === 'active') {
+		if (!locals.currentUser.profile) redirect(303, '/onboarding');
 		const courseId = await courseNavigationService.findResumableCourseId(locals.currentUser);
 		redirect(303, courseId ? `/courses/${courseId}` : '/explore');
 	}

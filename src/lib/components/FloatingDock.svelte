@@ -4,7 +4,6 @@
 	import { Dialog } from 'bits-ui';
 	import ChevronUp from 'lucide-svelte/icons/chevron-up';
 	import Compass from 'lucide-svelte/icons/compass';
-	import { UserButton } from 'svelte-clerk';
 	import type { FollowedCourseResponse } from '#lib/contracts/CourseFollowingContract.ts';
 	import {
 		COURSE_CHANNELS,
@@ -13,17 +12,22 @@
 		type CourseChannel
 	} from '#lib/navigation/CourseChannel.ts';
 	import CourseCodeTile from './CourseCodeTile.svelte';
+	import UserAvatar from './UserAvatar.svelte';
 
 	let {
 		followedCourses,
 		currentCourse,
 		currentChannel,
-		isAdministrator
+		isProfileCurrent,
+		isAdministrator,
+		profile
 	}: {
 		followedCourses: FollowedCourseResponse[];
 		currentCourse: { id: string; code: string } | null;
 		currentChannel: CourseChannel | null;
+		isProfileCurrent: boolean;
 		isAdministrator: boolean;
+		profile: { username: string; displayName: string };
 	} = $props();
 
 	let isSwitcherOpen = $state(false);
@@ -113,5 +117,12 @@
 			</Dialog.Content>
 		</Dialog.Portal>
 	</Dialog.Root>
-	<span class="flex size-11 items-center justify-center"><UserButton /></span>
+	<a
+		href={resolve('/(app)/profile')}
+		aria-label="Your profile"
+		aria-current={isProfileCurrent ? 'page' : undefined}
+		class="flex size-11 items-center justify-center"
+	>
+		<UserAvatar username={profile.username} displayName={profile.displayName} size={32} />
+	</a>
 </nav>

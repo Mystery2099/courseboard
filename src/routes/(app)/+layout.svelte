@@ -11,6 +11,7 @@
 
 	const currentCourse = $derived(page.data.course ?? null);
 	const currentChannel = $derived(findCourseChannel(page.route.id));
+	const isProfileCurrent = $derived(page.route.id === '/(app)/profile');
 	const isAdministrator = $derived(data.currentUser?.role === 'administrator');
 
 	const clerkContext = useClerkContext();
@@ -31,7 +32,9 @@
 			followedCourses={data.followedCourses}
 			currentCourseId={currentCourse?.id ?? null}
 			isExploreCurrent={page.route.id === '/(app)/explore'}
+			{isProfileCurrent}
 			{isAdministrator}
+			profile={data.profile}
 		/>
 	</div>
 	<div class="min-w-0 flex-1 pb-24 desktop:pb-0">
@@ -42,7 +45,9 @@
 			followedCourses={data.followedCourses}
 			{currentCourse}
 			{currentChannel}
+			{isProfileCurrent}
 			{isAdministrator}
+			profile={data.profile}
 		/>
 	</div>
 </div>

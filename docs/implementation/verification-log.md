@@ -24,6 +24,7 @@ This is the record of what has actually been checked, how, and when, so nobody h
 | Nov 8, 2026 | Custom domain | Render shows it verified with an issued certificate; the page loads | Works |
 | Nov 8, 2026 | Security headers and CSP | Local production build with the development Clerk key, checked with curl and headless Chromium on `/` | All headers present; Clerk loads with no CSP violations while signed out |
 | Nov 8, 2026 | Clerk telemetry is off | The deployed console showed CSP blocks on `clerk-telemetry.com`. Local production build in headless Chromium with `navigator.webdriver` hidden, reading `Clerk.telemetry.isEnabled` with and without the change | On before, off after; no telemetry requests |
+| Nov 8, 2026 | Username uniqueness | The repository's index definition and onboarding update run with `mongosh` against a throwaway MongoDB 8.0 container | Accounts without usernames coexist; a second claim on a taken name fails with a duplicate key, which the app reports as unavailable; an onboarded user can't overwrite their profile |
 
 ## Not verified yet
 
@@ -33,6 +34,7 @@ These come from Stage 0 of the roadmap. Each needs the deployed site and, where 
 - Clerk sign-up, email verification, sign-in, sign-out, and protected routes on the deployed site.
 - Signed-in CSP behavior: Clerk's sign-up bot check (Cloudflare Turnstile), profile images, and the account menu.
 - A signed-in browser opening an authenticated Socket.IO connection, including after a cold start and after the session token expires.
+- Onboarding on the deployed site: the redirect for an account without a profile, a taken username, and Explore opening on the chosen school.
 - Invitation redemption on the deployed site: wrong email, expired, revoked, reused, and forwarded links (two profiles).
 - Protected image upload and retrieval, including a signed-out request. Not built yet; waits on the input limits (D19).
 - TanStack Query caching isolated by account, with one client per server render.

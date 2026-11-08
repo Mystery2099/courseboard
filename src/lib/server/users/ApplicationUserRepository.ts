@@ -1,4 +1,4 @@
-import type { ClientSession, Collection, ObjectId } from 'mongodb';
+import { MongoServerError, type ClientSession, type Collection, type ObjectId } from 'mongodb';
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
 import {
 	USERS_COLLECTION_NAME,
@@ -7,7 +7,27 @@ import {
 	type UserRole
 } from './ApplicationUser.ts';
 
+export interface OnboardingProfile {
+	username: string;
+	displayName: string;
+	primaryInstitutionId: ObjectId;
+}
+
+export type ProfileCreationOutcome = 'created' | 'already-onboarded' | 'username-unavailable';
+
+const DUPLICATE_KEY_ERROR_CODE = 11000;
+
 export class ApplicationUserRepository {
+	private static readonly CURRENT_USER_PROJECTION = {
+		_id: 1,
+		clerkUserId: 1,
+		role: 1,
+		status: 1,
+		username: 1,
+		displayName: 1,
+		primaryInstitutionId: 1
+	} as const;
+
 	private collection(): Collection<ApplicationUserDocument> {
 		return mongoClientProvider
 			.getDatabase()
@@ -16,6 +36,11 @@ export class ApplicationUserRepository {
 
 	async ensureIndexes(): Promise<void> {
 		await this.collection().createIndex({ clerkUserId: 1 }, { unique: true });
+		// Partial, because accounts that haven't finished onboarding have no username yet.
+		await this.collection().createIndex(
+			{ username: 1 },
+			{ unique: true, partialFilterExpression: { username: { $type: 'string' } } }
+		);
 	}
 
 	async findByClerkUserId(
@@ -24,7 +49,7 @@ export class ApplicationUserRepository {
 	): Promise<ApplicationUser | null> {
 		const document = await this.collection().findOne(
 			{ clerkUserId },
-			{ projection: { _id: 1, clerkUserId: 1, role: 1, status: 1 }, session }
+			{ projection: ApplicationUserRepository.CURRENT_USER_PROJECTION, session }
 		);
 		return document ? ApplicationUserRepository.toApplicationUser(document) : null;
 	}
@@ -65,6 +90,35 @@ export class ApplicationUserRepository {
 		);
 	}
 
+	/** Sets every profile field at once, only if onboarding hasn't already set them. */
+	async createProfile(
+		userId: ObjectId,
+		profile: OnboardingProfile,
+		onboardedAt: Date
+	): Promise<ProfileCreationOutcome> {
+		try {
+			const result = await this.collection().updateOne(
+				{ _id: userId, username: { $exists: false } },
+				{ $set: { ...profile, onboardedAt } }
+			);
+			return result.matchedCount === 1 ? 'created' : 'already-onboarded';
+		} catch (cause) {
+			if (cause instanceof MongoServerError && cause.code === DUPLICATE_KEY_ERROR_CODE) {
+				return 'username-unavailable';
+			}
+			throw cause;
+		}
+	}
+
+	/** Returns false when the user hasn't finished onboarding. */
+	async updateDisplayName(userId: ObjectId, displayName: string): Promise<boolean> {
+		const result = await this.collection().updateOne(
+			{ _id: userId, username: { $exists: true } },
+			{ $set: { displayName } }
+		);
+		return result.matchedCount === 1;
+	}
+
 	async updateLastVisitedCourse(userId: ObjectId, courseId: ObjectId): Promise<void> {
 		await this.collection().updateOne({ _id: userId }, { $set: { lastVisitedCourseId: courseId } });
 	}
@@ -78,13 +132,27 @@ export class ApplicationUserRepository {
 	}
 
 	private static toApplicationUser(
-		document: Pick<ApplicationUserDocument, '_id' | 'clerkUserId' | 'role' | 'status'>
+		document: Pick<
+			ApplicationUserDocument,
+			| '_id'
+			| 'clerkUserId'
+			| 'role'
+			| 'status'
+			| 'username'
+			| 'displayName'
+			| 'primaryInstitutionId'
+		>
 	): ApplicationUser {
+		const { username, displayName, primaryInstitutionId } = document;
 		return {
 			id: document._id.toHexString(),
 			clerkUserId: document.clerkUserId,
 			role: document.role,
-			status: document.status
+			status: document.status,
+			profile:
+				username && displayName && primaryInstitutionId
+					? { username, displayName, primaryInstitutionId: primaryInstitutionId.toHexString() }
+					: null
 		};
 	}
 }
