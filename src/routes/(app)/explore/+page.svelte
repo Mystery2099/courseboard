@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { DropdownMenu } from 'bits-ui';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
@@ -82,7 +83,15 @@
 				href="{resolve('/(app)/explore')}?{new URLSearchParams({
 					institutionId: data.catalog.institution.id,
 					after: data.catalog.nextCursor
-				})}">Load more</a
+				})}">Next courses</a
+			>
+		{/if}
+		{#if page.url.searchParams.has('after')}
+			<a
+				class="mt-4 ml-2 inline-block rounded-full border px-4 py-1.5"
+				href="{resolve('/(app)/explore')}?{new URLSearchParams({
+					institutionId: data.catalog.institution.id
+				})}">Back to first courses</a
 			>
 		{/if}
 	{/if}

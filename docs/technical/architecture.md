@@ -24,7 +24,7 @@ Confirmed November 7, 2026: one repository and one deployable application with c
 | `POST /api/invitations/{invitationId}/revoke` | Active administrator | JSON `{}`; returns `{ revoked: true }`, or 409 when unavailable |
 | `POST /api/invitations/redeem` | Signed-in identity; admission not required | JSON `{ token }`; returns `{ kind: 'admitted' }` or `{ kind: 'already-admitted' }` |
 
-Authentication uses the existing Clerk request middleware; actor identity and roles are never taken from request bodies. Writes require `application/json` and reject a supplied Origin that differs from the request origin. No cross-origin browser API access is enabled.
+Authentication uses the existing Clerk request middleware; actor identity and roles are never taken from request bodies. Writes reject a supplied Origin that differs from the request origin, and writes with a body require `application/json`; bodyless `DELETE` is safe because HTML forms can't send it and cross-origin fetches need a preflight. No cross-origin browser API access is enabled.
 
 ### Course catalog HTTP API
 
@@ -34,7 +34,7 @@ Authentication uses the existing Clerk request middleware; actor identity and ro
 | `GET /api/courses?institutionId=…&after=…` | Admitted user | One page of an institution's courses in code order, each with `isFollowed`; pass `nextCursor` as `after` for the next page |
 | `GET /api/courses/{courseId}` | Admitted user | Course detail with its institution and `isFollowed` |
 | `PUT /api/courses/{courseId}/following` | Admitted user | JSON `{}`; follows the course and returns `{ isFollowed: true }`. Repeating it changes nothing |
-| `DELETE /api/courses/{courseId}/following` | Admitted user | JSON `{}`; returns `{ isFollowed: false }` |
+| `DELETE /api/courses/{courseId}/following` | Admitted user | No body; returns `{ isFollowed: false }` |
 | `GET /api/following` | Admitted user | The caller's followed courses, most recent first |
 | `PUT /api/courses/{courseId}/visit` | Admitted user | JSON `{}`; records the course as the caller's last visited one and returns `{ recorded: true }` |
 | `GET /api/admin/catalog/courses` | Active administrator | The whole catalog with institution names, bounded, with `hasMoreCourses` |

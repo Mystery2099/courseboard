@@ -33,12 +33,17 @@ export function requireApiIdentity(locals: App.Locals): string {
 	return AccessPolicy.requireIdentity(locals.auth().userId);
 }
 
-/** JSON-only writes reject browser form submissions; no cross-origin cookie API is enabled. */
-export async function readApiJson(request: Request): Promise<unknown> {
+/** No cross-origin cookie API is enabled, so writes from another origin are rejected. */
+export function requireSameOriginWrite(request: Request): void {
 	const origin = request.headers.get('origin');
 	if (origin && origin !== new URL(request.url).origin) {
 		throw new ApiInputError(403, 'Cross-origin writes are not allowed.');
 	}
+}
+
+/** JSON-only writes reject browser form submissions. */
+export async function readApiJson(request: Request): Promise<unknown> {
+	requireSameOriginWrite(request);
 	if (request.headers.get('content-type')?.split(';')[0].trim() !== 'application/json') {
 		throw new ApiInputError(415, 'Use application/json.');
 	}
