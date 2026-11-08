@@ -1,4 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { z } from 'zod';
 import { completeOnboardingSchema } from '#lib/contracts/UserProfileContract.ts';
 import { AccessGuard } from '#lib/server/access/AccessGuard.ts';
 import { courseCatalogService } from '#lib/server/catalog/CourseCatalogService.ts';
@@ -22,7 +23,7 @@ export const actions: Actions = {
 		};
 		const parsed = completeOnboardingSchema.safeParse(submitted);
 		if (!parsed.success) {
-			const fieldErrors = parsed.error.flatten().fieldErrors;
+			const fieldErrors = z.flattenError(parsed.error).fieldErrors;
 			return fail(400, {
 				submitted,
 				errors: {
