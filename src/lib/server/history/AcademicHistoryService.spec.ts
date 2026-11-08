@@ -107,6 +107,22 @@ describe('academic history service', () => {
 		expect(insert).not.toHaveBeenCalled();
 	});
 
+	it('withdraws an entry that a concurrent request pushed over the limit', async () => {
+		const { service, entries } = createService();
+		vi.spyOn(entries, 'countByUser').mockResolvedValueOnce(199).mockResolvedValueOnce(201);
+		const insert = vi.spyOn(entries, 'insert').mockResolvedValue();
+		const remove = vi.spyOn(entries, 'deleteOwned').mockResolvedValue(true);
+
+		const result = await service.createEntry(
+			{ courseId: courseId.toHexString(), status: 'planning', term: null },
+			student
+		);
+
+		expect(result).toEqual({ kind: 'entry-limit-reached' });
+		const insertedEntryId = insert.mock.calls[0][0]._id;
+		expect(remove).toHaveBeenCalledWith(insertedEntryId, new ObjectId(student.id));
+	});
+
 	it('changes and deletes entries only through the acting owner', async () => {
 		const { service, entries } = createService();
 		const update = vi.spyOn(entries, 'updateOwned').mockResolvedValue(false);

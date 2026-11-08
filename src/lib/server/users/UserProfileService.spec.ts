@@ -137,7 +137,7 @@ describe('user profile service', () => {
 
 	it('shows another user only their public profile fields', async () => {
 		const { service, users } = createService();
-		vi.spyOn(users, 'findPublicProfileByUsername').mockResolvedValue({
+		const findProfile = vi.spyOn(users, 'findPublicProfileByUsername').mockResolvedValue({
 			_id: new ObjectId('000000000000000000000005'),
 			clerkUserId: 'classmate',
 			username: 'sam_r',
@@ -147,6 +147,7 @@ describe('user profile service', () => {
 
 		const profile = await service.getPublicProfile('Sam_R', newStudent);
 
+		expect(findProfile).toHaveBeenCalledWith('sam_r');
 		expect(profile).toEqual({
 			username: 'sam_r',
 			displayName: 'Sam R.',

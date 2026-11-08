@@ -100,8 +100,18 @@ export class AcademicHistoryService {
 			createdAt: now,
 			updatedAt: now
 		});
+		// Concurrent requests can all pass the count above, so recount after writing and withdraw this
+		// entry if it went over. The history then never stays above the limit the owner's list reads.
+		if ((await this.entries.countByUser(userId)) > AcademicHistoryService.ENTRY_LIMIT) {
+			await this.entries.deleteOwned(entryId, userId);
+			return { kind: 'entry-limit-reached' };
+		}
 		const entry = await this.entries.findOwnEntry(entryId, userId);
-		if (!entry) return { kind: 'course-not-found' };
+		if (!entry) {
+			// The course was removed after the check above; an entry without a course is never shown.
+			await this.entries.deleteOwned(entryId, userId);
+			return { kind: 'course-not-found' };
+		}
 		return { kind: 'created', entry: AcademicHistoryService.toOwnEntryResponse(entry) };
 	}
 
