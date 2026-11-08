@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { SignOutButton, UserButton, useClerkContext } from 'svelte-clerk';
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
+	import AcademicHistorySection from '#lib/components/history/AcademicHistorySection.svelte';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -30,6 +31,13 @@
 			</p>
 		</div>
 	</div>
+
+	<AcademicHistorySection
+		initialHistory={data.history}
+		initialHistoryLoadedAt={data.historyLoadedAt}
+		username={data.profile.username}
+		primaryInstitutionId={data.profile.primaryInstitution.id}
+	/>
 
 	<section class="mt-8 rounded-[20px] border bg-white p-4">
 		<h2 class="text-lg font-semibold">Display name</h2>
