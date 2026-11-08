@@ -12,7 +12,7 @@
 - [ ] Verify Render Free, Atlas Free, and Clerk work without payment details or billable services.
 - [ ] Prove Clerk sign-up, verification, sign-in, protected server routes, logout, and authenticated Socket.IO connections on the deployed host. *Deployed at https://courseboard.mathewtech.us; WebSockets pass through and fake tokens are rejected. The browser now connects when signed in.*
 - [ ] Prove application invitation redemption with independent verified-email matching, expiration, revocation, and single-use enforcement.
-- [ ] Set up TanStack Query with account-isolated caching, request-scoped SSR clients, and one owner for interactive server data. Verify initial-data integration and targeted invalidation.
+- [ ] Set up TanStack Query with account-isolated caching, request-scoped SSR clients, and one owner for interactive server data. Verify initial-data integration and targeted invalidation. *Set up and used for academic history; not yet checked in a signed-in browser.*
 - [ ] Bootstrap the administrator and link MongoDB profiles through unique Clerk user IDs.
 - [ ] Prove a processed image upload and authorized retrieval through the hosted application.
 - [ ] Verify MongoDB text search, Zod, Sharp, and TanStack Markdown (markdown-it as fallback). Use pnpm. Define image input byte and pixel limits.
@@ -22,7 +22,7 @@
 
 - [ ] Seed fictional institutions, courses, histories, roles, and content repeatably. Course creation automatically creates its canonical space. *Done for institutions and courses: an administrator loads the demo catalog from the admin page, and each course's space is created in the same transaction.*
 - [x] Implement primary-institution onboarding, unique usernames, editable display names, course discovery, following, and last-course navigation. *Onboarding asks for the school, then the username and display name; adding courses during onboarding waits on academic history.*
-- [ ] Implement private-by-default history entries, repeated attempts, season/year terms, private notes, and profile visibility.
+- [ ] Implement private-by-default history entries, repeated attempts, season/year terms, private notes, and profile visibility. *Built on the profile page and course pages, with Preview as others; other people's profile pages and the onboarding course step are still to do.*
 - [ ] Implement questions, discussions, one-level replies, accepted answers, and locked discussions.
 - [ ] Verify that membership, history, and content remain independent and unauthorized reads/writes fail on the server.
 - [ ] Expose core workflow reads/writes through the HTTP API without requiring web-page form submissions. Test service rules and direct authorized/unauthorized API requests independently of the UI. Web adapters reuse those services; native mobile/desktop clients are not required.

@@ -18,6 +18,9 @@ This is the record of what has actually been checked, how, and when, so nobody h
 
 | Date | What | How | Result |
 | --- | --- | --- | --- |
+| Nov 8, 2026 | History privacy in MongoDB | The real `AcademicHistoryRepository` against a throwaway MongoDB 8.0 container (podman), with one visible and one private entry | Owner query returns both; the visible query returns only the visible entry with `_id`, course, status, and term, without notes; another user's update and delete match nothing |
+| Nov 8, 2026 | History query uses its index | `explain()` on `{ userId, visibility: 'visible' }` in the same container | `IXSCAN` on `userId_1_courseId_1`, with visibility filtered after the fetch |
+| Nov 8, 2026 | History service rules | Unit tests in `AcademicHistoryService.spec.ts` | New entries are private and belong to the caller; Taking and Took require a term; unknown courses and usernames write or read nothing; unadmitted accounts are refused |
 | Nov 8, 2026 | Changing schools after onboarding | Source inspection of `UserProfileService` and `UserProfileContract` | Not supported: profile updates accept only the display name, and repeat onboarding leaves the existing profile unchanged. Not browser-tested. |
 | Nov 8, 2026 | Render reaches Atlas | `GET /api/health` on both URLs | `{"status":"ok","databaseReachable":true}` |
 | Nov 8, 2026 | WebSockets pass through Render and Cloudflare | Node `socket.io-client`, WebSocket transport only, against both URLs | Handshake reached the server |
@@ -39,7 +42,8 @@ These come from Stage 0 of the roadmap. Each needs the deployed site and, where 
 - Onboarding on the deployed site: the redirect for an account without a profile, a taken username, and Explore opening on the chosen school.
 - Invitation redemption on the deployed site: wrong email, expired, revoked, reused, and forwarded links (two profiles).
 - Protected image upload and retrieval, including a signed-out request. Not built yet; waits on the input limits (D19).
-- TanStack Query caching isolated by account, with one client per server render.
+- TanStack Query caching isolated by account, with one client per server render. The cache now clears when the Clerk user changes; not yet watched in a browser.
+- Academic history in a signed-in browser: adding from a course page and from the profile, editing, deleting, Preview as others, and a second account seeing only visible entries.
 - A restore from backup.
 
 ## Testing notes
