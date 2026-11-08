@@ -1,6 +1,7 @@
 import type { ClientSession, Collection, ObjectId } from 'mongodb';
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
 import { COURSES_COLLECTION_NAME, type CourseDocument } from './Course.ts';
+import { INSTITUTIONS_COLLECTION_NAME } from './Institution.ts';
 
 export type CourseSummary = Pick<
 	CourseDocument,
@@ -8,6 +9,13 @@ export type CourseSummary = Pick<
 >;
 
 export type CourseDetail = CourseSummary & Pick<CourseDocument, 'institutionId' | 'description'>;
+
+export interface CatalogCourse {
+	_id: ObjectId;
+	code: string;
+	title: string;
+	institutionName: string;
+}
 
 export class CourseRepository {
 	private static readonly SUMMARY_PROJECTION = {
@@ -41,6 +49,27 @@ export class CourseRepository {
 				sort: { normalizedCode: 1 },
 				limit
 			})
+			.toArray();
+	}
+
+	/** Courses grouped by institution in code order, using the (institutionId, normalizedCode) index. */
+	async findCatalogCourses(limit: number): Promise<CatalogCourse[]> {
+		return this.collection()
+			.aggregate<CatalogCourse>([
+				{ $sort: { institutionId: 1, normalizedCode: 1 } },
+				{ $limit: limit },
+				{
+					$lookup: {
+						from: INSTITUTIONS_COLLECTION_NAME,
+						localField: 'institutionId',
+						foreignField: '_id',
+						as: 'institution',
+						pipeline: [{ $project: { name: 1 } }]
+					}
+				},
+				{ $unwind: '$institution' },
+				{ $project: { code: 1, title: 1, institutionName: '$institution.name' } }
+			])
 			.toArray();
 	}
 

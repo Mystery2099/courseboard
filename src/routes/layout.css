@@ -1,3 +1,11 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
+
+/* Layout tiers from the design handoff: phone < 600, tablet 600–899, desktop 900–1279, wide ≥ 1280. */
+@theme {
+	--breakpoint-*: initial;
+	--breakpoint-tablet: 600px;
+	--breakpoint-desktop: 900px;
+	--breakpoint-wide: 1280px;
+}

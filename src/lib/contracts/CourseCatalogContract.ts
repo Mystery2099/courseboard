@@ -44,6 +44,18 @@ export interface CourseDetailResponse {
 	isFollowed: boolean;
 }
 
+export interface CatalogCourseResponse {
+	id: string;
+	code: string;
+	title: string;
+	institutionName: string;
+}
+
+export interface CatalogCourseListResponse {
+	courses: CatalogCourseResponse[];
+	hasMoreCourses: boolean;
+}
+
 export interface DemoCatalogLoadResponse {
 	institutionsCreated: number;
 	coursesCreated: number;

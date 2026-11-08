@@ -1,6 +1,7 @@
 import { ObjectId } from 'mongodb';
 import {
 	courseIdSchema,
+	type CatalogCourseListResponse,
 	type CourseBrowseQuery,
 	type CourseBrowseResponse,
 	type CourseDetailResponse,
@@ -32,6 +33,7 @@ export interface CatalogEntryCreation {
 export class CourseCatalogService {
 	private static readonly INSTITUTION_LIMIT = 200;
 	private static readonly COURSE_PAGE_SIZE = 25;
+	private static readonly CATALOG_COURSE_LIMIT = 500;
 
 	constructor(
 		private readonly institutions: InstitutionRepository,
@@ -106,6 +108,22 @@ export class CourseCatalogService {
 			description: course.description,
 			institution: { id: institution._id.toHexString(), name: institution.name },
 			isFollowed
+		};
+	}
+
+	/** The whole catalog for administrators, up to a safety ceiling. */
+	async listCatalogCourses(actor: ApplicationUser | null): Promise<CatalogCourseListResponse> {
+		AccessPolicy.requireAdministrator(actor);
+		const limit = CourseCatalogService.CATALOG_COURSE_LIMIT;
+		const courses = await this.courses.findCatalogCourses(limit + 1);
+		return {
+			courses: courses.slice(0, limit).map((course) => ({
+				id: course._id.toHexString(),
+				code: course.code,
+				title: course.title,
+				institutionName: course.institutionName
+			})),
+			hasMoreCourses: courses.length > limit
 		};
 	}
 
