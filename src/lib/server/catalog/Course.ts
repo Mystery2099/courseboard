@@ -19,6 +19,11 @@ export interface CourseDocument {
 	createdAt: Date;
 }
 
+/** The code as displayed: trimmed, with internal whitespace collapsed to single spaces. */
+export function formatCourseCode(code: string): string {
+	return code.trim().replace(/\s+/g, ' ');
+}
+
 export function normalizeCourseCode(code: string): string {
 	return code.replace(/\s+/g, '').toUpperCase();
 }

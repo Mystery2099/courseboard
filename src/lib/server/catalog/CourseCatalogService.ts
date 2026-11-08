@@ -11,7 +11,7 @@ import { AccessPolicy } from '#lib/server/access/AccessPolicy.ts';
 import { DatabaseIndexInitializer } from '#lib/server/persistence/DatabaseIndexInitializer.ts';
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
-import { normalizeCourseCode } from './Course.ts';
+import { formatCourseCode, normalizeCourseCode } from './Course.ts';
 import { courseRepository, type CourseRepository } from './CourseRepository.ts';
 import { institutionRepository, type InstitutionRepository } from './InstitutionRepository.ts';
 import { membershipRepository, type MembershipRepository } from './MembershipRepository.ts';
@@ -165,7 +165,7 @@ export class CourseCatalogService {
 					{
 						_id: courseId,
 						institutionId: newCourse.institutionId,
-						code: newCourse.code.trim(),
+						code: formatCourseCode(newCourse.code),
 						normalizedCode,
 						title: newCourse.title.trim(),
 						description: newCourse.description.trim(),

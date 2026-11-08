@@ -19,7 +19,7 @@ const administrator: ApplicationUser = {
 
 const newCourse = {
 	institutionId: new ObjectId('000000000000000000000002'),
-	code: ' cs 101 ',
+	code: ' cs   101 ',
 	title: 'Introduction to Programming',
 	description: 'Basics.'
 };
