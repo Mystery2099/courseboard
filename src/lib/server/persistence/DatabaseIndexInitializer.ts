@@ -1,10 +1,15 @@
 import { invitationRepository } from '#lib/server/admission/InvitationRepository.ts';
+import { courseRepository } from '#lib/server/catalog/CourseRepository.ts';
+import { institutionRepository } from '#lib/server/catalog/InstitutionRepository.ts';
+import { membershipRepository } from '#lib/server/catalog/MembershipRepository.ts';
+import { spaceRepository } from '#lib/server/catalog/SpaceRepository.ts';
 import { applicationUserRepository } from '#lib/server/users/ApplicationUserRepository.ts';
 
 const RETRY_DELAY_MILLISECONDS = 30_000;
 
 /**
- * Creates the indexes that enforce identities (unique Clerk user IDs and invitation token hashes)
+ * Creates the indexes that enforce identities (Clerk user IDs, invitation token hashes, institution
+ * names, course codes per institution, one space per course, one membership per user and space)
  * and support current queries. `createIndex` is idempotent, so this runs on every start.
  *
  * Writes that rely on a unique index await `ensureIndexes()` first, so no duplicate can be
@@ -39,7 +44,11 @@ export class DatabaseIndexInitializer {
 	private static async createIndexes(): Promise<void> {
 		await Promise.all([
 			applicationUserRepository.ensureIndexes(),
-			invitationRepository.ensureIndexes()
+			invitationRepository.ensureIndexes(),
+			institutionRepository.ensureIndexes(),
+			courseRepository.ensureIndexes(),
+			spaceRepository.ensureIndexes(),
+			membershipRepository.ensureIndexes()
 		]);
 	}
 }

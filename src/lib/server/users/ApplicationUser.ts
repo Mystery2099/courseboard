@@ -19,6 +19,8 @@ export interface ApplicationUserDocument {
 	/** Null for the bootstrap administrator, who is admitted without an invitation. */
 	admittedByInvitationId: ObjectId | null;
 	admittedAt: Date;
+	/** The course page opened most recently, resumed after sign-in. Absent until the first visit. */
+	lastVisitedCourseId?: ObjectId;
 }
 
 /** The fields request handling needs about the current user. */
