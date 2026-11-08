@@ -68,7 +68,7 @@ Read the [product spec](docs/product/product-spec.md) and [decision register](do
 
 The repository contains planning documents, assignment materials, design exports, and an application scaffold. The app isn't a working product yet. Besides configuration, the MongoDB connection, Clerk, and Socket.IO, it has invitations, course discovery and following, and last-course navigation. An administrator loads the demo catalog, centered on Alfred State College, from **Admin → Course catalog**; it's safe to load repeatedly.
 
-To run it locally, copy `.env.example` to `.env`, fill in Clerk and MongoDB values, then run `pnpm install` and `pnpm dev`. For production, use `pnpm build` and `pnpm start`; `render.yaml` describes the Render service. GitHub Actions runs a dependency audit, linting, type checks, server tests, and the build on every pull request and push to `master`; Render deploys `master` only after those checks pass. `GET /api/health` reports whether MongoDB is reachable. The first implementation step is to prove the hosted combination of Clerk, SvelteKit, Socket.IO, Atlas, and one protected image upload before building dependent screens.
+To run it locally, copy `.env.example` to `.env`, fill in Clerk and MongoDB values, then run `pnpm install` and `pnpm dev`. For production, use `pnpm build` and `pnpm start`; `render.yaml` describes the Render service. GitHub Actions runs a dependency audit, linting, type checks, server tests, and the build on every pull request and push to `master`; Render deploys `master` only after those checks pass. The app is deployed at https://courseboard.mathewtech.us. `GET /api/health` reports whether MongoDB is reachable. The first implementation step is to prove the hosted combination of Clerk, SvelteKit, Socket.IO, Atlas, and one protected image upload before building dependent screens.
 
 | Document | What it's for |
 | --- | --- |
@@ -83,6 +83,7 @@ To run it locally, copy `.env.example` to `.env`, fill in Clerk and MongoDB valu
 | [Diagrams](docs/technical/diagrams.md) | System context, collections, request checks, admission, realtime, post lifecycle, and review eligibility |
 | [Blueprint handoff](docs/design/blueprint-handoff.md) | Design tokens, components, layout, interactions, and which artboards are current |
 | [Roadmap and acceptance](docs/implementation/roadmap-and-acceptance.md) | Build order, verification, and the assignment demonstration |
+| [Verification log](docs/implementation/verification-log.md) | What has been checked on the deployed app, how, and what hasn't been yet |
 
 ## When documents disagree
 

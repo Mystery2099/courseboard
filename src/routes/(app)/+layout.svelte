@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { useClerkContext } from 'svelte-clerk';
+	import { RealtimeConnection } from '#lib/realtime/RealtimeConnection.svelte.ts';
 	import FloatingDock from '#lib/components/FloatingDock.svelte';
 	import SpaceRail from '#lib/components/SpaceRail.svelte';
 	import { findCourseChannel } from '#lib/navigation/CourseChannel.ts';
@@ -10,6 +12,17 @@
 	const currentCourse = $derived(page.data.course ?? null);
 	const currentChannel = $derived(findCourseChannel(page.route.id));
 	const isAdministrator = $derived(data.currentUser?.role === 'administrator');
+
+	const clerkContext = useClerkContext();
+	const isSignedIn = $derived(clerkContext.isLoaded && clerkContext.session != null);
+
+	$effect(() => {
+		if (!isSignedIn) return;
+		const realtimeConnection = new RealtimeConnection(
+			async () => (await clerkContext.session?.getToken()) ?? null
+		);
+		return () => realtimeConnection.close();
+	});
 </script>
 
 <div class="min-h-dvh desktop:flex">

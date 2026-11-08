@@ -3,7 +3,8 @@ import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import adapter from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
-import type { Plugin } from 'vite';
+import { loadEnv, type Plugin } from 'vite';
+import { buildContentSecurityPolicyDirectives } from './server/ContentSecurityPolicyDirectives.js';
 import { attachSocketServer } from './server/SocketServerAttacher.js';
 
 const socketServerDevPlugin: Plugin = {
@@ -13,7 +14,7 @@ const socketServerDevPlugin: Plugin = {
 	}
 };
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
 	plugins: [
 		tailwindcss(),
 		socketServerDevPlugin,
@@ -23,7 +24,13 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			adapter: adapter()
+			adapter: adapter(),
+			csp: {
+				mode: 'auto',
+				directives: buildContentSecurityPolicyDirectives(
+					loadEnv(mode, process.cwd(), '').PUBLIC_CLERK_PUBLISHABLE_KEY
+				)
+			}
 		})
 	],
 	test: {
@@ -55,4 +62,4 @@ export default defineConfig({
 			}
 		]
 	}
-});
+}));

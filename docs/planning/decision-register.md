@@ -21,7 +21,7 @@ When we settle something, add it here with what we chose, what we rejected, and 
 | Access | Individual, single-use invitations matched to an independently verified email; no logged-out reading, including images | A forwarded link alone must never grant access |
 | Authentication | Clerk through community-maintained `svelte-clerk`, email/password with required verification | Prebuilt authentication and account-management UI |
 | Permissions | Regular users, per-course moderators, platform admins | Community owners can wait. Admins can't read anyone's private history or notes through the app |
-| Hosting | Render Free for the app, Atlas Free for the database, Cloudflare for DNS | Strictly free: no payment method or overage billing. Cold starts are acceptable. My personal server stays out of it |
+| Hosting | Render Free for the app, Atlas Free for the database, Cloudflare for DNS. Served at `courseboard.mathewtech.us`, a domain I already own (November 8, 2026) | Strictly free: no payment method or overage billing. Cold starts are acceptable. My personal server stays out of it. The custom domain also makes a Clerk production instance possible |
 | Client/server architecture | One repository and deployable application, explicit HTTP API, server-owned services (November 7, 2026) | Future clients could reuse the API without adding native clients or backend infrastructure to assignment scope. See [architecture](../technical/architecture.md) |
 | Realtime | Socket.IO with WebSocket transport; writes go through HTTP first, MongoDB is the source of truth | An event never replaces a persisted record; reconnecting refetches |
 | Images | Separate MongoDB collection, processed with Sharp; two per top-level post, 2 MB each, 100 MB total | No extra storage provider, and the quota fits well inside Atlas Free |
@@ -62,3 +62,4 @@ When we settle something, add it here with what we chose, what we rejected, and 
 | D18 | Which profanity matcher? | Leaning toward a simple whole-word matcher with no dependency |
 | D19 | Image input limits | Byte and pixel limits to check before decoding, plus the resize dimensions |
 | D20 | When can the hosted app come down? | At least about a month, provisionally one month after grading; confirm the date once it's known |
+| D21 | Should Clerk move from its development instance to a production instance? | Leaning yes now that the app has its own domain; development instances show a badge and cap users. Needs Clerk's DNS records on `mathewtech.us` and new keys in Render |
