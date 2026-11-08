@@ -23,6 +23,7 @@ This is the record of what has actually been checked, how, and when, so nobody h
 | Nov 8, 2026 | Socket handshakes fail closed | Same client with a fake token | Rejected with `unauthenticated` |
 | Nov 8, 2026 | Custom domain | Render shows it verified with an issued certificate; the page loads | Works |
 | Nov 8, 2026 | Security headers and CSP | Local production build with the development Clerk key, checked with curl and headless Chromium on `/` | All headers present; Clerk loads with no CSP violations while signed out |
+| Nov 8, 2026 | Clerk telemetry is off | The deployed console showed CSP blocks on `clerk-telemetry.com`. Local production build in headless Chromium with `navigator.webdriver` hidden, reading `Clerk.telemetry.isEnabled` with and without the change | On before, off after; no telemetry requests |
 
 ## Not verified yet
 
@@ -41,4 +42,5 @@ These come from Stage 0 of the roadmap. Each needs the deployed site and, where 
 
 - **The CSP is fixed at build time.** It takes Clerk's Frontend API host from `PUBLIC_CLERK_PUBLISHABLE_KEY` during `pnpm build`, so changing Clerk keys needs a rebuild. Render rebuilds when environment variables change. CI builds with the placeholder key and logs a warning; that build is never deployed.
 - **Clerk needs extra CSP sources:** its Frontend API host, `cdn.protect.clerk.com` for the bot-protection script, `*.protect.clerk.com` on any port for its probes and frames, `img.clerk.com`, and `challenges.cloudflare.com`. They're in [`server/ContentSecurityPolicyDirectives.js`](../../server/ContentSecurityPolicyDirectives.js).
+- **Clerk telemetry is turned off** in the root layout instead of allowed in the CSP. Clerk sends it only from development instances, and it skips automated browsers, so checking it in headless Chromium means hiding `navigator.webdriver`.
 - **Running the production build over plain HTTP locally:** adapter-node assumes HTTPS unless `PROTOCOL_HEADER` names a header, so Clerk's handshake redirects to `https://localhost` and fails. Start with `PROTOCOL_HEADER=x-local-proto` and send `x-local-proto: http` on requests to localhost, or use `pnpm dev`.
