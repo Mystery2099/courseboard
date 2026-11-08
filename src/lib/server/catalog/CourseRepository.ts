@@ -2,7 +2,10 @@ import type { ClientSession, Collection, ObjectId } from 'mongodb';
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
 import { COURSES_COLLECTION_NAME, type CourseDocument } from './Course.ts';
 
-export type CourseSummary = Pick<CourseDocument, '_id' | 'code' | 'normalizedCode' | 'title' | 'spaceId'>;
+export type CourseSummary = Pick<
+	CourseDocument,
+	'_id' | 'code' | 'normalizedCode' | 'title' | 'spaceId'
+>;
 
 export type CourseDetail = CourseSummary & Pick<CourseDocument, 'institutionId' | 'description'>;
 
