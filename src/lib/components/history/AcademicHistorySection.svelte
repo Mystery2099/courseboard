@@ -1,20 +1,20 @@
 <script lang="ts">
 	import { createQuery } from '@tanstack/svelte-query';
+	import { resolve } from '$app/paths';
 	import Plus from 'lucide-svelte/icons/plus';
 	import {
 		AcademicHistoryApiClient,
 		academicHistoryQueryKeys
 	} from '#lib/client/history/AcademicHistoryApiClient.ts';
-	import {
-		HISTORY_STATUS_LABELS,
-		groupHistoryEntries,
-		type DisplayedHistoryEntry
-	} from '#lib/client/history/AcademicHistoryPresentation.ts';
+	import { groupHistoryEntries } from '#lib/client/history/AcademicHistoryPresentation.ts';
 	import type {
 		OwnHistoryEntryResponse,
 		OwnHistoryResponse
 	} from '#lib/contracts/AcademicHistoryContract.ts';
+	import HistoryCourseLabel from './HistoryCourseLabel.svelte';
 	import HistoryEntryEditorDialog from './HistoryEntryEditorDialog.svelte';
+	import HistoryStatusBadge from './HistoryStatusBadge.svelte';
+	import VisibleHistoryList from './VisibleHistoryList.svelte';
 
 	let {
 		initialHistory,
@@ -54,26 +54,7 @@
 	}
 
 	const ownGroups = $derived(groupHistoryEntries(ownHistoryQuery.data.entries));
-	const visibleGroups = $derived(groupHistoryEntries(visibleHistoryQuery.data?.entries ?? []));
 </script>
-
-{#snippet entryHeading(entry: DisplayedHistoryEntry)}
-	<span class="min-w-0 flex-1">
-		<span class="block font-mono text-sm font-semibold text-blue-700">{entry.course.code}</span>
-		<span class="block truncate font-semibold">{entry.course.title}</span>
-	</span>
-{/snippet}
-
-{#snippet statusBadge(entry: DisplayedHistoryEntry)}
-	<span
-		class={[
-			'rounded-full px-3 py-0.5 text-sm font-semibold',
-			entry.status === 'took' && 'bg-emerald-100 text-emerald-900',
-			entry.status === 'taking' && 'bg-sky-100 text-sky-900',
-			entry.status === 'planning' && 'bg-slate-100 text-slate-800'
-		]}>{HISTORY_STATUS_LABELS[entry.status]}</span
-	>
-{/snippet}
 
 <section class="mt-8" aria-labelledby="history-heading">
 	<div class="flex flex-wrap items-center justify-between gap-3">
@@ -101,29 +82,16 @@
 	{#if isPreviewingAsOthers}
 		<p class="mt-2 text-sm text-slate-600">
 			This is what other students see. Private entries and notes are left out.
+			<a class="font-semibold text-blue-700" href={resolve('/(app)/users/[username]', { username })}
+				>Open your profile page</a
+			>
 		</p>
 		{#if visibleHistoryQuery.isPending}
 			<p class="mt-4 text-sm text-slate-600">Loading preview…</p>
 		{:else if visibleHistoryQuery.isError}
 			<p class="mt-4 text-sm text-red-700" role="alert">The preview couldn't be loaded.</p>
-		{:else if visibleGroups.length === 0}
-			<p class="mt-4 rounded-[20px] border bg-white p-4 text-slate-600">No courses to show.</p>
 		{:else}
-			{#each visibleGroups as group (group.key)}
-				<div class="mt-4 overflow-hidden rounded-[20px] border bg-white">
-					<h3 class="border-b px-4 py-2 text-sm font-semibold tracking-wide uppercase">
-						{group.heading}
-					</h3>
-					<ul class="divide-y">
-						{#each group.entries as entry (entry.id)}
-							<li class="flex items-center gap-3 px-4 py-3">
-								{@render entryHeading(entry)}
-								{@render statusBadge(entry)}
-							</li>
-						{/each}
-					</ul>
-				</div>
-			{/each}
+			<VisibleHistoryList entries={visibleHistoryQuery.data.entries} />
 		{/if}
 	{:else}
 		<p class="mt-2 text-sm text-slate-600">
@@ -158,9 +126,9 @@
 									aria-label="Edit {entry.course.code} {entry.course.title}"
 									onclick={() => openEditor(entry)}
 								>
-									{@render entryHeading(entry)}
+									<HistoryCourseLabel course={entry.course} />
 									<span class="flex flex-col items-end gap-1">
-										{@render statusBadge(entry)}
+										<HistoryStatusBadge status={entry.status} />
 										<span class="text-sm text-slate-600">
 											{entry.visibility === 'visible' ? 'Visible' : 'Private'}{entry.privateNote
 												? ' · note'
