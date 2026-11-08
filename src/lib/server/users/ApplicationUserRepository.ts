@@ -119,6 +119,12 @@ export class ApplicationUserRepository {
 		return result.matchedCount === 1;
 	}
 
+	/** Only onboarded users have a username, so this never finds an unfinished account. */
+	async findIdByUsername(username: string): Promise<ObjectId | null> {
+		const document = await this.collection().findOne({ username }, { projection: { _id: 1 } });
+		return document?._id ?? null;
+	}
+
 	async updateLastVisitedCourse(userId: ObjectId, courseId: ObjectId): Promise<void> {
 		await this.collection().updateOne({ _id: userId }, { $set: { lastVisitedCourseId: courseId } });
 	}

@@ -3,6 +3,7 @@ import { courseRepository } from '#lib/server/catalog/CourseRepository.ts';
 import { institutionRepository } from '#lib/server/catalog/InstitutionRepository.ts';
 import { membershipRepository } from '#lib/server/catalog/MembershipRepository.ts';
 import { spaceRepository } from '#lib/server/catalog/SpaceRepository.ts';
+import { academicHistoryRepository } from '#lib/server/history/AcademicHistoryRepository.ts';
 import { applicationUserRepository } from '#lib/server/users/ApplicationUserRepository.ts';
 
 const RETRY_DELAY_MILLISECONDS = 30_000;
@@ -48,7 +49,8 @@ export class DatabaseIndexInitializer {
 			institutionRepository.ensureIndexes(),
 			courseRepository.ensureIndexes(),
 			spaceRepository.ensureIndexes(),
-			membershipRepository.ensureIndexes()
+			membershipRepository.ensureIndexes(),
+			academicHistoryRepository.ensureIndexes()
 		]);
 	}
 }
