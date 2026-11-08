@@ -3,7 +3,7 @@
 **Course:** CISY 8503, Applied Database Management  
 **Assignment:** NoSQL Database Lab 1  
 **Name:** Still a working title  
-**Status:** Early implementation. Professor Enke approved the proposal on November 4, 2026. Invitations, course discovery, and following work; the rest of the first build is still planned.  
+**Status:** Early implementation. Professor Enke approved the proposal on November 4, 2026. Invitations, onboarding, profiles, course discovery, and following work; the rest of the first build is still planned.  
 **Last documentation review:** November 8, 2026
 
 For my NoSQL lab, I'm building a course-focused discussion platform where students can keep track of their academic histories, ask questions, discuss classes, and share structured reviews. Discord inspired some of the navigation, but the academic information should stay useful outside an active conversation.
@@ -66,7 +66,7 @@ I care about low memory usage, fast transitions and loading, and perceived respo
 
 Read the [product spec](docs/product/product-spec.md) and [decision register](docs/planning/decision-register.md) first. The spec describes how the app should behave, and the register records why. The [roadmap](docs/implementation/roadmap-and-acceptance.md) turns those decisions into build stages and acceptance checks.
 
-The repository contains planning documents, assignment materials, design exports, and an application scaffold. The app isn't a working product yet. Besides configuration, the MongoDB connection, Clerk, and Socket.IO, it has invitations, course discovery and following, and last-course navigation. An administrator loads the demo catalog, centered on Alfred State College, from **Admin → Course catalog**; it's safe to load repeatedly.
+The repository contains planning documents, assignment materials, design exports, and an application scaffold. The app isn't a working product yet. Besides configuration, the MongoDB connection, Clerk, and Socket.IO, it has invitations, onboarding with a username, display name, and primary school, course discovery and following, and last-course navigation. An administrator loads the demo catalog, centered on Alfred State College, from **Admin → Course catalog**; it's safe to load repeatedly.
 
 To run it locally, copy `.env.example` to `.env`, fill in Clerk and MongoDB values, then run `pnpm install` and `pnpm dev`. For production, use `pnpm build` and `pnpm start`; `render.yaml` describes the Render service. GitHub Actions runs a dependency audit, linting, type checks, server tests, and the build on every pull request and push to `master`; Render deploys `master` only after those checks pass. The app is deployed at https://courseboard.mathewtech.us. `GET /api/health` reports whether MongoDB is reachable. The first implementation step is to prove the hosted combination of Clerk, SvelteKit, Socket.IO, Atlas, and one protected image upload before building dependent screens.
 
