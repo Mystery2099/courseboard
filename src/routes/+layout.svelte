@@ -18,7 +18,7 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<ClerkProvider>
+<ClerkProvider telemetry={{ disabled: true }}>
 	<QueryClientProvider client={queryClient}>
 		{@render children()}
 	</QueryClientProvider>
