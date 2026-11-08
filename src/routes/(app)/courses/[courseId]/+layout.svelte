@@ -14,6 +14,15 @@
 	let { data, children }: LayoutProps = $props();
 
 	const currentChannel = $derived(findCourseChannel(page.route.id));
+
+	// Recorded from the browser after the space renders, so hover preloads don't count as visits.
+	$effect(() => {
+		void fetch(`/api/courses/${data.course.id}/visit`, {
+			method: 'PUT',
+			headers: { 'content-type': 'application/json' },
+			body: '{}'
+		}).catch(() => undefined);
+	});
 	const followActionUrl = $derived(
 		`${resolve('/(app)/courses/[courseId]', { courseId: data.course.id })}?/${data.course.isFollowed ? 'unfollow' : 'follow'}`
 	);

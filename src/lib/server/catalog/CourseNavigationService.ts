@@ -15,12 +15,15 @@ export class CourseNavigationService {
 		private readonly courses: CourseRepository
 	) {}
 
-	async recordCourseVisit(courseId: string, actor: ApplicationUser | null): Promise<void> {
+	/** Returns false when the course doesn't exist or the id is malformed. */
+	async recordCourseVisit(courseId: string, actor: ApplicationUser | null): Promise<boolean> {
 		const user = AccessPolicy.requireAdmittedUser(actor);
-		await this.users.updateLastVisitedCourse(
-			new ObjectId(user.id),
-			new ObjectId(courseIdSchema.parse(courseId))
-		);
+		const parsedCourseId = courseIdSchema.safeParse(courseId);
+		if (!parsedCourseId.success) return false;
+		const id = new ObjectId(parsedCourseId.data);
+		if (!(await this.courses.findSpaceId(id))) return false;
+		await this.users.updateLastVisitedCourse(new ObjectId(user.id), id);
+		return true;
 	}
 
 	/** The last visited course if it still exists, otherwise null. */

@@ -2,21 +2,18 @@ import { fail, type RequestEvent } from '@sveltejs/kit';
 import { AccessGuard } from '#lib/server/access/AccessGuard.ts';
 import { courseFollowingService } from '#lib/server/catalog/CourseFollowingService.ts';
 
-async function readCourseId(request: Request): Promise<string> {
-	const courseId = (await request.formData()).get('courseId');
-	return typeof courseId === 'string' ? courseId : '';
-}
+type CourseRequestEvent = RequestEvent<{ courseId: string }>;
 
-/** Web form adapters for following; pages submit a `courseId` field to `?/follow` or `?/unfollow`. */
+/** Web form adapters for following, mounted on the course page; the course comes from the route. */
 export const courseFollowingFormActions = {
-	follow: async ({ locals, request }: RequestEvent) => {
+	follow: async ({ locals, params }: CourseRequestEvent) => {
 		const user = AccessGuard.requireAdmittedUser(locals);
-		const state = await courseFollowingService.followCourse(await readCourseId(request), user);
+		const state = await courseFollowingService.followCourse(params.courseId, user);
 		if (!state) return fail(404, { followingError: 'This course does not exist.' });
 	},
-	unfollow: async ({ locals, request }: RequestEvent) => {
+	unfollow: async ({ locals, params }: CourseRequestEvent) => {
 		const user = AccessGuard.requireAdmittedUser(locals);
-		const state = await courseFollowingService.unfollowCourse(await readCourseId(request), user);
+		const state = await courseFollowingService.unfollowCourse(params.courseId, user);
 		if (!state) return fail(404, { followingError: 'This course does not exist.' });
 	}
 };
