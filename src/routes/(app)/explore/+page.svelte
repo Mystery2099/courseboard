@@ -1,59 +1,76 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
+	import ChevronRight from 'lucide-svelte/icons/chevron-right';
+	import CourseCodeTile from '#lib/components/CourseCodeTile.svelte';
 	import type { PageProps } from './$types';
 
-	let { data, form }: PageProps = $props();
+	let { data }: PageProps = $props();
 </script>
 
-<h1 class="text-2xl font-semibold">Explore</h1>
+<svelte:head><title>Explore</title></svelte:head>
 
-{#if !data.catalog}
-	<p class="mt-2 text-sm opacity-70">No courses have been added yet.</p>
-{:else}
-	<form method="GET" class="mt-4 flex flex-wrap items-end gap-2">
-		<label class="flex flex-col text-sm">
-			Institution
-			<select name="institutionId" class="mt-1 rounded border px-2 py-1">
-				{#each data.institutions as institution (institution.id)}
-					<option value={institution.id} selected={institution.id === data.catalog.institution.id}
-						>{institution.name}</option
+<main class="mx-auto max-w-3xl px-4 py-8">
+	<h1 class="text-3xl font-semibold">Explore</h1>
+
+	{#if !data.catalog}
+		<p class="mt-4 text-slate-600">No courses have been added yet.</p>
+	{:else}
+		<div class="mt-6 flex items-center justify-between gap-4">
+			<h2 class="text-xl font-semibold">Courses at {data.catalog.institution.name}</h2>
+			{#if data.institutions.length > 1}
+				<details class="relative shrink-0">
+					<summary class="cursor-pointer list-none rounded-full border px-4 py-1.5"
+						>Change ▾</summary
 					>
-				{/each}
-			</select>
-		</label>
-		<button type="submit" class="rounded border px-4 py-1">Show courses</button>
-	</form>
+					<ul class="absolute right-0 z-10 mt-2 w-64 rounded-2xl border bg-white p-2 shadow-lg">
+						{#each data.institutions as institution (institution.id)}
+							<li>
+								<a
+									href="{resolve('/(app)/explore')}?{new URLSearchParams({
+										institutionId: institution.id
+									})}"
+									aria-current={institution.id === data.catalog.institution.id ? 'page' : undefined}
+									class="block rounded-xl px-3 py-2 hover:bg-slate-100">{institution.name}</a
+								>
+							</li>
+						{/each}
+					</ul>
+				</details>
+			{/if}
+		</div>
 
-	{#if form?.followingError}<p class="mt-4 text-sm" role="alert">{form.followingError}</p>{/if}
+		<ul class="mt-4 divide-y overflow-hidden rounded-[20px] border bg-white">
+			{#each data.catalog.courses as course (course.id)}
+				<li>
+					<a
+						href={resolve('/(app)/courses/[courseId]', { courseId: course.id })}
+						class="flex items-center gap-4 px-4 py-3 hover:bg-slate-50"
+					>
+						<CourseCodeTile code={course.code} />
+						<span class="min-w-0 flex-1">
+							<span class="block truncate font-semibold">{course.title}</span>
+							<span class="block text-sm text-slate-600">
+								<span class="font-mono">{course.code}</span>{course.isFollowed
+									? ' · following'
+									: ''}
+							</span>
+						</span>
+						<ChevronRight size={20} class="shrink-0" />
+					</a>
+				</li>
+			{:else}
+				<li class="px-4 py-3 text-slate-600">This institution has no courses yet.</li>
+			{/each}
+		</ul>
 
-	<h2 class="mt-6 text-lg font-semibold">{data.catalog.institution.name}</h2>
-	<ul class="mt-2">
-		{#each data.catalog.courses as course (course.id)}
-			<li class="flex items-center justify-between gap-4 border-t py-2">
-				<a href={resolve('/(app)/courses/[courseId]', { courseId: course.id })}>
-					<span class="font-medium">{course.code}</span>
-					{course.title}
-				</a>
-				<form method="POST" action={course.isFollowed ? '?/unfollow' : '?/follow'} use:enhance>
-					<input type="hidden" name="courseId" value={course.id} />
-					<button type="submit" class="rounded border px-3 py-1 text-sm">
-						{course.isFollowed ? 'Unfollow' : 'Follow'}
-					</button>
-				</form>
-			</li>
-		{:else}
-			<li class="border-t py-2 text-sm opacity-70">This institution has no courses yet.</li>
-		{/each}
-	</ul>
-
-	{#if data.catalog.nextCursor}
-		<a
-			class="mt-4 inline-block underline"
-			href="{resolve('/(app)/explore')}?{new URLSearchParams({
-				institutionId: data.catalog.institution.id,
-				after: data.catalog.nextCursor
-			})}">More courses</a
-		>
+		{#if data.catalog.nextCursor}
+			<a
+				class="mt-4 inline-block rounded-full border px-4 py-1.5"
+				href="{resolve('/(app)/explore')}?{new URLSearchParams({
+					institutionId: data.catalog.institution.id,
+					after: data.catalog.nextCursor
+				})}">Load more</a
+			>
+		{/if}
 	{/if}
-{/if}
+</main>

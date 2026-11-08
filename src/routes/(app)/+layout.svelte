@@ -1,38 +1,35 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
-	import { UserButton } from 'svelte-clerk';
+	import { page } from '$app/state';
+	import FloatingDock from '#lib/components/FloatingDock.svelte';
+	import SpaceRail from '#lib/components/SpaceRail.svelte';
+	import { findCourseChannel } from '#lib/navigation/CourseChannel.ts';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
+
+	const currentCourse = $derived(page.data.course ?? null);
+	const currentChannel = $derived(findCourseChannel(page.route.id));
+	const isAdministrator = $derived(data.currentUser?.role === 'administrator');
 </script>
 
-<header class="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
-	<nav class="flex gap-4 text-sm">
-		<a href={resolve('/(app)/explore')}>Explore</a>
-		{#if data.currentUser?.role === 'administrator'}
-			<a href={resolve('/(app)/admin/invitations')}>Invitations</a>
-			<a href={resolve('/(app)/admin/catalog')}>Catalog</a>
-		{/if}
-	</nav>
-	<UserButton />
-</header>
-
-{#if data.followedCourses.length > 0}
-	<nav aria-label="Followed courses" class="mx-auto max-w-4xl px-4">
-		<ul class="flex flex-wrap gap-2 text-sm">
-			{#each data.followedCourses as course (course.id)}
-				<li>
-					<a
-						href={resolve('/(app)/courses/[courseId]', { courseId: course.id })}
-						title="{course.title}, {course.institutionName}"
-						class="rounded border px-2 py-0.5">{course.code}</a
-					>
-				</li>
-			{/each}
-		</ul>
-	</nav>
-{/if}
-
-<main class="mx-auto max-w-4xl px-4 py-8">
-	{@render children()}
-</main>
+<div class="min-h-dvh desktop:flex">
+	<div class="hidden desktop:block">
+		<SpaceRail
+			followedCourses={data.followedCourses}
+			currentCourseId={currentCourse?.id ?? null}
+			isExploreCurrent={page.route.id === '/(app)/explore'}
+			{isAdministrator}
+		/>
+	</div>
+	<div class="min-w-0 flex-1 pb-24 desktop:pb-0">
+		{@render children()}
+	</div>
+	<div class="desktop:hidden">
+		<FloatingDock
+			followedCourses={data.followedCourses}
+			{currentCourse}
+			{currentChannel}
+			{isAdministrator}
+		/>
+	</div>
+</div>

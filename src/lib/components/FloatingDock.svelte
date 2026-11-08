@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { afterNavigate } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { ChevronUp, Compass } from 'lucide-svelte';
+	import ChevronUp from 'lucide-svelte/icons/chevron-up';
+	import Compass from 'lucide-svelte/icons/compass';
 	import { UserButton } from 'svelte-clerk';
 	import type { FollowedCourseResponse } from '#lib/contracts/CourseFollowingContract.ts';
 	import {
 		COURSE_CHANNELS,
 		COURSE_CHANNEL_LABELS,
-		courseChannelHref,
+		COURSE_CHANNEL_ROUTE_IDS,
 		type CourseChannel
 	} from '#lib/navigation/CourseChannel.ts';
 	import CourseCodeTile from './CourseCodeTile.svelte';
@@ -92,7 +93,7 @@
 			{#each COURSE_CHANNELS as channel (channel)}
 				<li>
 					<a
-						href={courseChannelHref(currentCourse.id, channel)}
+						href={resolve(COURSE_CHANNEL_ROUTE_IDS[channel], { courseId: currentCourse.id })}
 						aria-current={channel === currentChannel ? 'page' : undefined}
 						class={[
 							'block rounded-xl px-4 py-3',

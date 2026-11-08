@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { Compass, Shield } from 'lucide-svelte';
+	import Compass from 'lucide-svelte/icons/compass';
+	import Shield from 'lucide-svelte/icons/shield';
 	import { UserButton } from 'svelte-clerk';
 	import type { FollowedCourseResponse } from '#lib/contracts/CourseFollowingContract.ts';
 	import CourseCodeTile from './CourseCodeTile.svelte';

@@ -1,7 +1,6 @@
 import { courseBrowseQuerySchema } from '#lib/contracts/CourseCatalogContract.ts';
 import { AccessGuard } from '#lib/server/access/AccessGuard.ts';
 import { courseCatalogService } from '#lib/server/catalog/CourseCatalogService.ts';
-import { courseFollowingFormActions } from '#lib/server/web/CourseFollowingFormActions.ts';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -23,5 +22,3 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	);
 	return { institutions, catalog };
 };
-
-export const actions = courseFollowingFormActions;
