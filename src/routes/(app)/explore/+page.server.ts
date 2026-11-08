@@ -8,7 +8,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const { institutions } = await courseCatalogService.listInstitutions(user);
 	if (institutions.length === 0) return { institutions, catalog: null };
 
-	const requestedInstitutionId = url.searchParams.get('institutionId');
+	// Discovery defaults to the primary institution, but any school can be browsed.
+	const requestedInstitutionId =
+		url.searchParams.get('institutionId') ?? user.profile?.primaryInstitutionId;
 	const institutionId =
 		institutions.find((institution) => institution.id === requestedInstitutionId)?.id ??
 		institutions[0].id;

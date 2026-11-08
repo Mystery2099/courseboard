@@ -1,0 +1,28 @@
+import { error, fail } from '@sveltejs/kit';
+import { z } from 'zod';
+import { updateProfileSchema } from '#lib/contracts/UserProfileContract.ts';
+import { AccessGuard } from '#lib/server/access/AccessGuard.ts';
+import { userProfileService } from '#lib/server/users/UserProfileService.ts';
+import type { Actions, PageServerLoad } from './$types';
+
+export const load: PageServerLoad = async ({ locals }) => {
+	const user = AccessGuard.requireAdmittedUser(locals);
+	const profile = await userProfileService.getOwnProfile(user);
+	if (!profile) error(409, 'Finish setting up your profile first.');
+	return { profile };
+};
+
+export const actions: Actions = {
+	updateDisplayName: async ({ locals, request }) => {
+		const user = AccessGuard.requireAdmittedUser(locals);
+		const displayName = String((await request.formData()).get('displayName') ?? '');
+		const parsed = updateProfileSchema.safeParse({ displayName });
+		if (!parsed.success) {
+			const message = z.flattenError(parsed.error).fieldErrors.displayName?.[0];
+			return fail(400, { displayName, displayNameError: message ?? 'Check your display name.' });
+		}
+		const profile = await userProfileService.updateProfile(parsed.data, user);
+		if (!profile) return fail(409, { displayName, displayNameError: 'Finish onboarding first.' });
+		return { displayNameSaved: true };
+	}
+};
