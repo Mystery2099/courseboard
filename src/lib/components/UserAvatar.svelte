@@ -17,11 +17,14 @@
 	);
 
 	/** The same username always gets the same hue, so a person keeps one color everywhere. */
-	const hue = $derived([...username].reduce((hash, character) => (hash * 31 + character.charCodeAt(0)) % 360, 7));
+	const hue = $derived(
+		[...username].reduce((hash, character) => (hash * 31 + character.charCodeAt(0)) % 360, 7)
+	);
 </script>
 
 <span
 	class="inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white"
-	style="width: {size}px; height: {size}px; font-size: {size * 0.4}px; background-color: hsl({hue} 55% 38%);"
+	style="width: {size}px; height: {size}px; font-size: {size *
+		0.4}px; background-color: hsl({hue} 55% 38%);"
 	aria-hidden="true">{initials}</span
 >

@@ -38,7 +38,10 @@ export class UserProfileService {
 		private readonly institutions: InstitutionRepository
 	) {}
 
-	async completeOnboarding(input: unknown, actor: ApplicationUser | null): Promise<OnboardingResult> {
+	async completeOnboarding(
+		input: unknown,
+		actor: ApplicationUser | null
+	): Promise<OnboardingResult> {
 		const user = AccessPolicy.requireAdmittedUser(actor);
 		if (user.profile) return { kind: 'already-onboarded' };
 		const request = completeOnboardingSchema.parse(input);
