@@ -1,6 +1,6 @@
 # Build plan and acceptance
 
-**Status:** Plan, November 8, 2026. No implementation or deployment has been verified. Use the [product spec](../product/product-spec.md) for confirmed behavior and the [lab checklist](../course/lab-checklist.md) for what every lab needs before submission.
+**Status:** Plan, November 8, 2026. The [verification log](verification-log.md) records what has been checked so far. Use the [product spec](../product/product-spec.md) for confirmed behavior and the [lab checklist](../course/lab-checklist.md) for what every lab needs before submission.
 
 ## Stage 0: prove the infrastructure
 
@@ -8,9 +8,9 @@
 - [ ] Decide whether academic history is embedded in `users` or kept in its own collection (D16).
 - [x] Revise the [needs assessment](../planning/needs-assessment.md) to match the current scope, keeping the original as the first version.
 - [x] Write the [security and recovery plan](../technical/security-and-recovery.md) and add a dependency audit to CI.
-- [ ] Add security headers and a Content Security Policy.
+- [ ] Add security headers and a Content Security Policy. *Added and checked locally while signed out; still needs a signed-in check on the deployed site.*
 - [ ] Verify Render Free, Atlas Free, and Clerk work without payment details or billable services.
-- [ ] Prove Clerk sign-up, verification, sign-in, protected server routes, logout, and authenticated Socket.IO connections on the deployed host.
+- [ ] Prove Clerk sign-up, verification, sign-in, protected server routes, logout, and authenticated Socket.IO connections on the deployed host. *Deployed at https://courseboard.mathewtech.us; WebSockets pass through and fake tokens are rejected. The browser now connects when signed in.*
 - [ ] Prove application invitation redemption with independent verified-email matching, expiration, revocation, and single-use enforcement.
 - [ ] Set up TanStack Query with account-isolated caching, request-scoped SSR clients, and one owner for interactive server data. Verify initial-data integration and targeted invalidation.
 - [ ] Bootstrap the administrator and link MongoDB profiles through unique Clerk user IDs.
