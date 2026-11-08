@@ -18,6 +18,7 @@ This is the record of what has actually been checked, how, and when, so nobody h
 
 | Date | What | How | Result |
 | --- | --- | --- | --- |
+| Nov 8, 2026 | Academic history in a signed-in browser | Checked by hand in a local signed-in session: adding from a course page and the profile, editing, deleting, and Preview as others | Worked as expected. A second account viewing visible entries wasn't part of this check |
 | Nov 8, 2026 | History privacy in MongoDB | The real `AcademicHistoryRepository` against a throwaway MongoDB 8.0 container (podman), with one visible and one private entry | Owner query returns both; the visible query returns only the visible entry with `_id`, course, status, and term, without notes; another user's update and delete match nothing |
 | Nov 8, 2026 | History query uses its index | `explain()` on `{ userId, visibility: 'visible' }` in the same container | `IXSCAN` on `userId_1_courseId_1`, with visibility filtered after the fetch |
 | Nov 8, 2026 | History service rules | Unit tests in `AcademicHistoryService.spec.ts` | New entries are private and belong to the caller; Taking and Took require a term; unknown courses and usernames write or read nothing; unadmitted accounts are refused |
@@ -43,7 +44,7 @@ These come from Stage 0 of the roadmap. Each needs the deployed site and, where 
 - Invitation redemption on the deployed site: wrong email, expired, revoked, reused, and forwarded links (two profiles).
 - Protected image upload and retrieval, including a signed-out request. Not built yet; waits on the input limits (D19).
 - TanStack Query caching isolated by account, with one client per server render. The cache now clears when the Clerk user changes; not yet watched in a browser.
-- Academic history in a signed-in browser: adding from a course page and from the profile, editing, deleting, Preview as others, and a second account seeing only visible entries.
+- Academic history with a second account: it should see only visible entries and never notes.
 - A restore from backup.
 
 ## Testing notes
