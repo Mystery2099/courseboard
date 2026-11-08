@@ -50,9 +50,10 @@
 	{#if data.catalog.nextCursor}
 		<a
 			class="mt-4 inline-block underline"
-			href="?institutionId={data.catalog.institution.id}&after={encodeURIComponent(
-				data.catalog.nextCursor
-			)}">More courses</a
+			href="{resolve('/(app)/explore')}?{new URLSearchParams({
+				institutionId: data.catalog.institution.id,
+				after: data.catalog.nextCursor
+			})}">More courses</a
 		>
 	{/if}
 {/if}
