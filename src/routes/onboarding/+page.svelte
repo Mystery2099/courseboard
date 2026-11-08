@@ -54,6 +54,7 @@
 
 	<form
 		method="POST"
+		action="?/completeOnboarding"
 		class="mt-8 flex flex-1 flex-col"
 		use:enhance={() => {
 			isSubmitting = true;
@@ -74,9 +75,21 @@
 			</p>
 
 			{#if data.institutions.length === 0}
-				<p class="mt-6 text-slate-600" role="status">
-					No schools have been added yet. Ask an administrator to add yours.
-				</p>
+				{#if data.isAdministrator}
+					<p class="mt-6 text-slate-600" role="status">
+						No schools have been added yet. Load the demo catalog to start.
+					</p>
+					<button
+						type="submit"
+						formaction="?/loadDemoCatalog"
+						formnovalidate
+						class="mt-4 rounded-full border px-4 py-2 font-semibold">Load demo catalog</button
+					>
+				{:else}
+					<p class="mt-6 text-slate-600" role="status">
+						No schools have been added yet. Ask an administrator to add yours.
+					</p>
+				{/if}
 			{:else}
 				<label class="relative mt-6 block">
 					<span class="sr-only">Search schools</span>

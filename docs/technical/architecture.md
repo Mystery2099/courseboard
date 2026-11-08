@@ -34,7 +34,7 @@ Authentication uses the existing Clerk request middleware; actor identity and ro
 | `POST /api/profile` | Admitted user | JSON `{ primaryInstitutionId, username, displayName }`; completes onboarding with status 201. 409 when the username is taken or the profile already exists, 404 for an unknown institution |
 | `PATCH /api/profile` | Admitted user with a profile | JSON `{ displayName }`; returns the updated profile. The username can't be changed |
 
-An admitted account without a profile is sent to onboarding by every web page. Usernames are lowercase, unique, and can't be changed; a few names that look like staff or system accounts are reserved.
+An admitted account without a profile is sent to onboarding by every web page. On a fresh database there are no schools to choose, so onboarding offers administrators the demo catalog load that otherwise lives under **Admin → Course catalog**. Usernames are lowercase, unique, and can't be changed; a few names that look like staff or system accounts are reserved.
 
 ### Course catalog HTTP API
 

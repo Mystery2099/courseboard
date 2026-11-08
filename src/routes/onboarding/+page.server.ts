@@ -3,13 +3,15 @@ import { z } from 'zod';
 import { completeOnboardingSchema } from '#lib/contracts/UserProfileContract.ts';
 import { AccessGuard } from '#lib/server/access/AccessGuard.ts';
 import { courseCatalogService } from '#lib/server/catalog/CourseCatalogService.ts';
+import { demoCatalogLoader } from '#lib/server/catalog/DemoCatalogLoader.ts';
 import { userProfileService } from '#lib/server/users/UserProfileService.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = AccessGuard.requireAdmittedUser(locals);
 	if (user.profile) redirect(303, '/');
-	return courseCatalogService.listInstitutions(user);
+	const { institutions } = await courseCatalogService.listInstitutions(user);
+	return { institutions, isAdministrator: user.role === 'administrator' };
 };
 
 type OnboardingFieldErrors = Partial<
@@ -25,7 +27,12 @@ function rejectOnboarding(
 }
 
 export const actions: Actions = {
-	default: async ({ locals, request }) => {
+	/** On a fresh database, an administrator can't reach the admin catalog page before onboarding. */
+	loadDemoCatalog: async ({ locals }) => {
+		const administrator = AccessGuard.requireAdministrator(locals);
+		await demoCatalogLoader.loadDemoCatalog(administrator);
+	},
+	completeOnboarding: async ({ locals, request }) => {
 		const user = AccessGuard.requireAdmittedUser(locals);
 		const formData = await request.formData();
 		const submitted = {
