@@ -25,6 +25,7 @@ This is the record of what has actually been checked, how, and when, so nobody h
 | Nov 8, 2026 | Security headers and CSP | Local production build with the development Clerk key, checked with curl and headless Chromium on `/` | All headers present; Clerk loads with no CSP violations while signed out |
 | Nov 8, 2026 | Clerk telemetry is off | The deployed console showed CSP blocks on `clerk-telemetry.com`. Local production build in headless Chromium with `navigator.webdriver` hidden, reading `Clerk.telemetry.isEnabled` with and without the change | On before, off after; no telemetry requests |
 | Nov 8, 2026 | Username uniqueness | The repository's index definition and onboarding update run with `mongosh` against a throwaway MongoDB 8.0 container | Accounts without usernames coexist; a second claim on a taken name fails with a duplicate key, which the app reports as unavailable; an onboarded user can't overwrite their profile |
+| Nov 8, 2026 | Clerk name fields off | Development instance config patched through the Clerk API after a dry run; the response shows `user_model.first_name` and `last_name` changed from enabled to disabled | Applied. Clerk's Update profile panel itself hasn't been looked at since |
 
 ## Not verified yet
 

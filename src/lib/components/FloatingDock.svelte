@@ -27,7 +27,7 @@
 		currentChannel: CourseChannel | null;
 		isProfileCurrent: boolean;
 		isAdministrator: boolean;
-		profile: { username: string; displayName: string };
+		profile: { username: string; displayName: string; imageUrl: string | null };
 	} = $props();
 
 	let isSwitcherOpen = $state(false);
@@ -123,6 +123,11 @@
 		aria-current={isProfileCurrent ? 'page' : undefined}
 		class="flex size-11 items-center justify-center"
 	>
-		<UserAvatar username={profile.username} displayName={profile.displayName} size={32} />
+		<UserAvatar
+			username={profile.username}
+			displayName={profile.displayName}
+			imageUrl={profile.imageUrl}
+			size={32}
+		/>
 	</a>
 </nav>

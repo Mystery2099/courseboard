@@ -16,6 +16,10 @@
 
 	const clerkContext = useClerkContext();
 	const isSignedIn = $derived(clerkContext.isLoaded && clerkContext.session != null);
+	const profile = $derived({
+		...data.profile,
+		imageUrl: clerkContext.user?.hasImage ? clerkContext.user.imageUrl : null
+	});
 
 	$effect(() => {
 		if (!isSignedIn) return;
@@ -34,7 +38,7 @@
 			isExploreCurrent={page.route.id === '/(app)/explore'}
 			{isProfileCurrent}
 			{isAdministrator}
-			profile={data.profile}
+			{profile}
 		/>
 	</div>
 	<div class="min-w-0 flex-1 pb-24 desktop:pb-0">
@@ -47,7 +51,7 @@
 			{currentChannel}
 			{isProfileCurrent}
 			{isAdministrator}
-			profile={data.profile}
+			{profile}
 		/>
 	</div>
 </div>
