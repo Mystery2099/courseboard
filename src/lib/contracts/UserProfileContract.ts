@@ -39,3 +39,12 @@ export type OnboardingResult =
 	| { kind: 'already-onboarded' }
 	| { kind: 'username-unavailable' }
 	| { kind: 'institution-not-found' };
+
+/** Another user's profile as admitted users see it. Email addresses are never included. */
+export interface PublicProfileResponse {
+	username: string;
+	displayName: string;
+	imageUrl: string | null;
+	primaryInstitution: { id: string; name: string };
+	isOwnProfile: boolean;
+}

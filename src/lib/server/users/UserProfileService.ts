@@ -2,8 +2,10 @@ import { ObjectId } from 'mongodb';
 import {
 	completeOnboardingSchema,
 	updateProfileSchema,
+	usernameSchema,
 	type OnboardingResult,
-	type OwnProfileResponse
+	type OwnProfileResponse,
+	type PublicProfileResponse
 } from '#lib/contracts/UserProfileContract.ts';
 import { AccessPolicy } from '#lib/server/access/AccessPolicy.ts';
 import {
@@ -16,6 +18,7 @@ import {
 	applicationUserRepository,
 	type ApplicationUserRepository
 } from './ApplicationUserRepository.ts';
+import { profilePhotoLookup, type ProfilePhotoLookup } from './ProfilePhotoLookup.ts';
 
 /**
  * Onboarding sets a user's username, display name, and primary institution together; until then the
@@ -35,7 +38,8 @@ export class UserProfileService {
 
 	constructor(
 		private readonly users: ApplicationUserRepository,
-		private readonly institutions: InstitutionRepository
+		private readonly institutions: InstitutionRepository,
+		private readonly profilePhotos: ProfilePhotoLookup
 	) {}
 
 	async completeOnboarding(
@@ -93,6 +97,32 @@ export class UserProfileService {
 		return updated ? this.toOwnProfile({ ...user.profile, displayName }) : null;
 	}
 
+	/** Another onboarded user's profile; null when no onboarded user has that username. */
+	async getPublicProfile(
+		username: string,
+		actor: ApplicationUser | null
+	): Promise<PublicProfileResponse | null> {
+		const user = AccessPolicy.requireAdmittedUser(actor);
+		const parsedUsername = usernameSchema.safeParse(username);
+		if (!parsedUsername.success) return null;
+		const profile = await this.users.findPublicProfileByUsername(parsedUsername.data);
+		if (!profile) return null;
+		const [institution, imageUrl] = await Promise.all([
+			this.institutions.findById(profile.primaryInstitutionId),
+			this.profilePhotos.findImageUrl(profile.clerkUserId)
+		]);
+		return {
+			username: profile.username,
+			displayName: profile.displayName,
+			imageUrl,
+			primaryInstitution: {
+				id: profile.primaryInstitutionId.toHexString(),
+				name: institution?.name ?? 'Unknown institution'
+			},
+			isOwnProfile: profile._id.toHexString() === user.id
+		};
+	}
+
 	private async toOwnProfile(profile: ApplicationUserProfile): Promise<OwnProfileResponse> {
 		const institution = await this.institutions.findById(
 			new ObjectId(profile.primaryInstitutionId)
@@ -110,5 +140,6 @@ export class UserProfileService {
 
 export const userProfileService = new UserProfileService(
 	applicationUserRepository,
-	institutionRepository
+	institutionRepository,
+	profilePhotoLookup
 );

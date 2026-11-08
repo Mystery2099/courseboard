@@ -13,6 +13,15 @@ export interface OnboardingProfile {
 	primaryInstitutionId: ObjectId;
 }
 
+/** What another admitted user may see about someone; never the email address or role. */
+export interface PublicProfileRecord {
+	_id: ObjectId;
+	clerkUserId: string;
+	username: string;
+	displayName: string;
+	primaryInstitutionId: ObjectId;
+}
+
 export type ProfileCreationOutcome = 'created' | 'already-onboarded' | 'username-unavailable';
 
 const DUPLICATE_KEY_ERROR_CODE = 11000;
@@ -123,6 +132,16 @@ export class ApplicationUserRepository {
 	async findIdByUsername(username: string): Promise<ObjectId | null> {
 		const document = await this.collection().findOne({ username }, { projection: { _id: 1 } });
 		return document?._id ?? null;
+	}
+
+	async findPublicProfileByUsername(username: string): Promise<PublicProfileRecord | null> {
+		const document = await this.collection().findOne(
+			{ username },
+			{
+				projection: { _id: 1, clerkUserId: 1, username: 1, displayName: 1, primaryInstitutionId: 1 }
+			}
+		);
+		return document as PublicProfileRecord | null;
 	}
 
 	async updateLastVisitedCourse(userId: ObjectId, courseId: ObjectId): Promise<void> {
