@@ -18,6 +18,7 @@ This is the record of what has actually been checked, how, and when, so nobody h
 
 | Date | What | How | Result |
 | --- | --- | --- | --- |
+| Nov 8, 2026 | Changing schools after onboarding | Source inspection of `UserProfileService` and `UserProfileContract` | Not supported: profile updates accept only the display name, and repeat onboarding leaves the existing profile unchanged. Not browser-tested. |
 | Nov 8, 2026 | Render reaches Atlas | `GET /api/health` on both URLs | `{"status":"ok","databaseReachable":true}` |
 | Nov 8, 2026 | WebSockets pass through Render and Cloudflare | Node `socket.io-client`, WebSocket transport only, against both URLs | Handshake reached the server |
 | Nov 8, 2026 | Socket handshakes fail closed | Same client with a fake token | Rejected with `unauthenticated` |
