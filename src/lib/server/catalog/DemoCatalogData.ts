@@ -1,7 +1,8 @@
 /**
  * Demonstration catalog. Alfred State College, where the platform is demonstrated, is the main
- * school; descriptions are placeholders rather than official catalog text. The two fictional schools
- * both offer a "CS 101", showing that course codes are only unique within an institution.
+ * school; descriptions are placeholders rather than official catalog text. Every other school is
+ * fictional. Several offer a "CS 101", showing that course codes are only unique within an
+ * institution.
  */
 export const DEMO_CATALOG = [
 	{
@@ -101,6 +102,111 @@ export const DEMO_CATALOG = [
 				code: 'PSY 101',
 				title: 'Introduction to Psychology',
 				description: 'Perception, memory, development, and the methods of psychological research.'
+			}
+		]
+	},
+	{
+		institutionName: 'Thistlewood University',
+		courses: [
+			{
+				code: 'CS 101',
+				title: 'Introduction to Computer Science',
+				description: 'Algorithms, abstraction, and programming fundamentals in Java.'
+			},
+			{
+				code: 'CS 310',
+				title: 'Web Application Development',
+				description: 'Building server-rendered and client-side web applications with a database.'
+			},
+			{
+				code: 'IS 420',
+				title: 'Information Security',
+				description: 'Threat modeling, authentication, encryption, and secure application design.'
+			},
+			{
+				code: 'STAT 200',
+				title: 'Introductory Statistics',
+				description: 'Descriptive statistics, probability, sampling, and hypothesis testing.'
+			},
+			{
+				code: 'PHIL 105',
+				title: 'Ethics and Technology',
+				description: 'Privacy, automation, and responsibility in a networked society.'
+			}
+		]
+	},
+	{
+		institutionName: 'Kestrel Bay College',
+		courses: [
+			{
+				code: 'NURS 101',
+				title: 'Foundations of Nursing',
+				description: 'Patient care, safety, communication, and the role of the nurse.'
+			},
+			{
+				code: 'BIO 210',
+				title: 'Anatomy and Physiology I',
+				description: 'The structure and function of the human body, with a weekly lab.'
+			},
+			{
+				code: 'CHEM 110',
+				title: 'General Chemistry',
+				description: 'Atomic structure, bonding, reactions, and stoichiometry.'
+			},
+			{
+				code: 'ENG 101',
+				title: 'College Writing I',
+				description: 'Clear academic writing, revision, and the use of sources.'
+			}
+		]
+	},
+	{
+		institutionName: 'Ashgrove Technical Institute',
+		courses: [
+			{
+				code: 'CS 101',
+				title: 'Programming Essentials',
+				description: 'Problem solving and structured programming in C#.'
+			},
+			{
+				code: 'NET 150',
+				title: 'Networking Fundamentals',
+				description: 'IP addressing, routing, switching, and network troubleshooting.'
+			},
+			{
+				code: 'ELEC 120',
+				title: 'Circuit Analysis',
+				description: 'DC and AC circuits, Ohm’s law, and measurement with lab instruments.'
+			},
+			{
+				code: 'CAD 101',
+				title: 'Computer-Aided Drafting',
+				description: 'Technical drawing and 2D and 3D modeling for engineering technology.'
+			}
+		]
+	},
+	{
+		institutionName: 'Brindle Hill College',
+		courses: [
+			{
+				code: 'BUS 101',
+				title: 'Introduction to Business',
+				description: 'How organizations are structured, financed, and managed.'
+			},
+			{
+				code: 'ACCT 201',
+				title: 'Financial Accounting',
+				description: 'Recording transactions and preparing and reading financial statements.'
+			},
+			{
+				code: 'ECON 102',
+				title: 'Principles of Microeconomics',
+				description: 'Supply and demand, market structures, and consumer choice.'
+			},
+			{
+				code: 'MKT 230',
+				title: 'Digital Marketing',
+				description: 'Search, social, and email marketing, with campaign analytics.'
 			}
 		]
 	}
