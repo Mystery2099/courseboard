@@ -41,7 +41,7 @@ flowchart LR
 
 ## Collections and relationships
 
-Candidate model from the [MongoDB model](mongodb-model.md). D16 is still open: `ACADEMIC_HISTORY` may become an array embedded in `USERS` instead of its own collection. The relationships stay the same either way.
+Candidate model from the [MongoDB model](mongodb-model.md). `ACADEMIC_HISTORY` is its own collection rather than an array embedded in `USERS`; the [model](mongodb-model.md#why-academic-history-has-its-own-collection) explains why.
 
 ```mermaid
 erDiagram

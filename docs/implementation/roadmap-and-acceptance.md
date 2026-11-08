@@ -5,7 +5,7 @@
 ## Stage 0: prove the infrastructure
 
 - [x] Confirm requirements with Professor Enke. He approved the proposal on November 4, 2026, expects WebSockets, and treats Markdown as a given.
-- [ ] Decide whether academic history is embedded in `users` or kept in its own collection (D16).
+- [x] Decide whether academic history is embedded in `users` or kept in its own collection. It has its own collection; see the [decision register](../planning/decision-register.md).
 - [x] Revise the [needs assessment](../planning/needs-assessment.md) to match the current scope, keeping the original as the first version.
 - [x] Write the [security and recovery plan](../technical/security-and-recovery.md) and add a dependency audit to CI.
 - [ ] Add security headers and a Content Security Policy. *Added and checked locally while signed out; still needs a signed-in check on the deployed site.*

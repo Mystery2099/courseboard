@@ -16,6 +16,7 @@ When we settle something, add it here with what we chose, what we rejected, and 
 | Institutions | Primary school informs discovery; multiple current/past schools supported | Institutions are metadata and filters, not navigation layers |
 | History vs membership | Recording a course and following its space are independent | Following can't imply enrollment, and old courses shouldn't flood the sidebar |
 | History privacy | Self-reported, **Private** by default; optional **Visible on profile** for signed-in users | No implied school verification |
+| History storage | Entries live in their own `academicHistories` collection, not embedded in `users` (November 8, 2026). Changed from the approved proposal | `users` is read on every request, so embedded entries would carry private notes along unless every query projected them out. Entries also have their own visibility, repeated attempts, and review-eligibility checks. See the [MongoDB model](../technical/mongodb-model.md#why-academic-history-has-its-own-collection) |
 | Grades | Deferred; private notes stay private | Neither is ever used in searches, profiles, counts, or review stats |
 | Reviews | One per person per course; requires a Taking/Took entry; publishing discloses that participation after a warning | Eligibility isn't verification; each person counts once in course statistics |
 | Access | Individual, single-use invitations matched to an independently verified email; no logged-out reading, including images | A forwarded link alone must never grant access |
@@ -47,6 +48,7 @@ When we settle something, add it here with what we chose, what we rejected, and 
 - **Atlas Search:** deferred; text indexes cover the initial search.
 - **Other Markdown libraries:** Marked doesn't sanitize its output; unified/remark/rehype needs more packages and pipeline configuration; MDsveX compiles Markdown into Svelte components, which is wrong for untrusted student posts.
 - **Separate backend, microservices, multiple packages, native clients:** keeping the layers separate in one app gives the same flexibility without extra infrastructure.
+- **Embedding academic history in `users`:** the approved proposal suggested it, and it would make an owner's history a single read. But a careless `find` on `users` could then return private notes, and that document is read on every request. Embedding still appears where data is small and owned by one document, such as review details on review posts.
 - **Post edit history:** posts only show an edited timestamp.
 - **Automated backups through GitHub Actions:** they would store user data, including email addresses, as build artifacts.
 
@@ -57,7 +59,6 @@ When we settle something, add it here with what we chose, what we rejected, and 
 | D01 | What's the app called? | Still a placeholder; affects branding, URLs, and metadata |
 | D07 | On desktop, does a new post use a dialog or a full page? | Both were explored; mobile is full screen either way |
 | D13 | Do moderators need a separate escalation flow? | Reports and a course-scoped queue only; no escalation planned |
-| D16 | Should academic history be embedded in `users` or kept in its own collection? | The approved proposal said embedded; the current model leans separate. See the [MongoDB model](../technical/mongodb-model.md#embedding-academic-history). Decide before Stage 1 |
 | D17 | Google login? | Undecided; email/password comes first |
 | D18 | Which profanity matcher? | Leaning toward a simple whole-word matcher with no dependency |
 | D19 | Image input limits | Byte and pixel limits to check before decoding, plus the resize dimensions |

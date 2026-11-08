@@ -33,4 +33,4 @@ I emailed Professor Enke a proposal on November 3, 2026: a web-based academic di
 
 He replied on November 4: "Your lab sounds good!" We'd already discussed it in person. He said the proposal was good, that he **expects WebSockets**, and that **Markdown support is a given**. Neither is written in the handout, but both are requirements for this project.
 
-The scope has narrowed since the proposal: general communities and Experience posts are deferred, and academic history may not end up embedded (D16 in the [decision register](decision-register.md)). I'll point out those changes during the demonstration rather than presenting the original proposal as what was built.
+The scope has narrowed since the proposal: general communities and Experience posts are deferred, and academic history is kept in its own collection instead of embedded (see the [decision register](decision-register.md)). I'll point out those changes during the demonstration rather than presenting the original proposal as what was built.
