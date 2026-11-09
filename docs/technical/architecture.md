@@ -13,7 +13,7 @@ Confirmed November 7, 2026: one repository and one deployable application with c
 - Shared request/response types are fine; MongoDB documents and server internals stay on the server. Responses return deliberately chosen, privacy-aware fields rather than raw database records.
 - Socket authentication and subscriptions use the same permission checks. Changes are saved through HTTP first, then announced over the socket.
 
-**Current implementation:** `src/lib/server/` separates services, repositories, access policy, and persistence. Invitations were the first feature built this way, followed by the course catalog and following, then onboarding and profiles. Each has HTTP endpoints that use the same services as the web pages. HTTP and realtime share the same account-access checks, and `src/lib/contracts/` defines the request and response types the client sees. Dates are sent as ISO strings. Other APIs will be added along with their features.
+**Current implementation:** `src/lib/server/` separates services, repositories, access policy, and persistence. Invitations were the first feature built this way, followed by the course catalog and following, onboarding and profiles, then academic history. Each has HTTP endpoints that use the same services as the web pages. HTTP and realtime share the same account-access checks, and `src/lib/contracts/` defines the request and response types the client sees. Dates are sent as ISO strings. Other APIs will be added along with their features.
 
 ### Invitation HTTP API
 
@@ -49,6 +49,21 @@ An admitted account without a profile is sent to onboarding by every web page. O
 | `PUT /api/courses/{courseId}/visit` | Admitted user | JSON `{}`; records the course as the caller's last visited one and returns `{ recorded: true }` |
 | `GET /api/admin/catalog/courses` | Active administrator | The whole catalog with institution names, bounded, with `hasMoreCourses` |
 | `POST /api/admin/catalog/demo-data` | Active administrator | JSON `{}`; loads the demo catalog and returns how many institutions and courses were added |
+
+### Academic history HTTP API
+
+| Method and path | Access | Result |
+| --- | --- | --- |
+| `GET /api/history` | Admitted user | All of the caller's entries, including private ones, visibility, and notes |
+| `POST /api/history` | Admitted user | JSON `{ courseId, status, term, visibility?, privateNote? }`; returns the entry with status 201. Visibility defaults to private. 404 for an unknown course, 409 at the 200-entry limit |
+| `PUT /api/history/{entryId}` | Owner | JSON `{ status, term, visibility, privateNote }`; replaces those fields. The course can't change |
+| `DELETE /api/history/{entryId}` | Owner | No body; returns 204 |
+| `GET /api/users/{username}/history` | Admitted user | Only that user's visible entries: course, status, and term. 404 for an unknown username |
+| `GET /api/users/{username}` | Admitted user | That user's display name, username, Clerk photo URL or null, primary institution, and `isOwnProfile`. Never email or role. 404 for an unknown username |
+
+`status` is `planning`, `taking`, or `took`; `term` is `{ season, year }` with `season` one of `winter`, `spring`, `summer`, `fall`, and only Planning may send `null`. Another user's entry answers 404 exactly like a missing one. Someone with only private entries looks the same as someone with none, and administrators get no exception.
+
+Profile pages for other students live at `/users/{username}`. They show the person's visible entries grouped by term and school. Schools other than the primary institution appear only through visible entries. Opening your own page shows it as others see it, with a link back to editing. Photos are read from Clerk on the server for each view, and initials are shown if Clerk can't be reached. Hiding the primary institution isn't built yet.
 
 Following never reads or writes academic history. After a course page renders, the browser records it as the user's last visited course; it isn't recorded during the server load, so hover preloading doesn't count as a visit. `/` resumes that course after sign-in when it still exists.
 
@@ -96,9 +111,11 @@ The browser shouldn't be able to pick someone else's identity or permissions thr
 
 ## Client data and caching
 
-TanStack Query owns the client cache for interactive server data such as course lists, threads, and replies, fetched through the HTTP API. SvelteKit handles routing and initial loading; initial data for Query-managed views goes into the same cache rather than a second mutable copy. Verify the Svelte adapter's SSR integration before relying on it.
+TanStack Query owns the client cache for interactive server data such as course lists, threads, and replies, fetched through the HTTP API. SvelteKit handles routing and initial loading; initial data for Query-managed views goes into the same cache rather than a second mutable copy.
 
 After writes, update or invalidate the affected queries. Socket events queue new-item notices without shifting content. Keep caches isolated by account, clear them on logout/account changes, and create a new server-side QueryClient per request. Cached data never replaces authorization.
+
+**Current implementation:** the root layout creates the `QueryClient`, so each server render gets its own and each browser tab keeps one. Queries don't run during server rendering; a page's server load supplies `initialData` with its load time as `initialDataUpdatedAt`, and the query owns the data from then on. `AccountScopedQueryCache` clears the cache when the Clerk user changes, including sign-out. Browser API calls go through `src/lib/client/`, which also defines query keys. Academic history is the first view built this way: writes invalidate every `academic-history` key, which covers the owner's list and Preview as others. The course picker uses an infinite query over the course browse API.
 
 Use TanStack Virtual for browsing lists once they grow enough to need it. Virtualization limits rendered elements, not fetched data, so bound Query's retained pages separately and test scroll restoration after old pages are evicted. Pending replies need a stable submission ID so Retry can't duplicate a reply that was stored before a lost response.
 

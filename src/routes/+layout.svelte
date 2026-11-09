@@ -4,6 +4,7 @@
 	import { ClerkProvider } from 'svelte-clerk';
 	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
 	import { browser } from '$app/env';
+	import AccountScopedQueryCache from '#lib/components/AccountScopedQueryCache.svelte';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
@@ -20,6 +21,8 @@
 
 <ClerkProvider telemetry={{ disabled: true }}>
 	<QueryClientProvider client={queryClient}>
-		{@render children()}
+		<AccountScopedQueryCache>
+			{@render children()}
+		</AccountScopedQueryCache>
 	</QueryClientProvider>
 </ClerkProvider>

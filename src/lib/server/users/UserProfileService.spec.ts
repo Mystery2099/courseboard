@@ -4,7 +4,10 @@ import { InstitutionRepository } from '#lib/server/catalog/InstitutionRepository
 import { DatabaseIndexInitializer } from '#lib/server/persistence/DatabaseIndexInitializer.ts';
 import type { ApplicationUser } from './ApplicationUser.ts';
 import { ApplicationUserRepository } from './ApplicationUserRepository.ts';
+import { ProfilePhotoLookup } from './ProfilePhotoLookup.ts';
 import { UserProfileService } from './UserProfileService.ts';
+
+vi.mock('svelte-clerk/server', () => ({ clerkClient: { users: { getUser: vi.fn() } } }));
 
 const institutionId = new ObjectId('000000000000000000000002');
 const newStudent: ApplicationUser = {
@@ -28,7 +31,13 @@ function createService() {
 		_id: institutionId,
 		name: 'Alfred State College'
 	});
-	return { service: new UserProfileService(users, institutions), users, institutions };
+	const profilePhotos = new ProfilePhotoLookup();
+	vi.spyOn(profilePhotos, 'findImageUrl').mockResolvedValue(null);
+	return {
+		service: new UserProfileService(users, institutions, profilePhotos),
+		users,
+		institutions
+	};
 }
 
 afterEach(() => vi.restoreAllMocks());
@@ -123,6 +132,38 @@ describe('user profile service', () => {
 
 			await expect(service.completeOnboarding(onboardingRequest, actor)).rejects.toThrow();
 			expect(createProfile).not.toHaveBeenCalled();
+		}
+	);
+
+	it('shows another user only their public profile fields', async () => {
+		const { service, users } = createService();
+		const findProfile = vi.spyOn(users, 'findPublicProfileByUsername').mockResolvedValue({
+			_id: new ObjectId('000000000000000000000005'),
+			clerkUserId: 'classmate',
+			username: 'sam_r',
+			displayName: 'Sam R.',
+			primaryInstitutionId: institutionId
+		});
+
+		const profile = await service.getPublicProfile('Sam_R', newStudent);
+
+		expect(findProfile).toHaveBeenCalledWith('sam_r');
+		expect(profile).toEqual({
+			username: 'sam_r',
+			displayName: 'Sam R.',
+			imageUrl: null,
+			primaryInstitution: { id: institutionId.toHexString(), name: 'Alfred State College' },
+			isOwnProfile: false
+		});
+	});
+
+	it.each(['nobody', 'not a username'])(
+		'reports a username no onboarded user has: %s',
+		async (username) => {
+			const { service, users } = createService();
+			vi.spyOn(users, 'findPublicProfileByUsername').mockResolvedValue(null);
+
+			expect(await service.getPublicProfile(username, newStudent)).toBeNull();
 		}
 	);
 });

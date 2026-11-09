@@ -2,6 +2,7 @@ import { error, fail } from '@sveltejs/kit';
 import { z } from 'zod';
 import { updateProfileSchema } from '#lib/contracts/UserProfileContract.ts';
 import { AccessGuard } from '#lib/server/access/AccessGuard.ts';
+import { academicHistoryService } from '#lib/server/history/AcademicHistoryService.ts';
 import { userProfileService } from '#lib/server/users/UserProfileService.ts';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -9,7 +10,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const user = AccessGuard.requireAdmittedUser(locals);
 	const profile = await userProfileService.getOwnProfile(user);
 	if (!profile) error(409, 'Finish setting up your profile first.');
-	return { profile };
+	const history = await academicHistoryService.listOwnEntries(user);
+	return { profile, history, historyLoadedAt: Date.now() };
 };
 
 export const actions: Actions = {

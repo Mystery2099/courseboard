@@ -17,7 +17,7 @@ Embedding can be useful when the data is small, bounded, and really owned by one
 | `courses` | `_id`, institutionId, code, normalizedCode, title, description, spaceId | Don't identify courses by code alone |
 | `spaces` | `_id`, courseId | One canonical space per course, created in the same transaction as the course, which stores its `spaceId`. Routes use the course id, so there's no slug; views are fixed, and general communities are deferred |
 | `memberships` | `_id`, userId, spaceId, courseId, followedAt | Following a course; independent of academic history. `courseId` is copied from the space so the followed-course list joins courses directly |
-| `academicHistories` | `_id`, userId, courseId, status, term, visibility, privateNote | Its own collection, not embedded in `users`; see [below](#why-academic-history-has-its-own-collection). `privateNote` is only ever returned to the owner. Grades are deferred |
+| `academicHistories` | `_id`, userId, courseId, status, term `{ season, year }` (null only while Planning), visibility, privateNote, createdAt, updatedAt | Its own collection, not embedded in `users`; see [below](#why-academic-history-has-its-own-collection). `privateNote` is only ever returned to the owner. Grades are deferred |
 | `posts` | `_id`, spaceId, courseId, kind (`question`/`discussion`/`review`), authorId, title, bodyMarkdown, optional reviewData, imageIds, state, timestamps | Review structure belongs with review posts; one review per user per course |
 | `replies` | `_id`, postId, optional parentReplyId, authorId, bodyMarkdown, timestamps | One-level nesting at most |
 | `reports` | `_id`, reporterId, target, spaceId, reason, state, actions | Must support space-scoped moderation |
@@ -33,7 +33,7 @@ These are starting points; I don't plan on creating all eleven right away. We st
 - **Courses (built):** unique `(institutionId, normalizedCode)`, which also serves browsing one school's courses in code order with a code cursor. Revisit if campuses or cross-listed courses need separate entries.
 - **Spaces (built):** unique `courseId`.
 - **Memberships (built):** unique `(userId, spaceId)` for following and follow-state checks, plus `(userId, followedAt)` for the followed-course list, which joins courses and institutions with `$lookup`.
-- **Histories:** `(userId, courseId)` for an owner's history and review-eligibility checks, and `(courseId, visibility)` for people filtering if query plans show it's needed. Repeated attempts mean neither is unique.
+- **Histories (built):** `(userId, courseId)` for an owner's history, another user's visible entries, and later review-eligibility checks. It isn't unique, because repeated attempts give one user several entries for a course. `(courseId, visibility)` for people filtering waits until query plans show it's needed.
 - **Posts:** indexes supporting `(spaceId, kind, lastActivityAt)` and course review queries such as `(courseId, kind, createdAt)`. A unique partial index on `(courseId, authorId)` where `kind = review` enforces one review per user per course.
 - **Replies:** `(postId, createdAt)` plus parent lookup if needed.
 - **Reports:** `(spaceId, state, createdAt)` for moderation queues.
