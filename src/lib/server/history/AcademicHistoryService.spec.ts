@@ -93,6 +93,28 @@ describe('academic history service', () => {
 		expect(insert).toHaveBeenCalledTimes(isValid ? 1 : 0);
 	});
 
+	it.each([
+		{ privateNote: 'Study group 👩‍💻 on Fridays', isValid: true },
+		{ privateNote: 'می‌خواهم', isValid: true },
+		{ privateNote: 'Line one\nLine two', isValid: true },
+		{ privateNote: 'Bell \u0007 character', isValid: false }
+	])('allows joiners but not control characters in notes: $privateNote', async (scenario) => {
+		const { service, entries } = createService();
+		vi.spyOn(entries, 'insert').mockResolvedValue();
+		const create = service.createEntry(
+			{
+				courseId: courseId.toHexString(),
+				status: 'planning',
+				term: null,
+				privateNote: scenario.privateNote
+			},
+			student
+		);
+
+		if (scenario.isValid) await expect(create).resolves.toMatchObject({ kind: 'created' });
+		else await expect(create).rejects.toThrow();
+	});
+
 	it('refuses an unknown course without writing', async () => {
 		const { service, entries, courses } = createService();
 		vi.spyOn(courses, 'findById').mockResolvedValue(null);

@@ -22,7 +22,9 @@ const privateNoteSchema = z
 	.string()
 	.trim()
 	.max(PRIVATE_NOTE_MAX_LENGTH, `Use ${PRIVATE_NOTE_MAX_LENGTH} characters or fewer.`)
-	.regex(/^(?:[^\p{C}]|[\n\r\t])*$/u, 'Remove control characters.');
+	// Only control characters and lone surrogates: joiners (format characters) appear in emoji and in
+	// Persian and Indic text.
+	.regex(/^(?:[^\p{Cc}\p{Cs}]|[\n\r\t])*$/u, 'Remove control characters.');
 
 const historyEntryFieldsSchema = z.object({
 	status: z.enum(HISTORY_STATUSES),
