@@ -12,12 +12,14 @@ This is the record of what has actually been checked, how, and when, so nobody h
 | Render URL | https://courseboard.onrender.com, the same service |
 | Render service | `courseboard`, Free plan, Virginia, deploys `master` after CI passes ([`render.yaml`](../../render.yaml)) |
 | Database | MongoDB Atlas Free, AWS us-east-1, database `academic_platform` |
+| Pull request previews | Render builds a preview deployment for each pull request, against the same Atlas database and Clerk instance |
 | Clerk | **Development instance** (`pk_test_` keys). Moving to a production instance on `mathewtech.us` is open question D21 |
 
 ## Verified
 
 | Date | What | How | Result |
 | --- | --- | --- | --- |
+| Nov 8, 2026 | Student profile pages with two accounts | Render's preview deployment for PR #12, signed in as `@kennedmr` and `@mar` and opening each other's `/users/{username}` page | Each saw only the other's visible entries, with course, status, and term and no notes. A school other than the primary one appeared only through a visible entry. A Clerk photo loaded for the account that has one; the account without one showed initials |
 | Nov 8, 2026 | Public profile service rules | Unit tests in `UserProfileService.spec.ts` | Another user's profile has only username, display name, photo, primary institution, and `isOwnProfile`; unknown or malformed usernames return nothing |
 | Nov 8, 2026 | Academic history in a signed-in browser | Checked by hand in a local signed-in session: adding from a course page and the profile, editing, deleting, and Preview as others | Worked as expected. A second account viewing visible entries wasn't part of this check |
 | Nov 8, 2026 | History privacy in MongoDB | The real `AcademicHistoryRepository` against a throwaway MongoDB 8.0 container (podman), with one visible and one private entry | Owner query returns both; the visible query returns only the visible entry with `_id`, course, status, and term, without notes; another user's update and delete match nothing |
@@ -45,8 +47,6 @@ These come from Stage 0 of the roadmap. Each needs the deployed site and, where 
 - Invitation redemption on the deployed site: wrong email, expired, revoked, reused, and forwarded links (two profiles).
 - Protected image upload and retrieval, including a signed-out request. Not built yet; waits on the input limits (D19).
 - TanStack Query caching isolated by account, with one client per server render. The cache now clears when the Clerk user changes; not yet watched in a browser.
-- Academic history with a second account: its view of `/users/{username}` should show only visible entries, never notes, and the same empty state whether the owner has private entries or none.
-- Another student's Clerk photo on their profile page, on the deployed site.
 - A restore from backup.
 
 ## Testing notes
