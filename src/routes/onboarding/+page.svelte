@@ -44,7 +44,7 @@
 			>
 		{/if}
 		<div class="flex flex-1 gap-2" aria-hidden="true">
-			{#each [1, 2] as segment (segment)}
+			{#each [1, 2, 3] as segment (segment)}
 				<span
 					class="h-1.5 flex-1 rounded-full {segment <= stepNumber ? 'bg-blue-700' : 'bg-slate-200'}"
 				></span>
@@ -66,7 +66,7 @@
 	>
 		<input type="hidden" name="primaryInstitutionId" value={primaryInstitutionId} />
 
-		<p class="font-mono text-sm text-blue-700">Step {stepNumber} of 2</p>
+		<p class="font-mono text-sm text-blue-700">Step {stepNumber} of 3</p>
 
 		{#if step === 'school'}
 			<h1 class="mt-2 text-3xl font-semibold">Where do you study?</h1>
@@ -187,7 +187,7 @@
 				<button
 					type="submit"
 					class="w-full rounded-full bg-blue-700 py-3 font-semibold text-white disabled:opacity-50"
-					disabled={isSubmitting}>{isSubmitting ? 'Saving…' : 'Finish'}</button
+					disabled={isSubmitting}>{isSubmitting ? 'Saving…' : 'Continue'}</button
 				>
 			</div>
 		{/if}

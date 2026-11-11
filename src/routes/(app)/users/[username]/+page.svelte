@@ -18,12 +18,13 @@
 		initialDataUpdatedAt: data.historyLoadedAt
 	}));
 
-	// Other schools appear only through visible entries, so private history never reveals them.
+	// Other schools appear only through visible entries, so private history never reveals them. A
+	// hidden primary school is listed the same way when a visible entry is there.
 	const otherInstitutionNames = $derived([
 		...new Set(
 			historyQuery.data.entries
 				.map((entry) => entry.course.institution)
-				.filter((institution) => institution.id !== data.person.primaryInstitution.id)
+				.filter((institution) => institution.id !== data.person.primaryInstitution?.id)
 				.map((institution) => institution.name)
 		)
 	]);
@@ -52,14 +53,18 @@
 		</div>
 	</div>
 
-	<ul class="mt-4 flex flex-wrap gap-2" aria-label="Schools">
-		<li class="rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold">
-			{data.person.primaryInstitution.name}
-		</li>
-		{#each otherInstitutionNames as institutionName (institutionName)}
-			<li class="rounded-full bg-slate-100 px-3 py-1 text-sm">{institutionName}</li>
-		{/each}
-	</ul>
+	{#if data.person.primaryInstitution || otherInstitutionNames.length > 0}
+		<ul class="mt-4 flex flex-wrap gap-2" aria-label="Schools">
+			{#if data.person.primaryInstitution}
+				<li class="rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold">
+					{data.person.primaryInstitution.name}
+				</li>
+			{/if}
+			{#each otherInstitutionNames as institutionName (institutionName)}
+				<li class="rounded-full bg-slate-100 px-3 py-1 text-sm">{institutionName}</li>
+			{/each}
+		</ul>
+	{/if}
 
 	<section class="mt-8" aria-labelledby="history-heading">
 		<h2 id="history-heading" class="text-xl font-semibold">History</h2>

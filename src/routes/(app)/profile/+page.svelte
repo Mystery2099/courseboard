@@ -12,6 +12,7 @@
 
 	let isEditingDisplayName = $state(false);
 	let isSaving = $state(false);
+	let isSavingInstitutionVisibility = $state(false);
 </script>
 
 <svelte:head><title>Your profile</title></svelte:head>
@@ -98,6 +99,48 @@
 		{/if}
 		<p class="mt-3 text-sm text-slate-600">
 			Your username can't be changed. Your email address is never shown to other students.
+		</p>
+	</section>
+
+	<section class="mt-4 rounded-[20px] border bg-white p-4">
+		<h2 class="text-lg font-semibold">School</h2>
+		<form
+			method="POST"
+			action="?/updatePrimaryInstitutionVisibility"
+			class="mt-2 flex items-center justify-between gap-4"
+			use:enhance={() => {
+				isSavingInstitutionVisibility = true;
+				return async ({ update }) => {
+					await update({ reset: false });
+					isSavingInstitutionVisibility = false;
+				};
+			}}
+		>
+			<div class="min-w-0">
+				<p>{data.profile.primaryInstitution.name}</p>
+				<p class="text-sm text-slate-600">
+					{data.profile.isPrimaryInstitutionHidden
+						? 'Hidden from other students.'
+						: 'Shown on your profile.'}
+				</p>
+			</div>
+			<button
+				type="submit"
+				name="isPrimaryInstitutionHidden"
+				value={data.profile.isPrimaryInstitutionHidden ? 'false' : 'true'}
+				class="shrink-0 rounded-full border px-4 py-1.5 disabled:opacity-50"
+				disabled={isSavingInstitutionVisibility}
+				>{data.profile.isPrimaryInstitutionHidden ? 'Show' : 'Hide'}</button
+			>
+		</form>
+		{#if form?.institutionVisibilityError}
+			<p class="mt-2 text-sm text-red-700" role="alert">{form.institutionVisibilityError}</p>
+		{:else if form?.institutionVisibilitySaved}
+			<p class="mt-2 text-sm text-slate-600" role="status">Saved.</p>
+		{/if}
+		<p class="mt-3 text-sm text-slate-600">
+			Hiding it keeps your school off your profile unless a visible history entry is there. Course
+			search still opens on it for you.
 		</p>
 	</section>
 

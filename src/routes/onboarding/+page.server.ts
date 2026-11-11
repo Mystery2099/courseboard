@@ -59,6 +59,6 @@ export const actions: Actions = {
 				primaryInstitutionId: 'That school is no longer available. Choose another.'
 			});
 		}
-		redirect(303, '/explore');
+		redirect(303, '/onboarding/courses');
 	}
 };

@@ -30,11 +30,13 @@ Authentication uses the existing Clerk request middleware; actor identity and ro
 
 | Method and path | Access | Result |
 | --- | --- | --- |
-| `GET /api/profile` | Admitted user | The caller's username, display name, and primary institution, or 409 `onboarding-required` |
+| `GET /api/profile` | Admitted user | The caller's username, display name, primary institution, and `isPrimaryInstitutionHidden`, or 409 `onboarding-required` |
 | `POST /api/profile` | Admitted user | JSON `{ primaryInstitutionId, username, displayName }`; completes onboarding with status 201. 409 when the username is taken or the profile already exists, 404 for an unknown institution |
-| `PATCH /api/profile` | Admitted user with a profile | JSON `{ displayName }`; returns the updated profile. The username can't be changed |
+| `PATCH /api/profile` | Admitted user with a profile | JSON `{ displayName?, isPrimaryInstitutionHidden? }` with at least one of them; returns the updated profile. The username can't be changed |
 
 An admitted account without a profile is sent to onboarding by every web page. On a fresh database there are no schools to choose, so onboarding offers administrators the demo catalog load that otherwise lives under **Admin → Course catalog**. Usernames are lowercase, unique, and can't be changed; a few names that look like staff or system accounts are reserved.
+
+Onboarding has three steps: the school, then the display name and username, then an optional course step at `/onboarding/courses`. The second step creates the profile, so the third can be skipped or abandoned without leaving the account half set up. It lists the primary institution's courses, and each one can be added to history, followed, both, or neither. Adding records a private Taking entry for the current term through `POST /api/history`; following uses the following endpoints. Neither action triggers the other.
 
 ### Course catalog HTTP API
 
@@ -59,11 +61,11 @@ An admitted account without a profile is sent to onboarding by every web page. O
 | `PUT /api/history/{entryId}` | Owner | JSON `{ status, term, visibility, privateNote }`; replaces those fields. The course can't change |
 | `DELETE /api/history/{entryId}` | Owner | No body; returns 204 |
 | `GET /api/users/{username}/history` | Admitted user | Only that user's visible entries: course, status, and term. 404 for an unknown username |
-| `GET /api/users/{username}` | Admitted user | That user's display name, username, Clerk photo URL or null, primary institution, and `isOwnProfile`. Never email or role. 404 for an unknown username |
+| `GET /api/users/{username}` | Admitted user | That user's display name, username, Clerk photo URL or null, primary institution (null when hidden), and `isOwnProfile`. Never email or role. 404 for an unknown username |
 
 `status` is `planning`, `taking`, or `took`; `term` is `{ season, year }` with `season` one of `winter`, `spring`, `summer`, `fall`, and only Planning may send `null`. Another user's entry answers 404 exactly like a missing one. Someone with only private entries looks the same as someone with none, and administrators get no exception.
 
-Profile pages for other students live at `/users/{username}`. They show the person's visible entries grouped by term and school. Schools other than the primary institution appear only through visible entries. Opening your own page shows it as others see it, with a link back to editing. Photos are read from Clerk on the server for each view, and initials are shown if Clerk can't be reached. Hiding the primary institution isn't built yet.
+Profile pages for other students live at `/users/{username}`. They show the person's visible entries grouped by term and school. Schools other than the primary institution appear only through visible entries. Opening your own page shows it as others see it, with a link back to editing. Photos are read from Clerk on the server for each view, and initials are shown if Clerk can't be reached. A user can hide their primary institution from the profile page's School section. The repository then returns no institution for the public profile, including when the owner opens their own page, and the school shows up only if a visible entry is there. Course discovery still defaults to it for the owner.
 
 Following never reads or writes academic history. After a course page renders, the browser records it as the user's last visited course; it isn't recorded during the server load, so hover preloading doesn't count as a visit. `/` resumes that course after sign-in when it still exists.
 
