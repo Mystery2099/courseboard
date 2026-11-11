@@ -19,6 +19,8 @@ This is the record of what has actually been checked, how, and when, so nobody h
 
 | Date | What | How | Result |
 | --- | --- | --- | --- |
+| Nov 11, 2026 | Onboarding course step in a signed-in browser | Render's preview deployment for PR #13, signed in as `@kennedmr` and opening `/onboarding/courses` directly | Add to history recorded a private Taking, Fall 2026 entry and Follow added the course to the followed list, each without the other; both could be undone on the page. After a reload the entry showed as recorded but could no longer be removed there. Reaching the step from step 2 with a new account wasn't part of this check |
+| Nov 11, 2026 | School setting in a signed-in browser | Same preview and account: Hide on the profile page, then `/users/kennedmr`, `GET /api/users/kennedmr`, and Explore | The public page and API response had no primary institution, the school with a visible entry was still listed, the own profile kept it, and Explore still opened on it. Show restored it. A second account wasn't used |
 | Nov 11, 2026 | Hidden primary institution in MongoDB | The real `ApplicationUserRepository` against a throwaway MongoDB 8.0 container (podman): onboard a user, hide the school, then show it again while renaming | The public profile record has the institution before and no institution while hidden; the owner's own profile keeps it with `isPrimaryInstitutionHidden` true; showing it again and changing the display name in one update both apply. An account without a profile can't be updated |
 | Nov 11, 2026 | Hidden primary institution service rules | Unit tests in `UserProfileService.spec.ts` | A hidden school is left out of the public profile without an institution lookup, also for the owner; changing visibility writes only that field |
 | Nov 8, 2026 | Student profile pages with two accounts | Render's preview deployment for PR #12, signed in as `@kennedmr` and `@mar` and opening each other's `/users/{username}` page | Each saw only the other's visible entries, with course, status, and term and no notes. A school other than the primary one appeared only through a visible entry. A Clerk photo loaded for the account that has one; the account without one showed initials |
@@ -49,8 +51,8 @@ These come from Stage 0 of the roadmap. Each needs the deployed site and, where 
 - Invitation redemption on the deployed site: wrong email, expired, revoked, reused, and forwarded links (two profiles).
 - Protected image upload and retrieval, including a signed-out request. Not built yet; waits on the input limits (D19).
 - TanStack Query caching isolated by account, with one client per server render. The cache now clears when the Clerk user changes; not yet watched in a browser.
-- The onboarding course step in a signed-in browser: finishing step 2 lands on it, Add to history records a private Taking entry for the current term, Follow adds the course to navigation, and Skip and Continue open Explore.
-- The School setting on the profile page in a signed-in browser, and a second account confirming the hidden school is gone from `/users/{username}` (two profiles).
+- A new account finishing onboarding step 2 and landing on the course step, with Skip and Continue opening Explore.
+- A second account confirming a hidden school is gone from `/users/{username}` (two profiles).
 - A restore from backup.
 
 ## Testing notes
