@@ -22,6 +22,8 @@ export interface ApplicationUserDocument {
 	username?: string;
 	displayName?: string;
 	primaryInstitutionId?: ObjectId;
+	/** Absent means shown. The school still sets the user's own discovery default either way. */
+	primaryInstitutionHidden?: boolean;
 	onboardedAt?: Date;
 	/** The course page opened most recently, resumed after sign-in. Absent until the first visit. */
 	lastVisitedCourseId?: ObjectId;
@@ -31,6 +33,7 @@ export interface ApplicationUserProfile {
 	username: string;
 	displayName: string;
 	primaryInstitutionId: string;
+	isPrimaryInstitutionHidden: boolean;
 }
 
 /** The fields request handling needs about the current user. */

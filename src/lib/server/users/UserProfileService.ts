@@ -22,7 +22,8 @@ import { profilePhotoLookup, type ProfilePhotoLookup } from './ProfilePhotoLooku
 
 /**
  * Onboarding sets a user's username, display name, and primary institution together; until then the
- * account can't use the rest of the application. Afterwards only the display name is editable.
+ * account can't use the rest of the application. Afterwards the display name and whether other
+ * users see the primary institution are editable.
  */
 export class UserProfileService {
 	/** Names that would look like staff or system accounts, including the "Deleted user" label. */
@@ -74,7 +75,8 @@ export class UserProfileService {
 			profile: {
 				username: request.username,
 				displayName: request.displayName,
-				primaryInstitution: { id: institution._id.toHexString(), name: institution.name }
+				primaryInstitution: { id: institution._id.toHexString(), name: institution.name },
+				isPrimaryInstitutionHidden: false
 			}
 		};
 	}
@@ -92,9 +94,20 @@ export class UserProfileService {
 	): Promise<OwnProfileResponse | null> {
 		const user = AccessPolicy.requireAdmittedUser(actor);
 		if (!user.profile) return null;
-		const { displayName } = updateProfileSchema.parse(input);
-		const updated = await this.users.updateDisplayName(new ObjectId(user.id), displayName);
-		return updated ? this.toOwnProfile({ ...user.profile, displayName }) : null;
+		const { displayName, isPrimaryInstitutionHidden } = updateProfileSchema.parse(input);
+		const updated = await this.users.updateProfile(new ObjectId(user.id), {
+			...(displayName !== undefined && { displayName }),
+			...(isPrimaryInstitutionHidden !== undefined && {
+				primaryInstitutionHidden: isPrimaryInstitutionHidden
+			})
+		});
+		if (!updated) return null;
+		return this.toOwnProfile({
+			...user.profile,
+			displayName: displayName ?? user.profile.displayName,
+			isPrimaryInstitutionHidden:
+				isPrimaryInstitutionHidden ?? user.profile.isPrimaryInstitutionHidden
+		});
 	}
 
 	/** Another onboarded user's profile; null when no onboarded user has that username. */
@@ -107,16 +120,17 @@ export class UserProfileService {
 		if (!parsedUsername.success) return null;
 		const profile = await this.users.findPublicProfileByUsername(parsedUsername.data);
 		if (!profile) return null;
+		const { primaryInstitutionId } = profile;
 		const [institution, imageUrl] = await Promise.all([
-			this.institutions.findById(profile.primaryInstitutionId),
+			primaryInstitutionId ? this.institutions.findById(primaryInstitutionId) : null,
 			this.profilePhotos.findImageUrl(profile.clerkUserId)
 		]);
 		return {
 			username: profile.username,
 			displayName: profile.displayName,
 			imageUrl,
-			primaryInstitution: {
-				id: profile.primaryInstitutionId.toHexString(),
+			primaryInstitution: primaryInstitutionId && {
+				id: primaryInstitutionId.toHexString(),
 				name: institution?.name ?? 'Unknown institution'
 			},
 			isOwnProfile: profile._id.toHexString() === user.id
@@ -133,7 +147,8 @@ export class UserProfileService {
 			primaryInstitution: {
 				id: profile.primaryInstitutionId,
 				name: institution?.name ?? 'Unknown institution'
-			}
+			},
+			isPrimaryInstitutionHidden: profile.isPrimaryInstitutionHidden
 		};
 	}
 }

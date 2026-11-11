@@ -54,7 +54,8 @@ describe('user profile service', () => {
 			profile: {
 				username: 'alex_m',
 				displayName: 'Alex Morgan',
-				primaryInstitution: { id: institutionId.toHexString(), name: 'Alfred State College' }
+				primaryInstitution: { id: institutionId.toHexString(), name: 'Alfred State College' },
+				isPrimaryInstitutionHidden: false
 			}
 		});
 		expect(createProfile).toHaveBeenCalledWith(
@@ -102,7 +103,8 @@ describe('user profile service', () => {
 			profile: {
 				username: 'alex_m',
 				displayName: 'Alex',
-				primaryInstitutionId: institutionId.toHexString()
+				primaryInstitutionId: institutionId.toHexString(),
+				isPrimaryInstitutionHidden: false
 			}
 		};
 
@@ -155,6 +157,46 @@ describe('user profile service', () => {
 			primaryInstitution: { id: institutionId.toHexString(), name: 'Alfred State College' },
 			isOwnProfile: false
 		});
+	});
+
+	it('leaves a hidden primary institution out of the public profile', async () => {
+		const { service, users, institutions } = createService();
+		vi.spyOn(users, 'findPublicProfileByUsername').mockResolvedValue({
+			_id: new ObjectId(newStudent.id),
+			clerkUserId: 'student',
+			username: 'alex_m',
+			displayName: 'Alex',
+			primaryInstitutionId: null
+		});
+
+		const profile = await service.getPublicProfile('alex_m', newStudent);
+
+		expect(profile).toMatchObject({ primaryInstitution: null, isOwnProfile: true });
+		expect(institutions.findById).not.toHaveBeenCalled();
+	});
+
+	it('hides the primary institution without touching other profile fields', async () => {
+		const { service, users } = createService();
+		const updateProfile = vi.spyOn(users, 'updateProfile').mockResolvedValue(true);
+		const onboardedStudent = {
+			...newStudent,
+			profile: {
+				username: 'alex_m',
+				displayName: 'Alex',
+				primaryInstitutionId: institutionId.toHexString(),
+				isPrimaryInstitutionHidden: false
+			}
+		};
+
+		const profile = await service.updateProfile(
+			{ isPrimaryInstitutionHidden: true },
+			onboardedStudent
+		);
+
+		expect(updateProfile).toHaveBeenCalledWith(new ObjectId(newStudent.id), {
+			primaryInstitutionHidden: true
+		});
+		expect(profile).toMatchObject({ displayName: 'Alex', isPrimaryInstitutionHidden: true });
 	});
 
 	it.each(['nobody', 'not a username'])(

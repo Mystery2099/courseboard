@@ -19,7 +19,14 @@ export interface PublicProfileRecord {
 	clerkUserId: string;
 	username: string;
 	displayName: string;
-	primaryInstitutionId: ObjectId;
+	/** Null when the user hides their primary institution. */
+	primaryInstitutionId: ObjectId | null;
+}
+
+/** The profile fields a user may change after onboarding. */
+export interface ProfileChanges {
+	displayName?: string;
+	primaryInstitutionHidden?: boolean;
 }
 
 export type ProfileCreationOutcome = 'created' | 'already-onboarded' | 'username-unavailable';
@@ -34,7 +41,8 @@ export class ApplicationUserRepository {
 		status: 1,
 		username: 1,
 		displayName: 1,
-		primaryInstitutionId: 1
+		primaryInstitutionId: 1,
+		primaryInstitutionHidden: 1
 	} as const;
 
 	private collection(): Collection<ApplicationUserDocument> {
@@ -120,10 +128,10 @@ export class ApplicationUserRepository {
 	}
 
 	/** Returns false when the user hasn't finished onboarding. */
-	async updateDisplayName(userId: ObjectId, displayName: string): Promise<boolean> {
+	async updateProfile(userId: ObjectId, changes: ProfileChanges): Promise<boolean> {
 		const result = await this.collection().updateOne(
 			{ _id: userId, username: { $exists: true } },
-			{ $set: { displayName } }
+			{ $set: changes }
 		);
 		return result.matchedCount === 1;
 	}
@@ -138,10 +146,27 @@ export class ApplicationUserRepository {
 		const document = await this.collection().findOne(
 			{ username },
 			{
-				projection: { _id: 1, clerkUserId: 1, username: 1, displayName: 1, primaryInstitutionId: 1 }
+				projection: {
+					_id: 1,
+					clerkUserId: 1,
+					username: 1,
+					displayName: 1,
+					primaryInstitutionId: 1,
+					primaryInstitutionHidden: 1
+				}
 			}
 		);
-		return document as PublicProfileRecord | null;
+		if (!document?.username || !document.displayName) return null;
+		return {
+			_id: document._id,
+			clerkUserId: document.clerkUserId,
+			username: document.username,
+			displayName: document.displayName,
+			// A hidden school is dropped here, so no caller can pass it on by accident.
+			primaryInstitutionId: document.primaryInstitutionHidden
+				? null
+				: (document.primaryInstitutionId ?? null)
+		};
 	}
 
 	async updateLastVisitedCourse(userId: ObjectId, courseId: ObjectId): Promise<void> {
@@ -166,6 +191,7 @@ export class ApplicationUserRepository {
 			| 'username'
 			| 'displayName'
 			| 'primaryInstitutionId'
+			| 'primaryInstitutionHidden'
 		>
 	): ApplicationUser {
 		const { username, displayName, primaryInstitutionId } = document;
@@ -176,7 +202,12 @@ export class ApplicationUserRepository {
 			status: document.status,
 			profile:
 				username && displayName && primaryInstitutionId
-					? { username, displayName, primaryInstitutionId: primaryInstitutionId.toHexString() }
+					? {
+							username,
+							displayName,
+							primaryInstitutionId: primaryInstitutionId.toHexString(),
+							isPrimaryInstitutionHidden: document.primaryInstitutionHidden === true
+						}
 					: null
 		};
 	}

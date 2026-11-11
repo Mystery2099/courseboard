@@ -24,7 +24,16 @@ export const completeOnboardingSchema = z.object({
 
 export type CompleteOnboardingRequest = z.infer<typeof completeOnboardingSchema>;
 
-export const updateProfileSchema = z.object({ displayName: displayNameSchema });
+export const updateProfileSchema = z
+	.object({
+		displayName: displayNameSchema.optional(),
+		isPrimaryInstitutionHidden: z.boolean().optional()
+	})
+	.refine(
+		(changes) =>
+			changes.displayName !== undefined || changes.isPrimaryInstitutionHidden !== undefined,
+		'Change the display name or the school visibility.'
+	);
 
 export type UpdateProfileRequest = z.infer<typeof updateProfileSchema>;
 
@@ -32,6 +41,8 @@ export interface OwnProfileResponse {
 	username: string;
 	displayName: string;
 	primaryInstitution: { id: string; name: string };
+	/** Hidden from other users' views of the profile; the user still sees and uses it. */
+	isPrimaryInstitutionHidden: boolean;
 }
 
 export type OnboardingResult =
@@ -45,6 +56,7 @@ export interface PublicProfileResponse {
 	username: string;
 	displayName: string;
 	imageUrl: string | null;
-	primaryInstitution: { id: string; name: string };
+	/** Null when the user hides it, including when they open their own public page. */
+	primaryInstitution: { id: string; name: string } | null;
 	isOwnProfile: boolean;
 }
