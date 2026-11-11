@@ -26,5 +26,13 @@ export const actions: Actions = {
 		const profile = await userProfileService.updateProfile(parsed.data, user);
 		if (!profile) return fail(409, { displayName, displayNameError: 'Finish onboarding first.' });
 		return { displayNameSaved: true };
+	},
+	updatePrimaryInstitutionVisibility: async ({ locals, request }) => {
+		const user = AccessGuard.requireAdmittedUser(locals);
+		const isPrimaryInstitutionHidden =
+			(await request.formData()).get('isPrimaryInstitutionHidden') === 'true';
+		const profile = await userProfileService.updateProfile({ isPrimaryInstitutionHidden }, user);
+		if (!profile) return fail(409, { institutionVisibilityError: 'Finish onboarding first.' });
+		return { institutionVisibilitySaved: true };
 	}
 };
