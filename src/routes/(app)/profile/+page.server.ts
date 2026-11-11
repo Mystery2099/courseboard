@@ -29,9 +29,16 @@ export const actions: Actions = {
 	},
 	updatePrimaryInstitutionVisibility: async ({ locals, request }) => {
 		const user = AccessGuard.requireAdmittedUser(locals);
-		const isPrimaryInstitutionHidden =
-			(await request.formData()).get('isPrimaryInstitutionHidden') === 'true';
-		const profile = await userProfileService.updateProfile({ isPrimaryInstitutionHidden }, user);
+		const submitted = z
+			.enum(['true', 'false'])
+			.safeParse((await request.formData()).get('isPrimaryInstitutionHidden'));
+		if (!submitted.success) {
+			return fail(400, { institutionVisibilityError: 'Choose Hide or Show.' });
+		}
+		const profile = await userProfileService.updateProfile(
+			{ isPrimaryInstitutionHidden: submitted.data === 'true' },
+			user
+		);
 		if (!profile) return fail(409, { institutionVisibilityError: 'Finish onboarding first.' });
 		return { institutionVisibilitySaved: true };
 	}
