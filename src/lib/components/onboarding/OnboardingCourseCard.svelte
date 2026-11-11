@@ -26,9 +26,9 @@
 	const queryClient = useQueryClient();
 	const term = currentTerm();
 
-	// Only the entry this step creates can be removed here; anything else is edited on the profile.
-	const entryForThisTerm = $derived(
-		historyEntries.find(
+	// Earlier attempts in other terms don't count: the step asks about this term only.
+	const isTakingThisTerm = $derived(
+		historyEntries.some(
 			(entry) =>
 				entry.status === 'taking' &&
 				entry.term?.season === term.season &&
@@ -36,16 +36,26 @@
 		)
 	);
 
+	// Only the entry this card created can be removed here. One that already existed may carry a
+	// note or be visible, so it is changed from the profile.
+	let createdEntryId = $state<string | null>(null);
+	const createdEntry = $derived(historyEntries.find((entry) => entry.id === createdEntryId));
+
 	const historyMutation = createMutation(() => ({
 		mutationFn: async () => {
-			if (entryForThisTerm) return AcademicHistoryApiClient.deleteEntry(entryForThisTerm.id);
-			await AcademicHistoryApiClient.createEntry({
+			if (createdEntry) {
+				await AcademicHistoryApiClient.deleteEntry(createdEntry.id);
+				createdEntryId = null;
+				return;
+			}
+			const entry = await AcademicHistoryApiClient.createEntry({
 				courseId: course.id,
 				status: 'taking',
 				term,
 				visibility: 'private',
 				privateNote: ''
 			});
+			createdEntryId = entry.id;
 		},
 		onSettled: () => queryClient.invalidateQueries({ queryKey: academicHistoryQueryKeys.all })
 	}));
@@ -59,7 +69,6 @@
 			queryClient.invalidateQueries({ queryKey: courseCatalogQueryKeys.courses(institutionId) })
 	}));
 
-	const isInHistory = $derived(historyEntries.length > 0);
 	const chipClass = 'inline-flex items-center gap-1 rounded-full px-4 py-1.5 disabled:opacity-50';
 	const selectedChipClass = 'bg-indigo-100 font-semibold';
 	const unselectedChipClass = 'border font-semibold text-blue-700';
@@ -71,12 +80,12 @@
 	<div class="mt-3 flex flex-wrap gap-2">
 		<button
 			type="button"
-			class={[chipClass, isInHistory ? selectedChipClass : unselectedChipClass]}
-			aria-pressed={isInHistory}
-			disabled={historyMutation.isPending || (isInHistory && !entryForThisTerm)}
+			class={[chipClass, isTakingThisTerm ? selectedChipClass : unselectedChipClass]}
+			aria-pressed={isTakingThisTerm}
+			disabled={historyMutation.isPending || (isTakingThisTerm && !createdEntry)}
 			onclick={() => historyMutation.mutate()}
 		>
-			{#if isInHistory}<Check size={16} /> In my history{:else}<Plus size={16} /> Add to history{/if}
+			{#if isTakingThisTerm}<Check size={16} /> In my history{:else}<Plus size={16} /> Add to history{/if}
 		</button>
 		<button
 			type="button"
