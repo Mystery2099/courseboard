@@ -26,25 +26,26 @@
 	const queryClient = useQueryClient();
 	const term = currentTerm();
 
-	// Earlier attempts in other terms don't count: the step asks about this term only.
-	const isTakingThisTerm = $derived(
-		historyEntries.some(
-			(entry) =>
-				entry.status === 'taking' &&
-				entry.term?.season === term.season &&
-				entry.term.year === term.year
-		)
-	);
-
 	// Only the entry this card created can be removed here. One that already existed may carry a
 	// note or be visible, so it is changed from the profile.
 	let createdEntryId = $state<string | null>(null);
-	const createdEntry = $derived(historyEntries.find((entry) => entry.id === createdEntryId));
+
+	// Earlier attempts in other terms don't count: the step asks about this term only. The created
+	// entry counts before the history list refreshes, so a second click can't record a duplicate.
+	const isTakingThisTerm = $derived(
+		createdEntryId !== null ||
+			historyEntries.some(
+				(entry) =>
+					entry.status === 'taking' &&
+					entry.term?.season === term.season &&
+					entry.term.year === term.year
+			)
+	);
 
 	const historyMutation = createMutation(() => ({
 		mutationFn: async () => {
-			if (createdEntry) {
-				await AcademicHistoryApiClient.deleteEntry(createdEntry.id);
+			if (createdEntryId) {
+				await AcademicHistoryApiClient.deleteEntry(createdEntryId);
 				createdEntryId = null;
 				return;
 			}
@@ -82,7 +83,7 @@
 			type="button"
 			class={[chipClass, isTakingThisTerm ? selectedChipClass : unselectedChipClass]}
 			aria-pressed={isTakingThisTerm}
-			disabled={historyMutation.isPending || (isTakingThisTerm && !createdEntry)}
+			disabled={historyMutation.isPending || (isTakingThisTerm && !createdEntryId)}
 			onclick={() => historyMutation.mutate()}
 		>
 			{#if isTakingThisTerm}<Check size={16} /> In my history{:else}<Plus size={16} /> Add to history{/if}

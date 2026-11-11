@@ -42,6 +42,7 @@
 
 <svelte:head><title>Add your courses</title></svelte:head>
 
+<!-- Explore is loaded on the click, not on hover, so it shows the courses followed on this step. -->
 <main class="mx-auto flex min-h-dvh max-w-lg flex-col px-4 py-8">
 	<div class="flex items-center gap-3">
 		<div class="flex flex-1 gap-2" aria-hidden="true">
@@ -49,7 +50,11 @@
 				<span class="h-1.5 flex-1 rounded-full bg-blue-700"></span>
 			{/each}
 		</div>
-		<a class="font-semibold text-blue-700" href={resolve('/(app)/explore')}>Skip</a>
+		<a
+			class="font-semibold text-blue-700"
+			href={resolve('/(app)/explore')}
+			data-sveltekit-preload-data="off">Skip</a
+		>
 	</div>
 
 	<p class="mt-8 font-mono text-sm text-blue-700">Step 3 of 3</p>
@@ -89,7 +94,8 @@
 		</p>
 		<a
 			class="block w-full rounded-full bg-blue-700 py-3 text-center font-semibold text-white"
-			href={resolve('/(app)/explore')}>Continue</a
+			href={resolve('/(app)/explore')}
+			data-sveltekit-preload-data="off">Continue</a
 		>
 	</div>
 </main>
