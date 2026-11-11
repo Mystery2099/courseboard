@@ -12,7 +12,7 @@ Embedding can be useful when the data is small, bounded, and really owned by one
 
 | Collection | Likely fields | What to watch |
 | --- | --- | --- |
-| `users` | `_id`, clerkUserId, role, status, username, displayName, primaryInstitutionId, onboardedAt, lastVisitedCourseId | Application profile linked to Clerk; credentials stay in Clerk. Onboarding sets the username, display name, and primary institution together. `lastVisitedCourseId` lets sign-in resume the last course |
+| `users` | `_id`, clerkUserId, role, status, username, displayName, primaryInstitutionId, primaryInstitutionHidden, onboardedAt, lastVisitedCourseId | Application profile linked to Clerk; credentials stay in Clerk. Onboarding sets the username, display name, and primary institution together. `primaryInstitutionHidden` is absent until the user hides their school from other users. `lastVisitedCourseId` lets sign-in resume the last course |
 | `institutions` | `_id`, name, normalized name, optional identifiers | Used for course identity and discovery |
 | `courses` | `_id`, institutionId, code, normalizedCode, title, description, spaceId | Don't identify courses by code alone |
 | `spaces` | `_id`, courseId | One canonical space per course, created in the same transaction as the course, which stores its `spaceId`. Routes use the course id, so there's no slug; views are fixed, and general communities are deferred |

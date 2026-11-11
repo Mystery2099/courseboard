@@ -1,6 +1,6 @@
 # Verification log
 
-**Last updated:** November 8, 2026
+**Last updated:** November 11, 2026
 
 This is the record of what has actually been checked, how, and when, so nobody has to ask again. The [roadmap](roadmap-and-acceptance.md) lists what still needs checking; this file holds the evidence. Add a row whenever something is verified, and move it out of "Not verified yet" instead of deleting it.
 
@@ -19,6 +19,8 @@ This is the record of what has actually been checked, how, and when, so nobody h
 
 | Date | What | How | Result |
 | --- | --- | --- | --- |
+| Nov 11, 2026 | Hidden primary institution in MongoDB | The real `ApplicationUserRepository` against a throwaway MongoDB 8.0 container (podman): onboard a user, hide the school, then show it again while renaming | The public profile record has the institution before and no institution while hidden; the owner's own profile keeps it with `isPrimaryInstitutionHidden` true; showing it again and changing the display name in one update both apply. An account without a profile can't be updated |
+| Nov 11, 2026 | Hidden primary institution service rules | Unit tests in `UserProfileService.spec.ts` | A hidden school is left out of the public profile without an institution lookup, also for the owner; changing visibility writes only that field |
 | Nov 8, 2026 | Student profile pages with two accounts | Render's preview deployment for PR #12, signed in as `@kennedmr` and `@mar` and opening each other's `/users/{username}` page | Each saw only the other's visible entries, with course, status, and term and no notes. A school other than the primary one appeared only through a visible entry. A Clerk photo loaded for the account that has one; the account without one showed initials |
 | Nov 8, 2026 | Public profile service rules | Unit tests in `UserProfileService.spec.ts` | Another user's profile has only username, display name, photo, primary institution, and `isOwnProfile`; unknown or malformed usernames return nothing |
 | Nov 8, 2026 | Academic history in a signed-in browser | Checked by hand in a local signed-in session: adding from a course page and the profile, editing, deleting, and Preview as others | Worked as expected. A second account viewing visible entries wasn't part of this check |
@@ -47,6 +49,8 @@ These come from Stage 0 of the roadmap. Each needs the deployed site and, where 
 - Invitation redemption on the deployed site: wrong email, expired, revoked, reused, and forwarded links (two profiles).
 - Protected image upload and retrieval, including a signed-out request. Not built yet; waits on the input limits (D19).
 - TanStack Query caching isolated by account, with one client per server render. The cache now clears when the Clerk user changes; not yet watched in a browser.
+- The onboarding course step in a signed-in browser: finishing step 2 lands on it, Add to history records a private Taking entry for the current term, Follow adds the course to navigation, and Skip and Continue open Explore.
+- The School setting on the profile page in a signed-in browser, and a second account confirming the hidden school is gone from `/users/{username}` (two profiles).
 - A restore from backup.
 
 ## Testing notes
