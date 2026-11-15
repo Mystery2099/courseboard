@@ -165,7 +165,7 @@
 		</p>
 		<div class="mt-3 flex items-center gap-4">
 			<UserButton />
-			<SignOutButton class="rounded-full border px-4 py-1.5" />
+			<SignOutButton class="rounded-full border px-4 py-1.5">{m.auth_sign_out()}</SignOutButton>
 		</div>
 	</section>
 </main>

@@ -310,5 +310,8 @@
 	"error_page_not_found": "Page not found",
 	"error_page_forbidden": "You can't open this page",
 	"error_page_failed": "Something went wrong",
-	"error_page_home": "Go to the home page"
+	"error_page_home": "Go to the home page",
+	"auth_sign_in": "Sign in",
+	"auth_sign_up": "Sign up",
+	"auth_sign_out": "Sign out"
 }

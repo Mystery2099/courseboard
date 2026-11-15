@@ -310,5 +310,8 @@
 	"error_page_not_found": "Página no encontrada",
 	"error_page_forbidden": "No puedes abrir esta página",
 	"error_page_failed": "Algo salió mal",
-	"error_page_home": "Ir a la página de inicio"
+	"error_page_home": "Ir a la página de inicio",
+	"auth_sign_in": "Iniciar sesión",
+	"auth_sign_up": "Crear cuenta",
+	"auth_sign_out": "Cerrar sesión"
 }

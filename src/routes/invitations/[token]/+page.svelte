@@ -17,15 +17,17 @@
 		</form>
 		{#if form?.errorCode}
 			<p class="mt-4" role="alert">{describeErrorCode(form.errorCode)}</p>
-			<div class="mt-4"><SignOutButton redirectUrl={page.url.pathname} /></div>
+			<div class="mt-4">
+				<SignOutButton redirectUrl={page.url.pathname}>{m.auth_sign_out()}</SignOutButton>
+			</div>
 		{/if}
 	{:else}
 		<p class="mt-4">
 			{m.invitation_sign_in_prompt()}
 		</p>
 		<div class="mt-6 flex gap-4">
-			<SignUpButton forceRedirectUrl={page.url.pathname} />
-			<SignInButton forceRedirectUrl={page.url.pathname} />
+			<SignUpButton forceRedirectUrl={page.url.pathname}>{m.auth_sign_up()}</SignUpButton>
+			<SignInButton forceRedirectUrl={page.url.pathname}>{m.auth_sign_in()}</SignInButton>
 		</div>
 	{/if}
 </main>
