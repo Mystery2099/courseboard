@@ -1,6 +1,6 @@
 import type { ClientSession, Collection, Filter, ObjectId } from 'mongodb';
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
-import { CONTENT_AUTHOR_LOOKUP_STAGES } from './ContentAuthorLookup.ts';
+import { ContentAuthorLookup } from './ContentAuthorLookup.ts';
 import {
 	POSTS_COLLECTION_NAME,
 	type PostDetail,
@@ -58,7 +58,7 @@ export class PostRepository {
 				{ $match: filter },
 				{ $sort: { [orderedBy]: -1, _id: -1 } },
 				{ $limit: limit },
-				...CONTENT_AUTHOR_LOOKUP_STAGES,
+				...ContentAuthorLookup.STAGES,
 				{ $project: PostRepository.SUMMARY_FIELDS }
 			])
 			.toArray();
@@ -68,7 +68,7 @@ export class PostRepository {
 		const [post] = await this.collection()
 			.aggregate<PostDetail>([
 				{ $match: { _id: postId } },
-				...CONTENT_AUTHOR_LOOKUP_STAGES,
+				...ContentAuthorLookup.STAGES,
 				{ $project: { ...PostRepository.SUMMARY_FIELDS, bodyMarkdown: 1 } }
 			])
 			.toArray();

@@ -1,6 +1,6 @@
 import type { ClientSession, Collection, Filter, ObjectId } from 'mongodb';
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
-import { CONTENT_AUTHOR_LOOKUP_STAGES } from './ContentAuthorLookup.ts';
+import { ContentAuthorLookup } from './ContentAuthorLookup.ts';
 import {
 	REPLIES_COLLECTION_NAME,
 	type ReplyDocument,
@@ -64,7 +64,7 @@ export class ReplyRepository {
 				{ $match: filter },
 				{ $sort: { _id: 1 } },
 				{ $limit: limit },
-				...CONTENT_AUTHOR_LOOKUP_STAGES,
+				...ContentAuthorLookup.STAGES,
 				{ $project: ReplyRepository.REPLY_FIELDS }
 			])
 			.toArray();

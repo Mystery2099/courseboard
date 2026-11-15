@@ -36,12 +36,12 @@ export class ReplyService {
 		const { after } = replyListQuerySchema.parse(query);
 		const parsedPostId = postIdSchema.safeParse(postId);
 		if (!parsedPostId.success) return null;
-		const id = new ObjectId(parsedPostId.data);
-		if (!(await this.posts.exists(id))) return null;
+		const postObjectId = new ObjectId(parsedPostId.data);
+		if (!(await this.posts.exists(postObjectId))) return null;
 
 		const pageSize = ReplyService.PAGE_SIZE;
 		const replies = await this.replies.findPage(
-			id,
+			postObjectId,
 			after ? new ObjectId(after) : null,
 			pageSize + 1
 		);
@@ -67,27 +67,27 @@ export class ReplyService {
 		const request = createReplySchema.parse(input);
 		const parsedPostId = postIdSchema.safeParse(postId);
 		if (!parsedPostId.success) return { kind: 'post-not-found' };
-		const id = new ObjectId(parsedPostId.data);
-		const authorId = new ObjectId(author.id);
+		const postObjectId = new ObjectId(parsedPostId.data);
+		const authorId = new ObjectId(author.postObjectId);
 
 		const storedEarlier = await this.replies.findBySubmission(authorId, request.submissionId);
 		if (storedEarlier) return { kind: 'created', reply: ReplyService.toResponse(storedEarlier) };
 
-		const post = await this.posts.findById(id);
+		const post = await this.posts.findById(postObjectId);
 		if (!post) return { kind: 'post-not-found' };
 		if (post.lockedAt) return { kind: 'post-locked' };
 
 		const parentReplyId = request.parentReplyId ? new ObjectId(request.parentReplyId) : null;
 		if (parentReplyId) {
 			const parent = await this.replies.findPlacement(parentReplyId);
-			if (!parent?.postId.equals(id) || parent.parentReplyId) {
+			if (!parent?.postId.equals(postObjectId) || parent.parentReplyId) {
 				return { kind: 'parent-reply-unavailable' };
 			}
 		}
 
 		const reply: ReplyDocument = {
 			_id: new ObjectId(),
-			postId: id,
+			postId: postObjectId,
 			parentReplyId,
 			authorId,
 			bodyMarkdown: request.bodyMarkdown,
@@ -99,7 +99,7 @@ export class ReplyService {
 		const session = mongoClientProvider.startSession();
 		try {
 			const wasStored = await session.withTransaction(async () => {
-				if (!(await this.posts.recordReply(id, reply.createdAt, session))) return false;
+				if (!(await this.posts.recordReply(postObjectId, reply.createdAt, session))) return false;
 				await this.replies.insert(reply, session);
 				return true;
 			});

@@ -31,7 +31,7 @@
 	let bodyMarkdown = $state('');
 	let fieldErrors = $state<{ title?: string; bodyMarkdown?: string }>({});
 
-	const createMutationState = createMutation(() => ({
+	const publishMutation = createMutation(() => ({
 		mutationFn: (request: CreatePostRequest) => PostApiClient.createPost(courseId, request),
 		onSuccess: async (post) => {
 			await queryClient.invalidateQueries({ queryKey: postQueryKeys.lists(courseId) });
@@ -51,7 +51,7 @@
 			return;
 		}
 		fieldErrors = {};
-		createMutationState.mutate(parsed.data);
+		publishMutation.mutate(parsed.data);
 	}
 </script>
 
@@ -99,10 +99,10 @@
 						<span class="text-sm text-red-700" role="alert">{fieldErrors.bodyMarkdown}</span>
 					{/if}
 				</label>
-				{#if createMutationState.error}
+				{#if publishMutation.error}
 					<p class="text-sm text-red-700" role="alert">
-						{createMutationState.error instanceof ApiRequestError
-							? createMutationState.error.message
+						{publishMutation.error instanceof ApiRequestError
+							? publishMutation.error.message
 							: 'Your post could not be published. Try again.'}
 					</p>
 				{/if}
@@ -110,8 +110,8 @@
 					<button
 						type="submit"
 						class="rounded-full bg-blue-700 px-5 py-2 font-semibold text-white disabled:opacity-50"
-						disabled={createMutationState.isPending}
-						>{createMutationState.isPending ? 'Posting…' : 'Post'}</button
+						disabled={publishMutation.isPending}
+						>{publishMutation.isPending ? 'Posting…' : 'Post'}</button
 					>
 					<Dialog.Close class="rounded-full border px-5 py-2">Cancel</Dialog.Close>
 				</div>
