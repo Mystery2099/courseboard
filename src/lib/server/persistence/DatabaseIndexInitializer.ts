@@ -3,6 +3,8 @@ import { courseRepository } from '#lib/server/catalog/CourseRepository.ts';
 import { institutionRepository } from '#lib/server/catalog/InstitutionRepository.ts';
 import { membershipRepository } from '#lib/server/catalog/MembershipRepository.ts';
 import { spaceRepository } from '#lib/server/catalog/SpaceRepository.ts';
+import { postRepository } from '#lib/server/content/PostRepository.ts';
+import { replyRepository } from '#lib/server/content/ReplyRepository.ts';
 import { academicHistoryRepository } from '#lib/server/history/AcademicHistoryRepository.ts';
 import { applicationUserRepository } from '#lib/server/users/ApplicationUserRepository.ts';
 
@@ -10,7 +12,8 @@ const RETRY_DELAY_MILLISECONDS = 30_000;
 
 /**
  * Creates the indexes that enforce identities (Clerk user IDs, invitation token hashes, institution
- * names, course codes per institution, one space per course, one membership per user and space)
+ * names, course codes per institution, one space per course, one membership per user and space,
+ * one reply per submission)
  * and support current queries. `createIndex` is idempotent, so this runs on every start.
  *
  * Writes that rely on a unique index await `ensureIndexes()` first, so no duplicate can be
@@ -50,7 +53,9 @@ export class DatabaseIndexInitializer {
 			courseRepository.ensureIndexes(),
 			spaceRepository.ensureIndexes(),
 			membershipRepository.ensureIndexes(),
-			academicHistoryRepository.ensureIndexes()
+			academicHistoryRepository.ensureIndexes(),
+			postRepository.ensureIndexes(),
+			replyRepository.ensureIndexes()
 		]);
 	}
 }

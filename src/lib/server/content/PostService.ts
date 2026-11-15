@@ -1,0 +1,221 @@
+import { ObjectId } from 'mongodb';
+import {
+	acceptReplySchema,
+	createPostSchema,
+	postIdSchema,
+	postListQuerySchema,
+	THREAD_KINDS,
+	type AcceptedReplyChangeResult,
+	type PostCreationResult,
+	type PostDetailResponse,
+	type PostListResponse,
+	type PostSummaryResponse
+} from '#lib/contracts/PostContract.ts';
+import { courseIdSchema } from '#lib/contracts/CourseCatalogContract.ts';
+import { AccessDeniedError, AccessPolicy } from '#lib/server/access/AccessPolicy.ts';
+import { courseRepository, type CourseRepository } from '#lib/server/catalog/CourseRepository.ts';
+import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
+import type {
+	PostDetail,
+	PostDocument,
+	PostOrderField,
+	PostPagePosition,
+	PostSummary
+} from './Post.ts';
+import { postRepository, type PostRepository } from './PostRepository.ts';
+import { replyRepository, type ReplyRepository } from './ReplyRepository.ts';
+
+/**
+ * Questions and discussions. Any admitted user reads and posts without following the course or
+ * recording it in their history. Only a question's author chooses its accepted reply, and only
+ * administrators lock threads until course moderators exist.
+ */
+export class PostService {
+	private static readonly PAGE_SIZE = 20;
+
+	constructor(
+		private readonly posts: PostRepository,
+		private readonly replies: ReplyRepository,
+		private readonly courses: CourseRepository
+	) {}
+
+	/** Returns null when the course doesn't exist or the id is malformed. */
+	async listPosts(
+		courseId: string,
+		query: unknown,
+		actor: ApplicationUser | null
+	): Promise<PostListResponse | null> {
+		AccessPolicy.requireAdmittedUser(actor);
+		const { kind, filter, after } = postListQuerySchema.parse(query);
+		const spaceId = await this.findSpaceId(courseId);
+		if (!spaceId) return null;
+
+		const orderedBy: PostOrderField = filter === 'active' ? 'lastActivityAt' : 'createdAt';
+		const pageSize = PostService.PAGE_SIZE;
+		const posts = await this.posts.findPage(
+			{
+				spaceId,
+				kinds: kind ? [kind] : THREAD_KINDS,
+				orderedBy,
+				onlyWithoutReplies: filter === 'unanswered',
+				after: after ? PostService.parseCursor(after) : null
+			},
+			pageSize + 1
+		);
+		const page = posts.slice(0, pageSize);
+		const lastPost = page.at(-1);
+		return {
+			posts: page.map(PostService.toSummaryResponse),
+			nextCursor:
+				lastPost && posts.length > pageSize
+					? `${lastPost[orderedBy].getTime()}_${lastPost._id.toHexString()}`
+					: null
+		};
+	}
+
+	async createPost(
+		courseId: string,
+		input: unknown,
+		actor: ApplicationUser | null
+	): Promise<PostCreationResult> {
+		const author = AccessPolicy.requireOnboardedUser(actor);
+		const request = createPostSchema.parse(input);
+		const parsedCourseId = courseIdSchema.safeParse(courseId);
+		const spaceId = await this.findSpaceId(courseId);
+		if (!parsedCourseId.success || !spaceId) return { kind: 'course-not-found' };
+
+		const now = new Date();
+		const post: PostDocument = {
+			_id: new ObjectId(),
+			spaceId,
+			courseId: new ObjectId(parsedCourseId.data),
+			kind: request.kind,
+			authorId: new ObjectId(author.id),
+			title: request.title,
+			bodyMarkdown: request.bodyMarkdown,
+			replyCount: 0,
+			acceptedReplyId: null,
+			lockedAt: null,
+			createdAt: now,
+			lastActivityAt: now
+		};
+		await this.posts.insert(post);
+		const { username, displayName } = author.profile;
+		return {
+			kind: 'created',
+			post: PostService.toDetailResponse({ ...post, author: { username, displayName } }, author)
+		};
+	}
+
+	/** Returns null when the post doesn't exist or the id is malformed. */
+	async getPost(postId: string, actor: ApplicationUser | null): Promise<PostDetailResponse | null> {
+		const viewer = AccessPolicy.requireAdmittedUser(actor);
+		const post = await this.findPost(postId);
+		return post ? PostService.toDetailResponse(post, viewer) : null;
+	}
+
+	async chooseAcceptedReply(
+		postId: string,
+		input: unknown,
+		actor: ApplicationUser | null
+	): Promise<AcceptedReplyChangeResult> {
+		const { replyId } = acceptReplySchema.parse(input);
+		return this.changeAcceptedReply(postId, new ObjectId(replyId), actor);
+	}
+
+	async clearAcceptedReply(
+		postId: string,
+		actor: ApplicationUser | null
+	): Promise<AcceptedReplyChangeResult> {
+		return this.changeAcceptedReply(postId, null, actor);
+	}
+
+	/** Locking stops new replies. Returns null when the post doesn't exist. */
+	async setLocked(
+		postId: string,
+		isLocked: boolean,
+		actor: ApplicationUser | null
+	): Promise<PostDetailResponse | null> {
+		const administrator = AccessPolicy.requireAdministrator(actor);
+		const post = await this.findPost(postId);
+		if (!post) return null;
+		// Locking again keeps the original time.
+		const lockedAt = isLocked ? (post.lockedAt ?? new Date()) : null;
+		if (!(await this.posts.setLockedAt(post._id, lockedAt))) return null;
+		return PostService.toDetailResponse({ ...post, lockedAt }, administrator);
+	}
+
+	private async changeAcceptedReply(
+		postId: string,
+		replyId: ObjectId | null,
+		actor: ApplicationUser | null
+	): Promise<AcceptedReplyChangeResult> {
+		const user = AccessPolicy.requireAdmittedUser(actor);
+		const post = await this.findPost(postId);
+		if (!post) return { kind: 'post-not-found' };
+		if (post.kind !== 'question') return { kind: 'not-a-question' };
+		if (post.authorId.toHexString() !== user.id) {
+			throw new AccessDeniedError(
+				'forbidden',
+				'Only the person who asked can choose the accepted reply.'
+			);
+		}
+		if (replyId) {
+			const placement = await this.replies.findPlacement(replyId);
+			if (!placement?.postId.equals(post._id)) return { kind: 'reply-not-found' };
+		}
+		if (!(await this.posts.setAcceptedReply(post._id, post.authorId, replyId))) {
+			return { kind: 'post-not-found' };
+		}
+		return {
+			kind: 'changed',
+			post: PostService.toDetailResponse({ ...post, acceptedReplyId: replyId }, user)
+		};
+	}
+
+	private async findPost(postId: string): Promise<PostDetail | null> {
+		const parsedPostId = postIdSchema.safeParse(postId);
+		return parsedPostId.success ? this.posts.findById(new ObjectId(parsedPostId.data)) : null;
+	}
+
+	private async findSpaceId(courseId: string): Promise<ObjectId | null> {
+		const parsedCourseId = courseIdSchema.safeParse(courseId);
+		if (!parsedCourseId.success) return null;
+		return this.courses.findSpaceId(new ObjectId(parsedCourseId.data));
+	}
+
+	private static parseCursor(cursor: string): PostPagePosition {
+		const [orderedAtMilliseconds, postId] = cursor.split('_');
+		return { orderedAt: new Date(Number(orderedAtMilliseconds)), postId: new ObjectId(postId) };
+	}
+
+	private static toSummaryResponse(post: PostSummary): PostSummaryResponse {
+		return {
+			id: post._id.toHexString(),
+			courseId: post.courseId.toHexString(),
+			kind: post.kind,
+			title: post.title,
+			author: post.author,
+			createdAt: post.createdAt.toISOString(),
+			lastActivityAt: post.lastActivityAt.toISOString(),
+			replyCount: post.replyCount,
+			hasAcceptedReply: post.acceptedReplyId !== null,
+			isLocked: post.lockedAt !== null
+		};
+	}
+
+	private static toDetailResponse(post: PostDetail, viewer: ApplicationUser): PostDetailResponse {
+		return {
+			...PostService.toSummaryResponse(post),
+			bodyMarkdown: post.bodyMarkdown,
+			acceptedReplyId: post.acceptedReplyId?.toHexString() ?? null,
+			viewerPermissions: {
+				canChooseAcceptedReply:
+					post.kind === 'question' && post.authorId.toHexString() === viewer.id,
+				canLock: viewer.role === 'administrator'
+			}
+		};
+	}
+}
+
+export const postService = new PostService(postRepository, replyRepository, courseRepository);
