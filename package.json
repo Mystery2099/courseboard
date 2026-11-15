@@ -61,6 +61,10 @@
 	},
 	"dependencies": {
 		"@clerk/localizations": "4.24.8",
+		"@fontsource-variable/inter": "5.3.0",
+		"@fontsource-variable/literata": "5.3.0",
+		"@fontsource-variable/space-grotesk": "5.3.0",
+		"@fontsource/ibm-plex-mono": "5.3.0",
 		"@tanstack/svelte-query": "^6.3.10",
 		"bits-ui": "^2.20.5",
 		"lucide-svelte": "^1.0.1",
