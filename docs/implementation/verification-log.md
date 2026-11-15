@@ -19,6 +19,9 @@ This is the record of what has actually been checked, how, and when, so nobody h
 
 | Date | What | How | Result |
 | --- | --- | --- | --- |
+| Nov 15, 2026 | Language chosen on the server | `pnpm dev` and curl on `/` and an invalid invitation link with different `Accept-Language` headers and `PARAGLIDE_LOCALE` cookies | `es` renders Spanish with `<html lang="es">`; an `es` cookie wins over an English header; no header gives English. The 404 page is translated from its code. Responses send `Vary: Cookie, Accept-Language`, and the CSP header is unchanged |
+| Nov 15, 2026 | Language picker while signed out | Headless Chromium against `pnpm dev`, choosing Español on `/` | The page reloads in Spanish with `lang="es"`, sets the `PARAGLIDE_LOCALE` cookie, and Clerk's sign-in button reads "Iniciar sesión" |
+| Nov 15, 2026 | Translations and error codes | `pnpm check`, `pnpm i18n:check`, and unit tests including `ErrorPresentation.spec.ts` | No missing Spanish messages; contract checks and API codes become translated messages, including the length limit |
 | Nov 15, 2026 | Disclosure stays tied to the acknowledged status and term (CodeRabbit review of PR #15) | New cases in `ReviewService.spec.ts` and `ReviewForm.svelte.spec.ts`, then `pnpm check`, `pnpm lint`, `pnpm build`, and `pnpm exec vitest run` against a throwaway MongoDB 8.0 replica set | A request whose acknowledged status or term differs from the entry returns `history-required` and writes nothing. In Chromium, a changed term or a removed entry cleared the checkbox, and a removed entry moved the selection to the remaining one. An unchanged refetch kept it checked. 118 tests passed |
 | Nov 14, 2026 | Review changes rechecked before pushing | Reran `pnpm check`, `pnpm lint`, `git diff --check`, `pnpm build`, and `pnpm exec vitest run` against a new throwaway MongoDB 8.0 replica set. Read the review service, repository, routes, and the post listing and page loader changes | All passed; 116 tests, including the browser and MongoDB checks. The code review found no defects. Creating a review checks for an existing one before the history entry, and the unique index handles concurrent attempts. Editing matches only the author's published review. Removed and deleted posts are hidden from lists, pages, and replies. Unanswered still accepts only questions. A review page opened under another course or channel returns 404 |
 | Nov 14, 2026 | Review list and composer in a browser, without the server | `ReviewForm.svelte.spec.ts` in headless Chromium, with stubbed API clients and the application stylesheet | At 360 × 640 the composer expanded, required disclosure acknowledgement, kept failed text, retried the same fields, refreshed the list, and offered the existing review after success. No horizontal page overflow in that state. At 728px the edit form kept status and term fixed and sent only feedback and ratings |
@@ -68,6 +71,7 @@ These come from Stage 0 of the roadmap. Each needs the deployed site and, where 
 - Questions and discussions with two accounts: a second account replying to and reading a thread, and being refused once an administrator locks it (two profiles).
 - Reviews on a deployed preview: disclosure, repeated attempts, existing-review editing, statistics, and a second account reading and replying without seeing private history.
 - A restore from backup.
+- Signed-in pages in Spanish: Clerk's account menu and profile dialog, form and API errors, and dates on a deployed preview. The Spanish text also needs review by a fluent speaker.
 
 ## Testing notes
 
