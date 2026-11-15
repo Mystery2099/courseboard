@@ -3,11 +3,7 @@ import type { ApplicationUser, OnboardedUser } from '#lib/server/users/Applicati
 export class AccessDeniedError extends Error {
 	constructor(
 		readonly code:
-			| 'unauthenticated'
-			| 'not-admitted'
-			| 'suspended'
-			| 'onboarding-required'
-			| 'forbidden',
+			'unauthenticated' | 'not-admitted' | 'suspended' | 'onboarding-required' | 'forbidden',
 		message: string
 	) {
 		super(message);

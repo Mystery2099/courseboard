@@ -30,10 +30,6 @@ export const POST: RequestHandler = ({ locals, params, request }) =>
 	apiResponse(async () => {
 		requireApiIdentity(locals);
 		const actor = AccessPolicy.requireAdmittedUser(locals.currentUser);
-		const result = await postService.createPost(
-			params.courseId,
-			await readApiJson(request),
-			actor
-		);
+		const result = await postService.createPost(params.courseId, await readApiJson(request), actor);
 		return result.kind === 'created' ? json(result.post, { status: 201 }) : courseNotFound();
 	});

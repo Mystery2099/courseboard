@@ -11,8 +11,7 @@
 	<UserAvatar username={author.username} displayName={author.displayName} size={28} />
 	<a
 		class="font-semibold hover:underline"
-		href={resolve('/(app)/users/[username]', { username: author.username })}
-		>{author.displayName}</a
+		href={resolve('/(app)/users/[username]', { username: author.username })}>{author.displayName}</a
 	>
 	<span class="text-slate-600">
 		· <time datetime={createdAt}>{formatRelativeTime(createdAt)}</time>

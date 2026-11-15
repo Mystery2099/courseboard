@@ -126,8 +126,7 @@ export interface ReplyListResponse {
 }
 
 export type PostCreationResult =
-	| { kind: 'created'; post: PostDetailResponse }
-	| { kind: 'course-not-found' };
+	{ kind: 'created'; post: PostDetailResponse } | { kind: 'course-not-found' };
 
 export type ReplyCreationResult =
 	| { kind: 'created'; reply: ReplyResponse }

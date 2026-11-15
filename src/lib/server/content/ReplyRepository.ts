@@ -43,7 +43,10 @@ export class ReplyRepository {
 		);
 	}
 
-	async findBySubmission(authorId: ObjectId, submissionId: string): Promise<ReplyWithAuthor | null> {
+	async findBySubmission(
+		authorId: ObjectId,
+		submissionId: string
+	): Promise<ReplyWithAuthor | null> {
 		const [reply] = await this.findWithAuthor({ authorId, submissionId }, 1);
 		return reply ?? null;
 	}

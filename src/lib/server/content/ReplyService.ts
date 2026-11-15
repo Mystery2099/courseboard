@@ -12,7 +12,7 @@ import { DatabaseIndexInitializer } from '#lib/server/persistence/DatabaseIndexI
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
 import { postRepository, type PostRepository } from './PostRepository.ts';
-import type { ReplyWithAuthor } from './Reply.ts';
+import type { ReplyDocument, ReplyWithAuthor } from './Reply.ts';
 import { replyRepository, type ReplyRepository } from './ReplyRepository.ts';
 
 const DUPLICATE_KEY_ERROR_CODE = 11000;
@@ -85,13 +85,14 @@ export class ReplyService {
 			}
 		}
 
-		const reply: ReplyWithAuthor = {
+		const reply: ReplyDocument = {
 			_id: new ObjectId(),
 			postId: id,
 			parentReplyId,
+			authorId,
 			bodyMarkdown: request.bodyMarkdown,
-			createdAt: new Date(),
-			author: { username: author.profile.username, displayName: author.profile.displayName }
+			submissionId: request.submissionId,
+			createdAt: new Date()
 		};
 		// The unique submission index must exist before it can stop a duplicate.
 		await DatabaseIndexInitializer.ensureIndexes();
@@ -99,11 +100,7 @@ export class ReplyService {
 		try {
 			const wasStored = await session.withTransaction(async () => {
 				if (!(await this.posts.recordReply(id, reply.createdAt, session))) return false;
-				const { author: _author, ...fields } = reply;
-				await this.replies.insert(
-					{ ...fields, authorId, submissionId: request.submissionId },
-					session
-				);
+				await this.replies.insert(reply, session);
 				return true;
 			});
 			// The post was locked or removed after the check above.
@@ -122,7 +119,11 @@ export class ReplyService {
 		} finally {
 			await session.endSession();
 		}
-		return { kind: 'created', reply: ReplyService.toResponse(reply) };
+		const { username, displayName } = author.profile;
+		return {
+			kind: 'created',
+			reply: ReplyService.toResponse({ ...reply, author: { username, displayName } })
+		};
 	}
 
 	private static toResponse(reply: ReplyWithAuthor): ReplyResponse {

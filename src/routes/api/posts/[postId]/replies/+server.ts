@@ -28,11 +28,7 @@ export const POST: RequestHandler = ({ locals, params, request }) =>
 	apiResponse(async () => {
 		requireApiIdentity(locals);
 		const actor = AccessPolicy.requireAdmittedUser(locals.currentUser);
-		const result = await replyService.createReply(
-			params.postId,
-			await readApiJson(request),
-			actor
-		);
+		const result = await replyService.createReply(params.postId, await readApiJson(request), actor);
 		switch (result.kind) {
 			case 'created':
 				return json(result.reply, { status: 201 });
