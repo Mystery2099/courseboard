@@ -59,6 +59,7 @@
 		"vitest-browser-svelte": "^2.1.1"
 	},
 	"dependencies": {
+		"@clerk/localizations": "4.24.8",
 		"@tanstack/svelte-query": "^6.3.10",
 		"bits-ui": "^2.20.5",
 		"lucide-svelte": "^1.0.1",

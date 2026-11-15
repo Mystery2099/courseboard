@@ -166,6 +166,9 @@ importers:
 
   .:
     dependencies:
+      '@clerk/localizations':
+        specifier: 4.24.8
+        version: 4.24.8
       '@tanstack/svelte-query':
         specifier: ^6.3.10
         version: 6.3.10(svelte@5.57.3(@typescript-eslint/types@8.72.1))
@@ -365,8 +368,24 @@ packages:
     resolution: {integrity: sha512-tm2ZWWFW+qBzW9SkdR0RxL++hww/ArtTzrtsu8k2cCXJIVGKaIMl/5tKi+4wy7iouvgk33Bs22fv3vKJ0RRrHg==}
     engines: {node: '>=20.9.0'}
 
+  '@clerk/localizations@4.24.8':
+    resolution: {integrity: sha512-JKtLkGL/YJ2kqyID/0icY4Nv8Lh4j6AuNoRi2uvj96t8J8/SeWjYE23SBM+PqaFJaerf/letX/jFZjNd5LhYqQ==}
+    engines: {node: '>=20.9.0'}
+
   '@clerk/shared@4.44.0':
     resolution: {integrity: sha512-cSkplKEZZStBciwo+4iJZOg44rfs/C2jlMPwim4t6dVn2wykUts5NVr0HVote7XNAXP5s0A+UzV1n6pkz4CCHg==}
+    engines: {node: '>=20.9.0'}
+    peerDependencies:
+      react: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
+      react-dom: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
+
+  '@clerk/shared@4.45.1':
+    resolution: {integrity: sha512-rAGh+U8dSE6Ov1I3mXysIHaGhxx63ET+24kW4gnmApJvrfU8nq9JT9pQOoyzG3X4PQa93aaAsxkck46CynDeHA==}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       react: ^18.0.0 || ~19.0.3 || ~19.1.4 || ~19.2.3 || ~19.3.0-0
@@ -2575,7 +2594,21 @@ snapshots:
       - react
       - react-dom
 
+  '@clerk/localizations@4.24.8':
+    dependencies:
+      '@clerk/shared': 4.45.1
+    transitivePeerDependencies:
+      - react
+      - react-dom
+
   '@clerk/shared@4.44.0':
+    dependencies:
+      '@tanstack/query-core': 5.106.0
+      dequal: 2.0.3
+      glob-to-regexp: 0.4.1
+      js-cookie: 3.0.8
+
+  '@clerk/shared@4.45.1':
     dependencies:
       '@tanstack/query-core': 5.106.0
       dequal: 2.0.3
