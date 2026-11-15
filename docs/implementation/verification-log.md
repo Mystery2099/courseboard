@@ -19,6 +19,7 @@ This is the record of what has actually been checked, how, and when, so nobody h
 
 | Date | What | How | Result |
 | --- | --- | --- | --- |
+| Nov 15, 2026 | Signed-in pages in Spanish on a deployed preview | Render's preview for PR #16, signed in as `@kennedmr` in Chrome: a course space, Questions, the profile, Clerk's account menu, an unknown course ID, and an empty question submitted only to client validation | All Spanish with `lang="es"`: plurals, relative times, terms, and badges; the 404 page from its code; "Escribe un título." and "Primero escribe algo."; Clerk's menu reads "Administrar cuenta" and "Cerrar sesión". Nothing overflowed. The picker switched to English and back, reloading each time. Nothing was posted |
 | Nov 15, 2026 | Install fails when messages can't compile | `pnpm run prepare` with valid settings, then with `baseLocale` temporarily set to a locale that doesn't exist | Exit 0, then exit 1. Before this fix, `\|\| echo ''` hid the compile failure |
 | Nov 15, 2026 | Translation checks after CodeRabbit review of PR #16 | New cases in `TranslationValidator.spec.ts`, a run of `pnpm i18n:translate es` against a malformed `es.json`, then `pnpm lint`, `pnpm check`, and the server tests | A plural case missing `{count}`, an empty case, an empty `match`, and `match: null` are all rejected. The malformed catalog stops the run with its parse error and is left unchanged. 120 tests passed |
 | Nov 15, 2026 | Machine translation with Gemini | `pnpm i18n:translate es` through `agy` (Gemini 3.8 Flash) on a scratch copy with eight Spanish messages removed, then `inlang check` and a Paraglide compile | All eight came back with placeholders and leading spaces intact and followed the guide (infinitive buttons, *período*, *añadir*). The plural message renders "1 respuesta" and "2 respuestas". Gemini's structured output strips `=` and `*` from keys, so plural cases are sent by category. One call took almost three minutes |
@@ -75,7 +76,7 @@ These come from Stage 0 of the roadmap. Each needs the deployed site and, where 
 - Questions and discussions with two accounts: a second account replying to and reading a thread, and being refused once an administrator locks it (two profiles).
 - Reviews on a deployed preview: disclosure, repeated attempts, existing-review editing, statistics, and a second account reading and replying without seeing private history.
 - A restore from backup.
-- Signed-in pages in Spanish: Clerk's account menu and profile dialog, form and API errors, and dates on a deployed preview. The Spanish text also needs review by a fluent speaker.
+- The Spanish text needs review by a fluent speaker. Clerk's profile dialog and an API error returned from a real request haven't been seen in Spanish yet.
 
 ## Testing notes
 
