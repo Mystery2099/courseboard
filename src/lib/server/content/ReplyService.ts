@@ -68,7 +68,7 @@ export class ReplyService {
 		const parsedPostId = postIdSchema.safeParse(postId);
 		if (!parsedPostId.success) return { kind: 'post-not-found' };
 		const postObjectId = new ObjectId(parsedPostId.data);
-		const authorId = new ObjectId(author.postObjectId);
+		const authorId = new ObjectId(author.id);
 
 		const storedEarlier = await this.replies.findBySubmission(authorId, request.submissionId);
 		if (storedEarlier) return { kind: 'created', reply: ReplyService.toResponse(storedEarlier) };
