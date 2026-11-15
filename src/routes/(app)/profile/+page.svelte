@@ -85,7 +85,9 @@
 				</div>
 			</form>
 			{#if form?.displayNameError}
-				<p class="mt-2 text-sm text-red-700" role="alert">{describeErrorCode(form.displayNameError)}</p>
+				<p class="mt-2 text-sm text-red-700" role="alert">
+					{describeErrorCode(form.displayNameError)}
+				</p>
 			{/if}
 		{:else}
 			<div class="mt-2 flex items-center justify-between gap-4">
@@ -139,7 +141,9 @@
 			>
 		</form>
 		{#if form?.institutionVisibilityError}
-			<p class="mt-2 text-sm text-red-700" role="alert">{describeErrorCode(form.institutionVisibilityError)}</p>
+			<p class="mt-2 text-sm text-red-700" role="alert">
+				{describeErrorCode(form.institutionVisibilityError)}
+			</p>
 		{:else if form?.institutionVisibilitySaved}
 			<p class="mt-2 text-sm text-slate-600" role="status">{m.common_saved()}</p>
 		{/if}

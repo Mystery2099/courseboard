@@ -10,6 +10,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		userProfileService.getPublicProfile(params.username, user),
 		academicHistoryService.listVisibleEntries(params.username, user)
 	]);
-	if (!person || !history) error(404, { code: 'user-not-found', message: 'This user does not exist.' });
+	if (!person || !history)
+		error(404, { code: 'user-not-found', message: 'This user does not exist.' });
 	return { person, history, historyLoadedAt: Date.now() };
 };

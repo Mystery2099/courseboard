@@ -131,7 +131,9 @@
 				</fieldset>
 			{/if}
 			{#if form?.errors.primaryInstitutionId}
-				<p class="mt-3 text-sm text-red-700" role="alert">{describeErrorCode(form.errors.primaryInstitutionId)}</p>
+				<p class="mt-3 text-sm text-red-700" role="alert">
+					{describeErrorCode(form.errors.primaryInstitutionId)}
+				</p>
 			{/if}
 
 			<div class="mt-auto pt-8">
@@ -162,7 +164,9 @@
 				/>
 			</label>
 			{#if form?.errors.displayName}
-				<p id="display-name-error" class="mt-2 text-sm text-red-700">{describeErrorCode(form.errors.displayName)}</p>
+				<p id="display-name-error" class="mt-2 text-sm text-red-700">
+					{describeErrorCode(form.errors.displayName)}
+				</p>
 			{/if}
 
 			<label class="mt-6 block">
@@ -187,7 +191,9 @@
 				{m.onboarding_username_help()}
 			</p>
 			{#if form?.errors.username}
-				<p class="mt-1 text-sm text-red-700" role="alert">{describeErrorCode(form.errors.username)}</p>
+				<p class="mt-1 text-sm text-red-700" role="alert">
+					{describeErrorCode(form.errors.username)}
+				</p>
 			{/if}
 
 			<div class="mt-auto pt-8">
