@@ -13,12 +13,14 @@ export type RedemptionResult =
 	| { kind: 'email-mismatch' }
 	| { kind: 'unavailable' };
 
+export type InvitationStatus = 'pending' | 'expired' | 'revoked' | 'redeemed';
+
 export interface InvitationSummaryResponse {
 	id: string;
 	email: string;
 	createdAt: string;
 	expiresAt: string;
-	status: 'pending' | 'expired' | 'revoked' | 'redeemed';
+	status: InvitationStatus;
 }
 
 export interface InvitationListResponse {

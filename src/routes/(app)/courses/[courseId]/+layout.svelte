@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
@@ -42,7 +43,7 @@
 
 <div class="desktop:flex">
 	<nav
-		aria-label="{data.course.code} channels"
+		aria-label={m.course_space_channels({ courseCode: data.course.code })}
 		class="sticky top-0 hidden h-dvh w-64 shrink-0 border-r bg-slate-50 px-3 py-6 desktop:block"
 	>
 		<p class="px-3 font-mono text-sm font-semibold text-blue-700">{data.course.code}</p>
@@ -56,7 +57,7 @@
 						class={[
 							'block rounded-xl px-3 py-2',
 							channel === currentChannel && 'bg-indigo-100 font-semibold'
-						]}>{COURSE_CHANNEL_LABELS[channel]}</a
+						]}>{COURSE_CHANNEL_LABELS[channel]()}</a
 					>
 				</li>
 			{/each}
@@ -79,7 +80,8 @@
 							data.course.isFollowed ? 'bg-indigo-100' : 'bg-blue-700 text-white'
 						]}
 					>
-						{#if data.course.isFollowed}<Check size={18} /> Following{:else}Follow{/if}
+						{#if data.course.isFollowed}<Check size={18} />
+							{m.course_space_following()}{:else}{m.course_space_follow()}{/if}
 					</button>
 				</form>
 				<button
@@ -88,7 +90,7 @@
 					onclick={() => {
 						wasAddedToHistory = false;
 						isHistoryEditorOpen = true;
-					}}>Add to my history</button
+					}}>{m.course_space_add_to_history()}</button
 				>
 			</div>
 			{#if page.form?.followingError}
@@ -96,10 +98,13 @@
 			{/if}
 			{#if wasAddedToHistory}
 				<p class="mt-2 text-sm text-slate-600" role="status">
-					Added to your history. Following is separate and hasn't changed.
+					{m.course_space_added_to_history()}
 				</p>
 			{/if}
-			<nav aria-label="Channels" class="mt-4 flex gap-2 overflow-x-auto desktop:hidden">
+			<nav
+				aria-label={m.course_space_channels_short()}
+				class="mt-4 flex gap-2 overflow-x-auto desktop:hidden"
+			>
 				{#each COURSE_CHANNELS as channel (channel)}
 					<a
 						href={resolve(COURSE_CHANNEL_ROUTE_IDS[channel], { courseId: data.course.id })}
@@ -107,7 +112,7 @@
 						class={[
 							'shrink-0 rounded-full border px-4 py-1.5',
 							channel === currentChannel && 'border-transparent bg-indigo-100 font-semibold'
-						]}>{COURSE_CHANNEL_LABELS[channel]}</a
+						]}>{COURSE_CHANNEL_LABELS[channel]()}</a
 					>
 				{/each}
 			</nav>

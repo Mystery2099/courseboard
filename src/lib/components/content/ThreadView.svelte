@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery, createMutation, createQuery } from '@tanstack/svelte-query';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { untrack } from 'svelte';
+	import { getLocale } from '#lib/paraglide/runtime.js';
 	import Check from 'lucide-svelte/icons/check';
 	import Lock from 'lucide-svelte/icons/lock';
 	import { ApiRequestError } from '#lib/client/ApiRequest.ts';
@@ -105,7 +107,7 @@
 			{#if isAccepted}
 				<span
 					class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-0.5 text-sm font-semibold text-emerald-900"
-					><Check size={14} /> Accepted answer</span
+					><Check size={14} /> {m.thread_accepted_answer()}</span
 				>
 			{/if}
 		</div>
@@ -115,7 +117,7 @@
 				<button
 					type="button"
 					class="rounded-full border px-3 py-1"
-					onclick={() => (replyTargetId = reply.id)}>Reply</button
+					onclick={() => (replyTargetId = reply.id)}>{m.common_reply()}</button
 				>
 			{/if}
 			{#if post.viewerPermissions.canChooseAcceptedReply}
@@ -124,7 +126,7 @@
 					class="rounded-full border px-3 py-1 disabled:opacity-50"
 					disabled={acceptedReplyMutation.isPending}
 					onclick={() => acceptedReplyMutation.mutate(isAccepted ? null : reply.id)}
-					>{isAccepted ? 'Clear accepted answer' : 'Accept as answer'}</button
+					>{isAccepted ? m.thread_clear_accepted_answer() : m.thread_accept_answer()}</button
 				>
 			{/if}
 		</div>
@@ -137,7 +139,7 @@
 		{#if post.isLocked}
 			<span
 				class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-0.5 text-sm font-semibold text-slate-800"
-				><Lock size={14} /> Locked</span
+				><Lock size={14} /> {m.post_badge_locked()}</span
 			>
 		{/if}
 	</div>
@@ -145,7 +147,11 @@
 	<div class="mt-2"><ContentByline author={post.author} createdAt={post.createdAt} /></div>
 	{#if post.editedAt}
 		<p class="mt-1 text-sm text-slate-600">
-			Edited <time datetime={post.editedAt}>{new Date(post.editedAt).toLocaleDateString()}</time>
+			<time datetime={post.editedAt}
+				>{m.thread_edited({
+					date: new Date(post.editedAt).toLocaleDateString(getLocale())
+				})}</time
+			>
 		</p>
 	{/if}
 	{#if post.reviewData}
@@ -155,7 +161,7 @@
 	{#if post.viewerPermissions.canEditReview}
 		<details bind:open={isReviewEditorOpen} class="mt-4 rounded-[20px] border p-4">
 			<summary class="min-h-11 cursor-pointer py-2 font-semibold text-blue-700"
-				>Edit your review</summary
+				>{m.thread_edit_review()}</summary
 			>
 			{#if isReviewEditorOpen}
 				<div class="mt-4">
@@ -178,14 +184,12 @@
 			class="mt-4 rounded-full border px-4 py-1.5 text-sm disabled:opacity-50"
 			disabled={lockMutation.isPending}
 			onclick={() => lockMutation.mutate(!post.isLocked)}
-			>{post.isLocked ? 'Unlock thread' : 'Lock thread'}</button
+			>{post.isLocked ? m.thread_unlock() : m.thread_lock()}</button
 		>
 	{/if}
 	{#if actionError}
 		<p class="mt-2 text-sm text-red-700" role="alert">
-			{actionError instanceof ApiRequestError
-				? actionError.message
-				: 'That change could not be saved. Try again.'}
+			{actionError instanceof ApiRequestError ? actionError.message : m.thread_action_failed()}
 		</p>
 	{/if}
 </article>
@@ -210,7 +214,7 @@
 					{/each}
 					{#if replyTargetId === branch.reply.id && !post.isLocked}
 						<ReplyComposer
-							label="Reply to {branch.reply.author.displayName}"
+							label={m.thread_reply_to({ name: branch.reply.author.displayName })}
 							onSubmit={(bodyMarkdown) => {
 								submissionQueue.submit(bodyMarkdown, branch.reply.id);
 								replyTargetId = null;
@@ -229,7 +233,7 @@
 			class="mt-3 rounded-full border px-4 py-1.5 disabled:opacity-50"
 			disabled={repliesQuery.isFetchingNextPage}
 			onclick={() => repliesQuery.fetchNextPage()}
-			>{repliesQuery.isFetchingNextPage ? 'Loading…' : 'Load more replies'}</button
+			>{repliesQuery.isFetchingNextPage ? m.common_loading() : m.thread_load_more_replies()}</button
 		>
 	{/if}
 
@@ -246,11 +250,11 @@
 	<div class="mt-6">
 		{#if post.isLocked}
 			<p class="rounded-2xl bg-slate-100 p-4 text-sm" role="status">
-				This thread is locked, so it has no new replies.
+				{m.thread_locked_notice()}
 			</p>
 		{:else}
 			<ReplyComposer
-				label="Your reply"
+				label={m.thread_your_reply()}
 				onSubmit={(bodyMarkdown) => submissionQueue.submit(bodyMarkdown, null)}
 			/>
 		{/if}

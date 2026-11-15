@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { afterNavigate } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { Dialog } from 'bits-ui';
@@ -36,12 +37,12 @@
 </script>
 
 <nav
-	aria-label="Main"
+	aria-label={m.navigation_main()}
 	class="fixed inset-x-3 bottom-3 mx-auto flex h-[60px] max-w-[560px] items-center gap-2 rounded-full border bg-white px-2 shadow-lg"
 >
 	<a
 		href={resolve('/(app)/explore')}
-		aria-label="Explore"
+		aria-label={m.navigation_explore()}
 		class="flex size-11 items-center justify-center rounded-full"
 	>
 		<Compass size={22} />
@@ -53,9 +54,10 @@
 		>
 			{#if currentCourse}
 				<span class="font-mono text-sm font-semibold">{currentCourse.code}</span>
-				<span class="truncate">{currentChannel ? COURSE_CHANNEL_LABELS[currentChannel] : ''}</span>
+				<span class="truncate">{currentChannel ? COURSE_CHANNEL_LABELS[currentChannel]() : ''}</span
+				>
 			{:else}
-				<span>Spaces</span>
+				<span>{m.navigation_spaces()}</span>
 			{/if}
 			<ChevronUp size={18} class="ml-auto shrink-0" />
 		</Dialog.Trigger>
@@ -65,10 +67,10 @@
 				class="fixed inset-x-0 bottom-0 z-50 max-h-[90dvh] overflow-y-auto rounded-t-[28px] bg-white p-4 pb-8"
 			>
 				<Dialog.Title class="text-xs font-semibold tracking-wider text-slate-600 uppercase"
-					>Your courses</Dialog.Title
+					>{m.navigation_your_courses()}</Dialog.Title
 				>
 				{#if followedCourses.length === 0}
-					<p class="mt-2 text-sm text-slate-600">Courses you follow appear here.</p>
+					<p class="mt-2 text-sm text-slate-600">{m.navigation_followed_courses_empty()}</p>
 				{:else}
 					<ul class="mt-2 flex gap-3 overflow-x-auto pb-2">
 						{#each followedCourses as course (course.id)}
@@ -88,7 +90,7 @@
 
 				{#if currentCourse}
 					<h2 class="mt-4 text-xs font-semibold tracking-wider text-slate-600 uppercase">
-						In {currentCourse.code}
+						{m.navigation_in_course({ courseCode: currentCourse.code })}
 					</h2>
 					<ul class="mt-1">
 						{#each COURSE_CHANNELS as channel (channel)}
@@ -99,7 +101,7 @@
 									class={[
 										'block rounded-xl px-4 py-3',
 										channel === currentChannel && 'bg-indigo-100 font-semibold'
-									]}>{COURSE_CHANNEL_LABELS[channel]}</a
+									]}>{COURSE_CHANNEL_LABELS[channel]()}</a
 								>
 							</li>
 						{/each}
@@ -108,10 +110,10 @@
 
 				<div class="mt-4 flex flex-col items-center gap-2">
 					<a href={resolve('/(app)/explore')} class="font-semibold text-blue-700"
-						>Explore all courses</a
+						>{m.navigation_explore_all_courses()}</a
 					>
 					{#if isAdministrator}
-						<a href={resolve('/(app)/admin/invitations')} class="text-sm">Admin</a>
+						<a href={resolve('/(app)/admin/invitations')} class="text-sm">{m.navigation_admin()}</a>
 					{/if}
 				</div>
 			</Dialog.Content>
@@ -119,7 +121,7 @@
 	</Dialog.Root>
 	<a
 		href={resolve('/(app)/profile')}
-		aria-label="Your profile"
+		aria-label={m.navigation_your_profile()}
 		aria-current={isProfileCurrent ? 'page' : undefined}
 		class="flex size-11 items-center justify-center"
 	>

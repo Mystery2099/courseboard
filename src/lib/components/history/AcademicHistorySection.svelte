@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
 	import Plus from 'lucide-svelte/icons/plus';
@@ -58,7 +59,7 @@
 
 <section class="mt-8" aria-labelledby="history-heading">
 	<div class="flex flex-wrap items-center justify-between gap-3">
-		<h2 id="history-heading" class="text-xl font-semibold">History</h2>
+		<h2 id="history-heading" class="text-xl font-semibold">{m.history_heading()}</h2>
 		<div class="flex gap-2">
 			<button
 				type="button"
@@ -67,13 +68,14 @@
 					isPreviewingAsOthers && 'border-transparent bg-indigo-100 font-semibold'
 				]}
 				aria-pressed={isPreviewingAsOthers}
-				onclick={() => (isPreviewingAsOthers = !isPreviewingAsOthers)}>Preview as others</button
+				onclick={() => (isPreviewingAsOthers = !isPreviewingAsOthers)}
+				>{m.history_preview_as_others()}</button
 			>
 			{#if !isPreviewingAsOthers}
 				<button
 					type="button"
 					class="inline-flex items-center gap-1 rounded-full bg-blue-700 px-4 py-1.5 font-semibold text-white"
-					onclick={() => openEditor(null)}><Plus size={18} /> Add course</button
+					onclick={() => openEditor(null)}><Plus size={18} /> {m.history_add_course()}</button
 				>
 			{/if}
 		</div>
@@ -81,34 +83,32 @@
 
 	{#if isPreviewingAsOthers}
 		<p class="mt-2 text-sm text-slate-600">
-			This is what other students see. Private entries and notes are left out.
+			{m.history_preview_explanation()}
 			<a class="font-semibold text-blue-700" href={resolve('/(app)/users/[username]', { username })}
-				>Open your profile page</a
+				>{m.history_open_profile_page()}</a
 			>
 		</p>
 		{#if visibleHistoryQuery.isPending}
-			<p class="mt-4 text-sm text-slate-600">Loading preview…</p>
+			<p class="mt-4 text-sm text-slate-600">{m.history_preview_loading()}</p>
 		{:else if visibleHistoryQuery.isError}
-			<p class="mt-4 text-sm text-red-700" role="alert">The preview couldn't be loaded.</p>
+			<p class="mt-4 text-sm text-red-700" role="alert">{m.history_preview_failed()}</p>
 		{:else}
 			<VisibleHistoryList entries={visibleHistoryQuery.data.entries} />
 		{/if}
 	{:else}
 		<p class="mt-2 text-sm text-slate-600">
-			Self-reported. Entries are private until you make them visible, and only you see the
-			visibility labels and notes.
+			{m.history_explanation()}
 		</p>
 		{#if ownHistoryQuery.isError}
 			<p class="mt-2 text-sm text-slate-600" role="status">
-				Couldn't refresh your history. Showing what was loaded earlier.
+				{m.history_refresh_failed()}
 			</p>
 		{/if}
 		{#if ownGroups.length === 0}
 			<div class="mt-4 rounded-[20px] border bg-white p-4">
-				<p class="font-semibold">No courses yet</p>
+				<p class="font-semibold">{m.history_empty_title()}</p>
 				<p class="mt-1 text-sm text-slate-600">
-					Add the courses you're planning, taking, or took. Taking or Took lets you review a course
-					later.
+					{m.history_empty_detail()}
 				</p>
 			</div>
 		{:else}
@@ -123,15 +123,20 @@
 								<button
 									type="button"
 									class="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50"
-									aria-label="Edit {entry.course.code} {entry.course.title}"
+									aria-label={m.history_edit_entry_label({
+										courseCode: entry.course.code,
+										courseTitle: entry.course.title
+									})}
 									onclick={() => openEditor(entry)}
 								>
 									<HistoryCourseLabel course={entry.course} />
 									<span class="flex flex-col items-end gap-1">
 										<HistoryStatusBadge status={entry.status} />
 										<span class="text-sm text-slate-600">
-											{entry.visibility === 'visible' ? 'Visible' : 'Private'}{entry.privateNote
-												? ' · note'
+											{entry.visibility === 'visible'
+												? m.history_visibility_visible()
+												: m.history_visibility_private()}{entry.privateNote
+												? m.history_note_suffix()
 												: ''}
 										</span>
 									</span>

@@ -9,5 +9,5 @@
 	class={[
 		'rounded-full px-3 py-0.5 text-sm font-semibold',
 		kind === 'question' ? 'bg-sky-100 text-sky-900' : 'bg-orange-100 text-orange-900'
-	]}>{THREAD_KIND_LABELS[kind]}</span
+	]}>{THREAD_KIND_LABELS[kind]()}</span
 >

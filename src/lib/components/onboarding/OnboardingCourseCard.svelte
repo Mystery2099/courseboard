@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import Check from 'lucide-svelte/icons/check';
 	import Plus from 'lucide-svelte/icons/plus';
@@ -86,7 +87,10 @@
 			disabled={historyMutation.isPending || (isTakingThisTerm && !createdEntryId)}
 			onclick={() => historyMutation.mutate()}
 		>
-			{#if isTakingThisTerm}<Check size={16} /> In my history{:else}<Plus size={16} /> Add to history{/if}
+			{#if isTakingThisTerm}<Check size={16} /> {m.onboarding_course_in_history()}{:else}<Plus
+					size={16}
+				/>
+				{m.onboarding_course_add_to_history()}{/if}
 		</button>
 		<button
 			type="button"
@@ -95,10 +99,11 @@
 			disabled={followingMutation.isPending}
 			onclick={() => followingMutation.mutate()}
 		>
-			{#if course.isFollowed}<Check size={16} /> Following{:else}Follow{/if}
+			{#if course.isFollowed}<Check size={16} />
+				{m.course_space_following()}{:else}{m.course_space_follow()}{/if}
 		</button>
 	</div>
 	{#if historyMutation.isError || followingMutation.isError}
-		<p class="mt-2 text-sm text-red-700" role="alert">That change wasn't saved. Try again.</p>
+		<p class="mt-2 text-sm text-red-700" role="alert">{m.onboarding_course_change_failed()}</p>
 	{/if}
 </li>

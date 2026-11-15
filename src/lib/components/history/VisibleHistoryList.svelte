@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { resolve } from '$app/paths';
 	import { groupHistoryEntries } from '#lib/client/history/AcademicHistoryPresentation.ts';
 	import type { VisibleHistoryEntryResponse } from '#lib/contracts/AcademicHistoryContract.ts';
@@ -12,7 +13,7 @@
 
 <!-- The empty state reads the same whether someone has only private entries or none at all. -->
 {#if groups.length === 0}
-	<p class="mt-4 rounded-[20px] border bg-white p-4 text-slate-600">No courses to show.</p>
+	<p class="mt-4 rounded-[20px] border bg-white p-4 text-slate-600">{m.history_visible_empty()}</p>
 {:else}
 	{#each groups as group (group.key)}
 		<div class="mt-4 overflow-hidden rounded-[20px] border bg-white">

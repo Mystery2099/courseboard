@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
 	import { SignOutButton, UserButton, useClerkContext } from 'svelte-clerk';
+	import LanguagePicker from '#lib/components/LanguagePicker.svelte';
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import AcademicHistorySection from '#lib/components/history/AcademicHistorySection.svelte';
 	import type { PageProps } from './$types';
@@ -15,7 +17,7 @@
 	let isSavingInstitutionVisibility = $state(false);
 </script>
 
-<svelte:head><title>Your profile</title></svelte:head>
+<svelte:head><title>{m.profile_title()}</title></svelte:head>
 
 <main class="mx-auto max-w-3xl px-4 py-8">
 	<div class="flex items-center gap-4">
@@ -41,7 +43,7 @@
 	/>
 
 	<section class="mt-8 rounded-[20px] border bg-white p-4">
-		<h2 class="text-lg font-semibold">Display name</h2>
+		<h2 class="text-lg font-semibold">{m.profile_display_name()}</h2>
 		{#if isEditingDisplayName}
 			<form
 				method="POST"
@@ -57,7 +59,7 @@
 				}}
 			>
 				<label class="flex-1">
-					<span class="sr-only">Display name</span>
+					<span class="sr-only">{m.profile_display_name()}</span>
 					<input
 						name="displayName"
 						value={form?.displayName ?? data.profile.displayName}
@@ -72,12 +74,12 @@
 					<button
 						type="submit"
 						class="rounded-full bg-blue-700 px-4 py-2 font-semibold text-white disabled:opacity-50"
-						disabled={isSaving}>Save</button
+						disabled={isSaving}>{m.common_save()}</button
 					>
 					<button
 						type="button"
 						class="rounded-full border px-4 py-2"
-						onclick={() => (isEditingDisplayName = false)}>Cancel</button
+						onclick={() => (isEditingDisplayName = false)}>{m.common_cancel()}</button
 					>
 				</div>
 			</form>
@@ -90,20 +92,20 @@
 				<button
 					type="button"
 					class="rounded-full border px-4 py-1.5"
-					onclick={() => (isEditingDisplayName = true)}>Edit</button
+					onclick={() => (isEditingDisplayName = true)}>{m.common_edit()}</button
 				>
 			</div>
 			{#if form?.displayNameSaved}
-				<p class="mt-2 text-sm text-slate-600" role="status">Saved.</p>
+				<p class="mt-2 text-sm text-slate-600" role="status">{m.common_saved()}</p>
 			{/if}
 		{/if}
 		<p class="mt-3 text-sm text-slate-600">
-			Your username can't be changed. Your email address is never shown to other students.
+			{m.profile_identity_notice()}
 		</p>
 	</section>
 
 	<section class="mt-4 rounded-[20px] border bg-white p-4">
-		<h2 class="text-lg font-semibold">School</h2>
+		<h2 class="text-lg font-semibold">{m.profile_school()}</h2>
 		<form
 			method="POST"
 			action="?/updatePrimaryInstitutionVisibility"
@@ -120,8 +122,8 @@
 				<p>{data.profile.primaryInstitution.name}</p>
 				<p class="text-sm text-slate-600">
 					{data.profile.isPrimaryInstitutionHidden
-						? 'Hidden from other students.'
-						: 'Shown on your profile.'}
+						? m.profile_school_hidden()
+						: m.profile_school_shown()}
 				</p>
 			</div>
 			<button
@@ -130,25 +132,31 @@
 				value={data.profile.isPrimaryInstitutionHidden ? 'false' : 'true'}
 				class="shrink-0 rounded-full border px-4 py-1.5 disabled:opacity-50"
 				disabled={isSavingInstitutionVisibility}
-				>{data.profile.isPrimaryInstitutionHidden ? 'Show' : 'Hide'}</button
+				>{data.profile.isPrimaryInstitutionHidden
+					? m.profile_school_show()
+					: m.profile_school_hide()}</button
 			>
 		</form>
 		{#if form?.institutionVisibilityError}
 			<p class="mt-2 text-sm text-red-700" role="alert">{form.institutionVisibilityError}</p>
 		{:else if form?.institutionVisibilitySaved}
-			<p class="mt-2 text-sm text-slate-600" role="status">Saved.</p>
+			<p class="mt-2 text-sm text-slate-600" role="status">{m.common_saved()}</p>
 		{/if}
 		<p class="mt-3 text-sm text-slate-600">
-			Hiding it keeps your school off your profile unless a visible history entry is there. Course
-			search still opens on it for you.
+			{m.profile_school_hiding_explanation()}
 		</p>
 	</section>
 
 	<section class="mt-4 rounded-[20px] border bg-white p-4">
-		<h2 class="text-lg font-semibold">Account</h2>
+		<h2 class="text-lg font-semibold">{m.profile_language()}</h2>
+		<div class="mt-2"><LanguagePicker isLabelVisible={false} /></div>
+		<p class="mt-3 text-sm text-slate-600">{m.profile_language_explanation()}</p>
+	</section>
+
+	<section class="mt-4 rounded-[20px] border bg-white p-4">
+		<h2 class="text-lg font-semibold">{m.profile_account()}</h2>
 		<p class="mt-2 text-sm text-slate-600">
-			Profile photo, email, password, and sign-in settings. Open the account menu and choose Manage
-			account.
+			{m.profile_account_explanation()}
 		</p>
 		<div class="mt-3 flex items-center gap-4">
 			<UserButton />

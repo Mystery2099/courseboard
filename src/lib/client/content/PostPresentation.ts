@@ -1,19 +1,21 @@
+import { m } from '#lib/paraglide/messages.js';
+import { getLocale } from '#lib/paraglide/runtime.js';
 import type { PostKind, PostListFilter, ReplyResponse } from '#lib/contracts/PostContract.ts';
 
-export const THREAD_KIND_LABELS: Record<PostKind, string> = {
-	question: 'Question',
-	discussion: 'Discussion',
-	review: 'Review'
+export const THREAD_KIND_LABELS: Record<PostKind, () => string> = {
+	question: m.thread_kind_question,
+	discussion: m.thread_kind_discussion,
+	review: m.thread_kind_review
 };
 
-export const POST_LIST_FILTER_LABELS: Record<PostListFilter, string> = {
-	active: 'Active',
-	newest: 'Newest',
-	unanswered: 'Unanswered'
+export const POST_LIST_FILTER_LABELS: Record<PostListFilter, () => string> = {
+	active: m.post_list_filter_active,
+	newest: m.post_list_filter_newest,
+	unanswered: m.post_list_filter_unanswered
 };
 
 export function formatReplyCount(replyCount: number): string {
-	return replyCount === 1 ? '1 reply' : `${replyCount} replies`;
+	return m.post_reply_count({ count: replyCount });
 }
 
 const RELATIVE_TIME_STEPS: { unit: Intl.RelativeTimeFormatUnit; seconds: number }[] = [
@@ -24,13 +26,12 @@ const RELATIVE_TIME_STEPS: { unit: Intl.RelativeTimeFormatUnit; seconds: number 
 	{ unit: 'minute', seconds: 60 }
 ];
 
-const relativeTimeFormat = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
-
 /** "3 hours ago", in the largest unit that fits. */
 export function formatRelativeTime(isoDate: string, now = Date.now()): string {
 	const elapsedSeconds = Math.max(0, (now - new Date(isoDate).getTime()) / 1000);
 	const step = RELATIVE_TIME_STEPS.find((candidate) => elapsedSeconds >= candidate.seconds);
-	if (!step) return 'just now';
+	if (!step) return m.relative_time_just_now();
+	const relativeTimeFormat = new Intl.RelativeTimeFormat(getLocale(), { numeric: 'auto' });
 	return relativeTimeFormat.format(-Math.floor(elapsedSeconds / step.seconds), step.unit);
 }
 

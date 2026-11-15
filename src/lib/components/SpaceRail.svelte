@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { resolve } from '$app/paths';
 	import { Tooltip } from 'bits-ui';
 	import Compass from 'lucide-svelte/icons/compass';
@@ -26,12 +27,12 @@
 
 <Tooltip.Provider delayDuration={300}>
 	<nav
-		aria-label="Spaces"
+		aria-label={m.navigation_spaces()}
 		class="sticky top-0 flex h-dvh w-[72px] shrink-0 flex-col items-center gap-3 border-r bg-slate-100 py-4"
 	>
 		<a
 			href={resolve('/(app)/explore')}
-			aria-label="Explore"
+			aria-label={m.navigation_explore()}
 			aria-current={isExploreCurrent ? 'page' : undefined}
 			class={[
 				'flex size-12 items-center justify-center rounded-[15px] bg-white',
@@ -74,7 +75,7 @@
 		{#if isAdministrator}
 			<a
 				href={resolve('/(app)/admin/invitations')}
-				aria-label="Admin"
+				aria-label={m.navigation_admin()}
 				class="flex size-12 items-center justify-center rounded-[15px] bg-slate-800 text-white"
 			>
 				<Shield size={22} />
@@ -82,7 +83,7 @@
 		{/if}
 		<a
 			href={resolve('/(app)/profile')}
-			aria-label="Your profile"
+			aria-label={m.navigation_your_profile()}
 			aria-current={isProfileCurrent ? 'page' : undefined}
 			class={['rounded-full', isProfileCurrent && 'ring-3 ring-blue-700 ring-offset-2']}
 		>

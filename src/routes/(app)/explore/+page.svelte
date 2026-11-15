@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { DropdownMenu } from 'bits-ui';
@@ -9,20 +10,22 @@
 	let { data }: PageProps = $props();
 </script>
 
-<svelte:head><title>Explore</title></svelte:head>
+<svelte:head><title>{m.explore_title()}</title></svelte:head>
 
 <main class="mx-auto max-w-3xl px-4 py-8">
-	<h1 class="text-3xl font-semibold">Explore</h1>
+	<h1 class="text-3xl font-semibold">{m.explore_title()}</h1>
 
 	{#if !data.catalog}
-		<p class="mt-4 text-slate-600">No courses have been added yet.</p>
+		<p class="mt-4 text-slate-600">{m.explore_no_courses()}</p>
 	{:else}
 		<div class="mt-6 flex items-center justify-between gap-4">
-			<h2 class="text-xl font-semibold">Courses at {data.catalog.institution.name}</h2>
+			<h2 class="text-xl font-semibold">
+				{m.explore_courses_at({ institution: data.catalog.institution.name })}
+			</h2>
 			{#if data.institutions.length > 1}
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger class="shrink-0 rounded-full border px-4 py-1.5"
-						>Change ▾</DropdownMenu.Trigger
+						>{m.explore_change_institution()} ▾</DropdownMenu.Trigger
 					>
 					<DropdownMenu.Portal>
 						<DropdownMenu.Content
@@ -65,7 +68,7 @@
 							<span class="block truncate font-semibold">{course.title}</span>
 							<span class="block text-sm text-slate-600">
 								<span class="font-mono">{course.code}</span>{course.isFollowed
-									? ' · following'
+									? m.explore_following_suffix()
 									: ''}
 							</span>
 						</span>
@@ -73,7 +76,7 @@
 					</a>
 				</li>
 			{:else}
-				<li class="px-4 py-3 text-slate-600">This institution has no courses yet.</li>
+				<li class="px-4 py-3 text-slate-600">{m.explore_institution_empty()}</li>
 			{/each}
 		</ul>
 
@@ -83,7 +86,7 @@
 				href="{resolve('/(app)/explore')}?{new URLSearchParams({
 					institutionId: data.catalog.institution.id,
 					after: data.catalog.nextCursor
-				})}">Next courses</a
+				})}">{m.explore_next_courses()}</a
 			>
 		{/if}
 		{#if page.url.searchParams.has('after')}
@@ -91,7 +94,7 @@
 				class="mt-4 ml-2 inline-block rounded-full border px-4 py-1.5"
 				href="{resolve('/(app)/explore')}?{new URLSearchParams({
 					institutionId: data.catalog.institution.id
-				})}">Back to first courses</a
+				})}">{m.explore_first_courses()}</a
 			>
 		{/if}
 	{/if}

@@ -1,4 +1,5 @@
 import tailwindcss from '@tailwindcss/vite';
+import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 import adapter from '@sveltejs/adapter-node';
@@ -17,6 +18,11 @@ const socketServerDevPlugin: Plugin = {
 export default defineConfig(({ mode }) => ({
 	plugins: [
 		tailwindcss(),
+		paraglideVitePlugin({
+			project: './project.inlang',
+			outdir: './src/lib/paraglide',
+			strategy: ['cookie', 'preferredLanguage', 'baseLocale']
+		}),
 		socketServerDevPlugin,
 		sveltekit({
 			compilerOptions: {

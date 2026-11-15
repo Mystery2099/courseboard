@@ -1,3 +1,4 @@
+import { m } from '#lib/paraglide/messages.js';
 import type { PostKind } from '#lib/contracts/PostContract.ts';
 
 /** The fixed views of every course space, in display order. */
@@ -5,11 +6,12 @@ export const COURSE_CHANNELS = ['overview', 'questions', 'reviews', 'discussion'
 
 export type CourseChannel = (typeof COURSE_CHANNELS)[number];
 
-export const COURSE_CHANNEL_LABELS: Record<CourseChannel, string> = {
-	overview: 'Overview',
-	questions: 'Questions',
-	reviews: 'Reviews',
-	discussion: 'Discussion'
+/** Message functions, so each label is read in the locale of the current request. */
+export const COURSE_CHANNEL_LABELS: Record<CourseChannel, () => string> = {
+	overview: m.course_channel_overview,
+	questions: m.course_channel_questions,
+	reviews: m.course_channel_reviews,
+	discussion: m.course_channel_discussion
 };
 
 /** Route ids to pass to `resolve()` together with `{ courseId }`. */
