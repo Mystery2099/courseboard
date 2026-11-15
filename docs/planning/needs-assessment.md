@@ -35,6 +35,8 @@ A successful demonstration shows someone signing in, recording course history, f
 
 The primary users are students: current students, transfer students, former students, and people researching courses they might take. They need to find a course quickly, read what others have said, ask a question even if they haven't taken it, and keep their own history without it being public by default.
 
+**Accessibility is a core requirement, not optional polish.** This platform is for students, including students with visual, hearing, motor, cognitive, and learning disabilities. They shouldn't be excluded from course information or discussions because of how the app is built. The main workflows need to work with assistive technology, keyboard-only navigation, and text zoom, with clear language and predictable interactions.
+
 **Most of them will be on their phones**, so the app has to work well at 360px wide rather than feeling like a shrunken desktop site.
 
 **Privacy matters more than it might seem.** A course history can reveal a lot about someone, so entries start private and only appear on a profile when the student chooses. Following a course is never treated as evidence of taking it. Writing a review does reveal that someone took the course, so the app warns them before they publish.
@@ -66,13 +68,15 @@ The lab requirements come first, then the things that make the app usable. Anyth
 | Professor | WebSockets | New posts and replies appear in other sessions after they're saved |
 | Professor | Markdown | Safe Markdown rendering in posts and replies |
 | Usable | Search, images, and moderation tools | Course and post search, two images per post, reports, locking, and a profanity filter |
-| Usable | Responsive and accessible UI | Blueprint light/dark themes, WCAG 2.1 AA, working layouts at 360px |
+| Usable | Responsive and accessible UI | WCAG 2.1 AA target for the main workflows, keyboard and screen-reader access, readable contrast, text zoom, and working layouts at 360px in Blueprint light/dark themes |
 | Deferred | Communities, Home feed, presence, Focus, split panes, command palette, grades, MFA | Useful later, but not needed to demonstrate the database |
 | Out of scope | DMs, voice/video, bots, verified enrollment | Far beyond what the lab is asking for |
 
 **Data model.** Institutions, courses, course spaces, follows, academic histories, posts, replies, reports, moderator assignments, and images. The one open question is whether histories are embedded in user documents, as my proposal said, or kept in their own collection. The [MongoDB model](../technical/mongodb-model.md) compares both, and I'll decide before building that part.
 
 **Security.** Every page, API, image, and socket subscription checks the session, admission, and permissions on the server. The [security and recovery plan](../technical/security-and-recovery.md) covers the rest.
+
+**Accessibility.** Forms need clear labels and understandable errors, controls need visible keyboard focus, and information must not depend on color alone. Images need appropriate text alternatives, and realtime updates must not steal focus or disrupt reading. These are requirements to verify in the working app, not a claim that the app already meets WCAG 2.1 AA.
 
 The [product spec](../product/product-spec.md) has the detailed behavior.
 
@@ -96,7 +100,7 @@ The [roadmap](../implementation/roadmap-and-acceptance.md) has the detailed chec
 2. **Finish one course workflow.** Onboarding, history, course discovery, questions, discussions, and replies.
 3. **Reviews and discovery.** Reviews, the statistics aggregation, search, people filtering, and indexes based on actual query plans.
 4. **Content safety and realtime.** Markdown, images, moderation, the profanity filter, and live updates.
-5. **Polish, review, and demonstrate.** Test at phone and desktop sizes, run usability checks with a few students, complete the self-review, and demonstrate to Professor Enke before submitting.
+5. **Review and demonstrate.** Test at phone and desktop sizes, check the main workflows with keyboard-only navigation, a screen reader, and text zoom, and run usability checks with a few students, including students with disabilities where possible. Complete the self-review and demonstrate to Professor Enke before submitting.
 
 ## Conclusion
 
