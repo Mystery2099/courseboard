@@ -92,7 +92,9 @@
 		if (fieldErrors.disclosureAcknowledged) {
 			fieldErrors.disclosureAcknowledged = 'Confirm that you understand what publishing shares.';
 		}
-		void tick().then(() => formElement.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
+		void tick().then(() =>
+			formElement.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+		);
 	}
 
 	function save(event: SubmitEvent) {
@@ -130,8 +132,8 @@
 		</legend>
 		{#if editedReview && snapshot}
 			<p class="text-sm text-slate-600">
-				{HISTORY_STATUS_LABELS[snapshot.status]} · {formatTerm(snapshot.term)} · self-reported.
-				Course, status, and term stay fixed.
+				{HISTORY_STATUS_LABELS[snapshot.status]} · {formatTerm(snapshot.term)} · self-reported. Course,
+				status, and term stay fixed.
 			</p>
 		{:else}
 			<label class="flex min-w-0 flex-col gap-1">
@@ -139,6 +141,7 @@
 				<select
 					class="w-full min-w-0 rounded-2xl border-slate-300 px-4 py-2 text-base"
 					bind:value={historyEntryId}
+					onchange={() => (disclosureAcknowledged = false)}
 					aria-invalid={fieldErrors.historyEntryId ? 'true' : undefined}
 					aria-describedby={fieldErrors.historyEntryId ? 'review-attempt-error' : undefined}
 				>
@@ -231,8 +234,8 @@
 			<div class="border-l-2 border-amber-600 pl-3">
 				<p id="review-disclosure" class="text-sm">
 					Publishing shares your {HISTORY_STATUS_LABELS[selectedAttempt.status]} status and
-					{formatTerm(selectedAttempt.term)} term for this course, even if your history entry is
-					private. It stays labeled self-reported. Your history visibility and notes won’t change.
+					{formatTerm(selectedAttempt.term)} term for this course, even if your history entry is private.
+					It stays labeled self-reported. Your history visibility and notes won’t change.
 				</p>
 				<label class="mt-3 flex min-h-11 items-center gap-2 text-sm">
 					<input
@@ -265,7 +268,11 @@
 				type="submit"
 				class="min-h-11 rounded-full bg-blue-700 px-5 py-2 font-semibold text-white disabled:opacity-50"
 				disabled={saveMutation.isPending}
-				>{saveMutation.isPending ? 'Saving…' : editedReview ? 'Save changes' : 'Publish review'}</button
+				>{saveMutation.isPending
+					? 'Saving…'
+					: editedReview
+						? 'Save changes'
+						: 'Publish review'}</button
 			>
 			<button
 				type="button"

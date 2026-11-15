@@ -1,11 +1,7 @@
 import { json } from '@sveltejs/kit';
 import { AccessPolicy } from '#lib/server/access/AccessPolicy.ts';
 import { reviewService } from '#lib/server/content/ReviewService.ts';
-import {
-	apiResponse,
-	readApiJson,
-	requireApiIdentity
-} from '#lib/server/http/ApiResponse.ts';
+import { apiResponse, readApiJson, requireApiIdentity } from '#lib/server/http/ApiResponse.ts';
 import { postNotFound } from '../../PostApiErrors.ts';
 import type { RequestHandler } from './$types';
 

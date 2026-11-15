@@ -25,7 +25,11 @@ const courseId = new ObjectId('000000000000000000000002');
 const spaceId = new ObjectId('000000000000000000000003');
 const entryId = new ObjectId('000000000000000000000004');
 const postId = new ObjectId('000000000000000000000005');
-const attempt = { _id: entryId, status: 'taking' as const, term: { season: 'fall' as const, year: 2026 } };
+const attempt = {
+	_id: entryId,
+	status: 'taking' as const,
+	term: { season: 'fall' as const, year: 2026 }
+};
 const request = {
 	historyEntryId: entryId.toHexString(),
 	disclosureAcknowledged: true,
@@ -73,7 +77,11 @@ describe('review service', () => {
 			author
 		);
 
-		expect(histories.findReviewAttempt).toHaveBeenCalledWith(entryId, new ObjectId(author.id), courseId);
+		expect(histories.findReviewAttempt).toHaveBeenCalledWith(
+			entryId,
+			new ObjectId(author.id),
+			courseId
+		);
 		expect(posts.insert).toHaveBeenCalledWith(
 			expect.objectContaining({
 				courseId,
@@ -132,7 +140,9 @@ describe('review service', () => {
 		expect(posts.insert).not.toHaveBeenCalled();
 
 		findExisting.mockResolvedValueOnce(null).mockResolvedValue(postId);
-		vi.spyOn(posts, 'insert').mockRejectedValue(new MongoServerError({ code: 11000, message: 'Duplicate' }));
+		vi.spyOn(posts, 'insert').mockRejectedValue(
+			new MongoServerError({ code: 11000, message: 'Duplicate' })
+		);
 		expect(await service.createReview(courseId.toHexString(), request, author)).toEqual({
 			kind: 'review-exists'
 		});
@@ -170,7 +180,12 @@ describe('review service', () => {
 			author
 		);
 
-		expect(updateOwned).toHaveBeenCalledWith(postId, new ObjectId(author.id), changes, expect.any(Date));
+		expect(updateOwned).toHaveBeenCalledWith(
+			postId,
+			new ObjectId(author.id),
+			changes,
+			expect.any(Date)
+		);
 		expect(histories.findReviewAttempt).not.toHaveBeenCalled();
 		expect(result).toMatchObject({
 			reviewData: published.reviewData,

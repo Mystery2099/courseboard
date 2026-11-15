@@ -9,11 +9,7 @@
 		formatRelativeTime,
 		formatReplyCount
 	} from '#lib/client/content/PostPresentation.ts';
-	import type {
-		PostListFilter,
-		PostListResponse,
-		PostKind
-	} from '#lib/contracts/PostContract.ts';
+	import type { PostListFilter, PostListResponse, PostKind } from '#lib/contracts/PostContract.ts';
 	import { THREAD_ROUTE_IDS } from '#lib/navigation/CourseChannel.ts';
 	import ThreadKindBadge from './ThreadKindBadge.svelte';
 	import ReviewFacts from './ReviewFacts.svelte';

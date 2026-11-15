@@ -8,7 +8,10 @@ import { GET as getPost } from './[postId]/+server.ts';
 import { PUT as chooseAcceptedReply } from './[postId]/accepted-reply/+server.ts';
 import { PUT as lockPost } from './[postId]/lock/+server.ts';
 import { GET as listReplies, POST as createReply } from './[postId]/replies/+server.ts';
-import { GET as getReviewContext, POST as createReview } from '../courses/[courseId]/reviews/+server.ts';
+import {
+	GET as getReviewContext,
+	POST as createReview
+} from '../courses/[courseId]/reviews/+server.ts';
 import { PUT as updateReview } from './[postId]/review/+server.ts';
 
 const student: ApplicationUser = {
@@ -129,21 +132,34 @@ describe('post HTTP API', () => {
 		const createStoredReview = vi.spyOn(reviewService, 'createReview');
 		const updateStoredReview = vi.spyOn(reviewService, 'updateReview');
 		const responses = await Promise.all([
-			createReview(requestEvent(student, jsonRequest('POST', `/api/courses/${courseId}/reviews`, {}, 'https://elsewhere.test'))),
-			updateReview(requestEvent(student, jsonRequest('PUT', `/api/posts/${postId}/review`, {}, 'https://elsewhere.test')))
+			createReview(
+				requestEvent(
+					student,
+					jsonRequest('POST', `/api/courses/${courseId}/reviews`, {}, 'https://elsewhere.test')
+				)
+			),
+			updateReview(
+				requestEvent(
+					student,
+					jsonRequest('PUT', `/api/posts/${postId}/review`, {}, 'https://elsewhere.test')
+				)
+			)
 		]);
 		for (const response of responses) expect(response.status).toBe(403);
 		expect(createStoredReview).not.toHaveBeenCalled();
 		expect(updateStoredReview).not.toHaveBeenCalled();
 	});
 
-	it.each(['history-required', 'review-exists'] as const)('reports %s as a conflict', async (kind) => {
-		vi.spyOn(reviewService, 'createReview').mockResolvedValue({ kind });
-		const response = await createReview(
-			requestEvent(student, jsonRequest('POST', `/api/courses/${courseId}/reviews`, {}))
-		);
-		expect(response.status).toBe(409);
-		expect((await response.json()).error.code).toBe(kind);
-		expect(response.headers.get('cache-control')).toBe('no-store');
-	});
+	it.each(['history-required', 'review-exists'] as const)(
+		'reports %s as a conflict',
+		async (kind) => {
+			vi.spyOn(reviewService, 'createReview').mockResolvedValue({ kind });
+			const response = await createReview(
+				requestEvent(student, jsonRequest('POST', `/api/courses/${courseId}/reviews`, {}))
+			);
+			expect(response.status).toBe(409);
+			expect((await response.json()).error.code).toBe(kind);
+			expect(response.headers.get('cache-control')).toBe('no-store');
+		}
+	);
 });

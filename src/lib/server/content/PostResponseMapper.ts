@@ -1,7 +1,4 @@
-import type {
-	PostDetailResponse,
-	PostSummaryResponse
-} from '#lib/contracts/PostContract.ts';
+import type { PostDetailResponse, PostSummaryResponse } from '#lib/contracts/PostContract.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
 import type { PostDetail, PostSummary } from './Post.ts';
 

@@ -40,6 +40,10 @@ export const POST: RequestHandler = ({ locals, params, request }) =>
 					'Choose a Taking or Took entry for this course. Your history may have changed.'
 				);
 			case 'review-exists':
-				return apiError(409, result.kind, 'You already have a review for this course. Edit it instead.');
+				return apiError(
+					409,
+					result.kind,
+					'You already have a review for this course. Edit it instead.'
+				);
 		}
 	});

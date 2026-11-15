@@ -23,8 +23,8 @@ import { reviewRepository, type ReviewRepository } from './ReviewRepository.ts';
 const DUPLICATE_KEY_ERROR_CODE = 11000;
 
 /**
- * Reviews deliberately disclose a participation snapshot. Only publishing reads history, and no
- * review operation changes it or follows a course. Editing remains possible after history changes.
+ * Reviews deliberately disclose a participation snapshot copied from history when publishing.
+ * No review operation changes history or following. Editing remains possible after history changes.
  */
 export class ReviewService {
 	constructor(
@@ -116,7 +116,10 @@ export class ReviewService {
 		const { username, displayName } = author.profile;
 		return {
 			kind: 'created',
-			post: PostResponseMapper.toDetailResponse({ ...post, author: { username, displayName } }, author)
+			post: PostResponseMapper.toDetailResponse(
+				{ ...post, author: { username, displayName } },
+				author
+			)
 		};
 	}
 

@@ -14,20 +14,15 @@ import { courseIdSchema } from '#lib/contracts/CourseCatalogContract.ts';
 import { AccessDeniedError, AccessPolicy } from '#lib/server/access/AccessPolicy.ts';
 import { courseRepository, type CourseRepository } from '#lib/server/catalog/CourseRepository.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
-import type {
-	PostDetail,
-	PostDocument,
-	PostOrderField,
-	PostPagePosition
-} from './Post.ts';
+import type { PostDetail, PostDocument, PostOrderField, PostPagePosition } from './Post.ts';
 import { postRepository, type PostRepository } from './PostRepository.ts';
 import { PostResponseMapper } from './PostResponseMapper.ts';
 import { replyRepository, type ReplyRepository } from './ReplyRepository.ts';
 
 /**
- * Questions and discussions. Any admitted user reads and posts without following the course or
- * recording it in their history. Only a question's author chooses its accepted reply, and only
- * administrators lock threads until course moderators exist.
+ * Reads every post kind and publishes questions and discussions without requiring course history
+ * or following. Reviews publish through ReviewService. Only a question's author chooses its accepted
+ * reply, and only administrators lock threads until course moderators exist.
  */
 export class PostService {
 	private static readonly PAGE_SIZE = 20;
@@ -103,7 +98,10 @@ export class PostService {
 		const { username, displayName } = author.profile;
 		return {
 			kind: 'created',
-			post: PostResponseMapper.toDetailResponse({ ...post, author: { username, displayName } }, author)
+			post: PostResponseMapper.toDetailResponse(
+				{ ...post, author: { username, displayName } },
+				author
+			)
 		};
 	}
 
@@ -188,7 +186,6 @@ export class PostService {
 		const [orderedAtMilliseconds, postId] = cursor.split('_');
 		return { orderedAt: new Date(Number(orderedAtMilliseconds)), postId: new ObjectId(postId) };
 	}
-
 }
 
 export const postService = new PostService(postRepository, replyRepository, courseRepository);

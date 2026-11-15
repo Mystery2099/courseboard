@@ -97,6 +97,20 @@ describe('post service', () => {
 		expect(insert).not.toHaveBeenCalled();
 	});
 
+	it('does not let the general post endpoint bypass review eligibility', async () => {
+		const { service, posts } = createService();
+		const insert = vi.spyOn(posts, 'insert').mockResolvedValue();
+
+		await expect(
+			service.createPost(
+				courseId.toHexString(),
+				{ kind: 'review', title: 'Not eligible', bodyMarkdown: 'No history entry.' },
+				asker
+			)
+		).rejects.toThrow();
+		expect(insert).not.toHaveBeenCalled();
+	});
+
 	it('lists unanswered questions by creation and pages with a cursor', async () => {
 		const { service, posts } = createService();
 		const findPage = vi.spyOn(posts, 'findPage').mockResolvedValue([]);

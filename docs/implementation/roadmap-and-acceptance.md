@@ -29,8 +29,8 @@
 
 ## Stage 2: reviews and discovery
 
-- [ ] Implement one review per user/course, Taking/Took eligibility, disclosure warning, and publication-time participation snapshot.
-- [ ] Aggregate review count, workload, and would-take-again results from published nonremoved reviews.
+- [x] Implement one review per user/course, Taking/Took eligibility, disclosure warning, and publication-time participation snapshot. *Built with an expandable composer, editable feedback and ratings, and review threads using the existing replies. Status and term stay fixed even when history changes.*
+- [x] Aggregate review count, workload, and would-take-again results from published nonremoved reviews. *Computed from review posts only, without reading history. Empty courses have no averages.*
 - [ ] Implement course/post search and privacy-safe people filtering with stable bounded pagination.
 - [ ] Inspect actual query plans and add indexes for demonstrated query shapes.
 - [ ] Verify that private records never affect another user's matches, snippets, counts, or statistics.
@@ -63,4 +63,3 @@
 - [ ] Test a restore from backup, following the recovery plan.
 - [ ] Invite the professor and prepare a repeatable demonstration of documents, indexes, filtering, aggregation, WebSockets, images, and administrative roles.
 - [ ] Demonstrate to Professor Enke, then submit through Blackboard with a cover page (my name, the professor's name, and a description of the lab). The syllabus allows at most two submissions a week, so plan around other assignments.
-
