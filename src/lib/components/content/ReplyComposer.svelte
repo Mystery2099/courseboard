@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { describeValidationIssue } from '#lib/client/ErrorPresentation.ts';
 	import { REPLY_BODY_MAX_LENGTH, createReplySchema } from '#lib/contracts/PostContract.ts';
@@ -33,7 +34,7 @@
 	<label class="flex flex-col gap-1">
 		<span class="text-sm font-semibold">{label}</span>
 		<textarea
-			class="min-h-24 rounded-2xl border-outline px-4 py-2"
+			class="min-h-24 rounded-field border-outline px-4 py-2"
 			bind:value={bodyMarkdown}
 			maxlength={REPLY_BODY_MAX_LENGTH}
 			aria-invalid={errorMessage ? 'true' : undefined}
@@ -45,11 +46,9 @@
 		<p class="text-sm text-error" role="alert">{errorMessage}</p>
 	{/if}
 	<div class="flex gap-2">
-		<button type="submit" class="rounded-full bg-primary px-5 py-2 font-semibold text-on-primary"
-			>{m.common_reply()}</button
-		>
+		<button type="submit" class={buttonClass('filled')}>{m.common_reply()}</button>
 		{#if onCancel}
-			<button type="button" class="rounded-full border px-5 py-2" onclick={onCancel}
+			<button type="button" class={buttonClass('outlined')} onclick={onCancel}
 				>{m.common_cancel()}</button
 			>
 		{/if}

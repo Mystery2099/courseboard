@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { buttonClass, filterChipClass } from '#lib/components/ui/ControlStyles.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
@@ -74,20 +75,14 @@
 			<p class="mt-2 text-on-surface-variant">{data.course.description}</p>
 			<div class="mt-4 flex flex-wrap gap-2">
 				<form method="POST" action={followActionUrl} use:enhance>
-					<button
-						type="submit"
-						class={[
-							'inline-flex items-center gap-1 rounded-full px-5 py-2 font-semibold',
-							data.course.isFollowed ? 'bg-secondary-container' : 'bg-primary text-on-primary'
-						]}
-					>
+					<button type="submit" class={buttonClass(data.course.isFollowed ? 'tonal' : 'filled')}>
 						{#if data.course.isFollowed}<Check size={18} />
 							{m.course_space_following()}{:else}{m.course_space_follow()}{/if}
 					</button>
 				</form>
 				<button
 					type="button"
-					class="rounded-full border px-5 py-2"
+					class={buttonClass('outlined')}
 					onclick={() => {
 						wasAddedToHistory = false;
 						isHistoryEditorOpen = true;
@@ -104,17 +99,14 @@
 			{/if}
 			<nav
 				aria-label={m.course_space_channels_short()}
-				class="mt-4 flex gap-2 overflow-x-auto desktop:hidden"
+				class="mt-2.5 flex gap-2 overflow-x-auto py-1.5 desktop:hidden"
 			>
 				{#each COURSE_CHANNELS as channel (channel)}
 					<a
 						href={resolve(COURSE_CHANNEL_ROUTE_IDS[channel], { courseId: data.course.id })}
 						aria-current={channel === currentChannel ? 'page' : undefined}
-						class={[
-							'shrink-0 rounded-full border px-4 py-1.5',
-							channel === currentChannel &&
-								'border-transparent bg-secondary-container font-semibold'
-						]}>{COURSE_CHANNEL_LABELS[channel]()}</a
+						class={filterChipClass(channel === currentChannel)}
+						>{COURSE_CHANNEL_LABELS[channel]()}</a
 					>
 				{/each}
 			</nav>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createQuery, useQueryClient } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
@@ -93,26 +94,26 @@
 
 {#if context.ownReviewId && !isComposerOpen}
 	<a
-		class="mt-4 inline-block min-h-11 rounded-full border px-5 py-2 font-semibold text-primary"
+		class={[buttonClass('outlined'), 'mt-4']}
 		href={resolve('/(app)/courses/[courseId]/reviews/[postId]', {
 			courseId: course.id,
 			postId: context.ownReviewId
 		})}>{m.reviews_open_or_edit_own()}</a
 	>
 {:else if context.attempts.length === 0 && !isComposerOpen}
-	<div class="mt-4 rounded-[20px] border p-4">
+	<div class="mt-4 rounded-card border p-4">
 		<p class="font-semibold">{m.reviews_history_required()}</p>
 		<p class="mt-1 text-sm text-on-surface-variant">
 			{m.reviews_history_required_detail()}
 		</p>
 		<button
 			type="button"
-			class="mt-3 min-h-11 rounded-full border px-5 py-2 font-semibold text-primary"
+			class={[buttonClass('outlined'), 'mt-3']}
 			onclick={() => (isHistoryEditorOpen = true)}>{m.common_add_to_history()}</button
 		>
 	</div>
 {:else}
-	<details bind:open={isComposerOpen} class="mt-4 rounded-[20px] border bg-surface p-4">
+	<details bind:open={isComposerOpen} class="mt-4 rounded-card border bg-surface p-4">
 		<summary class="min-h-11 cursor-pointer py-2 font-semibold text-primary">
 			{m.reviews_write()}
 		</summary>

@@ -1,4 +1,9 @@
 <script lang="ts">
+	import {
+		buttonClass,
+		filterChipClass,
+		statusChipClass
+	} from '#lib/components/ui/ControlStyles.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
@@ -62,14 +67,11 @@
 </script>
 
 {#if filters.length > 0}
-	<div class="mt-3 flex gap-2" role="group" aria-label={m.post_list_order()}>
+	<div class="mt-3 flex flex-wrap gap-x-2 gap-y-3" role="group" aria-label={m.post_list_order()}>
 		{#each filters as option (option)}
 			<button
 				type="button"
-				class={[
-					'rounded-full border px-4 py-1.5 text-sm',
-					option === filter && 'border-transparent bg-secondary-container font-semibold'
-				]}
+				class={filterChipClass(option === filter)}
 				aria-pressed={option === filter}
 				onclick={() => (filter = option)}>{POST_LIST_FILTER_LABELS[option]()}</button
 			>
@@ -86,7 +88,7 @@
 		{filter === 'unanswered' ? m.post_list_all_answered() : emptyMessage}
 	</p>
 {:else}
-	<ul class="mt-4 divide-y overflow-hidden rounded-[20px] border bg-surface">
+	<ul class="mt-4 divide-y overflow-hidden rounded-card border bg-surface">
 		{#each posts as post (post.id)}
 			<li>
 				<a
@@ -96,14 +98,12 @@
 					<span class="flex flex-wrap items-center gap-2">
 						{#if kind === null}<ThreadKindBadge kind={post.kind} />{/if}
 						{#if post.hasAcceptedReply}
-							<span
-								class="inline-flex items-center gap-1 rounded-full bg-success-container px-3 py-0.5 text-sm font-semibold text-on-success-container"
+							<span class={statusChipClass('success')}
 								><Check size={14} /> {m.post_badge_answered()}</span
 							>
 						{/if}
 						{#if post.isLocked}
-							<span
-								class="inline-flex items-center gap-1 rounded-full bg-surface-container px-3 py-0.5 text-sm font-semibold text-on-surface"
+							<span class={statusChipClass('neutral')}
 								><Lock size={14} /> {m.post_badge_locked()}</span
 							>
 						{/if}
@@ -124,7 +124,7 @@
 		<div {@attach loadWhenVisible}>
 			<button
 				type="button"
-				class="mt-3 rounded-full border px-4 py-1.5 disabled:opacity-50"
+				class={[buttonClass('outlined', 'compact'), 'mt-3']}
 				disabled={postsQuery.isFetchingNextPage}
 				onclick={() => postsQuery.fetchNextPage()}
 				>{postsQuery.isFetchingNextPage ? m.common_loading() : m.common_load_more()}</button

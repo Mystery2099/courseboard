@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery, createQuery } from '@tanstack/svelte-query';
 	import { untrack } from 'svelte';
@@ -45,7 +46,7 @@
 	<label class="flex flex-col gap-1">
 		<span class="text-sm font-semibold">{m.course_picker_school()}</span>
 		<select
-			class="rounded-2xl border-outline px-4 py-2"
+			class="rounded-field border-outline px-4 py-2"
 			value={institutionId ?? ''}
 			onchange={(event) => (selectedInstitutionId = event.currentTarget.value)}
 			disabled={!institutionsQuery.data}
@@ -62,7 +63,7 @@
 		<p class="text-sm text-on-surface-variant">{m.course_picker_loading()}</p>
 	{:else}
 		<ul
-			class="max-h-72 divide-y overflow-y-auto rounded-[20px] border"
+			class="max-h-72 divide-y overflow-y-auto rounded-card border"
 			aria-label={m.course_picker_courses()}
 		>
 			{#each courses as course (course.id)}
@@ -88,7 +89,7 @@
 		{#if coursesQuery.hasNextPage}
 			<button
 				type="button"
-				class="self-start rounded-full border px-4 py-1.5 disabled:opacity-50"
+				class={[buttonClass('outlined', 'compact'), 'self-start']}
 				disabled={coursesQuery.isFetchingNextPage}
 				onclick={() => coursesQuery.fetchNextPage()}>{m.common_load_more()}</button
 			>

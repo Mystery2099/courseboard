@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
@@ -56,7 +57,7 @@
 			{/if}
 		</div>
 
-		<ul class="mt-4 divide-y overflow-hidden rounded-[20px] border bg-surface">
+		<ul class="mt-4 divide-y overflow-hidden rounded-card border bg-surface">
 			{#each data.catalog.courses as course (course.id)}
 				<li>
 					<a
@@ -82,7 +83,7 @@
 
 		{#if data.catalog.nextCursor}
 			<a
-				class="mt-4 inline-block rounded-full border px-4 py-1.5"
+				class={[buttonClass('outlined', 'compact'), 'mt-4']}
 				href="{resolve('/(app)/explore')}?{new URLSearchParams({
 					institutionId: data.catalog.institution.id,
 					after: data.catalog.nextCursor
@@ -91,7 +92,7 @@
 		{/if}
 		{#if page.url.searchParams.has('after')}
 			<a
-				class="mt-4 ml-2 inline-block rounded-full border px-4 py-1.5"
+				class={[buttonClass('outlined', 'compact'), 'mt-4 ml-2']}
 				href="{resolve('/(app)/explore')}?{new URLSearchParams({
 					institutionId: data.catalog.institution.id
 				})}">{m.explore_first_courses()}</a

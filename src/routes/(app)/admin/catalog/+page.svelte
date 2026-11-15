@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
@@ -11,7 +12,7 @@
 <div class="flex flex-wrap items-center justify-between gap-4">
 	<h1 class="text-2xl font-semibold">{m.admin_section_catalog()}</h1>
 	<form method="POST" action="?/loadDemoCatalog" use:enhance>
-		<button type="submit" class="rounded-full bg-primary px-5 py-2 font-semibold text-on-primary">
+		<button type="submit" class={buttonClass('filled')}>
 			{m.onboarding_load_demo_catalog()}
 		</button>
 	</form>
@@ -33,7 +34,7 @@
 	</p>
 {/if}
 
-<div class="mt-6 overflow-x-auto rounded-[20px] border bg-surface">
+<div class="mt-6 overflow-x-auto rounded-card border bg-surface">
 	<table class="w-full text-left text-sm">
 		<thead class="text-xs tracking-wider text-on-surface-variant uppercase">
 			<tr>

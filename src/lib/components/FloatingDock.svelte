@@ -64,7 +64,7 @@
 		<Dialog.Portal>
 			<Dialog.Overlay class="fixed inset-0 z-40 bg-scrim" />
 			<Dialog.Content
-				class="fixed inset-x-0 bottom-0 z-50 max-h-[90dvh] overflow-y-auto rounded-t-[28px] bg-surface p-4 pb-8"
+				class="fixed inset-x-0 bottom-0 z-50 max-h-[90dvh] overflow-y-auto rounded-t-sheet bg-surface p-4 pb-8"
 			>
 				<Dialog.Title class="text-xs font-semibold tracking-wider text-on-surface-variant uppercase"
 					>{m.navigation_your_courses()}</Dialog.Title

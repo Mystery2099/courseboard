@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { buttonClass, iconButtonClass } from '#lib/components/ui/ControlStyles.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
 	import Search from 'lucide-svelte/icons/search';
@@ -40,7 +41,7 @@
 		{#if step === 'profile'}
 			<button
 				type="button"
-				class="-ml-2 rounded-full p-2"
+				class={[iconButtonClass(), '-ml-2']}
 				aria-label={m.onboarding_back_to_school()}
 				onclick={() => (step = 'school')}><ChevronLeft size={24} /></button
 			>
@@ -89,8 +90,7 @@
 						type="submit"
 						formaction="?/loadDemoCatalog"
 						formnovalidate
-						class="mt-4 rounded-full border px-4 py-2 font-semibold"
-						>{m.onboarding_load_demo_catalog()}</button
+						class={[buttonClass('outlined'), 'mt-4']}>{m.onboarding_load_demo_catalog()}</button
 					>
 				{:else}
 					<p class="mt-6 text-on-surface-variant" role="status">
@@ -144,7 +144,7 @@
 			<div class="mt-auto pt-8">
 				<button
 					type="button"
-					class="w-full rounded-full bg-primary py-3 font-semibold text-on-primary disabled:opacity-50"
+					class={[buttonClass('filled'), 'w-full']}
 					disabled={!primaryInstitutionId}
 					onclick={() => (step = 'profile')}>{m.common_continue()}</button
 				>
@@ -165,7 +165,7 @@
 					required
 					aria-invalid={form?.errors.displayName ? 'true' : undefined}
 					aria-describedby={form?.errors.displayName ? 'display-name-error' : undefined}
-					class="mt-2 w-full rounded-2xl border-outline px-4 py-3"
+					class="mt-2 w-full rounded-field border-outline px-4 py-3"
 				/>
 			</label>
 			{#if form?.errors.displayName}
@@ -202,10 +202,8 @@
 			{/if}
 
 			<div class="mt-auto pt-8">
-				<button
-					type="submit"
-					class="w-full rounded-full bg-primary py-3 font-semibold text-on-primary disabled:opacity-50"
-					disabled={isSubmitting}>{isSubmitting ? m.common_saving() : m.common_continue()}</button
+				<button type="submit" class={[buttonClass('filled'), 'w-full']} disabled={isSubmitting}
+					>{isSubmitting ? m.common_saving() : m.common_continue()}</button
 				>
 			</div>
 		{/if}
