@@ -67,7 +67,7 @@ export class ReplySubmissionQueue {
 		} catch (cause) {
 			pendingReply.status = 'failed';
 			pendingReply.errorMessage =
-				cause instanceof ApiRequestError ? cause.message : "Couldn't send. Check your connection.";
+				cause instanceof ApiRequestError ? cause.message : 'Check your connection.';
 			// A refusal such as a locked thread means the page is out of date.
 			if (cause instanceof ApiRequestError && cause.status === 409) this.onRefused();
 		}

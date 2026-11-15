@@ -53,9 +53,10 @@ describe('post HTTP API', () => {
 			vi.spyOn(replyService, 'createReply')
 		];
 		const { user, signedIn } = scenario;
-		const read = (path: string) => requestEvent(user, new Request(`${origin}${path}`), signedIn);
-		const write = (method: string, path: string) =>
-			requestEvent(user, jsonRequest(method, path, {}), signedIn);
+		const read = <Event>(path: string) =>
+			requestEvent<Event>(user, new Request(`${origin}${path}`), signedIn);
+		const write = <Event>(method: string, path: string) =>
+			requestEvent<Event>(user, jsonRequest(method, path, {}), signedIn);
 
 		const responses = await Promise.all([
 			listPosts(read(`/api/courses/${courseId}/posts`)),

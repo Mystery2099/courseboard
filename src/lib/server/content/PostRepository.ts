@@ -31,6 +31,8 @@ export class PostRepository {
 		// Serves a course view ordered by activity. With `kind` as an `$in`, MongoDB merges the sorted
 		// runs of each kind, so the overview uses it too.
 		await this.collection().createIndex({ spaceId: 1, kind: 1, lastActivityAt: -1, _id: -1 });
+		// Newest and Unanswered order by creation; without this they sort every post of the kind.
+		await this.collection().createIndex({ spaceId: 1, kind: 1, createdAt: -1, _id: -1 });
 	}
 
 	async insert(post: PostDocument): Promise<void> {
