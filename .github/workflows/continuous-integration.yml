@@ -34,6 +34,8 @@ jobs:
 
       - run: pnpm check
 
+      - run: pnpm i18n:check
+
       - run: pnpm exec vitest run --project server
 
       - run: pnpm build
