@@ -19,6 +19,7 @@ This is the record of what has actually been checked, how, and when, so nobody h
 
 | Date | What | How | Result |
 | --- | --- | --- | --- |
+| Nov 14, 2026 | Questions and discussions in a signed-in browser | Checked by hand on Render's preview deployment for PR #14 | Worked as expected. Which actions were tried, and whether a second account or an administrator's lock was part of it, wasn't written down |
 | Nov 14, 2026 | Threads in MongoDB | The real `PostService` and `ReplyService` against a throwaway MongoDB 8.0 replica set (podman): two students and an administrator posting, replying, accepting, and locking | A reply to a nested reply or under another post's reply is refused. Four simultaneous requests with one `submissionId` stored one reply. After six concurrent replies `replyCount` matched the stored replies. Only the asker could accept, and only a reply of that question; a discussion has no accepted reply. A member couldn't lock; a locked thread refused replies and took them again once unlocked. Accepting and locking left `lastActivityAt` unchanged. Authors came back as username and display name only |
 | Nov 14, 2026 | Post and reply paging | Same container with 48 posts and 71 replies, following `nextCursor` to the end | Overview, Newest, Unanswered, and replies each returned every item once, in order |
 | Nov 14, 2026 | Post and reply queries use their indexes | `explain('executionStats')` in the same container | Questions by activity: `IXSCAN`, 21 keys for 21 posts. Overview: `SORT_MERGE` over one `IXSCAN` per kind, 22 keys. Newest and Unanswered sorted 32 posts in memory until `(spaceId, kind, createdAt, _id)` was added; then `IXSCAN` with 21 and 22 keys. Replies: `IXSCAN` on `(postId, _id)` |
@@ -58,7 +59,7 @@ These come from Stage 0 of the roadmap. Each needs the deployed site and, where 
 - TanStack Query caching isolated by account, with one client per server render. The cache now clears when the Clerk user changes; not yet watched in a browser.
 - A new account finishing onboarding step 2 and landing on the course step, with Skip and Continue opening Explore.
 - A second account confirming a hidden school is gone from `/users/{username}` (two profiles).
-- Questions and discussions in a signed-in browser on the deployed site: posting, replying, nesting, accepting, and locking as an administrator, with a second account reading the thread.
+- Questions and discussions with two accounts: a second account replying to and reading a thread, and being refused once an administrator locks it (two profiles).
 - A restore from backup.
 
 ## Testing notes
