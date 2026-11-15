@@ -2,8 +2,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { untrack } from 'svelte';
-	import { z } from 'zod';
-	import { ApiRequestError } from '#lib/client/ApiRequest.ts';
+	import { describeFieldIssues, describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 	import { reviewQueryKeys } from '#lib/client/content/ReviewApiClient.ts';
 	import {
 		AcademicHistoryApiClient,
@@ -112,8 +111,7 @@
 			privateNote
 		});
 		if (!parsed.success) {
-			const errors = z.flattenError(parsed.error).fieldErrors;
-			fieldErrors = { term: errors.term?.[0], privateNote: errors.privateNote?.[0] };
+			fieldErrors = describeFieldIssues(parsed.error);
 			return;
 		}
 		fieldErrors = {};
@@ -246,9 +244,7 @@
 
 	{#if requestError}
 		<p class="text-sm text-red-700" role="alert">
-			{requestError instanceof ApiRequestError
-				? requestError.message
-				: m.history_form_save_failed()}
+			{describeRequestFailure(requestError, m.history_form_save_failed)}
 		</p>
 	{/if}
 

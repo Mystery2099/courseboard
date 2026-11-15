@@ -3,8 +3,7 @@
 	import { Dialog } from 'bits-ui';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import X from 'lucide-svelte/icons/x';
-	import { z } from 'zod';
-	import { ApiRequestError } from '#lib/client/ApiRequest.ts';
+	import { describeFieldIssues, describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 	import { PostApiClient, postQueryKeys } from '#lib/client/content/PostApiClient.ts';
 	import {
 		POST_BODY_MAX_LENGTH,
@@ -47,8 +46,7 @@
 		event.preventDefault();
 		const parsed = createPostSchema.safeParse({ kind, title, bodyMarkdown });
 		if (!parsed.success) {
-			const errors = z.flattenError(parsed.error).fieldErrors;
-			fieldErrors = { title: errors.title?.[0], bodyMarkdown: errors.bodyMarkdown?.[0] };
+			fieldErrors = describeFieldIssues(parsed.error);
 			return;
 		}
 		fieldErrors = {};
@@ -106,9 +104,7 @@
 				</label>
 				{#if publishMutation.error}
 					<p class="text-sm text-red-700" role="alert">
-						{publishMutation.error instanceof ApiRequestError
-							? publishMutation.error.message
-							: m.post_composer_publish_failed()}
+						{describeRequestFailure(publishMutation.error, m.post_composer_publish_failed)}
 					</p>
 				{/if}
 				<div class="flex gap-2">

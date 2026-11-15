@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '#lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
+	import { describeErrorCode } from '#lib/client/ErrorPresentation.ts';
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import type { InvitationStatus } from '#lib/contracts/InvitationContract.ts';
 	import type { PageProps } from './$types';
@@ -35,7 +36,7 @@
 	</label>
 	<button type="submit" class="rounded border px-4 py-1">{m.admin_invitations_create()}</button>
 </form>
-{#if form?.createError}<p class="mt-2 text-sm" role="alert">{form.createError}</p>{/if}
+{#if form?.createError}<p class="mt-2 text-sm" role="alert">{describeErrorCode(form.createError)}</p>{/if}
 {#if form?.createdInvitation}
 	<div class="mt-4 rounded border p-4 text-sm">
 		<p>
@@ -58,7 +59,7 @@
 		>
 	</div>
 {/if}
-{#if form?.revokeError}<p class="mt-4 text-sm" role="alert">{form.revokeError}</p>{/if}
+{#if form?.revokeError}<p class="mt-4 text-sm" role="alert">{describeErrorCode(form.revokeError)}</p>{/if}
 
 <h2 class="mt-8 text-lg font-semibold">{m.admin_invitations_pending()}</h2>
 <p class="text-sm opacity-70">{m.admin_invitations_pending_explanation()}</p>

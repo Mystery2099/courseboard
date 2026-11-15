@@ -6,7 +6,7 @@
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import Check from 'lucide-svelte/icons/check';
 	import Lock from 'lucide-svelte/icons/lock';
-	import { ApiRequestError } from '#lib/client/ApiRequest.ts';
+	import { describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 	import { PostApiClient, postQueryKeys } from '#lib/client/content/PostApiClient.ts';
 	import { formatReplyCount, groupReplies } from '#lib/client/content/PostPresentation.ts';
 	import { ReplySubmissionQueue } from '#lib/client/content/ReplySubmissionQueue.svelte.ts';
@@ -189,7 +189,7 @@
 	{/if}
 	{#if actionError}
 		<p class="mt-2 text-sm text-red-700" role="alert">
-			{actionError instanceof ApiRequestError ? actionError.message : m.thread_action_failed()}
+			{describeRequestFailure(actionError, m.thread_action_failed)}
 		</p>
 	{/if}
 </article>

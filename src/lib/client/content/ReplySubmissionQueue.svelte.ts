@@ -1,4 +1,6 @@
 import { ApiRequestError } from '#lib/client/ApiRequest.ts';
+import { describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
+import { m } from '#lib/paraglide/messages.js';
 import type { ReplyResponse } from '#lib/contracts/PostContract.ts';
 import { PostApiClient } from './PostApiClient.ts';
 
@@ -66,8 +68,7 @@ export class ReplySubmissionQueue {
 			this.onStored();
 		} catch (cause) {
 			pendingReply.status = 'failed';
-			pendingReply.errorMessage =
-				cause instanceof ApiRequestError ? cause.message : 'Check your connection.';
+			pendingReply.errorMessage = describeRequestFailure(cause, m.error_unavailable);
 			// A refusal such as a locked thread means the page is out of date.
 			if (cause instanceof ApiRequestError && cause.status === 409) this.onRefused();
 		}

@@ -11,6 +11,7 @@
 		COURSE_CHANNEL_ROUTE_IDS,
 		findCourseChannel
 	} from '#lib/navigation/CourseChannel.ts';
+	import { describeErrorCode } from '#lib/client/ErrorPresentation.ts';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
@@ -94,7 +95,7 @@
 				>
 			</div>
 			{#if page.form?.followingError}
-				<p class="mt-2 text-sm" role="alert">{page.form.followingError}</p>
+				<p class="mt-2 text-sm" role="alert">{describeErrorCode(page.form.followingError)}</p>
 			{/if}
 			{#if wasAddedToHistory}
 				<p class="mt-2 text-sm text-slate-600" role="status">

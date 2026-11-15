@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { m } from '#lib/paraglide/messages.js';
+	import { describeValidationIssue } from '#lib/client/ErrorPresentation.ts';
 	import { REPLY_BODY_MAX_LENGTH, createReplySchema } from '#lib/contracts/PostContract.ts';
 
 	let {
@@ -19,7 +20,7 @@
 		event?.preventDefault();
 		const parsed = createReplySchema.shape.bodyMarkdown.safeParse(bodyMarkdown);
 		if (!parsed.success) {
-			errorMessage = parsed.error.issues[0].message;
+			errorMessage = describeValidationIssue(parsed.error.issues[0]);
 			return;
 		}
 		errorMessage = null;

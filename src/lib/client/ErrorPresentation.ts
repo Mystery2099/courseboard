@@ -1,4 +1,4 @@
-import type { core } from 'zod';
+import type { core, ZodError } from 'zod';
 import { ApiRequestError } from '#lib/client/ApiRequest.ts';
 import { isErrorCode, type ErrorCode } from '#lib/contracts/ErrorContract.ts';
 import { m } from '#lib/paraglide/messages.js';
@@ -57,6 +57,16 @@ export function describeValidationIssue(issue: core.$ZodIssue): string {
 		return m.validation_text_too_long_with_limit({ maximum });
 	}
 	return describeErrorCode(issue.message);
+}
+
+/** The first translated issue of each top-level field, keyed by field name. */
+export function describeFieldIssues(error: ZodError): Record<string, string | undefined> {
+	const messages: Record<string, string | undefined> = {};
+	for (const issue of error.issues) {
+		const field = issue.path[0];
+		if (typeof field === 'string') messages[field] ??= describeValidationIssue(issue);
+	}
+	return messages;
 }
 
 /** Translates a failed API request, or uses the fallback when the request never got an answer. */

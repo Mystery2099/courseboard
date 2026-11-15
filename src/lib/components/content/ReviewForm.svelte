@@ -3,7 +3,7 @@
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { tick, untrack } from 'svelte';
 	import type { ZodError } from 'zod';
-	import { ApiRequestError } from '#lib/client/ApiRequest.ts';
+	import { describeFieldIssues, describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 	import { postQueryKeys } from '#lib/client/content/PostApiClient.ts';
 	import { ReviewApiClient, reviewQueryKeys } from '#lib/client/content/ReviewApiClient.ts';
 	import {
@@ -100,12 +100,7 @@
 	}));
 
 	function showValidationErrors(error: ZodError) {
-		const errors: Record<string, string | undefined> = {};
-		for (const issue of error.issues) {
-			const field = issue.path[0];
-			if (typeof field === 'string') errors[field] ??= issue.message;
-		}
-		fieldErrors = errors;
+		fieldErrors = describeFieldIssues(error);
 		if (fieldErrors.disclosureAcknowledged) {
 			fieldErrors.disclosureAcknowledged = m.review_form_disclosure_required();
 		}
@@ -279,9 +274,7 @@
 		{/if}
 		{#if saveMutation.error}
 			<p class="text-sm text-red-700" role="alert">
-				{saveMutation.error instanceof ApiRequestError
-					? saveMutation.error.message
-					: m.review_form_save_failed()}
+				{describeRequestFailure(saveMutation.error, m.review_form_save_failed)}
 			</p>
 		{/if}
 		<div class="flex flex-wrap gap-2">
