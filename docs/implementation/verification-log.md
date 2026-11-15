@@ -1,6 +1,6 @@
 # Verification log
 
-**Last updated:** November 11, 2026
+**Last updated:** November 14, 2026
 
 This is the record of what has actually been checked, how, and when, so nobody has to ask again. The [roadmap](roadmap-and-acceptance.md) lists what still needs checking; this file holds the evidence. Add a row whenever something is verified, and move it out of "Not verified yet" instead of deleting it.
 
@@ -19,6 +19,7 @@ This is the record of what has actually been checked, how, and when, so nobody h
 
 | Date | What | How | Result |
 | --- | --- | --- | --- |
+| Nov 14, 2026 | Review workflow design preview, not application functionality | Rendered the default list option in `docs/design/review-workflow-options.html` at 728px and 360px with the HTML preview tool | The default layout fits both widths and reports no console messages. The writing-page and inline alternatives, form interactions, and real review functionality have not been verified |
 | Nov 14, 2026 | Questions and discussions in a signed-in browser | Checked by hand on Render's preview deployment for PR #14 | Worked as expected. Which actions were tried, and whether a second account or an administrator's lock was part of it, wasn't written down |
 | Nov 14, 2026 | Threads in MongoDB | The real `PostService` and `ReplyService` against a throwaway MongoDB 8.0 replica set (podman): two students and an administrator posting, replying, accepting, and locking | A reply to a nested reply or under another post's reply is refused. Four simultaneous requests with one `submissionId` stored one reply. After six concurrent replies `replyCount` matched the stored replies. Only the asker could accept, and only a reply of that question; a discussion has no accepted reply. A member couldn't lock; a locked thread refused replies and took them again once unlocked. Accepting and locking left `lastActivityAt` unchanged. Authors came back as username and display name only |
 | Nov 14, 2026 | Post and reply paging | Same container with 48 posts and 71 replies, following `nextCursor` to the end | Overview, Newest, Unanswered, and replies each returned every item once, in order |
