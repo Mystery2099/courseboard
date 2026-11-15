@@ -13,7 +13,7 @@
 		class="font-semibold hover:underline"
 		href={resolve('/(app)/users/[username]', { username: author.username })}>{author.displayName}</a
 	>
-	<span class="text-slate-600">
+	<span class="text-on-surface-variant">
 		· <time datetime={createdAt}>{formatRelativeTime(createdAt)}</time>
 	</span>
 </div>

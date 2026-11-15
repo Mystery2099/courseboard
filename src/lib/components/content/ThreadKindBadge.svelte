@@ -8,6 +8,8 @@
 <span
 	class={[
 		'rounded-full px-3 py-0.5 text-sm font-semibold',
-		kind === 'question' ? 'bg-sky-100 text-sky-900' : 'bg-orange-100 text-orange-900'
+		kind === 'question'
+			? 'bg-primary-container text-on-primary-container'
+			: 'bg-tertiary-container text-on-tertiary-container'
 	]}>{THREAD_KIND_LABELS[kind]()}</span
 >

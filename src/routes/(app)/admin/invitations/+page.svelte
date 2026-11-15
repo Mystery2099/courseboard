@@ -19,7 +19,7 @@
 </script>
 
 <h1 class="text-2xl font-semibold">{m.admin_section_invitations()}</h1>
-<p class="mt-2 text-sm opacity-70">
+<p class="mt-2 text-sm text-on-surface-variant">
 	{m.admin_invitations_explanation()}
 </p>
 
@@ -66,7 +66,7 @@
 	</p>{/if}
 
 <h2 class="mt-8 text-lg font-semibold">{m.admin_invitations_pending()}</h2>
-<p class="text-sm opacity-70">{m.admin_invitations_pending_explanation()}</p>
+<p class="text-sm text-on-surface-variant">{m.admin_invitations_pending_explanation()}</p>
 {#if data.hasMorePendingInvitations}
 	<p class="mt-2 text-sm" role="alert">
 		{m.admin_invitations_pending_truncated({ count: data.pendingInvitations.length })}
@@ -95,13 +95,17 @@
 				</td>
 			</tr>
 		{:else}
-			<tr><td colspan="4" class="py-2 opacity-70">{m.admin_invitations_pending_empty()}</td></tr>
+			<tr
+				><td colspan="4" class="py-2 text-on-surface-variant"
+					>{m.admin_invitations_pending_empty()}</td
+				></tr
+			>
 		{/each}
 	</tbody>
 </table>
 
 <h2 class="mt-8 text-lg font-semibold">{m.admin_invitations_recent()}</h2>
-<p class="text-sm opacity-70">{m.admin_invitations_recent_explanation()}</p>
+<p class="text-sm text-on-surface-variant">{m.admin_invitations_recent_explanation()}</p>
 <table class="mt-2 w-full text-left text-sm">
 	<thead>
 		<tr>
@@ -120,7 +124,11 @@
 				<td>{dateFormatter.format(new Date(invitation.expiresAt))}</td>
 			</tr>
 		{:else}
-			<tr><td colspan="4" class="py-2 opacity-70">{m.admin_invitations_recent_empty()}</td></tr>
+			<tr
+				><td colspan="4" class="py-2 text-on-surface-variant"
+					>{m.admin_invitations_recent_empty()}</td
+				></tr
+			>
 		{/each}
 	</tbody>
 </table>

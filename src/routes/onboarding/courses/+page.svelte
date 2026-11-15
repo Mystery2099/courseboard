@@ -48,24 +48,24 @@
 	<div class="flex items-center gap-3">
 		<div class="flex flex-1 gap-2" aria-hidden="true">
 			{#each [1, 2, 3] as segment (segment)}
-				<span class="h-1.5 flex-1 rounded-full bg-blue-700"></span>
+				<span class="h-1.5 flex-1 rounded-full bg-primary"></span>
 			{/each}
 		</div>
 		<a
-			class="font-semibold text-blue-700"
+			class="font-semibold text-primary"
 			href={resolve('/(app)/explore')}
 			data-sveltekit-preload-data="off">{m.onboarding_skip()}</a
 		>
 	</div>
 
-	<p class="mt-8 font-mono text-sm text-blue-700">{m.onboarding_step({ step: 3, total: 3 })}</p>
+	<p class="mt-8 font-mono text-sm text-primary">{m.onboarding_step({ step: 3, total: 3 })}</p>
 	<h1 class="mt-2 text-3xl font-semibold">{m.onboarding_courses_heading()}</h1>
-	<p class="mt-2 text-slate-600">
+	<p class="mt-2 text-on-surface-variant">
 		{m.onboarding_courses_detail({ term: formatTerm(currentTerm()) })}
 	</p>
 
 	{#if courses.length === 0}
-		<p class="mt-6 text-slate-600" role="status">
+		<p class="mt-6 text-on-surface-variant" role="status">
 			{m.onboarding_courses_empty({ institution: institution.name })}
 		</p>
 	{:else}
@@ -92,11 +92,11 @@
 	{/if}
 
 	<div class="mt-auto pt-8">
-		<p class="mb-3 text-sm text-slate-600">
+		<p class="mb-3 text-sm text-on-surface-variant">
 			{m.onboarding_courses_private_notice()}
 		</p>
 		<a
-			class="block w-full rounded-full bg-blue-700 py-3 text-center font-semibold text-white"
+			class="block w-full rounded-full bg-primary py-3 text-center font-semibold text-on-primary"
 			href={resolve('/(app)/explore')}
 			data-sveltekit-preload-data="off">{m.common_continue()}</a
 		>

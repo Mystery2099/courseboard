@@ -33,7 +33,7 @@
 	<label class="flex flex-col gap-1">
 		<span class="text-sm font-semibold">{label}</span>
 		<textarea
-			class="min-h-24 rounded-2xl border-slate-300 px-4 py-2"
+			class="min-h-24 rounded-2xl border-outline px-4 py-2"
 			bind:value={bodyMarkdown}
 			maxlength={REPLY_BODY_MAX_LENGTH}
 			aria-invalid={errorMessage ? 'true' : undefined}
@@ -42,10 +42,10 @@
 			}}></textarea>
 	</label>
 	{#if errorMessage}
-		<p class="text-sm text-red-700" role="alert">{errorMessage}</p>
+		<p class="text-sm text-error" role="alert">{errorMessage}</p>
 	{/if}
 	<div class="flex gap-2">
-		<button type="submit" class="rounded-full bg-blue-700 px-5 py-2 font-semibold text-white"
+		<button type="submit" class="rounded-full bg-primary px-5 py-2 font-semibold text-on-primary"
 			>{m.common_reply()}</button
 		>
 		{#if onCancel}

@@ -56,9 +56,9 @@
 
 <Dialog.Root bind:open>
 	<Dialog.Portal>
-		<Dialog.Overlay class="fixed inset-0 z-40 bg-slate-900/40" />
+		<Dialog.Overlay class="fixed inset-0 z-40 bg-scrim" />
 		<Dialog.Content
-			class="fixed inset-0 z-50 overflow-y-auto bg-white p-4 tablet:inset-auto tablet:top-1/2 tablet:left-1/2 tablet:max-h-[90dvh] tablet:w-[40rem] tablet:-translate-x-1/2 tablet:-translate-y-1/2 tablet:rounded-[24px] tablet:p-6 tablet:shadow-xl"
+			class="fixed inset-0 z-50 overflow-y-auto bg-surface p-4 tablet:inset-auto tablet:top-1/2 tablet:left-1/2 tablet:max-h-[90dvh] tablet:w-[40rem] tablet:-translate-x-1/2 tablet:-translate-y-1/2 tablet:rounded-[24px] tablet:p-6 tablet:shadow-xl"
 		>
 			<div class="mb-4 flex items-center gap-3">
 				<Dialog.Close class="-ml-2 rounded-full p-2" aria-label={m.common_close()}
@@ -78,13 +78,13 @@
 					<span class="text-sm font-semibold">{m.common_title()}</span>
 					<input
 						type="text"
-						class="rounded-2xl border-slate-300 px-4 py-2"
+						class="rounded-2xl border-outline px-4 py-2"
 						bind:value={title}
 						maxlength={POST_TITLE_MAX_LENGTH}
 						aria-invalid={fieldErrors.title ? 'true' : undefined}
 					/>
 					{#if fieldErrors.title}
-						<span class="text-sm text-red-700" role="alert">{fieldErrors.title}</span>
+						<span class="text-sm text-error" role="alert">{fieldErrors.title}</span>
 					{/if}
 				</label>
 				<label class="flex flex-col gap-1">
@@ -94,23 +94,23 @@
 							: m.post_composer_discussion_body()}
 					</span>
 					<textarea
-						class="min-h-48 rounded-2xl border-slate-300 px-4 py-2"
+						class="min-h-48 rounded-2xl border-outline px-4 py-2"
 						bind:value={bodyMarkdown}
 						maxlength={POST_BODY_MAX_LENGTH}
 						aria-invalid={fieldErrors.bodyMarkdown ? 'true' : undefined}></textarea>
 					{#if fieldErrors.bodyMarkdown}
-						<span class="text-sm text-red-700" role="alert">{fieldErrors.bodyMarkdown}</span>
+						<span class="text-sm text-error" role="alert">{fieldErrors.bodyMarkdown}</span>
 					{/if}
 				</label>
 				{#if publishMutation.error}
-					<p class="text-sm text-red-700" role="alert">
+					<p class="text-sm text-error" role="alert">
 						{describeRequestFailure(publishMutation.error, m.post_composer_publish_failed)}
 					</p>
 				{/if}
 				<div class="flex gap-2">
 					<button
 						type="submit"
-						class="rounded-full bg-blue-700 px-5 py-2 font-semibold text-white disabled:opacity-50"
+						class="rounded-full bg-primary px-5 py-2 font-semibold text-on-primary disabled:opacity-50"
 						disabled={publishMutation.isPending}
 						>{publishMutation.isPending
 							? m.post_composer_posting()

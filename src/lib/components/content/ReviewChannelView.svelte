@@ -45,11 +45,11 @@
 <h2 class="text-xl font-semibold">{m.reviews_heading()}</h2>
 <dl class="mt-4 grid grid-cols-3 gap-3 border-y py-4">
 	<div class="flex flex-col-reverse">
-		<dt class="text-sm text-slate-600">{m.reviews_statistic_count()}</dt>
+		<dt class="text-sm text-on-surface-variant">{m.reviews_statistic_count()}</dt>
 		<dd class="text-2xl font-semibold">{statistics.reviewCount}</dd>
 	</div>
 	<div class="flex flex-col-reverse">
-		<dt class="text-sm text-slate-600">{m.reviews_statistic_workload()}</dt>
+		<dt class="text-sm text-on-surface-variant">{m.reviews_statistic_workload()}</dt>
 		<dd class="text-2xl font-semibold">
 			{statistics.averageWorkload === null
 				? m.reviews_statistic_not_yet()
@@ -58,7 +58,7 @@
 		</dd>
 	</div>
 	<div class="flex flex-col-reverse">
-		<dt class="text-sm text-slate-600">{m.reviews_statistic_take_again()}</dt>
+		<dt class="text-sm text-on-surface-variant">{m.reviews_statistic_take_again()}</dt>
 		<dd class="text-2xl font-semibold">
 			{statistics.wouldTakeAgainPercentage === null
 				? m.reviews_statistic_not_yet()
@@ -66,11 +66,11 @@
 		</dd>
 	</div>
 </dl>
-<p class="mt-2 text-sm text-slate-600">
+<p class="mt-2 text-sm text-on-surface-variant">
 	{m.reviews_statistics_basis()}
 </p>
 {#if contextQuery.isError}
-	<p class="mt-3 text-sm text-red-700" role="alert">
+	<p class="mt-3 text-sm text-error" role="alert">
 		{m.reviews_context_refresh_failed()}
 		<button type="button" class="underline" onclick={() => contextQuery.refetch()}
 			>{m.common_try_again()}</button
@@ -82,7 +82,7 @@
 	<p class="mt-4 text-sm" role="status">
 		{m.reviews_published()}
 		<a
-			class="font-semibold text-blue-700"
+			class="font-semibold text-primary"
 			href={resolve('/(app)/courses/[courseId]/reviews/[postId]', {
 				courseId: course.id,
 				postId: savedReviewId
@@ -93,7 +93,7 @@
 
 {#if context.ownReviewId && !isComposerOpen}
 	<a
-		class="mt-4 inline-block min-h-11 rounded-full border px-5 py-2 font-semibold text-blue-700"
+		class="mt-4 inline-block min-h-11 rounded-full border px-5 py-2 font-semibold text-primary"
 		href={resolve('/(app)/courses/[courseId]/reviews/[postId]', {
 			courseId: course.id,
 			postId: context.ownReviewId
@@ -102,18 +102,18 @@
 {:else if context.attempts.length === 0 && !isComposerOpen}
 	<div class="mt-4 rounded-[20px] border p-4">
 		<p class="font-semibold">{m.reviews_history_required()}</p>
-		<p class="mt-1 text-sm text-slate-600">
+		<p class="mt-1 text-sm text-on-surface-variant">
 			{m.reviews_history_required_detail()}
 		</p>
 		<button
 			type="button"
-			class="mt-3 min-h-11 rounded-full border px-5 py-2 font-semibold text-blue-700"
+			class="mt-3 min-h-11 rounded-full border px-5 py-2 font-semibold text-primary"
 			onclick={() => (isHistoryEditorOpen = true)}>{m.common_add_to_history()}</button
 		>
 	</div>
 {:else}
-	<details bind:open={isComposerOpen} class="mt-4 rounded-[20px] border bg-white p-4">
-		<summary class="min-h-11 cursor-pointer py-2 font-semibold text-blue-700">
+	<details bind:open={isComposerOpen} class="mt-4 rounded-[20px] border bg-surface p-4">
+		<summary class="min-h-11 cursor-pointer py-2 font-semibold text-primary">
 			{m.reviews_write()}
 		</summary>
 		<div class="mt-4">

@@ -145,7 +145,7 @@
 			{editedReview ? m.review_form_edit_legend() : m.review_form_create_legend()}
 		</legend>
 		{#if editedReview && snapshot}
-			<p class="text-sm text-slate-600">
+			<p class="text-sm text-on-surface-variant">
 				{m.review_form_fixed_snapshot({
 					status: HISTORY_STATUS_LABELS[snapshot.status](),
 					term: formatTerm(snapshot.term)
@@ -155,7 +155,7 @@
 			<label class="flex min-w-0 flex-col gap-1">
 				<span class="text-sm font-semibold">{m.review_form_attempt()}</span>
 				<select
-					class="w-full min-w-0 rounded-2xl border-slate-300 px-4 py-2 text-base"
+					class="w-full min-w-0 rounded-2xl border-outline px-4 py-2 text-base"
 					bind:value={historyEntryId}
 					aria-invalid={fieldErrors.historyEntryId ? 'true' : undefined}
 					aria-describedby={fieldErrors.historyEntryId ? 'review-attempt-error' : undefined}
@@ -167,18 +167,18 @@
 					{/each}
 				</select>
 				{#if fieldErrors.historyEntryId}
-					<span id="review-attempt-error" class="text-sm text-red-700" role="alert">
+					<span id="review-attempt-error" class="text-sm text-error" role="alert">
 						{m.review_form_attempt_required()}
 					</span>
 				{/if}
-				<span class="text-sm text-slate-600">{m.review_form_attempt_fixed()}</span>
+				<span class="text-sm text-on-surface-variant">{m.review_form_attempt_fixed()}</span>
 			</label>
 		{/if}
 		<div class="grid gap-5 tablet:grid-cols-2">
 			<label class="flex min-w-0 flex-col gap-1">
 				<span class="text-sm font-semibold">{m.review_facts_workload()}</span>
 				<select
-					class="w-full rounded-2xl border-slate-300 px-4 py-2 text-base"
+					class="w-full rounded-2xl border-outline px-4 py-2 text-base"
 					bind:value={workload}
 					aria-invalid={fieldErrors.workload ? 'true' : undefined}
 					aria-describedby={fieldErrors.workload ? 'review-workload-error' : undefined}
@@ -191,7 +191,7 @@
 					<option value={5}>{m.review_form_workload_5()}</option>
 				</select>
 				{#if fieldErrors.workload}
-					<span id="review-workload-error" class="text-sm text-red-700" role="alert">
+					<span id="review-workload-error" class="text-sm text-error" role="alert">
 						{m.review_form_workload_required()}
 					</span>
 				{/if}
@@ -199,7 +199,7 @@
 			<label class="flex min-w-0 flex-col gap-1">
 				<span class="text-sm font-semibold">{m.review_form_take_again()}</span>
 				<select
-					class="w-full rounded-2xl border-slate-300 px-4 py-2 text-base"
+					class="w-full rounded-2xl border-outline px-4 py-2 text-base"
 					bind:value={wouldTakeAgain}
 					aria-invalid={fieldErrors.wouldTakeAgain ? 'true' : undefined}
 					aria-describedby={fieldErrors.wouldTakeAgain ? 'review-take-again-error' : undefined}
@@ -209,7 +209,7 @@
 					<option value={false}>{m.common_no()}</option>
 				</select>
 				{#if fieldErrors.wouldTakeAgain}
-					<span id="review-take-again-error" class="text-sm text-red-700" role="alert">
+					<span id="review-take-again-error" class="text-sm text-error" role="alert">
 						{m.review_form_take_again_required()}
 					</span>
 				{/if}
@@ -219,14 +219,14 @@
 			<span class="text-sm font-semibold">{m.common_title()}</span>
 			<input
 				type="text"
-				class="rounded-2xl border-slate-300 px-4 py-2 text-base"
+				class="rounded-2xl border-outline px-4 py-2 text-base"
 				bind:value={title}
 				maxlength={POST_TITLE_MAX_LENGTH}
 				aria-invalid={fieldErrors.title ? 'true' : undefined}
 				aria-describedby={fieldErrors.title ? 'review-title-error' : undefined}
 			/>
 			{#if fieldErrors.title}
-				<span id="review-title-error" class="text-sm text-red-700" role="alert">
+				<span id="review-title-error" class="text-sm text-error" role="alert">
 					{fieldErrors.title}
 				</span>
 			{/if}
@@ -234,19 +234,19 @@
 		<label class="flex flex-col gap-1">
 			<span class="text-sm font-semibold">{m.review_form_body()}</span>
 			<textarea
-				class="min-h-40 rounded-2xl border-slate-300 px-4 py-2 text-base"
+				class="min-h-40 rounded-2xl border-outline px-4 py-2 text-base"
 				bind:value={bodyMarkdown}
 				maxlength={POST_BODY_MAX_LENGTH}
 				aria-invalid={fieldErrors.bodyMarkdown ? 'true' : undefined}
 				aria-describedby={fieldErrors.bodyMarkdown ? 'review-body-error' : undefined}></textarea>
 			{#if fieldErrors.bodyMarkdown}
-				<span id="review-body-error" class="text-sm text-red-700" role="alert">
+				<span id="review-body-error" class="text-sm text-error" role="alert">
 					{fieldErrors.bodyMarkdown}
 				</span>
 			{/if}
 		</label>
 		{#if !editedReview && selectedAttempt}
-			<div class="border-l-2 border-amber-600 pl-3">
+			<div class="border-l-2 border-on-warning-container pl-3">
 				<p id="review-disclosure" class="text-sm">
 					{m.review_form_disclosure({
 						status: HISTORY_STATUS_LABELS[selectedAttempt.status](),
@@ -256,7 +256,7 @@
 				<label class="mt-3 flex min-h-11 items-center gap-2 text-sm">
 					<input
 						type="checkbox"
-						class="rounded border-slate-300"
+						class="rounded border-outline"
 						bind:checked={disclosureAcknowledged}
 						aria-invalid={fieldErrors.disclosureAcknowledged ? 'true' : undefined}
 						aria-describedby={fieldErrors.disclosureAcknowledged
@@ -266,21 +266,21 @@
 					{m.review_form_disclosure_acknowledgement()}
 				</label>
 				{#if fieldErrors.disclosureAcknowledged}
-					<p id="review-disclosure-error" class="mt-1 text-sm text-red-700" role="alert">
+					<p id="review-disclosure-error" class="mt-1 text-sm text-error" role="alert">
 						{fieldErrors.disclosureAcknowledged}
 					</p>
 				{/if}
 			</div>
 		{/if}
 		{#if saveMutation.error}
-			<p class="text-sm text-red-700" role="alert">
+			<p class="text-sm text-error" role="alert">
 				{describeRequestFailure(saveMutation.error, m.review_form_save_failed)}
 			</p>
 		{/if}
 		<div class="flex flex-wrap gap-2">
 			<button
 				type="submit"
-				class="min-h-11 rounded-full bg-blue-700 px-5 py-2 font-semibold text-white disabled:opacity-50"
+				class="min-h-11 rounded-full bg-primary px-5 py-2 font-semibold text-on-primary disabled:opacity-50"
 				disabled={saveMutation.isPending}
 				>{saveMutation.isPending
 					? m.common_saving()

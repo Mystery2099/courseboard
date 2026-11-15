@@ -45,7 +45,7 @@
 	<label class="flex flex-col gap-1">
 		<span class="text-sm font-semibold">{m.course_picker_school()}</span>
 		<select
-			class="rounded-2xl border-slate-300 px-4 py-2"
+			class="rounded-2xl border-outline px-4 py-2"
 			value={institutionId ?? ''}
 			onchange={(event) => (selectedInstitutionId = event.currentTarget.value)}
 			disabled={!institutionsQuery.data}
@@ -57,9 +57,9 @@
 	</label>
 
 	{#if institutionsQuery.isError || coursesQuery.isError}
-		<p class="text-sm text-red-700" role="alert">{m.course_picker_load_failed()}</p>
+		<p class="text-sm text-error" role="alert">{m.course_picker_load_failed()}</p>
 	{:else if coursesQuery.isPending}
-		<p class="text-sm text-slate-600">{m.course_picker_loading()}</p>
+		<p class="text-sm text-on-surface-variant">{m.course_picker_loading()}</p>
 	{:else}
 		<ul
 			class="max-h-72 divide-y overflow-y-auto rounded-[20px] border"
@@ -69,7 +69,7 @@
 				<li>
 					<button
 						type="button"
-						class="flex w-full items-center gap-3 px-4 py-2 text-left hover:bg-slate-50"
+						class="flex w-full items-center gap-3 px-4 py-2 text-left hover:bg-surface-container"
 						onclick={() =>
 							institution &&
 							onSelect({ id: course.id, code: course.code, title: course.title, institution })}
@@ -77,12 +77,12 @@
 						<CourseCodeTile code={course.code} />
 						<span class="min-w-0">
 							<span class="block truncate font-semibold">{course.title}</span>
-							<span class="block font-mono text-sm text-slate-600">{course.code}</span>
+							<span class="block font-mono text-sm text-on-surface-variant">{course.code}</span>
 						</span>
 					</button>
 				</li>
 			{:else}
-				<li class="px-4 py-3 text-slate-600">{m.course_picker_school_empty()}</li>
+				<li class="px-4 py-3 text-on-surface-variant">{m.course_picker_school_empty()}</li>
 			{/each}
 		</ul>
 		{#if coursesQuery.hasNextPage}

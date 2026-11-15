@@ -48,7 +48,9 @@
 		<div class="flex flex-1 gap-2" aria-hidden="true">
 			{#each [1, 2, 3] as segment (segment)}
 				<span
-					class="h-1.5 flex-1 rounded-full {segment <= stepNumber ? 'bg-blue-700' : 'bg-slate-200'}"
+					class="h-1.5 flex-1 rounded-full {segment <= stepNumber
+						? 'bg-primary'
+						: 'bg-outline-variant'}"
 				></span>
 			{/each}
 		</div>
@@ -68,19 +70,19 @@
 	>
 		<input type="hidden" name="primaryInstitutionId" value={primaryInstitutionId} />
 
-		<p class="font-mono text-sm text-blue-700">
+		<p class="font-mono text-sm text-primary">
 			{m.onboarding_step({ step: stepNumber, total: 3 })}
 		</p>
 
 		{#if step === 'school'}
 			<h1 class="mt-2 text-3xl font-semibold">{m.onboarding_school_heading()}</h1>
-			<p class="mt-2 text-slate-600">
+			<p class="mt-2 text-on-surface-variant">
 				{m.onboarding_school_detail()}
 			</p>
 
 			{#if data.institutions.length === 0}
 				{#if data.isAdministrator}
-					<p class="mt-6 text-slate-600" role="status">
+					<p class="mt-6 text-on-surface-variant" role="status">
 						{m.onboarding_no_schools_administrator()}
 					</p>
 					<button
@@ -91,19 +93,22 @@
 						>{m.onboarding_load_demo_catalog()}</button
 					>
 				{:else}
-					<p class="mt-6 text-slate-600" role="status">
+					<p class="mt-6 text-on-surface-variant" role="status">
 						{m.onboarding_no_schools()}
 					</p>
 				{/if}
 			{:else}
 				<label class="relative mt-6 block">
 					<span class="sr-only">{m.onboarding_search_schools()}</span>
-					<Search size={20} class="absolute top-1/2 left-4 -translate-y-1/2 text-slate-500" />
+					<Search
+						size={20}
+						class="absolute top-1/2 left-4 -translate-y-1/2 text-on-surface-variant"
+					/>
 					<input
 						type="search"
 						bind:value={institutionQuery}
 						placeholder={m.onboarding_search_schools()}
-						class="w-full rounded-full border-slate-300 py-3 pr-4 pl-12"
+						class="w-full rounded-full border-outline py-3 pr-4 pl-12"
 					/>
 				</label>
 
@@ -112,7 +117,7 @@
 					<div class="flex flex-col gap-2">
 						{#each matchingInstitutions as institution (institution.id)}
 							<label
-								class="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border px-4 py-3 has-checked:border-blue-700 has-checked:bg-blue-50"
+								class="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border px-4 py-3 has-checked:border-primary has-checked:bg-secondary-container"
 							>
 								<span class="font-semibold">{institution.name}</span>
 								<input
@@ -123,7 +128,7 @@
 								/>
 							</label>
 						{:else}
-							<p class="text-slate-600">
+							<p class="text-on-surface-variant">
 								{m.onboarding_no_matching_schools({ query: institutionQuery })}
 							</p>
 						{/each}
@@ -131,7 +136,7 @@
 				</fieldset>
 			{/if}
 			{#if form?.errors.primaryInstitutionId}
-				<p class="mt-3 text-sm text-red-700" role="alert">
+				<p class="mt-3 text-sm text-error" role="alert">
 					{describeErrorCode(form.errors.primaryInstitutionId)}
 				</p>
 			{/if}
@@ -139,14 +144,14 @@
 			<div class="mt-auto pt-8">
 				<button
 					type="button"
-					class="w-full rounded-full bg-blue-700 py-3 font-semibold text-white disabled:opacity-50"
+					class="w-full rounded-full bg-primary py-3 font-semibold text-on-primary disabled:opacity-50"
 					disabled={!primaryInstitutionId}
 					onclick={() => (step = 'profile')}>{m.common_continue()}</button
 				>
 			</div>
 		{:else}
 			<h1 class="mt-2 text-3xl font-semibold">{m.onboarding_profile_heading()}</h1>
-			<p class="mt-2 text-slate-600">
+			<p class="mt-2 text-on-surface-variant">
 				{m.onboarding_profile_detail()}
 			</p>
 
@@ -160,19 +165,19 @@
 					required
 					aria-invalid={form?.errors.displayName ? 'true' : undefined}
 					aria-describedby={form?.errors.displayName ? 'display-name-error' : undefined}
-					class="mt-2 w-full rounded-2xl border-slate-300 px-4 py-3"
+					class="mt-2 w-full rounded-2xl border-outline px-4 py-3"
 				/>
 			</label>
 			{#if form?.errors.displayName}
-				<p id="display-name-error" class="mt-2 text-sm text-red-700">
+				<p id="display-name-error" class="mt-2 text-sm text-error">
 					{describeErrorCode(form.errors.displayName)}
 				</p>
 			{/if}
 
 			<label class="mt-6 block">
 				<span class="font-semibold">{m.onboarding_username()}</span>
-				<span class="mt-2 flex items-center rounded-2xl border border-slate-300 bg-white px-4">
-					<span class="text-slate-500" aria-hidden="true">@</span>
+				<span class="mt-2 flex items-center rounded-2xl border border-outline bg-surface px-4">
+					<span class="text-on-surface-variant" aria-hidden="true">@</span>
 					<input
 						name="username"
 						bind:value={username}
@@ -187,11 +192,11 @@
 					/>
 				</span>
 			</label>
-			<p id="username-help" class="mt-2 text-sm text-slate-600">
+			<p id="username-help" class="mt-2 text-sm text-on-surface-variant">
 				{m.onboarding_username_help()}
 			</p>
 			{#if form?.errors.username}
-				<p class="mt-1 text-sm text-red-700" role="alert">
+				<p class="mt-1 text-sm text-error" role="alert">
 					{describeErrorCode(form.errors.username)}
 				</p>
 			{/if}
@@ -199,7 +204,7 @@
 			<div class="mt-auto pt-8">
 				<button
 					type="submit"
-					class="w-full rounded-full bg-blue-700 py-3 font-semibold text-white disabled:opacity-50"
+					class="w-full rounded-full bg-primary py-3 font-semibold text-on-primary disabled:opacity-50"
 					disabled={isSubmitting}>{isSubmitting ? m.common_saving() : m.common_continue()}</button
 				>
 			</div>

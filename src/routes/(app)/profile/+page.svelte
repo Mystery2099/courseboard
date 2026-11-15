@@ -30,7 +30,7 @@
 		/>
 		<div class="min-w-0">
 			<h1 class="truncate text-3xl font-semibold">{data.profile.displayName}</h1>
-			<p class="text-slate-600">
+			<p class="text-on-surface-variant">
 				@{data.profile.username} · {data.profile.primaryInstitution.name}
 			</p>
 		</div>
@@ -43,7 +43,7 @@
 		primaryInstitutionId={data.profile.primaryInstitution.id}
 	/>
 
-	<section class="mt-8 rounded-[20px] border bg-white p-4">
+	<section class="mt-8 rounded-[20px] border bg-surface p-4">
 		<h2 class="text-lg font-semibold">{m.profile_display_name()}</h2>
 		{#if isEditingDisplayName}
 			<form
@@ -68,13 +68,13 @@
 						autocomplete="name"
 						required
 						aria-invalid={form?.displayNameError ? 'true' : undefined}
-						class="w-full rounded-2xl border-slate-300 px-4 py-2"
+						class="w-full rounded-2xl border-outline px-4 py-2"
 					/>
 				</label>
 				<div class="flex gap-2">
 					<button
 						type="submit"
-						class="rounded-full bg-blue-700 px-4 py-2 font-semibold text-white disabled:opacity-50"
+						class="rounded-full bg-primary px-4 py-2 font-semibold text-on-primary disabled:opacity-50"
 						disabled={isSaving}>{m.common_save()}</button
 					>
 					<button
@@ -85,7 +85,7 @@
 				</div>
 			</form>
 			{#if form?.displayNameError}
-				<p class="mt-2 text-sm text-red-700" role="alert">
+				<p class="mt-2 text-sm text-error" role="alert">
 					{describeErrorCode(form.displayNameError)}
 				</p>
 			{/if}
@@ -99,15 +99,15 @@
 				>
 			</div>
 			{#if form?.displayNameSaved}
-				<p class="mt-2 text-sm text-slate-600" role="status">{m.common_saved()}</p>
+				<p class="mt-2 text-sm text-on-surface-variant" role="status">{m.common_saved()}</p>
 			{/if}
 		{/if}
-		<p class="mt-3 text-sm text-slate-600">
+		<p class="mt-3 text-sm text-on-surface-variant">
 			{m.profile_identity_notice()}
 		</p>
 	</section>
 
-	<section class="mt-4 rounded-[20px] border bg-white p-4">
+	<section class="mt-4 rounded-[20px] border bg-surface p-4">
 		<h2 class="text-lg font-semibold">{m.profile_school()}</h2>
 		<form
 			method="POST"
@@ -123,7 +123,7 @@
 		>
 			<div class="min-w-0">
 				<p>{data.profile.primaryInstitution.name}</p>
-				<p class="text-sm text-slate-600">
+				<p class="text-sm text-on-surface-variant">
 					{data.profile.isPrimaryInstitutionHidden
 						? m.profile_school_hidden()
 						: m.profile_school_shown()}
@@ -141,26 +141,26 @@
 			>
 		</form>
 		{#if form?.institutionVisibilityError}
-			<p class="mt-2 text-sm text-red-700" role="alert">
+			<p class="mt-2 text-sm text-error" role="alert">
 				{describeErrorCode(form.institutionVisibilityError)}
 			</p>
 		{:else if form?.institutionVisibilitySaved}
-			<p class="mt-2 text-sm text-slate-600" role="status">{m.common_saved()}</p>
+			<p class="mt-2 text-sm text-on-surface-variant" role="status">{m.common_saved()}</p>
 		{/if}
-		<p class="mt-3 text-sm text-slate-600">
+		<p class="mt-3 text-sm text-on-surface-variant">
 			{m.profile_school_hiding_explanation()}
 		</p>
 	</section>
 
-	<section class="mt-4 rounded-[20px] border bg-white p-4">
+	<section class="mt-4 rounded-[20px] border bg-surface p-4">
 		<h2 class="text-lg font-semibold">{m.profile_language()}</h2>
 		<div class="mt-2"><LanguagePicker isLabelVisible={false} /></div>
-		<p class="mt-3 text-sm text-slate-600">{m.profile_language_explanation()}</p>
+		<p class="mt-3 text-sm text-on-surface-variant">{m.profile_language_explanation()}</p>
 	</section>
 
-	<section class="mt-4 rounded-[20px] border bg-white p-4">
+	<section class="mt-4 rounded-[20px] border bg-surface p-4">
 		<h2 class="text-lg font-semibold">{m.profile_account()}</h2>
-		<p class="mt-2 text-sm text-slate-600">
+		<p class="mt-2 text-sm text-on-surface-variant">
 			{m.profile_account_explanation()}
 		</p>
 		<div class="mt-3 flex items-center gap-4">

@@ -16,7 +16,7 @@
 	<h1 class="text-3xl font-semibold">{m.explore_title()}</h1>
 
 	{#if !data.catalog}
-		<p class="mt-4 text-slate-600">{m.explore_no_courses()}</p>
+		<p class="mt-4 text-on-surface-variant">{m.explore_no_courses()}</p>
 	{:else}
 		<div class="mt-6 flex items-center justify-between gap-4">
 			<h2 class="text-xl font-semibold">
@@ -31,7 +31,7 @@
 						<DropdownMenu.Content
 							align="end"
 							sideOffset={8}
-							class="z-10 w-64 rounded-2xl border bg-white p-2 shadow-lg"
+							class="z-10 w-64 rounded-2xl border bg-surface p-2 shadow-lg"
 						>
 							{#each data.institutions as institution (institution.id)}
 								<DropdownMenu.Item>
@@ -44,7 +44,7 @@
 											aria-current={institution.id === data.catalog?.institution.id
 												? 'page'
 												: undefined}
-											class="block rounded-xl px-3 py-2 data-highlighted:bg-slate-100"
+											class="block rounded-xl px-3 py-2 data-highlighted:bg-surface-container"
 											>{institution.name}</a
 										>
 									{/snippet}
@@ -56,17 +56,17 @@
 			{/if}
 		</div>
 
-		<ul class="mt-4 divide-y overflow-hidden rounded-[20px] border bg-white">
+		<ul class="mt-4 divide-y overflow-hidden rounded-[20px] border bg-surface">
 			{#each data.catalog.courses as course (course.id)}
 				<li>
 					<a
 						href={resolve('/(app)/courses/[courseId]', { courseId: course.id })}
-						class="flex items-center gap-4 px-4 py-3 hover:bg-slate-50"
+						class="flex items-center gap-4 px-4 py-3 hover:bg-surface-container"
 					>
 						<CourseCodeTile code={course.code} />
 						<span class="min-w-0 flex-1">
 							<span class="block truncate font-semibold">{course.title}</span>
-							<span class="block text-sm text-slate-600">
+							<span class="block text-sm text-on-surface-variant">
 								<span class="font-mono">{course.code}</span>{course.isFollowed
 									? m.explore_following_suffix()
 									: ''}
@@ -76,7 +76,7 @@
 					</a>
 				</li>
 			{:else}
-				<li class="px-4 py-3 text-slate-600">{m.explore_institution_empty()}</li>
+				<li class="px-4 py-3 text-on-surface-variant">{m.explore_institution_empty()}</li>
 			{/each}
 		</ul>
 
