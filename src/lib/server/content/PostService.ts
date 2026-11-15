@@ -4,31 +4,25 @@ import {
 	createPostSchema,
 	postIdSchema,
 	postListQuerySchema,
-	THREAD_KINDS,
+	POST_KINDS,
 	type AcceptedReplyChangeResult,
 	type PostCreationResult,
 	type PostDetailResponse,
-	type PostListResponse,
-	type PostSummaryResponse
+	type PostListResponse
 } from '#lib/contracts/PostContract.ts';
 import { courseIdSchema } from '#lib/contracts/CourseCatalogContract.ts';
 import { AccessDeniedError, AccessPolicy } from '#lib/server/access/AccessPolicy.ts';
 import { courseRepository, type CourseRepository } from '#lib/server/catalog/CourseRepository.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
-import type {
-	PostDetail,
-	PostDocument,
-	PostOrderField,
-	PostPagePosition,
-	PostSummary
-} from './Post.ts';
+import type { PostDetail, PostDocument, PostOrderField, PostPagePosition } from './Post.ts';
 import { postRepository, type PostRepository } from './PostRepository.ts';
+import { PostResponseMapper } from './PostResponseMapper.ts';
 import { replyRepository, type ReplyRepository } from './ReplyRepository.ts';
 
 /**
- * Questions and discussions. Any admitted user reads and posts without following the course or
- * recording it in their history. Only a question's author chooses its accepted reply, and only
- * administrators lock threads until course moderators exist.
+ * Reads every post kind and publishes questions and discussions without requiring course history
+ * or following. Reviews publish through ReviewService. Only a question's author chooses its accepted
+ * reply, and only administrators lock threads until course moderators exist.
  */
 export class PostService {
 	private static readonly PAGE_SIZE = 20;
@@ -55,7 +49,7 @@ export class PostService {
 		const posts = await this.posts.findPage(
 			{
 				spaceId,
-				kinds: kind ? [kind] : THREAD_KINDS,
+				kinds: kind ? [kind] : POST_KINDS,
 				orderedBy,
 				onlyWithoutReplies: filter === 'unanswered',
 				after: after ? PostService.parseCursor(after) : null
@@ -65,7 +59,7 @@ export class PostService {
 		const page = posts.slice(0, pageSize);
 		const lastPost = page.at(-1);
 		return {
-			posts: page.map(PostService.toSummaryResponse),
+			posts: page.map(PostResponseMapper.toSummaryResponse),
 			nextCursor:
 				lastPost && posts.length > pageSize
 					? `${lastPost[orderedBy].getTime()}_${lastPost._id.toHexString()}`
@@ -97,13 +91,17 @@ export class PostService {
 			acceptedReplyId: null,
 			lockedAt: null,
 			createdAt: now,
-			lastActivityAt: now
+			lastActivityAt: now,
+			state: 'published'
 		};
 		await this.posts.insert(post);
 		const { username, displayName } = author.profile;
 		return {
 			kind: 'created',
-			post: PostService.toDetailResponse({ ...post, author: { username, displayName } }, author)
+			post: PostResponseMapper.toDetailResponse(
+				{ ...post, author: { username, displayName } },
+				author
+			)
 		};
 	}
 
@@ -111,7 +109,7 @@ export class PostService {
 	async getPost(postId: string, actor: ApplicationUser | null): Promise<PostDetailResponse | null> {
 		const viewer = AccessPolicy.requireAdmittedUser(actor);
 		const post = await this.findPost(postId);
-		return post ? PostService.toDetailResponse(post, viewer) : null;
+		return post ? PostResponseMapper.toDetailResponse(post, viewer) : null;
 	}
 
 	async chooseAcceptedReply(
@@ -142,7 +140,7 @@ export class PostService {
 		// Locking again keeps the original time.
 		const lockedAt = isLocked ? (post.lockedAt ?? new Date()) : null;
 		if (!(await this.posts.setLockedAt(post._id, lockedAt))) return null;
-		return PostService.toDetailResponse({ ...post, lockedAt }, administrator);
+		return PostResponseMapper.toDetailResponse({ ...post, lockedAt }, administrator);
 	}
 
 	private async changeAcceptedReply(
@@ -169,7 +167,7 @@ export class PostService {
 		}
 		return {
 			kind: 'changed',
-			post: PostService.toDetailResponse({ ...post, acceptedReplyId: replyId }, user)
+			post: PostResponseMapper.toDetailResponse({ ...post, acceptedReplyId: replyId }, user)
 		};
 	}
 
@@ -187,34 +185,6 @@ export class PostService {
 	private static parseCursor(cursor: string): PostPagePosition {
 		const [orderedAtMilliseconds, postId] = cursor.split('_');
 		return { orderedAt: new Date(Number(orderedAtMilliseconds)), postId: new ObjectId(postId) };
-	}
-
-	private static toSummaryResponse(post: PostSummary): PostSummaryResponse {
-		return {
-			id: post._id.toHexString(),
-			courseId: post.courseId.toHexString(),
-			kind: post.kind,
-			title: post.title,
-			author: post.author,
-			createdAt: post.createdAt.toISOString(),
-			lastActivityAt: post.lastActivityAt.toISOString(),
-			replyCount: post.replyCount,
-			hasAcceptedReply: post.acceptedReplyId !== null,
-			isLocked: post.lockedAt !== null
-		};
-	}
-
-	private static toDetailResponse(post: PostDetail, viewer: ApplicationUser): PostDetailResponse {
-		return {
-			...PostService.toSummaryResponse(post),
-			bodyMarkdown: post.bodyMarkdown,
-			acceptedReplyId: post.acceptedReplyId?.toHexString() ?? null,
-			viewerPermissions: {
-				canChooseAcceptedReply:
-					post.kind === 'question' && post.authorId.toHexString() === viewer.id,
-				canLock: viewer.role === 'administrator'
-			}
-		};
 	}
 }
 

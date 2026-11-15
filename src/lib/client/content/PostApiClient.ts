@@ -7,7 +7,7 @@ import type {
 	PostListResponse,
 	ReplyListResponse,
 	ReplyResponse,
-	ThreadKind
+	PostKind
 } from '#lib/contracts/PostContract.ts';
 
 /** Every key starts with `posts`, so one invalidation refreshes lists, threads, and replies. */
@@ -15,7 +15,7 @@ export const postQueryKeys = {
 	all: ['posts'] as const,
 	lists: (courseId: string) => [...postQueryKeys.all, 'list', courseId] as const,
 	/** A null kind is the course overview, which lists every kind. */
-	list: (courseId: string, kind: ThreadKind | null, filter: PostListFilter) =>
+	list: (courseId: string, kind: PostKind | null, filter: PostListFilter) =>
 		[...postQueryKeys.lists(courseId), kind ?? 'all', filter] as const,
 	detail: (postId: string) => [...postQueryKeys.all, 'detail', postId] as const,
 	replies: (postId: string) => [...postQueryKeys.all, 'replies', postId] as const
@@ -24,7 +24,7 @@ export const postQueryKeys = {
 export class PostApiClient {
 	static listPosts(
 		courseId: string,
-		kind: ThreadKind | null,
+		kind: PostKind | null,
 		filter: PostListFilter,
 		after: string | null
 	): Promise<PostListResponse> {

@@ -3,7 +3,7 @@ import type {
 	PostDetailResponse,
 	PostListResponse,
 	ReplyListResponse,
-	ThreadKind
+	PostKind
 } from '#lib/contracts/PostContract.ts';
 import { AccessGuard } from '#lib/server/access/AccessGuard.ts';
 import { postService } from '#lib/server/content/PostService.ts';
@@ -26,7 +26,7 @@ export class CoursePostPageLoader {
 	static async loadPostList(
 		locals: App.Locals,
 		courseId: string,
-		kind: ThreadKind | null
+		kind: PostKind | null
 	): Promise<PostListPageData> {
 		const user = AccessGuard.requireAdmittedUser(locals);
 		const postPage = await postService.listPosts(courseId, kind ? { kind } : {}, user);
@@ -38,7 +38,7 @@ export class CoursePostPageLoader {
 	static async loadThread(
 		locals: App.Locals,
 		params: { courseId: string; postId: string },
-		kind: ThreadKind
+		kind: PostKind
 	): Promise<ThreadPageData> {
 		const user = AccessGuard.requireAdmittedUser(locals);
 		const [post, replies] = await Promise.all([

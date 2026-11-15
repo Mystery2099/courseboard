@@ -20,6 +20,8 @@ export class PostRepository {
 		lockedAt: 1,
 		createdAt: 1,
 		lastActivityAt: 1,
+		reviewData: 1,
+		editedAt: 1,
 		author: 1
 	} as const;
 
@@ -45,6 +47,7 @@ export class PostRepository {
 		const filter: Filter<PostDocument> = {
 			spaceId: criteria.spaceId,
 			kind: { $in: [...criteria.kinds] },
+			state: { $nin: ['removed', 'deleted'] },
 			...(criteria.onlyWithoutReplies && { replyCount: 0 }),
 			...(after && {
 				$or: [
@@ -67,7 +70,7 @@ export class PostRepository {
 	async findById(postId: ObjectId): Promise<PostDetail | null> {
 		const [post] = await this.collection()
 			.aggregate<PostDetail>([
-				{ $match: { _id: postId } },
+				{ $match: { _id: postId, state: { $nin: ['removed', 'deleted'] } } },
 				...ContentAuthorLookup.STAGES,
 				{ $project: { ...PostRepository.SUMMARY_FIELDS, bodyMarkdown: 1 } }
 			])
@@ -76,7 +79,12 @@ export class PostRepository {
 	}
 
 	async exists(postId: ObjectId): Promise<boolean> {
-		return (await this.collection().countDocuments({ _id: postId }, { limit: 1 })) === 1;
+		return (
+			(await this.collection().countDocuments(
+				{ _id: postId, state: { $nin: ['removed', 'deleted'] } },
+				{ limit: 1 }
+			)) === 1
+		);
 	}
 
 	/**
@@ -86,7 +94,7 @@ export class PostRepository {
 	 */
 	async recordReply(postId: ObjectId, repliedAt: Date, session: ClientSession): Promise<boolean> {
 		const result = await this.collection().updateOne(
-			{ _id: postId, lockedAt: null },
+			{ _id: postId, lockedAt: null, state: { $nin: ['removed', 'deleted'] } },
 			{ $inc: { replyCount: 1 }, $max: { lastActivityAt: repliedAt } },
 			{ session }
 		);

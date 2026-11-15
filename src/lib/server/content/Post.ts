@@ -1,10 +1,11 @@
 import type { ObjectId } from 'mongodb';
-import type { ThreadKind } from '#lib/contracts/PostContract.ts';
+import type { PostKind } from '#lib/contracts/PostContract.ts';
+import type { ReviewData } from '#lib/contracts/ReviewContract.ts';
 
 export const POSTS_COLLECTION_NAME = 'posts';
 
 /**
- * A question or discussion in a course space. Replies live in their own collection, because a
+ * A question, discussion, or review in a course space. Replies live in their own collection, because a
  * thread's replies are unbounded and paged; the post keeps only their count and the accepted one.
  */
 export interface PostDocument {
@@ -12,18 +13,22 @@ export interface PostDocument {
 	spaceId: ObjectId;
 	/** Copied from the space, so links and course queries don't need a join. */
 	courseId: ObjectId;
-	kind: ThreadKind;
+	kind: PostKind;
 	authorId: ObjectId;
 	title: string;
 	bodyMarkdown: string;
 	replyCount: number;
-	/** Chosen by a question's author; always null on discussions. */
+	/** Chosen by a question's author; always null on discussions and reviews. */
 	acceptedReplyId: ObjectId | null;
 	/** Null while replies are allowed. */
 	lockedAt: Date | null;
 	createdAt: Date;
 	/** Advances on creation and new replies only, never on accepting or locking. */
 	lastActivityAt: Date;
+	/** Older questions and discussions have no state and are treated as published. */
+	state?: 'published' | 'removed' | 'deleted';
+	reviewData?: ReviewData;
+	editedAt?: Date;
 }
 
 export interface ContentAuthor {
@@ -43,6 +48,8 @@ export interface PostSummary extends Pick<
 	| 'lockedAt'
 	| 'createdAt'
 	| 'lastActivityAt'
+	| 'reviewData'
+	| 'editedAt'
 > {
 	author: ContentAuthor;
 }
@@ -61,7 +68,7 @@ export interface PostPagePosition {
 
 export interface PostPageCriteria {
 	spaceId: ObjectId;
-	kinds: readonly ThreadKind[];
+	kinds: readonly PostKind[];
 	orderedBy: PostOrderField;
 	onlyWithoutReplies: boolean;
 	after: PostPagePosition | null;

@@ -7,6 +7,7 @@ import {
 	type AcademicHistoryEntryDocument,
 	type HistoryEntryChanges,
 	type OwnHistoryEntry,
+	type ReviewAttempt,
 	type VisibleHistoryEntry
 } from './AcademicHistoryEntry.ts';
 
@@ -84,6 +85,28 @@ export class AcademicHistoryRepository {
 			{ userId, visibility: 'visible' },
 			AcademicHistoryRepository.VISIBLE_ENTRY_FIELDS,
 			limit
+		);
+	}
+
+	async findReviewAttempts(userId: ObjectId, courseId: ObjectId): Promise<ReviewAttempt[]> {
+		return this.collection()
+			.find<ReviewAttempt>(
+				{ userId, courseId, status: { $in: ['taking', 'took'] }, term: { $ne: null } },
+				{ projection: { status: 1, term: 1 } }
+			)
+			.sort({ createdAt: -1, _id: -1 })
+			.limit(200)
+			.toArray();
+	}
+
+	async findReviewAttempt(
+		entryId: ObjectId,
+		userId: ObjectId,
+		courseId: ObjectId
+	): Promise<ReviewAttempt | null> {
+		return this.collection().findOne<ReviewAttempt>(
+			{ _id: entryId, userId, courseId, status: { $in: ['taking', 'took'] }, term: { $ne: null } },
+			{ projection: { status: 1, term: 1 } }
 		);
 	}
 

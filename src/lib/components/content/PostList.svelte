@@ -9,13 +9,10 @@
 		formatRelativeTime,
 		formatReplyCount
 	} from '#lib/client/content/PostPresentation.ts';
-	import type {
-		PostListFilter,
-		PostListResponse,
-		ThreadKind
-	} from '#lib/contracts/PostContract.ts';
+	import type { PostListFilter, PostListResponse, PostKind } from '#lib/contracts/PostContract.ts';
 	import { THREAD_ROUTE_IDS } from '#lib/navigation/CourseChannel.ts';
 	import ThreadKindBadge from './ThreadKindBadge.svelte';
+	import ReviewFacts from './ReviewFacts.svelte';
 
 	let {
 		courseId,
@@ -26,7 +23,7 @@
 	}: {
 		courseId: string;
 		/** Null lists every kind, as the course overview does. */
-		kind: ThreadKind | null;
+		kind: PostKind | null;
 		/** The first page of the Active filter, rendered on the server. */
 		initialPage: PostListResponse;
 		initialPageLoadedAt: number;
@@ -115,6 +112,9 @@
 						{post.author.displayName} · {formatReplyCount(post.replyCount)} ·
 						<time datetime={post.lastActivityAt}>{formatRelativeTime(post.lastActivityAt)}</time>
 					</span>
+					{#if post.reviewData}
+						<ReviewFacts review={post.reviewData} />
+					{/if}
 				</a>
 			</li>
 		{/each}

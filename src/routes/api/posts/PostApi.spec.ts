@@ -1,12 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { postService } from '#lib/server/content/PostService.ts';
 import { replyService } from '#lib/server/content/ReplyService.ts';
+import { reviewService } from '#lib/server/content/ReviewService.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
 import { GET as listPosts, POST as createPost } from '../courses/[courseId]/posts/+server.ts';
 import { GET as getPost } from './[postId]/+server.ts';
 import { PUT as chooseAcceptedReply } from './[postId]/accepted-reply/+server.ts';
 import { PUT as lockPost } from './[postId]/lock/+server.ts';
 import { GET as listReplies, POST as createReply } from './[postId]/replies/+server.ts';
+import {
+	GET as getReviewContext,
+	POST as createReview
+} from '../courses/[courseId]/reviews/+server.ts';
+import { PUT as updateReview } from './[postId]/review/+server.ts';
 
 const student: ApplicationUser = {
 	id: '000000000000000000000001',
@@ -50,7 +56,10 @@ describe('post HTTP API', () => {
 			vi.spyOn(postService, 'createPost'),
 			vi.spyOn(postService, 'chooseAcceptedReply'),
 			vi.spyOn(replyService, 'listReplies'),
-			vi.spyOn(replyService, 'createReply')
+			vi.spyOn(replyService, 'createReply'),
+			vi.spyOn(reviewService, 'getCourseContext'),
+			vi.spyOn(reviewService, 'createReview'),
+			vi.spyOn(reviewService, 'updateReview')
 		];
 		const { user, signedIn } = scenario;
 		const read = <Event>(path: string) =>
@@ -64,7 +73,10 @@ describe('post HTTP API', () => {
 			listReplies(read(`/api/posts/${postId}/replies`)),
 			createPost(write('POST', `/api/courses/${courseId}/posts`)),
 			createReply(write('POST', `/api/posts/${postId}/replies`)),
-			chooseAcceptedReply(write('PUT', `/api/posts/${postId}/accepted-reply`))
+			chooseAcceptedReply(write('PUT', `/api/posts/${postId}/accepted-reply`)),
+			getReviewContext(read(`/api/courses/${courseId}/reviews`)),
+			createReview(write('POST', `/api/courses/${courseId}/reviews`)),
+			updateReview(write('PUT', `/api/posts/${postId}/review`))
 		]);
 
 		for (const response of responses) expect(response.status).toBe(scenario.status);
@@ -115,4 +127,39 @@ describe('post HTTP API', () => {
 		expect(notOnboarded.status).toBe(409);
 		expect((await notOnboarded.json()).error.code).toBe('onboarding-required');
 	});
+
+	it('rejects cross-origin review writes before calling the service', async () => {
+		const createStoredReview = vi.spyOn(reviewService, 'createReview');
+		const updateStoredReview = vi.spyOn(reviewService, 'updateReview');
+		const responses = await Promise.all([
+			createReview(
+				requestEvent(
+					student,
+					jsonRequest('POST', `/api/courses/${courseId}/reviews`, {}, 'https://elsewhere.test')
+				)
+			),
+			updateReview(
+				requestEvent(
+					student,
+					jsonRequest('PUT', `/api/posts/${postId}/review`, {}, 'https://elsewhere.test')
+				)
+			)
+		]);
+		for (const response of responses) expect(response.status).toBe(403);
+		expect(createStoredReview).not.toHaveBeenCalled();
+		expect(updateStoredReview).not.toHaveBeenCalled();
+	});
+
+	it.each(['history-required', 'review-exists'] as const)(
+		'reports %s as a conflict',
+		async (kind) => {
+			vi.spyOn(reviewService, 'createReview').mockResolvedValue({ kind });
+			const response = await createReview(
+				requestEvent(student, jsonRequest('POST', `/api/courses/${courseId}/reviews`, {}))
+			);
+			expect(response.status).toBe(409);
+			expect((await response.json()).error.code).toBe(kind);
+			expect(response.headers.get('cache-control')).toBe('no-store');
+		}
+	);
 });

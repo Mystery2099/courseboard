@@ -4,6 +4,7 @@ import type {
 	HistoryStatus,
 	HistoryVisibility
 } from '#lib/contracts/AcademicHistoryContract.ts';
+import type { ReviewParticipationStatus } from '#lib/contracts/ReviewContract.ts';
 
 export const ACADEMIC_HISTORIES_COLLECTION_NAME = 'academicHistories';
 
@@ -48,4 +49,11 @@ export interface VisibleHistoryEntry extends Pick<
 	'_id' | 'status' | 'term'
 > {
 	course: HistoryEntryCourse;
+}
+
+/** The only history fields a review may copy. Notes and visibility aren't read. */
+export interface ReviewAttempt {
+	_id: ObjectId;
+	status: ReviewParticipationStatus;
+	term: AcademicTerm;
 }

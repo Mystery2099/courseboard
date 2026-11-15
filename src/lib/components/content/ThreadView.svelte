@@ -17,6 +17,8 @@
 	import PendingReplyCard from './PendingReplyCard.svelte';
 	import ReplyComposer from './ReplyComposer.svelte';
 	import ThreadKindBadge from './ThreadKindBadge.svelte';
+	import ReviewFacts from './ReviewFacts.svelte';
+	import ReviewForm from './ReviewForm.svelte';
 
 	let {
 		initialPost,
@@ -68,6 +70,7 @@
 	}
 
 	let replyTargetId = $state<string | null>(null);
+	let isReviewEditorOpen = $state(false);
 
 	function showUpdatedPost(updatedPost: PostDetailResponse) {
 		queryClient.setQueryData(postQueryKeys.detail(postId), updatedPost);
@@ -140,7 +143,35 @@
 	</div>
 	<h2 class="mt-2 text-2xl font-semibold wrap-break-word">{post.title}</h2>
 	<div class="mt-2"><ContentByline author={post.author} createdAt={post.createdAt} /></div>
+	{#if post.editedAt}
+		<p class="mt-1 text-sm text-slate-600">
+			Edited <time datetime={post.editedAt}>{new Date(post.editedAt).toLocaleDateString()}</time>
+		</p>
+	{/if}
+	{#if post.reviewData}
+		<ReviewFacts review={post.reviewData} />
+	{/if}
 	<p class="mt-4 wrap-break-word whitespace-pre-wrap">{post.bodyMarkdown}</p>
+	{#if post.viewerPermissions.canEditReview}
+		<details bind:open={isReviewEditorOpen} class="mt-4 rounded-[20px] border p-4">
+			<summary class="min-h-11 cursor-pointer py-2 font-semibold text-blue-700"
+				>Edit your review</summary
+			>
+			{#if isReviewEditorOpen}
+				<div class="mt-4">
+					<ReviewForm
+						courseId={post.courseId}
+						editedReview={post}
+						onSaved={(updatedPost) => {
+							showUpdatedPost(updatedPost);
+							isReviewEditorOpen = false;
+						}}
+						onCancel={() => (isReviewEditorOpen = false)}
+					/>
+				</div>
+			{/if}
+		</details>
+	{/if}
 	{#if post.viewerPermissions.canLock}
 		<button
 			type="button"
