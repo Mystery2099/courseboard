@@ -99,7 +99,7 @@
 			{/if}
 			<nav
 				aria-label={m.course_space_channels_short()}
-				class="mt-4 flex gap-2 overflow-x-auto desktop:hidden"
+				class="mt-2.5 flex gap-2 overflow-x-auto py-1.5 desktop:hidden"
 			>
 				{#each COURSE_CHANNELS as channel (channel)}
 					<a
