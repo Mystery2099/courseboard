@@ -67,7 +67,7 @@
 </script>
 
 {#if filters.length > 0}
-	<div class="mt-3 flex gap-2" role="group" aria-label={m.post_list_order()}>
+	<div class="mt-3 flex flex-wrap gap-x-2 gap-y-3" role="group" aria-label={m.post_list_order()}>
 		{#each filters as option (option)}
 			<button
 				type="button"
