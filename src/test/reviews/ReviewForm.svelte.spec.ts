@@ -88,6 +88,8 @@ it('expands the composer, requires disclosure, retains a failed review, and refr
 	expect(createReview.mock.calls[0]).toEqual(createReview.mock.calls[1]);
 	expect(createReview).toHaveBeenLastCalledWith(review.courseId, {
 		historyEntryId: '000000000000000000000003',
+		acknowledgedStatus: 'taking',
+		acknowledgedTerm: { season: 'fall', year: 2026 },
 		disclosureAcknowledged: true,
 		title: review.title,
 		bodyMarkdown: review.bodyMarkdown,
@@ -113,4 +115,36 @@ it('edits feedback and ratings without offering changes to the participation sna
 		workload: 4,
 		wouldTakeAgain: false
 	});
+});
+
+it('clears the acknowledgement when the chosen entry changes or disappears', async () => {
+	const firstAttempt = {
+		id: '000000000000000000000003',
+		status: 'taking' as const,
+		term: { season: 'fall' as const, year: 2026 }
+	};
+	const secondAttempt = { ...firstAttempt, id: '000000000000000000000005' };
+	const screen = await render(ReviewFormTestHarness, {
+		attempts: [firstAttempt, secondAttempt],
+		onSaved: vi.fn()
+	});
+	const acknowledgement = screen.getByRole('checkbox', {
+		name: 'I understand what publishing shares.'
+	});
+
+	await acknowledgement.click();
+	await screen.rerender({ attempts: [{ ...firstAttempt }, secondAttempt] });
+	await expect.element(acknowledgement).toBeChecked();
+
+	await screen.rerender({
+		attempts: [{ ...firstAttempt, term: { season: 'spring', year: 2026 } }, secondAttempt]
+	});
+	await expect.element(acknowledgement).not.toBeChecked();
+
+	await acknowledgement.click();
+	await screen.rerender({ attempts: [secondAttempt] });
+	await expect.element(acknowledgement).not.toBeChecked();
+	await expect
+		.element(screen.getByRole('combobox', { name: 'Reviewing this attempt' }))
+		.toHaveValue(secondAttempt.id);
 });

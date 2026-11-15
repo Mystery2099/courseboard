@@ -32,6 +32,8 @@ const attempt = {
 };
 const request = {
 	historyEntryId: entryId.toHexString(),
+	acknowledgedStatus: 'taking',
+	acknowledgedTerm: { season: 'fall', year: 2026 },
 	disclosureAcknowledged: true,
 	title: '  Start the project early  ',
 	bodyMarkdown: 'The labs are useful.',
@@ -117,6 +119,20 @@ describe('review service', () => {
 			await expect(
 				service.createReview(courseId.toHexString(), { ...request, ...invalid }, author)
 			).rejects.toThrow();
+		}
+		expect(posts.insert).not.toHaveBeenCalled();
+	});
+
+	it('refuses an entry whose status or term changed after the disclosure was acknowledged', async () => {
+		const { service, posts } = createService();
+		for (const changed of [
+			{ acknowledgedStatus: 'took' },
+			{ acknowledgedTerm: { season: 'spring', year: 2026 } },
+			{ acknowledgedTerm: { season: 'fall', year: 2025 } }
+		]) {
+			expect(
+				await service.createReview(courseId.toHexString(), { ...request, ...changed }, author)
+			).toEqual({ kind: 'history-required' });
 		}
 		expect(posts.insert).not.toHaveBeenCalled();
 	});

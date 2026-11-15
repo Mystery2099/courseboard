@@ -62,6 +62,22 @@
 	let formElement: HTMLFormElement;
 	const selectedAttempt = $derived(attempts.find((attempt) => attempt.id === historyEntryId));
 	const snapshot = $derived(editedReview?.reviewData ?? selectedAttempt);
+	const acknowledgedSnapshotKey = $derived(
+		selectedAttempt
+			? `${selectedAttempt.id}:${selectedAttempt.status}:${selectedAttempt.term.season}:${selectedAttempt.term.year}`
+			: ''
+	);
+
+	// The acknowledgement covers one entry's status and term; history may change while this is open.
+	$effect(() => {
+		void acknowledgedSnapshotKey;
+		disclosureAcknowledged = false;
+	});
+
+	$effect(() => {
+		if (editedReview || selectedAttempt) return;
+		historyEntryId = attempts[0]?.id ?? '';
+	});
 
 	const saveMutation = createMutation(() => ({
 		mutationFn: (submission: ReviewSubmission) =>
@@ -113,6 +129,8 @@
 			const parsed = createReviewSchema.safeParse({
 				...changes,
 				historyEntryId,
+				acknowledgedStatus: selectedAttempt?.status,
+				acknowledgedTerm: selectedAttempt?.term,
 				disclosureAcknowledged
 			});
 			if (!parsed.success) {
@@ -141,7 +159,6 @@
 				<select
 					class="w-full min-w-0 rounded-2xl border-slate-300 px-4 py-2 text-base"
 					bind:value={historyEntryId}
-					onchange={() => (disclosureAcknowledged = false)}
 					aria-invalid={fieldErrors.historyEntryId ? 'true' : undefined}
 					aria-describedby={fieldErrors.historyEntryId ? 'review-attempt-error' : undefined}
 				>

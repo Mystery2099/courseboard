@@ -3,27 +3,25 @@
 	import ReviewForm from '#lib/components/content/ReviewForm.svelte';
 	import ReviewChannelView from '#lib/components/content/ReviewChannelView.svelte';
 	import type { PostDetailResponse } from '#lib/contracts/PostContract.ts';
+	import type { ReviewAttemptResponse } from '#lib/contracts/ReviewContract.ts';
 
 	let {
 		editedReview = null,
 		showChannel = false,
+		attempts = [
+			{ id: '000000000000000000000003', status: 'taking', term: { season: 'fall', year: 2026 } }
+		],
 		onSaved
 	}: {
 		editedReview?: PostDetailResponse | null;
 		showChannel?: boolean;
+		attempts?: ReviewAttemptResponse[];
 		onSaved: (post: PostDetailResponse) => void;
 	} = $props();
 
 	const queryClient = new QueryClient({
 		defaultOptions: { queries: { retry: false, staleTime: 60_000 }, mutations: { retry: false } }
 	});
-	const attempts = [
-		{
-			id: '000000000000000000000003',
-			status: 'taking' as const,
-			term: { season: 'fall' as const, year: 2026 }
-		}
-	];
 </script>
 
 <QueryClientProvider client={queryClient}>

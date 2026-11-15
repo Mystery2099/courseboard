@@ -79,7 +79,14 @@ export class ReviewService {
 			authorId,
 			id
 		);
-		if (!attempt) return { kind: 'history-required' };
+		if (
+			!attempt ||
+			attempt.status !== request.acknowledgedStatus ||
+			attempt.term.season !== request.acknowledgedTerm.season ||
+			attempt.term.year !== request.acknowledgedTerm.year
+		) {
+			return { kind: 'history-required' };
+		}
 
 		const now = new Date();
 		const post: PostDocument = {

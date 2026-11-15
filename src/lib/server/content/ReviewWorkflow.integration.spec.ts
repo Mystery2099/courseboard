@@ -108,6 +108,8 @@ it.skipIf(!testMongoDbUri)(
 			}
 			const request = {
 				historyEntryId: firstEntryId.toHexString(),
+				acknowledgedStatus: 'taking',
+				acknowledgedTerm: { season: 'fall', year: 2026 },
 				disclosureAcknowledged: true,
 				title: 'A useful course',
 				bodyMarkdown: 'Start the project early.',
@@ -146,6 +148,7 @@ it.skipIf(!testMongoDbUri)(
 				{
 					...request,
 					historyEntryId: secondEntryId.toHexString(),
+					acknowledgedStatus: 'took',
 					workload: 2,
 					wouldTakeAgain: true
 				},
