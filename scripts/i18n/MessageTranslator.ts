@@ -165,8 +165,9 @@ async function translateLocale(
 				targetMessages[key] = translation;
 			}
 		}
+		// Saved per batch, so a later failure keeps what earlier batches translated.
+		await catalogFile.write(schema, targetMessages, Object.keys(sourceMessages));
 	}
-	await catalogFile.write(schema, targetMessages, Object.keys(sourceMessages));
 	console.log(`${locale}: added ${missingKeys.length - rejectedCount} messages`);
 	return rejectedCount;
 }
