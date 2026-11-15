@@ -1,6 +1,8 @@
 const CLOUDFLARE_TURNSTILE_ORIGIN = 'https://challenges.cloudflare.com';
 const CLERK_IMAGE_ORIGIN = 'https://img.clerk.com';
 const CLERK_BOT_PROTECTION_SCRIPT_ORIGIN = 'https://cdn.protect.clerk.com';
+// Its bootstrap script then loads a loader from a generated per-client subdomain.
+const CLERK_BOT_PROTECTION_LOADER_SOURCE = 'https://*.client.protect.clerk.com';
 // Bot protection probes and frames use generated subdomains and several ports.
 const CLERK_BOT_PROTECTION_PROBE_SOURCE = 'https://*.protect.clerk.com:*';
 
@@ -42,6 +44,7 @@ export function buildContentSecurityPolicyDirectives(clerkPublishableKey) {
 			'self',
 			...clerkOrigins,
 			CLERK_BOT_PROTECTION_SCRIPT_ORIGIN,
+			CLERK_BOT_PROTECTION_LOADER_SOURCE,
 			CLOUDFLARE_TURNSTILE_ORIGIN
 		],
 		// Same-origin WebSocket connections are covered by 'self'.
