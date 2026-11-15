@@ -240,7 +240,7 @@
 	"person_history_attribution": "Self-reported by {displayName}. Schools don't verify these entries.",
 	"person_history_refresh_failed": "Couldn't refresh this history. Showing what was loaded earlier.",
 	"admin_catalog_demo_explanation": "The demo catalog adds Alfred State College and two fictional schools, with their courses. Entries that already exist are left unchanged, so it's safe to load again.",
-	"admin_catalog_demo_loaded": "Added {institutionCount} institutions and {courseCount} courses.",
+	"admin_catalog_demo_loaded": "Institutions added: {institutionCount}. Courses added: {courseCount}.",
 	"admin_catalog_truncated": "Only the first {count} courses are shown.",
 	"admin_catalog_code": "Code",
 	"admin_catalog_name": "Name",
