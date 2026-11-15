@@ -41,4 +41,25 @@ describe('machine translation checks', () => {
 		);
 		expect(findTranslationProblem(' · note', ' · nota')).toBeNull();
 	});
+
+	it('checks every plural case on its own', () => {
+		const withCases = (match: Record<string, string>) => [{ ...replyCount[0], match }];
+
+		expect(
+			findTranslationProblem(
+				replyCount,
+				withCases({ 'countPlural=one': '{count} respuesta', 'countPlural=*': 'respuestas' })
+			)
+		).toBe('countPlural=*: missing placeholder {count}');
+		expect(
+			findTranslationProblem(
+				replyCount,
+				withCases({ 'countPlural=one': ' ', 'countPlural=*': '{count} respuestas' })
+			)
+		).toBe('countPlural=one: empty');
+		expect(findTranslationProblem(replyCount, withCases({}))).toBe('no variants');
+		expect(findTranslationProblem(replyCount, [{ ...replyCount[0], match: null }])).toBe(
+			'expected the same variant structure'
+		);
+	});
 });

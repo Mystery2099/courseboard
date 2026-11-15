@@ -45,11 +45,18 @@ class MessageCatalogFile {
 		return new MessageCatalogFile(path.resolve(pattern.replace('{locale}', locale)));
 	}
 
+	/** A malformed or unreadable catalog stops the run, so existing translations are never lost. */
 	async read(): Promise<Record<string, unknown>> {
+		return JSON.parse(await readFile(this.filePath, 'utf8'));
+	}
+
+	/** A new locale has no catalog yet; only a missing file counts as empty. */
+	async readOrEmpty(): Promise<Record<string, unknown>> {
 		try {
-			return JSON.parse(await readFile(this.filePath, 'utf8'));
-		} catch {
-			return {};
+			return await this.read();
+		} catch (cause) {
+			if ((cause as NodeJS.ErrnoException).code === 'ENOENT') return {};
+			throw cause;
 		}
 	}
 
@@ -128,7 +135,7 @@ async function translateLocale(
 	catalogFile: MessageCatalogFile,
 	client: GeminiTranslationClient
 ): Promise<number> {
-	const targetMessages = await catalogFile.read();
+	const targetMessages = await catalogFile.readOrEmpty();
 	const missingKeys = Object.keys(sourceMessages).filter((key) => {
 		const value = targetMessages[key];
 		return value === undefined || (typeof value === 'string' && value.trim() === '');
