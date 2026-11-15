@@ -33,10 +33,13 @@ export function iconButtonClass(): string {
 	return 'inline-flex size-11 items-center justify-center rounded-full text-on-surface-variant transition-colors duration-150 hover:bg-on-surface/8';
 }
 
-/** Filter and channel chips: 8px radius, and selection shown by color alone, with no checkmark. */
+/**
+ * Filter and channel chips: 8px radius, and selection shown by color alone, with no checkmark. The
+ * chip is 36px tall as drawn, with an invisible extension that makes the touch target at least 44px.
+ */
 export function filterChipClass(isSelected: boolean): string {
 	return [
-		'inline-flex min-h-9 shrink-0 items-center rounded-chip border px-4 text-sm transition-colors duration-150',
+		'relative inline-flex min-h-9 shrink-0 items-center rounded-chip border px-4 text-sm transition-colors duration-150 after:absolute after:inset-x-0 after:-inset-y-1.5',
 		isSelected
 			? 'border-transparent bg-secondary-container font-semibold text-on-secondary-container'
 			: 'border-outline text-on-surface hover:bg-on-surface/8'
