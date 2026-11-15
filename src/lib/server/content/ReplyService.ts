@@ -75,7 +75,7 @@ export class ReplyService {
 
 		const post = await this.posts.findById(postObjectId);
 		if (!post) return { kind: 'post-not-found' };
-		if (post.lockedAt) return { kind: 'post-locked' };
+		if (post.lockedAt) return this.refuseLockedUnlessStored(authorId, request.submissionId);
 
 		const parentReplyId = request.parentReplyId ? new ObjectId(request.parentReplyId) : null;
 		if (parentReplyId) {
@@ -104,7 +104,7 @@ export class ReplyService {
 				return true;
 			});
 			// The post was locked or removed after the check above.
-			if (!wasStored) return { kind: 'post-locked' };
+			if (!wasStored) return this.refuseLockedUnlessStored(authorId, request.submissionId);
 		} catch (cause) {
 			if (!(cause instanceof MongoServerError) || cause.code !== DUPLICATE_KEY_ERROR_CODE) {
 				throw cause;
@@ -124,6 +124,20 @@ export class ReplyService {
 			kind: 'created',
 			reply: ReplyService.toResponse({ ...reply, author: { username, displayName } })
 		};
+	}
+
+	/**
+	 * A concurrent request with the same submission may have stored the reply just before the lock,
+	 * so look once more before telling the client it wasn't sent.
+	 */
+	private async refuseLockedUnlessStored(
+		authorId: ObjectId,
+		submissionId: string
+	): Promise<ReplyCreationResult> {
+		const stored = await this.replies.findBySubmission(authorId, submissionId);
+		return stored
+			? { kind: 'created', reply: ReplyService.toResponse(stored) }
+			: { kind: 'post-locked' };
 	}
 
 	private static toResponse(reply: ReplyWithAuthor): ReplyResponse {

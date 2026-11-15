@@ -71,6 +71,9 @@
 
 	function showUpdatedPost(updatedPost: PostDetailResponse) {
 		queryClient.setQueryData(postQueryKeys.detail(postId), updatedPost);
+		// The response reflects the post as that request read it; refetch in case another change to
+		// the thread landed in between.
+		void queryClient.invalidateQueries({ queryKey: postQueryKeys.detail(postId) });
 		void queryClient.invalidateQueries({ queryKey: postQueryKeys.lists(updatedPost.courseId) });
 	}
 
