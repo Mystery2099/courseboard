@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import Check from 'lucide-svelte/icons/check';
@@ -70,19 +71,15 @@
 		onSettled: () =>
 			queryClient.invalidateQueries({ queryKey: courseCatalogQueryKeys.courses(institutionId) })
 	}));
-
-	const chipClass = 'inline-flex items-center gap-1 rounded-full px-4 py-1.5 disabled:opacity-50';
-	const selectedChipClass = 'bg-secondary-container font-semibold';
-	const unselectedChipClass = 'border font-semibold text-primary';
 </script>
 
-<li class="rounded-[20px] border bg-surface p-4">
+<li class="rounded-card border bg-surface p-4">
 	<p class="font-mono text-sm font-semibold text-primary">{course.code}</p>
 	<p class="font-semibold">{course.title}</p>
 	<div class="mt-3 flex flex-wrap gap-2">
 		<button
 			type="button"
-			class={[chipClass, isTakingThisTerm ? selectedChipClass : unselectedChipClass]}
+			class={buttonClass(isTakingThisTerm ? 'tonal' : 'outlined', 'compact')}
 			aria-pressed={isTakingThisTerm}
 			disabled={historyMutation.isPending || (isTakingThisTerm && !createdEntryId)}
 			onclick={() => historyMutation.mutate()}
@@ -94,7 +91,7 @@
 		</button>
 		<button
 			type="button"
-			class={[chipClass, course.isFollowed ? selectedChipClass : unselectedChipClass]}
+			class={buttonClass(course.isFollowed ? 'tonal' : 'outlined', 'compact')}
 			aria-pressed={course.isFollowed}
 			disabled={followingMutation.isPending}
 			onclick={() => followingMutation.mutate()}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { statusChipClass } from '#lib/components/ui/ControlStyles.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { resolve } from '$app/paths';
 	import { createQuery } from '@tanstack/svelte-query';
@@ -42,7 +43,7 @@
 
 <main class="mx-auto max-w-3xl px-4 py-8">
 	{#if data.person.isOwnProfile}
-		<p class="mb-6 rounded-[20px] bg-secondary-container p-4 text-sm" role="status">
+		<p class="mb-6 rounded-card bg-secondary-container p-4 text-sm" role="status">
 			{m.person_own_profile_notice()}
 			<a class="font-semibold text-primary" href={resolve('/(app)/profile')}
 				>{m.person_edit_profile()}</a
@@ -66,12 +67,12 @@
 	{#if data.person.primaryInstitution || otherInstitutionNames.length > 0}
 		<ul class="mt-4 flex flex-wrap gap-2" aria-label={m.person_schools()}>
 			{#if data.person.primaryInstitution}
-				<li class="rounded-full bg-secondary-container px-3 py-1 text-sm font-semibold">
+				<li class={statusChipClass('secondary')}>
 					{data.person.primaryInstitution.name}
 				</li>
 			{/if}
 			{#each otherInstitutionNames as institutionName (institutionName)}
-				<li class="rounded-full bg-surface-container px-3 py-1 text-sm">{institutionName}</li>
+				<li class={statusChipClass('neutral')}>{institutionName}</li>
 			{/each}
 		</ul>
 	{/if}

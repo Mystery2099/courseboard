@@ -1,15 +1,15 @@
 <script lang="ts">
+	import { statusChipClass, type StatusTone } from '#lib/components/ui/ControlStyles.ts';
 	import { HISTORY_STATUS_LABELS } from '#lib/client/history/AcademicHistoryPresentation.ts';
 	import type { HistoryStatus } from '#lib/contracts/AcademicHistoryContract.ts';
 
 	let { status }: { status: HistoryStatus } = $props();
+
+	const STATUS_TONES: Record<HistoryStatus, StatusTone> = {
+		took: 'success',
+		taking: 'primary',
+		planning: 'neutral'
+	};
 </script>
 
-<span
-	class={[
-		'rounded-full px-3 py-0.5 text-sm font-semibold',
-		status === 'took' && 'bg-success-container text-on-success-container',
-		status === 'taking' && 'bg-primary-container text-on-primary-container',
-		status === 'planning' && 'bg-surface-container text-on-surface'
-	]}>{HISTORY_STATUS_LABELS[status]()}</span
->
+<span class={statusChipClass(STATUS_TONES[status])}>{HISTORY_STATUS_LABELS[status]()}</span>

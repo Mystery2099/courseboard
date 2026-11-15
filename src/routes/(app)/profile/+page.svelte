@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
 	import { SignOutButton, UserButton, useClerkContext } from 'svelte-clerk';
@@ -43,7 +44,7 @@
 		primaryInstitutionId={data.profile.primaryInstitution.id}
 	/>
 
-	<section class="mt-8 rounded-[20px] border bg-surface p-4">
+	<section class="mt-8 rounded-card border bg-surface p-4">
 		<h2 class="text-lg font-semibold">{m.profile_display_name()}</h2>
 		{#if isEditingDisplayName}
 			<form
@@ -68,18 +69,16 @@
 						autocomplete="name"
 						required
 						aria-invalid={form?.displayNameError ? 'true' : undefined}
-						class="w-full rounded-2xl border-outline px-4 py-2"
+						class="w-full rounded-field border-outline px-4 py-2"
 					/>
 				</label>
 				<div class="flex gap-2">
-					<button
-						type="submit"
-						class="rounded-full bg-primary px-4 py-2 font-semibold text-on-primary disabled:opacity-50"
-						disabled={isSaving}>{m.common_save()}</button
+					<button type="submit" class={buttonClass('filled')} disabled={isSaving}
+						>{m.common_save()}</button
 					>
 					<button
 						type="button"
-						class="rounded-full border px-4 py-2"
+						class={buttonClass('outlined')}
 						onclick={() => (isEditingDisplayName = false)}>{m.common_cancel()}</button
 					>
 				</div>
@@ -94,7 +93,7 @@
 				<p>{data.profile.displayName}</p>
 				<button
 					type="button"
-					class="rounded-full border px-4 py-1.5"
+					class={buttonClass('outlined', 'compact')}
 					onclick={() => (isEditingDisplayName = true)}>{m.common_edit()}</button
 				>
 			</div>
@@ -107,7 +106,7 @@
 		</p>
 	</section>
 
-	<section class="mt-4 rounded-[20px] border bg-surface p-4">
+	<section class="mt-4 rounded-card border bg-surface p-4">
 		<h2 class="text-lg font-semibold">{m.profile_school()}</h2>
 		<form
 			method="POST"
@@ -133,7 +132,7 @@
 				type="submit"
 				name="isPrimaryInstitutionHidden"
 				value={data.profile.isPrimaryInstitutionHidden ? 'false' : 'true'}
-				class="shrink-0 rounded-full border px-4 py-1.5 disabled:opacity-50"
+				class={[buttonClass('outlined', 'compact'), 'shrink-0']}
 				disabled={isSavingInstitutionVisibility}
 				>{data.profile.isPrimaryInstitutionHidden
 					? m.profile_school_show()
@@ -152,20 +151,20 @@
 		</p>
 	</section>
 
-	<section class="mt-4 rounded-[20px] border bg-surface p-4">
+	<section class="mt-4 rounded-card border bg-surface p-4">
 		<h2 class="text-lg font-semibold">{m.profile_language()}</h2>
 		<div class="mt-2"><LanguagePicker isLabelVisible={false} /></div>
 		<p class="mt-3 text-sm text-on-surface-variant">{m.profile_language_explanation()}</p>
 	</section>
 
-	<section class="mt-4 rounded-[20px] border bg-surface p-4">
+	<section class="mt-4 rounded-card border bg-surface p-4">
 		<h2 class="text-lg font-semibold">{m.profile_account()}</h2>
 		<p class="mt-2 text-sm text-on-surface-variant">
 			{m.profile_account_explanation()}
 		</p>
 		<div class="mt-3 flex items-center gap-4">
 			<UserButton />
-			<SignOutButton class="rounded-full border px-4 py-1.5">{m.auth_sign_out()}</SignOutButton>
+			<SignOutButton class={buttonClass('outlined', 'compact')}>{m.auth_sign_out()}</SignOutButton>
 		</div>
 	</section>
 </main>

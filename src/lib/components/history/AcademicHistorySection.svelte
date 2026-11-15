@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
@@ -63,10 +64,7 @@
 		<div class="flex gap-2">
 			<button
 				type="button"
-				class={[
-					'rounded-full border px-4 py-1.5',
-					isPreviewingAsOthers && 'border-transparent bg-secondary-container font-semibold'
-				]}
+				class={buttonClass(isPreviewingAsOthers ? 'tonal' : 'outlined', 'compact')}
 				aria-pressed={isPreviewingAsOthers}
 				onclick={() => (isPreviewingAsOthers = !isPreviewingAsOthers)}
 				>{m.history_preview_as_others()}</button
@@ -74,7 +72,7 @@
 			{#if !isPreviewingAsOthers}
 				<button
 					type="button"
-					class="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-1.5 font-semibold text-on-primary"
+					class={buttonClass('filled', 'compact')}
 					onclick={() => openEditor(null)}><Plus size={18} /> {m.history_add_course()}</button
 				>
 			{/if}
@@ -105,7 +103,7 @@
 			</p>
 		{/if}
 		{#if ownGroups.length === 0}
-			<div class="mt-4 rounded-[20px] border bg-surface p-4">
+			<div class="mt-4 rounded-card border bg-surface p-4">
 				<p class="font-semibold">{m.history_empty_title()}</p>
 				<p class="mt-1 text-sm text-on-surface-variant">
 					{m.history_empty_detail()}
@@ -113,7 +111,7 @@
 			</div>
 		{:else}
 			{#each ownGroups as group (group.key)}
-				<div class="mt-4 overflow-hidden rounded-[20px] border bg-surface">
+				<div class="mt-4 overflow-hidden rounded-card border bg-surface">
 					<h3 class="border-b px-4 py-2 text-sm font-semibold tracking-wide uppercase">
 						{group.heading}
 					</h3>

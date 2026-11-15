@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { untrack } from 'svelte';
@@ -174,7 +175,7 @@
 			<label class="flex-1">
 				<span class="sr-only">{m.history_form_season()}</span>
 				<select
-					class="w-full rounded-2xl border-outline px-4 py-2"
+					class="w-full rounded-field border-outline px-4 py-2"
 					bind:value={season}
 					aria-invalid={fieldErrors.term ? 'true' : undefined}
 				>
@@ -189,7 +190,7 @@
 			<label class="flex-1">
 				<span class="sr-only">{m.history_form_year()}</span>
 				<select
-					class="w-full rounded-2xl border-outline px-4 py-2 disabled:opacity-50"
+					class="w-full rounded-field border-outline px-4 py-2 disabled:opacity-50"
 					bind:value={year}
 					disabled={season === ''}
 				>
@@ -233,7 +234,7 @@
 			>{m.history_form_private_note_hint()}</span
 		>
 		<textarea
-			class="min-h-20 rounded-2xl border-outline px-4 py-2"
+			class="min-h-20 rounded-field border-outline px-4 py-2"
 			bind:value={privateNote}
 			maxlength={PRIVATE_NOTE_MAX_LENGTH}
 			aria-invalid={fieldErrors.privateNote ? 'true' : undefined}></textarea>
@@ -249,12 +250,10 @@
 	{/if}
 
 	<div class="flex flex-wrap items-center gap-2">
-		<button
-			type="submit"
-			class="rounded-full bg-primary px-5 py-2 font-semibold text-on-primary disabled:opacity-50"
-			disabled={isBusy}>{saveMutation.isPending ? m.common_saving() : m.common_save()}</button
+		<button type="submit" class={buttonClass('filled')} disabled={isBusy}
+			>{saveMutation.isPending ? m.common_saving() : m.common_save()}</button
 		>
-		<button type="button" class="rounded-full border px-5 py-2" onclick={() => onDone('cancelled')}
+		<button type="button" class={buttonClass('outlined')} onclick={() => onDone('cancelled')}
 			>{m.common_cancel()}</button
 		>
 		{#if editedEntry}
@@ -263,13 +262,13 @@
 				<span class="text-sm">{m.history_form_delete_confirm()}</span>
 				<button
 					type="button"
-					class="rounded-full bg-error px-4 py-2 font-semibold text-on-error disabled:opacity-50"
+					class={buttonClass('destructive')}
 					disabled={isBusy}
 					onclick={() => deleteMutation.mutate(editedEntry.id)}>{m.common_delete()}</button
 				>
 				<button
 					type="button"
-					class="rounded-full border px-4 py-2"
+					class={buttonClass('outlined')}
 					onclick={() => (isConfirmingDelete = false)}>{m.history_form_keep()}</button
 				>
 			{:else}

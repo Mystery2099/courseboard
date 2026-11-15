@@ -35,7 +35,7 @@
 			aria-label={m.navigation_explore()}
 			aria-current={isExploreCurrent ? 'page' : undefined}
 			class={[
-				'flex size-12 items-center justify-center rounded-[15px] bg-surface',
+				'flex size-12 items-center justify-center rounded-tile bg-surface',
 				isExploreCurrent && 'ring-3 ring-primary'
 			]}
 		>
@@ -78,7 +78,7 @@
 			<a
 				href={resolve('/(app)/admin/invitations')}
 				aria-label={m.navigation_admin()}
-				class="flex size-12 items-center justify-center rounded-[15px] bg-inverse-surface text-inverse-on-surface"
+				class="flex size-12 items-center justify-center rounded-tile bg-inverse-surface text-inverse-on-surface"
 			>
 				<Shield size={22} />
 			</a>

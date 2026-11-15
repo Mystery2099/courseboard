@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery, createQuery } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
@@ -84,7 +85,7 @@
 		{#if coursesQuery.hasNextPage}
 			<button
 				type="button"
-				class="mt-3 self-start rounded-full border px-4 py-1.5 disabled:opacity-50"
+				class={[buttonClass('outlined', 'compact'), 'mt-3 self-start']}
 				disabled={coursesQuery.isFetchingNextPage}
 				onclick={() => coursesQuery.fetchNextPage()}>{m.common_load_more()}</button
 			>
@@ -96,7 +97,7 @@
 			{m.onboarding_courses_private_notice()}
 		</p>
 		<a
-			class="block w-full rounded-full bg-primary py-3 text-center font-semibold text-on-primary"
+			class={[buttonClass('filled'), 'flex w-full']}
 			href={resolve('/(app)/explore')}
 			data-sveltekit-preload-data="off">{m.common_continue()}</a
 		>

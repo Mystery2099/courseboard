@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -30,7 +31,7 @@
 	</h2>
 	<button
 		type="button"
-		class="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-1.5 font-semibold text-on-primary"
+		class={buttonClass('filled', 'compact')}
 		onclick={() => (isComposerOpen = true)}
 		><Plus size={18} />
 		{isQuestionChannel

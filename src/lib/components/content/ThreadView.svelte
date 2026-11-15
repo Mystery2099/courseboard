@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { buttonClass, statusChipClass } from '#lib/components/ui/ControlStyles.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery, createMutation, createQuery } from '@tanstack/svelte-query';
 	import { useQueryClient } from '@tanstack/svelte-query';
@@ -107,8 +108,7 @@
 		<div class="flex flex-wrap items-center justify-between gap-2">
 			<ContentByline author={reply.author} createdAt={reply.createdAt} />
 			{#if isAccepted}
-				<span
-					class="inline-flex items-center gap-1 rounded-full bg-success-container px-3 py-0.5 text-sm font-semibold text-on-success-container"
+				<span class={statusChipClass('success')}
 					><Check size={14} /> {m.thread_accepted_answer()}</span
 				>
 			{/if}
@@ -118,14 +118,14 @@
 			{#if reply.parentReplyId === null && !post.isLocked}
 				<button
 					type="button"
-					class="rounded-full border px-3 py-1"
+					class={buttonClass('outlined', 'compact')}
 					onclick={() => (replyTargetId = reply.id)}>{m.common_reply()}</button
 				>
 			{/if}
 			{#if post.viewerPermissions.canChooseAcceptedReply}
 				<button
 					type="button"
-					class="rounded-full border px-3 py-1 disabled:opacity-50"
+					class={buttonClass('outlined', 'compact')}
 					disabled={acceptedReplyMutation.isPending}
 					onclick={() => acceptedReplyMutation.mutate(isAccepted ? null : reply.id)}
 					>{isAccepted ? m.thread_clear_accepted_answer() : m.thread_accept_answer()}</button
@@ -139,10 +139,7 @@
 	<div class="flex flex-wrap items-center gap-2">
 		<ThreadKindBadge kind={post.kind} />
 		{#if post.isLocked}
-			<span
-				class="inline-flex items-center gap-1 rounded-full bg-surface-container px-3 py-0.5 text-sm font-semibold text-on-surface"
-				><Lock size={14} /> {m.post_badge_locked()}</span
-			>
+			<span class={statusChipClass('neutral')}><Lock size={14} /> {m.post_badge_locked()}</span>
 		{/if}
 	</div>
 	<h2 class="mt-2 text-2xl font-semibold wrap-break-word">{post.title}</h2>
@@ -165,7 +162,7 @@
 		{post.bodyMarkdown}
 	</p>
 	{#if post.viewerPermissions.canEditReview}
-		<details bind:open={isReviewEditorOpen} class="mt-4 rounded-[20px] border p-4">
+		<details bind:open={isReviewEditorOpen} class="mt-4 rounded-card border p-4">
 			<summary class="min-h-11 cursor-pointer py-2 font-semibold text-primary"
 				>{m.thread_edit_review()}</summary
 			>
@@ -187,7 +184,7 @@
 	{#if post.viewerPermissions.canLock}
 		<button
 			type="button"
-			class="mt-4 rounded-full border px-4 py-1.5 text-sm disabled:opacity-50"
+			class={[buttonClass('outlined', 'compact'), 'mt-4']}
 			disabled={lockMutation.isPending}
 			onclick={() => lockMutation.mutate(!post.isLocked)}
 			>{post.isLocked ? m.thread_unlock() : m.thread_lock()}</button
@@ -236,7 +233,7 @@
 	{#if repliesQuery.hasNextPage}
 		<button
 			type="button"
-			class="mt-3 rounded-full border px-4 py-1.5 disabled:opacity-50"
+			class={[buttonClass('outlined', 'compact'), 'mt-3']}
 			disabled={repliesQuery.isFetchingNextPage}
 			onclick={() => repliesQuery.fetchNextPage()}
 			>{repliesQuery.isFetchingNextPage ? m.common_loading() : m.thread_load_more_replies()}</button

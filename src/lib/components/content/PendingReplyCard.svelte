@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import type { PendingReply } from '#lib/client/content/ReplySubmissionQueue.svelte.ts';
 
@@ -24,10 +25,10 @@
 			<p class="text-error" role="alert">
 				{m.pending_reply_not_sent({ reason: pendingReply.errorMessage ?? '' })}
 			</p>
-			<button type="button" class="rounded-full border px-3 py-1 font-semibold" onclick={onRetry}
+			<button type="button" class={buttonClass('outlined', 'compact')} onclick={onRetry}
 				>{m.common_retry()}</button
 			>
-			<button type="button" class="rounded-full px-3 py-1" onclick={onDiscard}
+			<button type="button" class={buttonClass('text', 'compact')} onclick={onDiscard}
 				>{m.common_discard()}</button
 			>
 		</div>

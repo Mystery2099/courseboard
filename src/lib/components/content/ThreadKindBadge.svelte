@@ -1,15 +1,11 @@
 <script lang="ts">
+	import { statusChipClass } from '#lib/components/ui/ControlStyles.ts';
 	import { THREAD_KIND_LABELS } from '#lib/client/content/PostPresentation.ts';
 	import type { PostKind } from '#lib/contracts/PostContract.ts';
 
 	let { kind }: { kind: PostKind } = $props();
 </script>
 
-<span
-	class={[
-		'rounded-full px-3 py-0.5 text-sm font-semibold',
-		kind === 'question'
-			? 'bg-primary-container text-on-primary-container'
-			: 'bg-tertiary-container text-on-tertiary-container'
-	]}>{THREAD_KIND_LABELS[kind]()}</span
+<span class={statusChipClass(kind === 'question' ? 'primary' : 'tertiary')}
+	>{THREAD_KIND_LABELS[kind]()}</span
 >
