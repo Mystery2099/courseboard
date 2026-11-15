@@ -88,6 +88,7 @@ Run local checks with `pnpm check`, `pnpm lint`, `pnpm exec vitest run`, and `pn
 | [Blueprint handoff](docs/design/blueprint-handoff.md) | Design tokens, components, layout, interactions, and which artboards are current |
 | [Roadmap and acceptance](docs/implementation/roadmap-and-acceptance.md) | Build order, verification, and the assignment demonstration |
 | [Verification log](docs/implementation/verification-log.md) | What has been checked on the deployed app, how, and what hasn't been yet |
+| [Development notes](docs/implementation/development-notes.md) | Problems that cost real time, what I tried, and what stuck, for the development reflections |
 
 ## When documents disagree
 
