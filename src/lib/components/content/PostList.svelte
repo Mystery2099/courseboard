@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
 	import Check from 'lucide-svelte/icons/check';
@@ -61,7 +62,7 @@
 </script>
 
 {#if filters.length > 0}
-	<div class="mt-3 flex gap-2" role="group" aria-label="Order">
+	<div class="mt-3 flex gap-2" role="group" aria-label={m.post_list_order()}>
 		{#each filters as option (option)}
 			<button
 				type="button"
@@ -70,19 +71,19 @@
 					option === filter && 'border-transparent bg-indigo-100 font-semibold'
 				]}
 				aria-pressed={option === filter}
-				onclick={() => (filter = option)}>{POST_LIST_FILTER_LABELS[option]}</button
+				onclick={() => (filter = option)}>{POST_LIST_FILTER_LABELS[option]()}</button
 			>
 		{/each}
 	</div>
 {/if}
 
 {#if postsQuery.isPending}
-	<p class="mt-4 text-sm text-slate-600">Loading…</p>
+	<p class="mt-4 text-sm text-slate-600">{m.common_loading()}</p>
 {:else if postsQuery.isError && posts.length === 0}
-	<p class="mt-4 text-sm text-red-700" role="alert">Posts couldn't be loaded. Try again.</p>
+	<p class="mt-4 text-sm text-red-700" role="alert">{m.post_list_load_failed()}</p>
 {:else if posts.length === 0}
 	<p class="mt-4 text-sm text-slate-600">
-		{filter === 'unanswered' ? 'Every question has a reply.' : emptyMessage}
+		{filter === 'unanswered' ? m.post_list_all_answered() : emptyMessage}
 	</p>
 {:else}
 	<ul class="mt-4 divide-y overflow-hidden rounded-[20px] border bg-white">
@@ -97,13 +98,13 @@
 						{#if post.hasAcceptedReply}
 							<span
 								class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-0.5 text-sm font-semibold text-emerald-900"
-								><Check size={14} /> Answered</span
+								><Check size={14} /> {m.post_badge_answered()}</span
 							>
 						{/if}
 						{#if post.isLocked}
 							<span
 								class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-0.5 text-sm font-semibold text-slate-800"
-								><Lock size={14} /> Locked</span
+								><Lock size={14} /> {m.post_badge_locked()}</span
 							>
 						{/if}
 					</span>
@@ -126,7 +127,7 @@
 				class="mt-3 rounded-full border px-4 py-1.5 disabled:opacity-50"
 				disabled={postsQuery.isFetchingNextPage}
 				onclick={() => postsQuery.fetchNextPage()}
-				>{postsQuery.isFetchingNextPage ? 'Loading…' : 'Load more'}</button
+				>{postsQuery.isFetchingNextPage ? m.common_loading() : m.common_load_more()}</button
 			>
 		</div>
 	{/if}

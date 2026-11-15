@@ -6,6 +6,6 @@ import type { LayoutServerLoad } from './$types';
 export const load: LayoutServerLoad = async ({ locals, params }) => {
 	const user = AccessGuard.requireAdmittedUser(locals);
 	const course = await courseCatalogService.getCourse(params.courseId, user);
-	if (!course) error(404, 'This course does not exist.');
+	if (!course) error(404, 'This course does not exist.', { code: 'course-not-found' });
 	return { course };
 };

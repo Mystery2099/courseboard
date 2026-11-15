@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
+	import { describeValidationIssue } from '#lib/client/ErrorPresentation.ts';
 	import { REPLY_BODY_MAX_LENGTH, createReplySchema } from '#lib/contracts/PostContract.ts';
 
 	let {
@@ -18,7 +20,7 @@
 		event?.preventDefault();
 		const parsed = createReplySchema.shape.bodyMarkdown.safeParse(bodyMarkdown);
 		if (!parsed.success) {
-			errorMessage = parsed.error.issues[0].message;
+			errorMessage = describeValidationIssue(parsed.error.issues[0]);
 			return;
 		}
 		errorMessage = null;
@@ -44,10 +46,12 @@
 	{/if}
 	<div class="flex gap-2">
 		<button type="submit" class="rounded-full bg-blue-700 px-5 py-2 font-semibold text-white"
-			>Reply</button
+			>{m.common_reply()}</button
 		>
 		{#if onCancel}
-			<button type="button" class="rounded-full border px-5 py-2" onclick={onCancel}>Cancel</button>
+			<button type="button" class="rounded-full border px-5 py-2" onclick={onCancel}
+				>{m.common_cancel()}</button
+			>
 		{/if}
 	</div>
 </form>

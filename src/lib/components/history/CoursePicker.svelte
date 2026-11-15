@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery, createQuery } from '@tanstack/svelte-query';
 	import { untrack } from 'svelte';
 	import CourseCodeTile from '#lib/components/CourseCodeTile.svelte';
@@ -42,7 +43,7 @@
 
 <div class="flex flex-col gap-3">
 	<label class="flex flex-col gap-1">
-		<span class="text-sm font-semibold">School</span>
+		<span class="text-sm font-semibold">{m.course_picker_school()}</span>
 		<select
 			class="rounded-2xl border-slate-300 px-4 py-2"
 			value={institutionId ?? ''}
@@ -56,11 +57,14 @@
 	</label>
 
 	{#if institutionsQuery.isError || coursesQuery.isError}
-		<p class="text-sm text-red-700" role="alert">Courses couldn't be loaded. Try again.</p>
+		<p class="text-sm text-red-700" role="alert">{m.course_picker_load_failed()}</p>
 	{:else if coursesQuery.isPending}
-		<p class="text-sm text-slate-600">Loading courses…</p>
+		<p class="text-sm text-slate-600">{m.course_picker_loading()}</p>
 	{:else}
-		<ul class="max-h-72 divide-y overflow-y-auto rounded-[20px] border" aria-label="Courses">
+		<ul
+			class="max-h-72 divide-y overflow-y-auto rounded-[20px] border"
+			aria-label={m.course_picker_courses()}
+		>
 			{#each courses as course (course.id)}
 				<li>
 					<button
@@ -78,7 +82,7 @@
 					</button>
 				</li>
 			{:else}
-				<li class="px-4 py-3 text-slate-600">This school has no courses yet.</li>
+				<li class="px-4 py-3 text-slate-600">{m.course_picker_school_empty()}</li>
 			{/each}
 		</ul>
 		{#if coursesQuery.hasNextPage}
@@ -86,7 +90,7 @@
 				type="button"
 				class="self-start rounded-full border px-4 py-1.5 disabled:opacity-50"
 				disabled={coursesQuery.isFetchingNextPage}
-				onclick={() => coursesQuery.fetchNextPage()}>Load more</button
+				onclick={() => coursesQuery.fetchNextPage()}>{m.common_load_more()}</button
 			>
 		{/if}
 	{/if}

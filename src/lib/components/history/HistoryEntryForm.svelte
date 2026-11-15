@@ -1,8 +1,8 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { untrack } from 'svelte';
-	import { z } from 'zod';
-	import { ApiRequestError } from '#lib/client/ApiRequest.ts';
+	import { describeFieldIssues, describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 	import { reviewQueryKeys } from '#lib/client/content/ReviewApiClient.ts';
 	import {
 		AcademicHistoryApiClient,
@@ -101,7 +101,7 @@
 	function save(event: SubmitEvent) {
 		event.preventDefault();
 		if (!course) {
-			fieldErrors = { course: 'Choose a course.' };
+			fieldErrors = { course: m.history_form_course_required() };
 			return;
 		}
 		const parsed = updateHistoryEntrySchema.safeParse({
@@ -111,8 +111,7 @@
 			privateNote
 		});
 		if (!parsed.success) {
-			const errors = z.flattenError(parsed.error).fieldErrors;
-			fieldErrors = { term: errors.term?.[0], privateNote: errors.privateNote?.[0] };
+			fieldErrors = describeFieldIssues(parsed.error);
 			return;
 		}
 		fieldErrors = {};
@@ -122,7 +121,7 @@
 
 <form class="flex flex-col gap-5" onsubmit={save} novalidate>
 	<div class="flex flex-col gap-1">
-		<span class="text-sm font-semibold" id="history-course-label">Course</span>
+		<span class="text-sm font-semibold" id="history-course-label">{m.history_form_course()}</span>
 		{#if isChoosingCourse && !editedEntry}
 			<CoursePicker
 				{defaultInstitutionId}
@@ -145,7 +144,7 @@
 					<button
 						type="button"
 						class="shrink-0 font-semibold text-blue-700"
-						onclick={() => (isChoosingCourse = true)}>Change</button
+						onclick={() => (isChoosingCourse = true)}>{m.common_change()}</button
 					>
 				{/if}
 			</div>
@@ -156,39 +155,39 @@
 	</div>
 
 	<fieldset>
-		<legend class="text-sm font-semibold">Status</legend>
+		<legend class="text-sm font-semibold">{m.history_form_status()}</legend>
 		<div class="mt-1 grid grid-cols-3 overflow-hidden rounded-full border">
 			{#each HISTORY_STATUSES as option (option)}
 				<label
 					class="cursor-pointer border-l py-2 text-center first:border-l-0 has-checked:bg-indigo-100 has-checked:font-semibold has-focus-visible:outline-2"
 				>
 					<input type="radio" class="sr-only" value={option} bind:group={status} />
-					{HISTORY_STATUS_LABELS[option]}
+					{HISTORY_STATUS_LABELS[option]()}
 				</label>
 			{/each}
 		</div>
 	</fieldset>
 
 	<fieldset>
-		<legend class="text-sm font-semibold">Term</legend>
+		<legend class="text-sm font-semibold">{m.history_form_term()}</legend>
 		<div class="mt-1 flex gap-2">
 			<label class="flex-1">
-				<span class="sr-only">Season</span>
+				<span class="sr-only">{m.history_form_season()}</span>
 				<select
 					class="w-full rounded-2xl border-slate-300 px-4 py-2"
 					bind:value={season}
 					aria-invalid={fieldErrors.term ? 'true' : undefined}
 				>
 					{#if status === 'planning' || season === ''}
-						<option value="">No term yet</option>
+						<option value="">{m.history_form_no_term()}</option>
 					{/if}
 					{#each TERM_SEASONS as option (option)}
-						<option value={option}>{TERM_SEASON_LABELS[option]}</option>
+						<option value={option}>{TERM_SEASON_LABELS[option]()}</option>
 					{/each}
 				</select>
 			</label>
 			<label class="flex-1">
-				<span class="sr-only">Year</span>
+				<span class="sr-only">{m.history_form_year()}</span>
 				<select
 					class="w-full rounded-2xl border-slate-300 px-4 py-2 disabled:opacity-50"
 					bind:value={year}
@@ -206,31 +205,32 @@
 	</fieldset>
 
 	<fieldset>
-		<legend class="text-sm font-semibold">Who can see this entry</legend>
+		<legend class="text-sm font-semibold">{m.history_form_visibility()}</legend>
 		<div class="mt-1 grid grid-cols-2 gap-2">
 			<label
 				class="cursor-pointer rounded-2xl border py-2 text-center has-checked:border-blue-700 has-checked:bg-indigo-100 has-checked:font-semibold has-focus-visible:outline-2"
 			>
 				<input type="radio" class="sr-only" value="private" bind:group={visibility} />
-				Private
+				{m.history_visibility_private()}
 			</label>
 			<label
 				class="cursor-pointer rounded-2xl border py-2 text-center has-checked:border-blue-700 has-checked:bg-indigo-100 has-checked:font-semibold has-focus-visible:outline-2"
 			>
 				<input type="radio" class="sr-only" value="visible" bind:group={visibility} />
-				Visible on profile
+				{m.history_form_visible_on_profile()}
 			</label>
 		</div>
 		<p class="mt-1 text-sm text-slate-600">
 			{visibility === 'private'
-				? 'Only you see this entry.'
-				: 'Other students see the course, status, and term on your profile.'}
+				? m.history_form_private_explanation()
+				: m.history_form_visible_explanation()}
 		</p>
 	</fieldset>
 
 	<label class="flex flex-col gap-1">
 		<span class="text-sm"
-			><span class="font-semibold">Private note</span> · optional · only you ever see this</span
+			><span class="font-semibold">{m.history_form_private_note()}</span
+			>{m.history_form_private_note_hint()}</span
 		>
 		<textarea
 			class="min-h-20 rounded-2xl border-slate-300 px-4 py-2"
@@ -244,9 +244,7 @@
 
 	{#if requestError}
 		<p class="text-sm text-red-700" role="alert">
-			{requestError instanceof ApiRequestError
-				? requestError.message
-				: 'Your changes could not be saved. Try again.'}
+			{describeRequestFailure(requestError, m.history_form_save_failed)}
 		</p>
 	{/if}
 
@@ -254,31 +252,31 @@
 		<button
 			type="submit"
 			class="rounded-full bg-blue-700 px-5 py-2 font-semibold text-white disabled:opacity-50"
-			disabled={isBusy}>{saveMutation.isPending ? 'Saving…' : 'Save'}</button
+			disabled={isBusy}>{saveMutation.isPending ? m.common_saving() : m.common_save()}</button
 		>
 		<button type="button" class="rounded-full border px-5 py-2" onclick={() => onDone('cancelled')}
-			>Cancel</button
+			>{m.common_cancel()}</button
 		>
 		{#if editedEntry}
 			<span class="flex-1"></span>
 			{#if isConfirmingDelete}
-				<span class="text-sm">Delete this entry?</span>
+				<span class="text-sm">{m.history_form_delete_confirm()}</span>
 				<button
 					type="button"
 					class="rounded-full bg-red-700 px-4 py-2 font-semibold text-white disabled:opacity-50"
 					disabled={isBusy}
-					onclick={() => deleteMutation.mutate(editedEntry.id)}>Delete</button
+					onclick={() => deleteMutation.mutate(editedEntry.id)}>{m.common_delete()}</button
 				>
 				<button
 					type="button"
 					class="rounded-full border px-4 py-2"
-					onclick={() => (isConfirmingDelete = false)}>Keep</button
+					onclick={() => (isConfirmingDelete = false)}>{m.history_form_keep()}</button
 				>
 			{:else}
 				<button
 					type="button"
 					class="rounded-full px-4 py-2 text-red-700"
-					onclick={() => (isConfirmingDelete = true)}>Delete entry</button
+					onclick={() => (isConfirmingDelete = true)}>{m.history_form_delete_entry()}</button
 				>
 			{/if}
 		{/if}

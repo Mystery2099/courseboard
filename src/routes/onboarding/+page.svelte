@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
 	import Search from 'lucide-svelte/icons/search';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
+	import { describeErrorCode } from '#lib/client/ErrorPresentation.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -31,7 +33,7 @@
 	const stepNumber = $derived(step === 'school' ? 1 : 2);
 </script>
 
-<svelte:head><title>Set up your profile</title></svelte:head>
+<svelte:head><title>{m.onboarding_title()}</title></svelte:head>
 
 <main class="mx-auto flex min-h-dvh max-w-lg flex-col px-4 py-8">
 	<div class="flex items-center gap-3">
@@ -39,7 +41,7 @@
 			<button
 				type="button"
 				class="-ml-2 rounded-full p-2"
-				aria-label="Back to choosing your school"
+				aria-label={m.onboarding_back_to_school()}
 				onclick={() => (step = 'school')}><ChevronLeft size={24} /></button
 			>
 		{/if}
@@ -66,44 +68,47 @@
 	>
 		<input type="hidden" name="primaryInstitutionId" value={primaryInstitutionId} />
 
-		<p class="font-mono text-sm text-blue-700">Step {stepNumber} of 3</p>
+		<p class="font-mono text-sm text-blue-700">
+			{m.onboarding_step({ step: stepNumber, total: 3 })}
+		</p>
 
 		{#if step === 'school'}
-			<h1 class="mt-2 text-3xl font-semibold">Where do you study?</h1>
+			<h1 class="mt-2 text-3xl font-semibold">{m.onboarding_school_heading()}</h1>
 			<p class="mt-2 text-slate-600">
-				This sets your default for course search. You can browse other schools anytime.
+				{m.onboarding_school_detail()}
 			</p>
 
 			{#if data.institutions.length === 0}
 				{#if data.isAdministrator}
 					<p class="mt-6 text-slate-600" role="status">
-						No schools have been added yet. Load the demo catalog to start.
+						{m.onboarding_no_schools_administrator()}
 					</p>
 					<button
 						type="submit"
 						formaction="?/loadDemoCatalog"
 						formnovalidate
-						class="mt-4 rounded-full border px-4 py-2 font-semibold">Load demo catalog</button
+						class="mt-4 rounded-full border px-4 py-2 font-semibold"
+						>{m.onboarding_load_demo_catalog()}</button
 					>
 				{:else}
 					<p class="mt-6 text-slate-600" role="status">
-						No schools have been added yet. Ask an administrator to add yours.
+						{m.onboarding_no_schools()}
 					</p>
 				{/if}
 			{:else}
 				<label class="relative mt-6 block">
-					<span class="sr-only">Search schools</span>
+					<span class="sr-only">{m.onboarding_search_schools()}</span>
 					<Search size={20} class="absolute top-1/2 left-4 -translate-y-1/2 text-slate-500" />
 					<input
 						type="search"
 						bind:value={institutionQuery}
-						placeholder="Search schools"
+						placeholder={m.onboarding_search_schools()}
 						class="w-full rounded-full border-slate-300 py-3 pr-4 pl-12"
 					/>
 				</label>
 
 				<fieldset class="mt-4">
-					<legend class="sr-only">Your school</legend>
+					<legend class="sr-only">{m.onboarding_your_school()}</legend>
 					<div class="flex flex-col gap-2">
 						{#each matchingInstitutions as institution (institution.id)}
 							<label
@@ -118,13 +123,17 @@
 								/>
 							</label>
 						{:else}
-							<p class="text-slate-600">No schools match “{institutionQuery}”.</p>
+							<p class="text-slate-600">
+								{m.onboarding_no_matching_schools({ query: institutionQuery })}
+							</p>
 						{/each}
 					</div>
 				</fieldset>
 			{/if}
 			{#if form?.errors.primaryInstitutionId}
-				<p class="mt-3 text-sm text-red-700" role="alert">{form.errors.primaryInstitutionId}</p>
+				<p class="mt-3 text-sm text-red-700" role="alert">
+					{describeErrorCode(form.errors.primaryInstitutionId)}
+				</p>
 			{/if}
 
 			<div class="mt-auto pt-8">
@@ -132,17 +141,17 @@
 					type="button"
 					class="w-full rounded-full bg-blue-700 py-3 font-semibold text-white disabled:opacity-50"
 					disabled={!primaryInstitutionId}
-					onclick={() => (step = 'profile')}>Continue</button
+					onclick={() => (step = 'profile')}>{m.common_continue()}</button
 				>
 			</div>
 		{:else}
-			<h1 class="mt-2 text-3xl font-semibold">A little about you</h1>
+			<h1 class="mt-2 text-3xl font-semibold">{m.onboarding_profile_heading()}</h1>
 			<p class="mt-2 text-slate-600">
-				Other students see your display name and username. Your email stays private.
+				{m.onboarding_profile_detail()}
 			</p>
 
 			<label class="mt-6 block">
-				<span class="font-semibold">Display name</span>
+				<span class="font-semibold">{m.onboarding_display_name()}</span>
 				<input
 					name="displayName"
 					bind:value={displayName}
@@ -155,11 +164,13 @@
 				/>
 			</label>
 			{#if form?.errors.displayName}
-				<p id="display-name-error" class="mt-2 text-sm text-red-700">{form.errors.displayName}</p>
+				<p id="display-name-error" class="mt-2 text-sm text-red-700">
+					{describeErrorCode(form.errors.displayName)}
+				</p>
 			{/if}
 
 			<label class="mt-6 block">
-				<span class="font-semibold">Username</span>
+				<span class="font-semibold">{m.onboarding_username()}</span>
 				<span class="mt-2 flex items-center rounded-2xl border border-slate-300 bg-white px-4">
 					<span class="text-slate-500" aria-hidden="true">@</span>
 					<input
@@ -177,17 +188,19 @@
 				</span>
 			</label>
 			<p id="username-help" class="mt-2 text-sm text-slate-600">
-				3 to 24 letters, numbers, or underscores. You can't change it later.
+				{m.onboarding_username_help()}
 			</p>
 			{#if form?.errors.username}
-				<p class="mt-1 text-sm text-red-700" role="alert">{form.errors.username}</p>
+				<p class="mt-1 text-sm text-red-700" role="alert">
+					{describeErrorCode(form.errors.username)}
+				</p>
 			{/if}
 
 			<div class="mt-auto pt-8">
 				<button
 					type="submit"
 					class="w-full rounded-full bg-blue-700 py-3 font-semibold text-white disabled:opacity-50"
-					disabled={isSubmitting}>{isSubmitting ? 'Saving…' : 'Continue'}</button
+					disabled={isSubmitting}>{isSubmitting ? m.common_saving() : m.common_continue()}</button
 				>
 			</div>
 		{/if}

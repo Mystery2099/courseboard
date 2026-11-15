@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { resolve } from '$app/paths';
 	import { createQuery } from '@tanstack/svelte-query';
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
@@ -30,13 +31,22 @@
 	]);
 </script>
 
-<svelte:head><title>{data.person.displayName} (@{data.person.username})</title></svelte:head>
+<svelte:head
+	><title
+		>{m.person_title({
+			displayName: data.person.displayName,
+			username: data.person.username
+		})}</title
+	></svelte:head
+>
 
 <main class="mx-auto max-w-3xl px-4 py-8">
 	{#if data.person.isOwnProfile}
 		<p class="mb-6 rounded-[20px] bg-indigo-50 p-4 text-sm" role="status">
-			This is how other students see your profile.
-			<a class="font-semibold text-blue-700" href={resolve('/(app)/profile')}>Edit your profile</a>
+			{m.person_own_profile_notice()}
+			<a class="font-semibold text-blue-700" href={resolve('/(app)/profile')}
+				>{m.person_edit_profile()}</a
+			>
 		</p>
 	{/if}
 
@@ -54,7 +64,7 @@
 	</div>
 
 	{#if data.person.primaryInstitution || otherInstitutionNames.length > 0}
-		<ul class="mt-4 flex flex-wrap gap-2" aria-label="Schools">
+		<ul class="mt-4 flex flex-wrap gap-2" aria-label={m.person_schools()}>
 			{#if data.person.primaryInstitution}
 				<li class="rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold">
 					{data.person.primaryInstitution.name}
@@ -67,13 +77,13 @@
 	{/if}
 
 	<section class="mt-8" aria-labelledby="history-heading">
-		<h2 id="history-heading" class="text-xl font-semibold">History</h2>
+		<h2 id="history-heading" class="text-xl font-semibold">{m.history_heading()}</h2>
 		<p class="mt-2 text-sm text-slate-600">
-			Self-reported by {data.person.displayName}. Schools don't verify these entries.
+			{m.person_history_attribution({ displayName: data.person.displayName })}
 		</p>
 		{#if historyQuery.isError}
 			<p class="mt-2 text-sm text-slate-600" role="status">
-				Couldn't refresh this history. Showing what was loaded earlier.
+				{m.person_history_refresh_failed()}
 			</p>
 		{/if}
 		<VisibleHistoryList entries={historyQuery.data.entries} />

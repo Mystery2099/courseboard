@@ -94,7 +94,7 @@ Thread pages live at `/courses/{courseId}/questions/{postId}`, `/courses/{course
 
 Following never reads or writes academic history. After a course page renders, the browser records it as the user's last visited course; it isn't recorded during the server load, so hover preloading doesn't count as a visit. `/` resumes that course after sign-in when it still exists.
 
-Errors use `{ error: { code, message } }`: 400 for invalid input/JSON, 401 for missing identity, 403 for denied access or redemption email mismatch, 404 for an unknown course, institution, post, or reply, 409 for revocation conflicts and refused replies, 410 for unavailable redemption, 415 for non-JSON writes, and a generic 500 for unexpected failures. Responses use `Cache-Control: no-store`, including the one-time creation token. Creation returns the token rather than a host-specific URL; the web page builds the invitation link.
+Errors use `{ error: { code, message } }`, where `code` is one of the [error codes](#languages) and `message` is English for logs: 400 for invalid input/JSON, 401 for missing identity, 403 for denied access or redemption email mismatch, 404 for an unknown course, institution, post, or reply, 409 for revocation conflicts and refused replies, 410 for unavailable redemption, 415 for non-JSON writes, and a generic 500 for unexpected failures. Responses use `Cache-Control: no-store`, including the one-time creation token. Creation returns the token rather than a host-specific URL; the web page builds the invitation link.
 
 ## Deployment context
 
@@ -149,6 +149,17 @@ The Reviews view uses the same post list with an expandable composer above it. A
 Use TanStack Virtual for browsing lists once they grow enough to need it. Virtualization limits rendered elements, not fetched data, so bound Query's retained pages separately and test scroll restoration after old pages are evicted. Pending replies need a stable submission ID so Retry can't duplicate a reply that was stored before a lost response.
 
 TanStack Table and Superforms are possible later additions, only if admin tables or form handling actually need them.
+
+## Languages
+
+Paraglide JS compiles `messages/{locale}.json` into typed functions in `src/lib/paraglide/`, which is generated and ignored by Git. `pnpm check` compiles first, so an unknown message key or a missing parameter fails type checking. `pnpm i18n:check` reports messages missing from a locale. A missing translation falls back to English at runtime.
+
+- **Choosing the language:** the `resolveLocale` handle in `hooks.server.ts` reads the `PARAGLIDE_LOCALE` cookie, then `Accept-Language`, then English, and sets `<html lang>` and `dir`. Responses vary on `Cookie` and `Accept-Language`. The language picker on the sign-in page and the profile writes the cookie and reloads the page.
+- **Errors:** the server never sends display text. API errors, form-action errors, and page errors carry a code from `src/lib/contracts/ErrorContract.ts`, and contract schemas use validation codes as their messages. `src/lib/client/ErrorPresentation.ts` maps every code to a message; it's a complete record, so a new code doesn't compile until it has a translation. A too-long text reads its limit from the failed check.
+- **Formatting:** dates, numbers, percentages, and relative times use `Intl` with the current locale. Plurals and academic terms such as "Fall 2026" are messages, so each language orders and inflects them itself.
+- **Clerk:** the root layout passes Clerk's matching localization from `@clerk/localizations` (`src/lib/client/ClerkLocalization.ts`), and the sign-in, sign-up, and sign-out buttons get translated labels. Clerk's hosted Account Portal, which the sign-in and sign-up buttons redirect to, stays in English.
+- **Machine translation:** `pnpm i18n:translate [locale]` fills missing messages with Gemini through the Antigravity CLI (`agy`), sending [`messages/translation-guide.md`](../../messages/translation-guide.md) with each batch from an empty temporary directory. Plural messages are sent as `{ one, other, … }` and rebuilt from the English declarations. A translation that changes placeholders, leading or trailing spaces, or plural structure is printed and left missing. It needs a signed-in `agy`, so it runs on a developer machine; CI only runs `pnpm i18n:check`. Machine output is a draft for a fluent speaker to review.
+- **Adding a language:** add the locale to `project.inlang/settings.json`, add a section to the translation guide, run `pnpm i18n:translate`, and add its Clerk localization. `pnpm i18n:check` lists anything left untranslated, and the picker names the language in itself without new messages. A right-to-left language also needs the layout checked, since only `dir` is set today.
 
 ## Hosting and security
 

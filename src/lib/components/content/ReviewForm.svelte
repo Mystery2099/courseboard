@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { tick, untrack } from 'svelte';
 	import type { ZodError } from 'zod';
-	import { ApiRequestError } from '#lib/client/ApiRequest.ts';
+	import { describeFieldIssues, describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 	import { postQueryKeys } from '#lib/client/content/PostApiClient.ts';
 	import { ReviewApiClient, reviewQueryKeys } from '#lib/client/content/ReviewApiClient.ts';
 	import {
@@ -99,14 +100,9 @@
 	}));
 
 	function showValidationErrors(error: ZodError) {
-		const errors: Record<string, string | undefined> = {};
-		for (const issue of error.issues) {
-			const field = issue.path[0];
-			if (typeof field === 'string') errors[field] ??= issue.message;
-		}
-		fieldErrors = errors;
+		fieldErrors = describeFieldIssues(error);
 		if (fieldErrors.disclosureAcknowledged) {
-			fieldErrors.disclosureAcknowledged = 'Confirm that you understand what publishing shares.';
+			fieldErrors.disclosureAcknowledged = m.review_form_disclosure_required();
 		}
 		void tick().then(() =>
 			formElement.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
@@ -146,16 +142,18 @@
 <form bind:this={formElement} onsubmit={save} novalidate>
 	<fieldset class="flex min-w-0 flex-col gap-5" disabled={saveMutation.isPending}>
 		<legend class="mb-4 text-lg font-semibold">
-			{editedReview ? 'Edit your review' : 'Your experience with this course'}
+			{editedReview ? m.review_form_edit_legend() : m.review_form_create_legend()}
 		</legend>
 		{#if editedReview && snapshot}
 			<p class="text-sm text-slate-600">
-				{HISTORY_STATUS_LABELS[snapshot.status]} · {formatTerm(snapshot.term)} · self-reported. Course,
-				status, and term stay fixed.
+				{m.review_form_fixed_snapshot({
+					status: HISTORY_STATUS_LABELS[snapshot.status](),
+					term: formatTerm(snapshot.term)
+				})}
 			</p>
 		{:else}
 			<label class="flex min-w-0 flex-col gap-1">
-				<span class="text-sm font-semibold">Reviewing this attempt</span>
+				<span class="text-sm font-semibold">{m.review_form_attempt()}</span>
 				<select
 					class="w-full min-w-0 rounded-2xl border-slate-300 px-4 py-2 text-base"
 					bind:value={historyEntryId}
@@ -164,61 +162,61 @@
 				>
 					{#each attempts as attempt (attempt.id)}
 						<option value={attempt.id}>
-							{HISTORY_STATUS_LABELS[attempt.status]} · {formatTerm(attempt.term)}
+							{HISTORY_STATUS_LABELS[attempt.status]()} · {formatTerm(attempt.term)}
 						</option>
 					{/each}
 				</select>
 				{#if fieldErrors.historyEntryId}
 					<span id="review-attempt-error" class="text-sm text-red-700" role="alert">
-						Choose a Taking or Took entry for this course.
+						{m.review_form_attempt_required()}
 					</span>
 				{/if}
-				<span class="text-sm text-slate-600">Status and term stay fixed after publishing.</span>
+				<span class="text-sm text-slate-600">{m.review_form_attempt_fixed()}</span>
 			</label>
 		{/if}
 		<div class="grid gap-5 tablet:grid-cols-2">
 			<label class="flex min-w-0 flex-col gap-1">
-				<span class="text-sm font-semibold">Workload</span>
+				<span class="text-sm font-semibold">{m.review_facts_workload()}</span>
 				<select
 					class="w-full rounded-2xl border-slate-300 px-4 py-2 text-base"
 					bind:value={workload}
 					aria-invalid={fieldErrors.workload ? 'true' : undefined}
 					aria-describedby={fieldErrors.workload ? 'review-workload-error' : undefined}
 				>
-					<option value="">Choose workload</option>
-					<option value={1}>1 / 5 · Very light</option>
-					<option value={2}>2 / 5 · Light</option>
-					<option value={3}>3 / 5 · Moderate</option>
-					<option value={4}>4 / 5 · Heavy</option>
-					<option value={5}>5 / 5 · Very heavy</option>
+					<option value="">{m.review_form_workload_placeholder()}</option>
+					<option value={1}>{m.review_form_workload_1()}</option>
+					<option value={2}>{m.review_form_workload_2()}</option>
+					<option value={3}>{m.review_form_workload_3()}</option>
+					<option value={4}>{m.review_form_workload_4()}</option>
+					<option value={5}>{m.review_form_workload_5()}</option>
 				</select>
 				{#if fieldErrors.workload}
 					<span id="review-workload-error" class="text-sm text-red-700" role="alert">
-						Choose a workload from 1 to 5.
+						{m.review_form_workload_required()}
 					</span>
 				{/if}
 			</label>
 			<label class="flex min-w-0 flex-col gap-1">
-				<span class="text-sm font-semibold">Would you take it again?</span>
+				<span class="text-sm font-semibold">{m.review_form_take_again()}</span>
 				<select
 					class="w-full rounded-2xl border-slate-300 px-4 py-2 text-base"
 					bind:value={wouldTakeAgain}
 					aria-invalid={fieldErrors.wouldTakeAgain ? 'true' : undefined}
 					aria-describedby={fieldErrors.wouldTakeAgain ? 'review-take-again-error' : undefined}
 				>
-					<option value="">Choose an answer</option>
-					<option value={true}>Yes</option>
-					<option value={false}>No</option>
+					<option value="">{m.review_form_take_again_placeholder()}</option>
+					<option value={true}>{m.common_yes()}</option>
+					<option value={false}>{m.common_no()}</option>
 				</select>
 				{#if fieldErrors.wouldTakeAgain}
 					<span id="review-take-again-error" class="text-sm text-red-700" role="alert">
-						Choose Yes or No.
+						{m.review_form_take_again_required()}
 					</span>
 				{/if}
 			</label>
 		</div>
 		<label class="flex flex-col gap-1">
-			<span class="text-sm font-semibold">Title</span>
+			<span class="text-sm font-semibold">{m.common_title()}</span>
 			<input
 				type="text"
 				class="rounded-2xl border-slate-300 px-4 py-2 text-base"
@@ -234,7 +232,7 @@
 			{/if}
 		</label>
 		<label class="flex flex-col gap-1">
-			<span class="text-sm font-semibold">Your review</span>
+			<span class="text-sm font-semibold">{m.review_form_body()}</span>
 			<textarea
 				class="min-h-40 rounded-2xl border-slate-300 px-4 py-2 text-base"
 				bind:value={bodyMarkdown}
@@ -250,9 +248,10 @@
 		{#if !editedReview && selectedAttempt}
 			<div class="border-l-2 border-amber-600 pl-3">
 				<p id="review-disclosure" class="text-sm">
-					Publishing shares your {HISTORY_STATUS_LABELS[selectedAttempt.status]} status and
-					{formatTerm(selectedAttempt.term)} term for this course, even if your history entry is private.
-					It stays labeled self-reported. Your history visibility and notes won’t change.
+					{m.review_form_disclosure({
+						status: HISTORY_STATUS_LABELS[selectedAttempt.status](),
+						term: formatTerm(selectedAttempt.term)
+					})}
 				</p>
 				<label class="mt-3 flex min-h-11 items-center gap-2 text-sm">
 					<input
@@ -264,7 +263,7 @@
 							? 'review-disclosure review-disclosure-error'
 							: 'review-disclosure'}
 					/>
-					I understand what publishing shares.
+					{m.review_form_disclosure_acknowledgement()}
 				</label>
 				{#if fieldErrors.disclosureAcknowledged}
 					<p id="review-disclosure-error" class="mt-1 text-sm text-red-700" role="alert">
@@ -275,9 +274,7 @@
 		{/if}
 		{#if saveMutation.error}
 			<p class="text-sm text-red-700" role="alert">
-				{saveMutation.error instanceof ApiRequestError
-					? saveMutation.error.message
-					: 'Your review could not be saved. Your text is still here. Try again.'}
+				{describeRequestFailure(saveMutation.error, m.review_form_save_failed)}
 			</p>
 		{/if}
 		<div class="flex flex-wrap gap-2">
@@ -286,16 +283,16 @@
 				class="min-h-11 rounded-full bg-blue-700 px-5 py-2 font-semibold text-white disabled:opacity-50"
 				disabled={saveMutation.isPending}
 				>{saveMutation.isPending
-					? 'Saving…'
+					? m.common_saving()
 					: editedReview
-						? 'Save changes'
-						: 'Publish review'}</button
+						? m.common_save_changes()
+						: m.review_form_publish()}</button
 			>
 			<button
 				type="button"
 				class="min-h-11 rounded-full border px-5 py-2"
 				disabled={saveMutation.isPending}
-				onclick={onCancel}>Cancel</button
+				onclick={onCancel}>{m.common_cancel()}</button
 			>
 		</div>
 	</fieldset>

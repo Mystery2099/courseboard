@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { Dialog } from 'bits-ui';
 	import X from 'lucide-svelte/icons/x';
 	import type {
@@ -29,16 +30,15 @@
 			class="fixed inset-0 z-50 overflow-y-auto bg-white p-4 tablet:inset-auto tablet:top-1/2 tablet:left-1/2 tablet:max-h-[90dvh] tablet:w-[34rem] tablet:-translate-x-1/2 tablet:-translate-y-1/2 tablet:rounded-[24px] tablet:p-6 tablet:shadow-xl"
 		>
 			<div class="mb-4 flex items-center gap-3">
-				<Dialog.Close class="-ml-2 rounded-full p-2" aria-label="Close"
+				<Dialog.Close class="-ml-2 rounded-full p-2" aria-label={m.common_close()}
 					><X size={22} /></Dialog.Close
 				>
 				<Dialog.Title class="text-xl font-semibold">
-					{editedEntry ? 'Edit history entry' : 'Add to my history'}
+					{editedEntry ? m.history_editor_edit_title() : m.common_add_to_history()}
 				</Dialog.Title>
 			</div>
 			<Dialog.Description class="sr-only">
-				Record a course you're planning, taking, or took. Entries are private unless you make them
-				visible on your profile.
+				{m.history_editor_description()}
 			</Dialog.Description>
 			<HistoryEntryForm
 				{editedEntry}

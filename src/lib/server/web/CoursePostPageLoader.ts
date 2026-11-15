@@ -30,7 +30,7 @@ export class CoursePostPageLoader {
 	): Promise<PostListPageData> {
 		const user = AccessGuard.requireAdmittedUser(locals);
 		const postPage = await postService.listPosts(courseId, kind ? { kind } : {}, user);
-		if (!postPage) error(404, 'This course does not exist.');
+		if (!postPage) error(404, 'This course does not exist.', { code: 'course-not-found' });
 		return { postPage, postPageLoadedAt: Date.now() };
 	}
 
@@ -46,7 +46,7 @@ export class CoursePostPageLoader {
 			replyService.listReplies(params.postId, {}, user)
 		]);
 		if (!post || !replies || post.courseId !== params.courseId || post.kind !== kind) {
-			error(404, 'This post does not exist.');
+			error(404, 'This post does not exist.', { code: 'post-not-found' });
 		}
 		return { post, replies, threadLoadedAt: Date.now() };
 	}

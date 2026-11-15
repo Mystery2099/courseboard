@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Plus from 'lucide-svelte/icons/plus';
@@ -24,12 +25,17 @@
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-3">
-	<h2 class="text-xl font-semibold">{isQuestionChannel ? 'Questions' : 'Discussion'}</h2>
+	<h2 class="text-xl font-semibold">
+		{isQuestionChannel ? m.course_channel_questions() : m.course_channel_discussion()}
+	</h2>
 	<button
 		type="button"
 		class="inline-flex items-center gap-1 rounded-full bg-blue-700 px-4 py-1.5 font-semibold text-white"
 		onclick={() => (isComposerOpen = true)}
-		><Plus size={18} /> {isQuestionChannel ? 'Ask a question' : 'Start a discussion'}</button
+		><Plus size={18} />
+		{isQuestionChannel
+			? m.post_composer_ask_question()
+			: m.post_composer_start_discussion()}</button
 	>
 </div>
 
@@ -38,7 +44,9 @@
 	{kind}
 	{initialPage}
 	{initialPageLoadedAt}
-	emptyMessage={isQuestionChannel ? 'No questions yet.' : 'No discussion yet.'}
+	emptyMessage={isQuestionChannel
+		? m.thread_channel_questions_empty()
+		: m.thread_channel_discussion_empty()}
 />
 
 <PostComposerDialog

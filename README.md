@@ -41,6 +41,7 @@ General communities, Experience posts, presence, a notification inbox, Focus mod
 | Authentication | Clerk through community-maintained `svelte-clerk` | Prebuilt authentication and account-management UI |
 | Database | MongoDB Atlas Free, official Node.js driver | The database this lab is meant to demonstrate |
 | Validation | Zod | Validate boundary inputs and infer types from schemas |
+| Languages | Paraglide JS (inlang) | English and Spanish UI text as typed messages; more languages are message files |
 | Client data | TanStack Query | Cache interactive server data from the start |
 | Realtime | Socket.IO with WebSocket transport | Authenticated course/thread subscriptions and reconnect handling |
 | Markdown | TanStack Markdown | Try this first; switch to markdown-it if integration becomes cumbersome |

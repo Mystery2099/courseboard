@@ -1,5 +1,7 @@
 import { sequence, type Handle, type ServerInit } from '@sveltejs/kit/hooks';
 import { withClerkHandler } from 'svelte-clerk/server';
+import { paraglideMiddleware } from '#lib/paraglide/server.js';
+import { getTextDirection } from '#lib/paraglide/runtime.js';
 import { SecurityHeaderPolicy } from '#lib/server/http/SecurityHeaderPolicy.ts';
 import { admissionService } from '#lib/server/admission/AdmissionService.ts';
 import { DatabaseIndexInitializer } from '#lib/server/persistence/DatabaseIndexInitializer.ts';
@@ -19,10 +21,29 @@ const resolveCurrentUser: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
+/** Resolves the request locale (cookie, then Accept-Language, then English) and sets it on the page. */
+const resolveLocale: Handle = ({ event, resolve }) =>
+	paraglideMiddleware(event.request, ({ request, locale }) =>
+		resolve(
+			{ ...event, request },
+			{
+				transformPageChunk: ({ html }) =>
+					html
+						.replace('%paraglide.lang%', locale)
+						.replace('%paraglide.dir%', getTextDirection(locale))
+			}
+		)
+	);
+
 const applySecurityHeaders: Handle = async ({ event, resolve }) => {
 	const response = await resolve(event);
 	SecurityHeaderPolicy.apply(response.headers, event.url.protocol === 'https:');
 	return response;
 };
 
-export const handle = sequence(applySecurityHeaders, withClerkHandler(), resolveCurrentUser);
+export const handle = sequence(
+	applySecurityHeaders,
+	resolveLocale,
+	withClerkHandler(),
+	resolveCurrentUser
+);

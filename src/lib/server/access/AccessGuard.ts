@@ -13,7 +13,7 @@ export class AccessGuard {
 		try {
 			return AccessPolicy.requireAdmittedUser(locals.currentUser);
 		} catch (cause) {
-			if (cause instanceof AccessDeniedError) error(403, cause.message);
+			if (cause instanceof AccessDeniedError) AccessGuard.deny(cause);
 			throw cause;
 		}
 	}
@@ -23,8 +23,13 @@ export class AccessGuard {
 		try {
 			return AccessPolicy.requireAdministrator(user);
 		} catch (cause) {
-			if (cause instanceof AccessDeniedError) error(403, cause.message);
+			if (cause instanceof AccessDeniedError) AccessGuard.deny(cause);
 			throw cause;
 		}
+	}
+
+	/** Renders the error page with the policy's code, which the page translates. */
+	static deny(cause: AccessDeniedError): never {
+		error(403, cause.message, { code: cause.code });
 	}
 }

@@ -32,6 +32,8 @@ When we settle something, add it here with what we chose, what we rejected, and 
 | Profanity filter | Admin-managed list with exceptions; whole-word, case-insensitive; code exempt | Blocks submission with a clear message rather than masking or rewriting text |
 | Deletion | Account deletion anonymizes retained posts and reviews as Deleted user and removes private data | Discussions stay readable without keeping private history |
 | Client data | TanStack Query from the start, isolated per account | One owner for interactive server data |
+| Languages | Paraglide JS, English first and Spanish second, with more languages added as message files. The language comes from a cookie, then the browser's `Accept-Language`, then English; URLs carry no language prefix (November 15, 2026) | Free, typed message functions, and only the messages a page uses are shipped. Started before the app is feature complete because every new screen would otherwise add text to extract later. Posts and reviews stay in the language they were written in |
+| Error text | The server sends stable error and validation codes; the web client translates them (November 15, 2026) | Keeps display text on the client. API responses still carry an English `message` for logs and other clients, but the web client never shows it |
 | Package manager | pnpm | My preferred package manager |
 | Security standard | OWASP Top 10 (2021), CSP and security headers, in-memory rate limits, `pnpm audit` in CI (November 8, 2026) | Answers the self-review security questions. See the [security and recovery plan](../technical/security-and-recovery.md) |
 | Backups | Manual `mongodump` exports kept off the repository, with a tested restore (November 8, 2026) | Atlas Free has no automated backups, and the exports contain email addresses |
@@ -51,6 +53,9 @@ When we settle something, add it here with what we chose, what we rejected, and 
 - **Separate backend, microservices, multiple packages, native clients:** keeping the layers separate in one app gives the same flexibility without extra infrastructure.
 - **Embedding academic history in `users`:** the approved proposal suggested it, and it would make an owner's history a single read. But a careless `find` on `users` could then return private notes, and that document is read on every request. Embedding still appears where data is small and owned by one document, such as review details on review posts.
 - **Post edit history:** posts only show an edited timestamp.
+- **Language in the URL (`/es/...`):** it only helps search engines, and nothing here is public. A cookie keeps links the same for everyone.
+- **Translating content:** posts, reviews, and catalog data are shown as written. Only the app's own text is translated.
+- **Sentence-by-sentence machine translation** (inlang's free service, translatex's keyless Google and Edge endpoints, offline Argos Translate): on the same test messages they used *usted* or the wrong terms, dropped leading spaces, and two weakened privacy wording, such as "only you ever see this" becoming "sólo se ve esto". Gemini through `agy` follows the [translation guide](../../messages/translation-guide.md) and is covered by my existing subscription. The Google Cloud Translation API and DeepL need a card on file, which the free-only rule excludes (November 15, 2026).
 - **Automated backups through GitHub Actions:** they would store user data, including email addresses, as build artifacts.
 
 ## Open questions

@@ -1,38 +1,46 @@
 <script lang="ts">
+	import { m } from '#lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
 </script>
 
-<svelte:head><title>Course catalog</title></svelte:head>
+<svelte:head><title>{m.admin_section_catalog()}</title></svelte:head>
 
 <div class="flex flex-wrap items-center justify-between gap-4">
-	<h1 class="text-2xl font-semibold">Course catalog</h1>
+	<h1 class="text-2xl font-semibold">{m.admin_section_catalog()}</h1>
 	<form method="POST" action="?/loadDemoCatalog" use:enhance>
 		<button type="submit" class="rounded-full bg-blue-700 px-5 py-2 font-semibold text-white">
-			Load demo catalog
+			{m.onboarding_load_demo_catalog()}
 		</button>
 	</form>
 </div>
 <p class="mt-2 text-sm text-slate-600">
-	The demo catalog adds Alfred State College and two fictional schools, with their courses. Entries
-	that already exist are left unchanged, so it's safe to load again.
+	{m.admin_catalog_demo_explanation()}
 </p>
 {#if form?.demoCatalogLoad}
 	<p class="mt-4 text-sm" role="status">
-		Added {form.demoCatalogLoad.institutionsCreated} institutions and
-		{form.demoCatalogLoad.coursesCreated} courses.
+		{m.admin_catalog_demo_loaded({
+			institutionCount: form.demoCatalogLoad.institutionsCreated,
+			courseCount: form.demoCatalogLoad.coursesCreated
+		})}
 	</p>
 {/if}
 {#if data.hasMoreCourses}
-	<p class="mt-4 text-sm" role="alert">Only the first {data.courses.length} courses are shown.</p>
+	<p class="mt-4 text-sm" role="alert">
+		{m.admin_catalog_truncated({ count: data.courses.length })}
+	</p>
 {/if}
 
 <div class="mt-6 overflow-x-auto rounded-[20px] border bg-white">
 	<table class="w-full text-left text-sm">
 		<thead class="text-xs tracking-wider text-slate-600 uppercase">
-			<tr><th class="px-4 py-3">Code</th><th class="px-4">Name</th><th class="px-4">School</th></tr>
+			<tr>
+				<th class="px-4 py-3">{m.admin_catalog_code()}</th>
+				<th class="px-4">{m.admin_catalog_name()}</th>
+				<th class="px-4">{m.admin_catalog_school()}</th>
+			</tr>
 		</thead>
 		<tbody>
 			{#each data.courses as course (course.id)}
@@ -42,7 +50,7 @@
 					<td class="px-4 text-slate-600">{course.institutionName}</td>
 				</tr>
 			{:else}
-				<tr><td colspan="3" class="px-4 py-3 text-slate-600">No courses yet.</td></tr>
+				<tr><td colspan="3" class="px-4 py-3 text-slate-600">{m.admin_catalog_empty()}</td></tr>
 			{/each}
 		</tbody>
 	</table>

@@ -5,6 +5,7 @@
 		"types": ["$app/types", "node"]
 	},
 	"include": [
+		"scripts",
 		"server",
 		"src",
 		"vite.config.ts",

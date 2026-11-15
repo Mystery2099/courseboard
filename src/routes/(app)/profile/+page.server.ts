@@ -4,11 +4,15 @@ import {
 	updateProfileSchema,
 	type OwnProfileResponse
 } from '#lib/contracts/UserProfileContract.ts';
+import { toValidationCode, type ErrorCode } from '#lib/contracts/ErrorContract.ts';
 import { AccessGuard } from '#lib/server/access/AccessGuard.ts';
 import { academicHistoryService } from '#lib/server/history/AcademicHistoryService.ts';
 import { userProfileService } from '#lib/server/users/UserProfileService.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
 import type { Actions, PageServerLoad } from './$types';
+
+const ONBOARDING_REQUIRED: ErrorCode = 'onboarding-required';
+const INVALID_INPUT: ErrorCode = 'invalid-input';
 
 /**
  * Without JavaScript the page load reruns within the action's request, where the current user was
@@ -26,7 +30,9 @@ function applySavedProfile(user: ApplicationUser, saved: OwnProfileResponse): vo
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = AccessGuard.requireAdmittedUser(locals);
 	const profile = await userProfileService.getOwnProfile(user);
-	if (!profile) error(409, 'Finish setting up your profile first.');
+	if (!profile) {
+		error(409, 'Finish setting up your profile first.', { code: 'onboarding-required' });
+	}
 	const history = await academicHistoryService.listOwnEntries(user);
 	return { profile, history, historyLoadedAt: Date.now() };
 };
@@ -37,11 +43,11 @@ export const actions: Actions = {
 		const displayName = String((await request.formData()).get('displayName') ?? '');
 		const parsed = updateProfileSchema.safeParse({ displayName });
 		if (!parsed.success) {
-			const message = z.flattenError(parsed.error).fieldErrors.displayName?.[0];
-			return fail(400, { displayName, displayNameError: message ?? 'Check your display name.' });
+			const issueCode = z.flattenError(parsed.error).fieldErrors.displayName?.[0];
+			return fail(400, { displayName, displayNameError: toValidationCode(issueCode) });
 		}
 		const profile = await userProfileService.updateProfile(parsed.data, user);
-		if (!profile) return fail(409, { displayName, displayNameError: 'Finish onboarding first.' });
+		if (!profile) return fail(409, { displayName, displayNameError: ONBOARDING_REQUIRED });
 		applySavedProfile(user, profile);
 		return { displayNameSaved: true };
 	},
@@ -51,13 +57,13 @@ export const actions: Actions = {
 			.enum(['true', 'false'])
 			.safeParse((await request.formData()).get('isPrimaryInstitutionHidden'));
 		if (!submitted.success) {
-			return fail(400, { institutionVisibilityError: 'Choose Hide or Show.' });
+			return fail(400, { institutionVisibilityError: INVALID_INPUT });
 		}
 		const profile = await userProfileService.updateProfile(
 			{ isPrimaryInstitutionHidden: submitted.data === 'true' },
 			user
 		);
-		if (!profile) return fail(409, { institutionVisibilityError: 'Finish onboarding first.' });
+		if (!profile) return fail(409, { institutionVisibilityError: ONBOARDING_REQUIRED });
 		applySavedProfile(user, profile);
 		return { institutionVisibilitySaved: true };
 	}

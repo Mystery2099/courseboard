@@ -1,5 +1,6 @@
 import { fail } from '@sveltejs/kit';
 import { z } from 'zod';
+import type { ErrorCode } from '#lib/contracts/ErrorContract.ts';
 import { createInvitationSchema, invitationIdSchema } from '#lib/contracts/InvitationContract.ts';
 import { AccessGuard } from '#lib/server/access/AccessGuard.ts';
 import { admissionService } from '#lib/server/admission/AdmissionService.ts';
@@ -16,7 +17,7 @@ export const actions: Actions = {
 	create: async ({ locals, request, url }) => {
 		const administrator = AccessGuard.requireAdministrator(locals);
 		const parsed = createInvitationSchema.safeParse(Object.fromEntries(await request.formData()));
-		if (!parsed.success) return fail(400, { createError: 'Enter a valid email address.' });
+		if (!parsed.success) return fail(400, { createError: 'email-invalid' satisfies ErrorCode });
 
 		const invitation = await admissionService.createInvitation(parsed.data.email, administrator);
 		return {
@@ -30,12 +31,14 @@ export const actions: Actions = {
 	revoke: async ({ locals, request }) => {
 		const administrator = AccessGuard.requireAdministrator(locals);
 		const parsed = revokeInvitationSchema.safeParse(Object.fromEntries(await request.formData()));
-		if (!parsed.success) return fail(400, { revokeError: 'Unknown invitation.' });
+		if (!parsed.success) return fail(400, { revokeError: 'invalid-input' satisfies ErrorCode });
 
 		const revoked = await admissionService.revokeInvitation(
 			parsed.data.invitationId,
 			administrator
 		);
-		if (!revoked) return fail(409, { revokeError: 'Only unused invitations can be revoked.' });
+		if (!revoked) {
+			return fail(409, { revokeError: 'invitation-unavailable' satisfies ErrorCode });
+		}
 	}
 };

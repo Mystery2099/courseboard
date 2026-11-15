@@ -71,7 +71,9 @@ it('expands the composer, requires disclosure, retains a failed review, and refr
 	expect(createReview).not.toHaveBeenCalled();
 	await screen.getByRole('checkbox', { name: 'I understand what publishing shares.' }).click();
 	await screen.getByRole('button', { name: 'Publish review' }).click();
-	await expect.element(screen.getByRole('alert')).toHaveTextContent('Try again.');
+	await expect
+		.element(screen.getByRole('alert'))
+		.toHaveTextContent("Couldn't reach the server. Check your connection and try again.");
 	await expect
 		.element(screen.getByRole('textbox', { name: 'Your review' }))
 		.toHaveValue(review.bodyMarkdown);

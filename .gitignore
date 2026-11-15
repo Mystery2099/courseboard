@@ -32,3 +32,7 @@ CLAUDE.md
 .codex/agents/context-explorer.toml
 .codex/config.toml
 .codex/rules/jbcontext.rules
+
+# Paraglide
+/src/lib/paraglide
+project.inlang/cache

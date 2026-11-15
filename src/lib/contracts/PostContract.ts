@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { MULTILINE_TEXT_PATTERN, objectIdSchema } from './ApiContract.ts';
+import type { ValidationErrorCode } from './ErrorContract.ts';
 import type { ReviewData } from './ReviewContract.ts';
 
 /** Questions and discussions use the general composer; reviews have their own publishing rules. */
@@ -21,17 +22,17 @@ export const postIdSchema = objectIdSchema;
 const titleSchema = z
 	.string()
 	.trim()
-	.min(1, 'Enter a title.')
-	.max(POST_TITLE_MAX_LENGTH, `Use ${POST_TITLE_MAX_LENGTH} characters or fewer.`)
-	.regex(/^[^\p{Cc}\p{Cs}]*$/u, 'Keep the title on one line.');
+	.min(1, 'title-required' satisfies ValidationErrorCode)
+	.max(POST_TITLE_MAX_LENGTH, 'text-too-long' satisfies ValidationErrorCode)
+	.regex(/^[^\p{Cc}\p{Cs}]*$/u, 'single-line-required' satisfies ValidationErrorCode);
 
 function bodySchema(maxLength: number) {
 	return z
 		.string()
 		.trim()
-		.min(1, 'Write something first.')
-		.max(maxLength, `Use ${maxLength.toLocaleString('en-US')} characters or fewer.`)
-		.regex(MULTILINE_TEXT_PATTERN, 'Remove control characters.');
+		.min(1, 'body-required' satisfies ValidationErrorCode)
+		.max(maxLength, 'text-too-long' satisfies ValidationErrorCode)
+		.regex(MULTILINE_TEXT_PATTERN, 'control-characters' satisfies ValidationErrorCode);
 }
 
 export const createPostSchema = z.object({
@@ -55,7 +56,7 @@ export const postListQuerySchema = z
 	})
 	.refine((query) => query.filter !== 'unanswered' || query.kind === 'question', {
 		path: ['filter'],
-		message: 'Only questions can be filtered by unanswered.'
+		message: 'unanswered-requires-question' satisfies ValidationErrorCode
 	});
 
 export type PostListQuery = z.input<typeof postListQuerySchema>;
