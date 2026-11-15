@@ -3,6 +3,11 @@ import { ZodError } from 'zod';
 import type { ApiErrorResponse } from '#lib/contracts/ApiContract.ts';
 import { AccessDeniedError, AccessPolicy } from '#lib/server/access/AccessPolicy.ts';
 
+const ACCESS_DENIED_STATUSES: Partial<Record<AccessDeniedError['code'], number>> = {
+	unauthenticated: 401,
+	'onboarding-required': 409
+};
+
 export function apiError(status: number, code: string, message: string): Response {
 	const body: ApiErrorResponse = { error: { code, message } };
 	return json(body, { status, headers: { 'cache-control': 'no-store' } });
@@ -19,7 +24,7 @@ export async function apiResponse(operation: () => Promise<Response>): Promise<R
 			return apiError(cause.status, 'invalid-input', cause.message);
 		}
 		if (cause instanceof AccessDeniedError) {
-			return apiError(cause.code === 'unauthenticated' ? 401 : 403, cause.code, cause.message);
+			return apiError(ACCESS_DENIED_STATUSES[cause.code] ?? 403, cause.code, cause.message);
 		}
 		if (cause instanceof ZodError) {
 			return apiError(400, 'invalid-input', 'Check the supplied request details.');
