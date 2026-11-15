@@ -82,11 +82,12 @@ export class PostRepository {
 	/**
 	 * Counts a new reply and advances the thread's activity. Matches only an unlocked post, so a
 	 * reply can't slip in while the thread is being locked. Returns false when nothing matched.
+	 * `$max` keeps activity from moving backwards when concurrent replies commit out of order.
 	 */
 	async recordReply(postId: ObjectId, repliedAt: Date, session: ClientSession): Promise<boolean> {
 		const result = await this.collection().updateOne(
 			{ _id: postId, lockedAt: null },
-			{ $inc: { replyCount: 1 }, $set: { lastActivityAt: repliedAt } },
+			{ $inc: { replyCount: 1 }, $max: { lastActivityAt: repliedAt } },
 			{ session }
 		);
 		return result.matchedCount === 1;
