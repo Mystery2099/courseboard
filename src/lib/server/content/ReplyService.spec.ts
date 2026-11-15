@@ -136,4 +136,34 @@ describe('reply service', () => {
 		expect(recordReply).not.toHaveBeenCalled();
 		expect(insert).not.toHaveBeenCalled();
 	});
+
+	it.each(['before the lock check', 'inside the transaction'])(
+		'returns a reply stored by a concurrent retry instead of a lock refusal: %s',
+		async (refusalPoint) => {
+			const isLockedOnRead = refusalPoint === 'before the lock check';
+			const { service, replies, recordReply, insert } = createService(
+				isLockedOnRead ? { ...post, lockedAt: new Date() } : post
+			);
+			recordReply.mockResolvedValue(false);
+			const stored: ReplyWithAuthor = {
+				_id: new ObjectId('000000000000000000000008'),
+				postId,
+				parentReplyId: null,
+				bodyMarkdown: 'Count me in.',
+				createdAt: new Date('2026-11-03T10:00:00Z'),
+				author: { username: 'alex_m', displayName: 'Alex M' }
+			};
+			// The first lookup misses; the other request stores the reply before the thread is locked.
+			vi.spyOn(replies, 'findBySubmission').mockResolvedValueOnce(null).mockResolvedValue(stored);
+
+			const result = await service.createReply(
+				postId.toHexString(),
+				{ bodyMarkdown: 'Count me in.', submissionId },
+				student
+			);
+
+			expect(result).toMatchObject({ kind: 'created', reply: { id: stored._id.toHexString() } });
+			expect(insert).not.toHaveBeenCalled();
+		}
+	);
 });
