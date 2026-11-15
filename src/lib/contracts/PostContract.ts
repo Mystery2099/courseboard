@@ -1,9 +1,12 @@
 import { z } from 'zod';
 import { MULTILINE_TEXT_PATTERN, objectIdSchema } from './ApiContract.ts';
+import type { ReviewData } from './ReviewContract.ts';
 
-/** Reviews are posts too, but they have their own rules and arrive with their own contract. */
+/** Questions and discussions use the general composer; reviews have their own publishing rules. */
 export const THREAD_KINDS = ['question', 'discussion'] as const;
 export type ThreadKind = (typeof THREAD_KINDS)[number];
+export const POST_KINDS = [...THREAD_KINDS, 'review'] as const;
+export type PostKind = (typeof POST_KINDS)[number];
 
 /** `active` orders by latest reply or creation; `unanswered` lists questions without replies. */
 export const POST_LIST_FILTERS = ['active', 'newest', 'unanswered'] as const;
@@ -42,7 +45,7 @@ export type CreatePostRequest = z.infer<typeof createPostSchema>;
 export const postListQuerySchema = z
 	.object({
 		/** Left out on the course overview, which lists every kind. */
-		kind: z.enum(THREAD_KINDS).optional(),
+		kind: z.enum(POST_KINDS).optional(),
 		filter: z.enum(POST_LIST_FILTERS).default('active'),
 		/** The `nextCursor` of the previous page: a timestamp and a post id. */
 		after: z
@@ -82,7 +85,7 @@ export interface PostAuthorResponse {
 export interface PostSummaryResponse {
 	id: string;
 	courseId: string;
-	kind: ThreadKind;
+	kind: PostKind;
 	title: string;
 	author: PostAuthorResponse;
 	createdAt: string;
@@ -91,6 +94,8 @@ export interface PostSummaryResponse {
 	replyCount: number;
 	hasAcceptedReply: boolean;
 	isLocked: boolean;
+	reviewData?: ReviewData;
+	editedAt?: string;
 }
 
 export interface PostListResponse {
@@ -106,6 +111,7 @@ export interface PostDetailResponse extends PostSummaryResponse {
 	viewerPermissions: {
 		canChooseAcceptedReply: boolean;
 		canLock: boolean;
+		canEditReview: boolean;
 	};
 }
 

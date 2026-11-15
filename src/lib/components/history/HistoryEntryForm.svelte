@@ -3,6 +3,7 @@
 	import { untrack } from 'svelte';
 	import { z } from 'zod';
 	import { ApiRequestError } from '#lib/client/ApiRequest.ts';
+	import { reviewQueryKeys } from '#lib/client/content/ReviewApiClient.ts';
 	import {
 		AcademicHistoryApiClient,
 		academicHistoryQueryKeys
@@ -75,7 +76,10 @@
 				? AcademicHistoryApiClient.updateEntry(editedEntry.id, request)
 				: AcademicHistoryApiClient.createEntry({ ...request, courseId: course!.id }),
 		onSuccess: async () => {
-			await queryClient.invalidateQueries({ queryKey: academicHistoryQueryKeys.all });
+			await Promise.all([
+				queryClient.invalidateQueries({ queryKey: academicHistoryQueryKeys.all }),
+				queryClient.invalidateQueries({ queryKey: reviewQueryKeys.all })
+			]);
 			onDone('saved');
 		}
 	}));
@@ -83,7 +87,10 @@
 	const deleteMutation = createMutation(() => ({
 		mutationFn: (entryId: string) => AcademicHistoryApiClient.deleteEntry(entryId),
 		onSuccess: async () => {
-			await queryClient.invalidateQueries({ queryKey: academicHistoryQueryKeys.all });
+			await Promise.all([
+				queryClient.invalidateQueries({ queryKey: academicHistoryQueryKeys.all }),
+				queryClient.invalidateQueries({ queryKey: reviewQueryKeys.all })
+			]);
 			onDone('deleted');
 		}
 	}));

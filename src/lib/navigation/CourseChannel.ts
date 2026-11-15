@@ -1,4 +1,4 @@
-import type { ThreadKind } from '#lib/contracts/PostContract.ts';
+import type { PostKind } from '#lib/contracts/PostContract.ts';
 
 /** The fixed views of every course space, in display order. */
 export const COURSE_CHANNELS = ['overview', 'questions', 'reviews', 'discussion'] as const;
@@ -23,8 +23,9 @@ export const COURSE_CHANNEL_ROUTE_IDS = {
 /** Thread pages live under the channel of their kind. */
 export const THREAD_ROUTE_IDS = {
 	question: '/(app)/courses/[courseId]/questions/[postId]',
-	discussion: '/(app)/courses/[courseId]/discussion/[postId]'
-} as const satisfies Record<ThreadKind, string>;
+	discussion: '/(app)/courses/[courseId]/discussion/[postId]',
+	review: '/(app)/courses/[courseId]/reviews/[postId]'
+} as const satisfies Record<PostKind, string>;
 
 /** The channel a route belongs to, or null outside a course space. */
 export function findCourseChannel(routeId: string | null): CourseChannel | null {

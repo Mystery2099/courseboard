@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { THREAD_KIND_LABELS } from '#lib/client/content/PostPresentation.ts';
-	import type { ThreadKind } from '#lib/contracts/PostContract.ts';
+	import type { PostKind } from '#lib/contracts/PostContract.ts';
 
-	let { kind }: { kind: ThreadKind } = $props();
+	let { kind }: { kind: PostKind } = $props();
 </script>
 
 <span

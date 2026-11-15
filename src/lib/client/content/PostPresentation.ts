@@ -1,8 +1,9 @@
-import type { PostListFilter, ReplyResponse, ThreadKind } from '#lib/contracts/PostContract.ts';
+import type { PostKind, PostListFilter, ReplyResponse } from '#lib/contracts/PostContract.ts';
 
-export const THREAD_KIND_LABELS: Record<ThreadKind, string> = {
+export const THREAD_KIND_LABELS: Record<PostKind, string> = {
 	question: 'Question',
-	discussion: 'Discussion'
+	discussion: 'Discussion',
+	review: 'Review'
 };
 
 export const POST_LIST_FILTER_LABELS: Record<PostListFilter, string> = {
