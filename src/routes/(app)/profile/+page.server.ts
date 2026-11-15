@@ -31,7 +31,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const user = AccessGuard.requireAdmittedUser(locals);
 	const profile = await userProfileService.getOwnProfile(user);
 	if (!profile) {
-		error(409, { code: 'onboarding-required', message: 'Finish setting up your profile first.' });
+		error(409, 'Finish setting up your profile first.', { code: 'onboarding-required' });
 	}
 	const history = await academicHistoryService.listOwnEntries(user);
 	return { profile, history, historyLoadedAt: Date.now() };

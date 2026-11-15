@@ -30,6 +30,6 @@ export class AccessGuard {
 
 	/** Renders the error page with the policy's code, which the page translates. */
 	static deny(cause: AccessDeniedError): never {
-		error(403, { code: cause.code, message: cause.message });
+		error(403, cause.message, { code: cause.code });
 	}
 }

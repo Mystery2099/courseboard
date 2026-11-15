@@ -10,7 +10,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		CoursePostPageLoader.loadPostList(locals, params.courseId, 'review'),
 		reviewService.getCourseContext(params.courseId, actor)
 	]);
-	if (!reviewContext)
-		error(404, { code: 'course-not-found', message: 'This course does not exist.' });
+	if (!reviewContext) error(404, 'This course does not exist.', { code: 'course-not-found' });
 	return { ...posts, reviewContext };
 };

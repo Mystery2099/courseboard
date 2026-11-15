@@ -9,7 +9,7 @@ import type { Actions, PageServerLoad } from './$types';
 function parseToken(rawToken: string): string {
 	const parsed = invitationTokenSchema.safeParse(rawToken);
 	if (!parsed.success) {
-		error(404, { code: 'invitation-link-invalid', message: 'This invitation link is not valid.' });
+		error(404, 'This invitation link is not valid.', { code: 'invitation-link-invalid' });
 	}
 	return parsed.data;
 }
