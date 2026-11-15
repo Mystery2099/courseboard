@@ -1,9 +1,12 @@
+import type { RequestErrorCode } from '#lib/contracts/ErrorContract.ts';
 import type { ApplicationUser, OnboardedUser } from '#lib/server/users/ApplicationUser.ts';
 
 export class AccessDeniedError extends Error {
 	constructor(
-		readonly code:
-			'unauthenticated' | 'not-admitted' | 'suspended' | 'onboarding-required' | 'forbidden',
+		readonly code: Extract<
+			RequestErrorCode,
+			'unauthenticated' | 'not-admitted' | 'suspended' | 'onboarding-required' | 'forbidden'
+		>,
 		message: string
 	) {
 		super(message);

@@ -13,8 +13,13 @@
 	"post_list_filter_unanswered": "Unanswered",
 	"post_reply_count": [
 		{
-			"declarations": ["input count", "local countPlural = count: plural"],
-			"selectors": ["countPlural"],
+			"declarations": [
+				"input count",
+				"local countPlural = count: plural"
+			],
+			"selectors": [
+				"countPlural"
+			],
 			"match": {
 				"countPlural=one": "{count} reply",
 				"countPlural=*": "{count} replies"
@@ -268,5 +273,47 @@
 	"invitation_status_revoked": "Revoked",
 	"invitation_status_redeemed": "Used",
 	"profile_language": "Language",
-	"profile_language_explanation": "Saved in this browser. Course posts and reviews stay in the language they were written in."
+	"profile_language_explanation": "Saved in this browser. Course posts and reviews stay in the language they were written in.",
+	"error_unauthenticated": "Sign in first.",
+	"error_not_admitted": "Your account doesn't have access yet.",
+	"error_suspended": "Your account is suspended.",
+	"error_onboarding_required": "Finish setting up your profile first.",
+	"error_already_onboarded": "Your profile is already set up.",
+	"error_forbidden": "You don't have permission to do this.",
+	"error_invalid_input": "Check what you entered and try again.",
+	"error_internal_error": "Something went wrong on our side. Try again.",
+	"error_unavailable": "Couldn't reach the server. Check your connection and try again.",
+	"error_course_not_found": "This course does not exist.",
+	"error_post_not_found": "This post does not exist.",
+	"error_reply_not_found": "This reply does not belong to the question.",
+	"error_user_not_found": "This user does not exist.",
+	"error_institution_not_found": "That school is no longer available. Choose another.",
+	"error_entry_not_found": "This history entry does not exist.",
+	"error_post_locked": "This thread is locked, so it has no new replies.",
+	"error_parent_reply_unavailable": "Reply to the post or to one of its top-level replies.",
+	"error_not_a_question": "Only questions have an accepted reply.",
+	"error_history_required": "Choose a Taking or Took entry for this course. Your history may have changed.",
+	"error_review_exists": "You already have a review for this course. Edit it instead.",
+	"error_entry_limit_reached": "Your history has reached its entry limit.",
+	"error_username_unavailable": "That username is taken.",
+	"error_email_mismatch": "This invitation was sent to a different email address. Sign in with that address, or add and verify it in your account settings.",
+	"error_invitation_unavailable": "This invitation has expired, been revoked, or already been used. Ask an administrator for a new one.",
+	"error_invitation_link_invalid": "This invitation link is not valid.",
+	"validation_title_required": "Enter a title.",
+	"validation_body_required": "Write something first.",
+	"validation_text_too_long": "This is too long.",
+	"validation_text_too_long_with_limit": "Use {maximum} characters or fewer.",
+	"validation_single_line_required": "Keep the title on one line.",
+	"validation_control_characters": "Remove control characters.",
+	"validation_username_format": "Use 3 to 24 letters, numbers, or underscores.",
+	"validation_display_name_required": "Enter a display name.",
+	"validation_term_required": "Choose a term.",
+	"validation_school_required": "Choose your school.",
+	"validation_email_invalid": "Enter a valid email address.",
+	"validation_unanswered_requires_question": "Only questions can be filtered by unanswered.",
+	"validation_profile_change_required": "Change the display name or the school visibility.",
+	"error_page_not_found": "Page not found",
+	"error_page_forbidden": "You can't open this page",
+	"error_page_failed": "Something went wrong",
+	"error_page_home": "Go to the home page"
 }

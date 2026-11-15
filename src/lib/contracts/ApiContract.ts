@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { RequestErrorCode } from './ErrorContract.ts';
 
 /** A MongoDB ObjectId in its 24-character hexadecimal form. */
 export const objectIdSchema = z.string().regex(/^[a-f0-9]{24}$/);
@@ -10,5 +11,6 @@ export const objectIdSchema = z.string().regex(/^[a-f0-9]{24}$/);
 export const MULTILINE_TEXT_PATTERN = /^(?:[^\p{Cc}\p{Cs}]|[\n\r\t])*$/u;
 
 export interface ApiErrorResponse {
-	error: { code: string; message: string };
+	/** `message` is English for logs and other clients; the web client shows the code's translation. */
+	error: { code: RequestErrorCode; message: string };
 }

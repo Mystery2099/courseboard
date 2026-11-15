@@ -60,3 +60,9 @@ const ERROR_CODES: ReadonlySet<string> = new Set([
 export function isErrorCode(value: unknown): value is ErrorCode {
 	return typeof value === 'string' && ERROR_CODES.has(value);
 }
+
+/** A failed contract check's message is a validation code; anything else becomes `invalid-input`. */
+export function toValidationCode(issueMessage: string | undefined): ErrorCode | undefined {
+	if (issueMessage === undefined) return undefined;
+	return isErrorCode(issueMessage) ? issueMessage : 'invalid-input';
+}

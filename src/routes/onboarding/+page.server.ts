@@ -1,5 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
+import { toValidationCode, type ErrorCode } from '#lib/contracts/ErrorContract.ts';
 import { completeOnboardingSchema } from '#lib/contracts/UserProfileContract.ts';
 import { AccessGuard } from '#lib/server/access/AccessGuard.ts';
 import { courseCatalogService } from '#lib/server/catalog/CourseCatalogService.ts';
@@ -15,7 +16,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 type OnboardingFieldErrors = Partial<
-	Record<'primaryInstitutionId' | 'username' | 'displayName', string>
+	Record<'primaryInstitutionId' | 'username' | 'displayName', ErrorCode>
 >;
 
 function rejectOnboarding(
@@ -44,19 +45,19 @@ export const actions: Actions = {
 		if (!parsed.success) {
 			const fieldErrors = z.flattenError(parsed.error).fieldErrors;
 			return rejectOnboarding(400, submitted, {
-				primaryInstitutionId: fieldErrors.primaryInstitutionId && 'Choose your school.',
-				username: fieldErrors.username?.[0],
-				displayName: fieldErrors.displayName?.[0]
+				primaryInstitutionId: fieldErrors.primaryInstitutionId && 'school-required',
+				username: toValidationCode(fieldErrors.username?.[0]),
+				displayName: toValidationCode(fieldErrors.displayName?.[0])
 			});
 		}
 
 		const result = await userProfileService.completeOnboarding(parsed.data, user);
 		if (result.kind === 'username-unavailable') {
-			return rejectOnboarding(409, submitted, { username: 'That username is taken.' });
+			return rejectOnboarding(409, submitted, { username: 'username-unavailable' });
 		}
 		if (result.kind === 'institution-not-found') {
 			return rejectOnboarding(404, submitted, {
-				primaryInstitutionId: 'That school is no longer available. Choose another.'
+				primaryInstitutionId: 'institution-not-found'
 			});
 		}
 		redirect(303, '/onboarding/courses');

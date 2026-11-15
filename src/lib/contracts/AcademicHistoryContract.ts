@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { MULTILINE_TEXT_PATTERN, objectIdSchema } from './ApiContract.ts';
+import type { ValidationErrorCode } from './ErrorContract.ts';
 
 export const HISTORY_STATUSES = ['planning', 'taking', 'took'] as const;
 export const TERM_SEASONS = ['winter', 'spring', 'summer', 'fall'] as const;
@@ -21,8 +22,8 @@ export type AcademicTerm = z.infer<typeof academicTermSchema>;
 const privateNoteSchema = z
 	.string()
 	.trim()
-	.max(PRIVATE_NOTE_MAX_LENGTH, `Use ${PRIVATE_NOTE_MAX_LENGTH} characters or fewer.`)
-	.regex(MULTILINE_TEXT_PATTERN, 'Remove control characters.');
+	.max(PRIVATE_NOTE_MAX_LENGTH, 'text-too-long' satisfies ValidationErrorCode)
+	.regex(MULTILINE_TEXT_PATTERN, 'control-characters' satisfies ValidationErrorCode);
 
 const historyEntryFieldsSchema = z.object({
 	status: z.enum(HISTORY_STATUSES),
@@ -38,7 +39,10 @@ function hasRequiredTerm(entry: HistoryEntryFields): boolean {
 	return entry.status === 'planning' || entry.term !== null;
 }
 
-const termRequiredIssue = { path: ['term'], message: 'Choose a term.' };
+const termRequiredIssue = {
+	path: ['term'],
+	message: 'term-required' satisfies ValidationErrorCode
+};
 
 export const createHistoryEntrySchema = historyEntryFieldsSchema
 	.extend({ courseId: objectIdSchema })

@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import { ZodError } from 'zod';
 import type { ApiErrorResponse } from '#lib/contracts/ApiContract.ts';
+import type { RequestErrorCode } from '#lib/contracts/ErrorContract.ts';
 import { AccessDeniedError, AccessPolicy } from '#lib/server/access/AccessPolicy.ts';
 
 const ACCESS_DENIED_STATUSES: Partial<Record<AccessDeniedError['code'], number>> = {
@@ -8,7 +9,7 @@ const ACCESS_DENIED_STATUSES: Partial<Record<AccessDeniedError['code'], number>>
 	'onboarding-required': 409
 };
 
-export function apiError(status: number, code: string, message: string): Response {
+export function apiError(status: number, code: RequestErrorCode, message: string): Response {
 	const body: ApiErrorResponse = { error: { code, message } };
 	return json(body, { status, headers: { 'cache-control': 'no-store' } });
 }

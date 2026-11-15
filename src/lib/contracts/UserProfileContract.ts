@@ -1,19 +1,20 @@
 import { z } from 'zod';
 import { objectIdSchema } from './ApiContract.ts';
+import type { ValidationErrorCode } from './ErrorContract.ts';
 
 /** Usernames are stored lowercase, so `Alex_M` and `alex_m` are the same name. */
 export const usernameSchema = z
 	.string()
 	.trim()
 	.toLowerCase()
-	.regex(/^[a-z0-9_]{3,24}$/, 'Use 3 to 24 letters, numbers, or underscores.');
+	.regex(/^[a-z0-9_]{3,24}$/, 'username-format' satisfies ValidationErrorCode);
 
 export const displayNameSchema = z
 	.string()
 	.trim()
-	.min(1, 'Enter a display name.')
-	.max(50, 'Use 50 characters or fewer.')
-	.regex(/^[^\p{C}]*$/u, 'Remove control characters.')
+	.min(1, 'display-name-required' satisfies ValidationErrorCode)
+	.max(50, 'text-too-long' satisfies ValidationErrorCode)
+	.regex(/^[^\p{C}]*$/u, 'control-characters' satisfies ValidationErrorCode)
 	.transform((name) => name.replace(/\s+/g, ' '));
 
 export const completeOnboardingSchema = z.object({
@@ -32,7 +33,7 @@ export const updateProfileSchema = z
 	.refine(
 		(changes) =>
 			changes.displayName !== undefined || changes.isPrimaryInstitutionHidden !== undefined,
-		'Change the display name or the school visibility.'
+		'profile-change-required' satisfies ValidationErrorCode
 	);
 
 export type UpdateProfileRequest = z.infer<typeof updateProfileSchema>;
