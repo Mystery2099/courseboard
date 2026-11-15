@@ -38,15 +38,18 @@ export interface ReplyBranch {
 	nestedReplies: ReplyResponse[];
 }
 
-/** Groups a chronological reply list into top-level replies with their nested replies. */
+/**
+ * Groups a reply list into top-level replies with their nested replies. Parents are collected
+ * first: replies are ordered by ObjectId, and ids written by different server processes within one
+ * second can put a nested reply just ahead of its parent.
+ */
 export function groupReplies(replies: ReplyResponse[]): ReplyBranch[] {
 	const branches = new Map<string, ReplyBranch>();
 	for (const reply of replies) {
-		if (reply.parentReplyId === null) {
-			branches.set(reply.id, { reply, nestedReplies: [] });
-		} else {
-			branches.get(reply.parentReplyId)?.nestedReplies.push(reply);
-		}
+		if (reply.parentReplyId === null) branches.set(reply.id, { reply, nestedReplies: [] });
+	}
+	for (const reply of replies) {
+		if (reply.parentReplyId !== null) branches.get(reply.parentReplyId)?.nestedReplies.push(reply);
 	}
 	return [...branches.values()];
 }

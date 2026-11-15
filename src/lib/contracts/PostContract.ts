@@ -119,7 +119,7 @@ export interface ReplyResponse {
 }
 
 export interface ReplyListResponse {
-	/** Chronological. A nested reply always comes after its parent. */
+	/** Ordered by id, which is chronological to the second. */
 	replies: ReplyResponse[];
 	/** Pass as `after` to load the next page; null on the last page. */
 	nextCursor: string | null;
