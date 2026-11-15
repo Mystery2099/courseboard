@@ -1,8 +1,9 @@
-import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
+import type { ApplicationUser, OnboardedUser } from '#lib/server/users/ApplicationUser.ts';
 
 export class AccessDeniedError extends Error {
 	constructor(
-		readonly code: 'unauthenticated' | 'not-admitted' | 'suspended' | 'forbidden',
+		readonly code:
+			'unauthenticated' | 'not-admitted' | 'suspended' | 'onboarding-required' | 'forbidden',
 		message: string
 	) {
 		super(message);
@@ -17,6 +18,15 @@ export class AccessPolicy {
 			throw new AccessDeniedError('suspended', 'Your account is suspended.');
 		}
 		return user;
+	}
+
+	/** Posting needs a username and display name, which exist only after onboarding. */
+	static requireOnboardedUser(user: ApplicationUser | null): OnboardedUser {
+		const actor = this.requireAdmittedUser(user);
+		if (!actor.profile) {
+			throw new AccessDeniedError('onboarding-required', 'Finish setting up your profile first.');
+		}
+		return { ...actor, profile: actor.profile };
 	}
 
 	static requireAdministrator(user: ApplicationUser | null): ApplicationUser {

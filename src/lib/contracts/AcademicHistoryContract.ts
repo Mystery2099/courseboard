@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { objectIdSchema } from './ApiContract.ts';
+import { MULTILINE_TEXT_PATTERN, objectIdSchema } from './ApiContract.ts';
 
 export const HISTORY_STATUSES = ['planning', 'taking', 'took'] as const;
 export const TERM_SEASONS = ['winter', 'spring', 'summer', 'fall'] as const;
@@ -22,9 +22,7 @@ const privateNoteSchema = z
 	.string()
 	.trim()
 	.max(PRIVATE_NOTE_MAX_LENGTH, `Use ${PRIVATE_NOTE_MAX_LENGTH} characters or fewer.`)
-	// Only control characters and lone surrogates: joiners (format characters) appear in emoji and in
-	// Persian and Indic text.
-	.regex(/^(?:[^\p{Cc}\p{Cs}]|[\n\r\t])*$/u, 'Remove control characters.');
+	.regex(MULTILINE_TEXT_PATTERN, 'Remove control characters.');
 
 const historyEntryFieldsSchema = z.object({
 	status: z.enum(HISTORY_STATUSES),

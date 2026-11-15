@@ -24,8 +24,9 @@ export class ApiRequest {
 		return ApiRequest.send<Response>('PUT', path, body);
 	}
 
-	static async delete(path: string): Promise<void> {
-		await ApiRequest.send<void>('DELETE', path);
+	/** Resolves to undefined for an empty 204 response. */
+	static delete<Response = void>(path: string): Promise<Response> {
+		return ApiRequest.send<Response>('DELETE', path);
 	}
 
 	private static async send<Response>(

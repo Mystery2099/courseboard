@@ -23,9 +23,9 @@
 - [ ] Seed fictional institutions, courses, histories, roles, and content repeatably. Course creation automatically creates its canonical space. *Done for institutions and courses: an administrator loads the demo catalog from the admin page, and each course's space is created in the same transaction.*
 - [x] Implement primary-institution onboarding, unique usernames, editable display names, course discovery, following, and last-course navigation. *Onboarding asks for the school, then the username and display name, then offers the school's courses to add to history or follow.*
 - [x] Implement private-by-default history entries, repeated attempts, season/year terms, private notes, and profile visibility. *Built on the profile page, course pages, other students' profile pages, and the last onboarding step, with Preview as others and a setting that hides the primary institution.*
-- [ ] Implement questions, discussions, one-level replies, accepted answers, and locked discussions.
+- [x] Implement questions, discussions, one-level replies, accepted answers, and locked discussions. *Built on the Overview, Questions, and Discussion views with thread pages. Bodies show as plain text until Stage 3 adds Markdown, and only administrators can lock until course moderators exist.*
 - [ ] Verify that membership, history, and content remain independent and unauthorized reads/writes fail on the server.
-- [ ] Expose core workflow reads/writes through the HTTP API without requiring web-page form submissions. Test service rules and direct authorized/unauthorized API requests independently of the UI. Web adapters reuse those services; native mobile/desktop clients are not required.
+- [ ] Expose core workflow reads/writes through the HTTP API without requiring web-page form submissions. Test service rules and direct authorized/unauthorized API requests independently of the UI. Web adapters reuse those services; native mobile/desktop clients are not required. *Done for the catalog, following, history, profiles, posts, and replies.*
 
 ## Stage 2: reviews and discovery
 

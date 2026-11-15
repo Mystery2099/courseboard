@@ -45,3 +45,5 @@ export interface ApplicationUser {
 	/** Null until onboarding is complete. */
 	profile: ApplicationUserProfile | null;
 }
+
+export type OnboardedUser = ApplicationUser & { profile: ApplicationUserProfile };

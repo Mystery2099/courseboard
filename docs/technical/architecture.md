@@ -13,7 +13,7 @@ Confirmed November 7, 2026: one repository and one deployable application with c
 - Shared request/response types are fine; MongoDB documents and server internals stay on the server. Responses return deliberately chosen, privacy-aware fields rather than raw database records.
 - Socket authentication and subscriptions use the same permission checks. Changes are saved through HTTP first, then announced over the socket.
 
-**Current implementation:** `src/lib/server/` separates services, repositories, access policy, and persistence. Invitations were the first feature built this way, followed by the course catalog and following, onboarding and profiles, then academic history. Each has HTTP endpoints that use the same services as the web pages. HTTP and realtime share the same account-access checks, and `src/lib/contracts/` defines the request and response types the client sees. Dates are sent as ISO strings. Other APIs will be added along with their features.
+**Current implementation:** `src/lib/server/` separates services, repositories, access policy, and persistence. Invitations were the first feature built this way, followed by the course catalog and following, onboarding and profiles, academic history, then questions and discussions. Each has HTTP endpoints that use the same services as the web pages. HTTP and realtime share the same account-access checks, and `src/lib/contracts/` defines the request and response types the client sees. Dates are sent as ISO strings. Other APIs will be added along with their features.
 
 ### Invitation HTTP API
 
@@ -67,9 +67,29 @@ Onboarding has three steps: the school, then the display name and username, then
 
 Profile pages for other students live at `/users/{username}`. They show the person's visible entries grouped by term and school. Schools other than the primary institution appear only through visible entries. Opening your own page shows it as others see it, with a link back to editing. Photos are read from Clerk on the server for each view, and initials are shown if Clerk can't be reached. A user can hide their primary institution from the profile page's School section. The repository then returns no institution for the public profile, including when the owner opens their own page, and the school shows up only if a visible entry is there. Course discovery still defaults to it for the owner.
 
+### Posts and replies HTTP API
+
+| Method and path | Access | Result |
+| --- | --- | --- |
+| `GET /api/courses/{courseId}/posts?kind=…&filter=…&after=…` | Admitted user | One page of 20 posts without bodies, each with author, reply count, `hasAcceptedReply`, and `isLocked`. `kind` is `question` or `discussion`; leaving it out lists both, as Overview does. `filter` is `active` (default), `newest`, or `unanswered` |
+| `POST /api/courses/{courseId}/posts` | Admitted user with a profile | JSON `{ kind, title, bodyMarkdown }`; returns the post with status 201 |
+| `GET /api/posts/{postId}` | Admitted user | The post with its body, `acceptedReplyId`, and `viewerPermissions` |
+| `GET /api/posts/{postId}/replies?after=…` | Admitted user | One page of 30 replies, oldest first |
+| `POST /api/posts/{postId}/replies` | Admitted user with a profile | JSON `{ bodyMarkdown, parentReplyId?, submissionId }`; returns the reply with status 201. 409 `post-locked` or `parent-reply-unavailable` |
+| `PUT /api/posts/{postId}/accepted-reply` | The question's author | JSON `{ replyId }`; chooses or replaces the accepted reply and returns the post. 409 on a discussion |
+| `DELETE /api/posts/{postId}/accepted-reply` | The question's author | No body; clears it and returns the post |
+| `PUT /api/posts/{postId}/lock` | Active administrator | JSON `{}`; locks the thread and returns the post |
+| `DELETE /api/posts/{postId}/lock` | Active administrator | No body; unlocks it |
+
+Reading and posting need neither following nor a history entry. `active` orders by `lastActivityAt`, which advances on creation and new replies only; `newest` orders by creation; `unanswered` lists questions without replies, newest first, and is refused for discussions. Titles hold up to 150 characters, post bodies 10,000, and replies 5,000. Titles and bodies are trimmed at both ends, bodies are otherwise stored as written, and they're shown as plain text until the Markdown renderer exists.
+
+A reply names its parent with `parentReplyId`, which must be a top-level reply of the same post, so nesting stops at one level. `submissionId` is a UUID the client picks once per reply and sends again on Retry. It's unique per author, so a repeated request returns the reply stored the first time. The reply and the post's `replyCount` and `lastActivityAt` are written in one transaction, and the post update matches only an unlocked post, so a reply can't land while the thread is being locked. Any reply of the question can be accepted, including a nested one or the author's own. Locking and accepting don't count as activity. Course moderators will be able to lock once assignments exist; until then only administrators can. An account without a profile gets 409 `onboarding-required` when it tries to post.
+
+Thread pages live at `/courses/{courseId}/questions/{postId}` and `/courses/{courseId}/discussion/{postId}`; a post opened under the wrong course or channel answers 404. Editing, deleting, reporting, drafts, and realtime notices aren't built yet.
+
 Following never reads or writes academic history. After a course page renders, the browser records it as the user's last visited course; it isn't recorded during the server load, so hover preloading doesn't count as a visit. `/` resumes that course after sign-in when it still exists.
 
-Errors use `{ error: { code, message } }`: 400 for invalid input/JSON, 401 for missing identity, 403 for denied access or redemption email mismatch, 404 for an unknown course or institution, 409 for revocation conflicts, 410 for unavailable redemption, 415 for non-JSON writes, and a generic 500 for unexpected failures. Responses use `Cache-Control: no-store`, including the one-time creation token. Creation returns the token rather than a host-specific URL; the web page builds the invitation link.
+Errors use `{ error: { code, message } }`: 400 for invalid input/JSON, 401 for missing identity, 403 for denied access or redemption email mismatch, 404 for an unknown course, institution, post, or reply, 409 for revocation conflicts and refused replies, 410 for unavailable redemption, 415 for non-JSON writes, and a generic 500 for unexpected failures. Responses use `Cache-Control: no-store`, including the one-time creation token. Creation returns the token rather than a host-specific URL; the web page builds the invitation link.
 
 ## Deployment context
 
@@ -117,7 +137,7 @@ TanStack Query owns the client cache for interactive server data such as course 
 
 After writes, update or invalidate the affected queries. Socket events queue new-item notices without shifting content. Keep caches isolated by account, clear them on logout/account changes, and create a new server-side QueryClient per request. Cached data never replaces authorization.
 
-**Current implementation:** the root layout creates the `QueryClient`, so each server render gets its own and each browser tab keeps one. Queries don't run during server rendering; a page's server load supplies `initialData` with its load time as `initialDataUpdatedAt`, and the query owns the data from then on. `AccountScopedQueryCache` clears the cache when the Clerk user changes, including sign-out. Browser API calls go through `src/lib/client/`, which also defines query keys. Academic history is the first view built this way: writes invalidate every `academic-history` key, which covers the owner's list and Preview as others. The course picker uses an infinite query over the course browse API.
+**Current implementation:** the root layout creates the `QueryClient`, so each server render gets its own and each browser tab keeps one. Queries don't run during server rendering; a page's server load supplies `initialData` with its load time as `initialDataUpdatedAt`, and the query owns the data from then on. `AccountScopedQueryCache` clears the cache when the Clerk user changes, including sign-out. Browser API calls go through `src/lib/client/`, which also defines query keys. Academic history is the first view built this way: writes invalidate every `academic-history` key, which covers the owner's list and Preview as others. The course picker uses an infinite query over the course browse API. Post lists and reply lists are infinite queries too, seeded with the server-rendered first page. Post lists load the next page when the end scrolls into view and keep a Load more button; replies use Load more only. A reply being sent appears as pending, and a failed one keeps its text with Retry and Discard.
 
 Use TanStack Virtual for browsing lists once they grow enough to need it. Virtualization limits rendered elements, not fetched data, so bound Query's retained pages separately and test scroll restoration after old pages are evicted. Pending replies need a stable submission ID so Retry can't duplicate a reply that was stored before a lost response.
 
