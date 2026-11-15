@@ -13,10 +13,12 @@
 
 <!-- The empty state reads the same whether someone has only private entries or none at all. -->
 {#if groups.length === 0}
-	<p class="mt-4 rounded-[20px] border bg-white p-4 text-slate-600">{m.history_visible_empty()}</p>
+	<p class="mt-4 rounded-[20px] border bg-surface p-4 text-on-surface-variant">
+		{m.history_visible_empty()}
+	</p>
 {:else}
 	{#each groups as group (group.key)}
-		<div class="mt-4 overflow-hidden rounded-[20px] border bg-white">
+		<div class="mt-4 overflow-hidden rounded-[20px] border bg-surface">
 			<h3 class="border-b px-4 py-2 text-sm font-semibold tracking-wide uppercase">
 				{group.heading}
 			</h3>
@@ -25,7 +27,7 @@
 					<li>
 						<a
 							href={resolve('/(app)/courses/[courseId]', { courseId: entry.course.id })}
-							class="flex items-center gap-3 px-4 py-3 hover:bg-slate-50"
+							class="flex items-center gap-3 px-4 py-3 hover:bg-surface-container"
 						>
 							<HistoryCourseLabel course={entry.course} />
 							<HistoryStatusBadge status={entry.status} />

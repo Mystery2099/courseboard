@@ -72,12 +72,12 @@
 	}));
 
 	const chipClass = 'inline-flex items-center gap-1 rounded-full px-4 py-1.5 disabled:opacity-50';
-	const selectedChipClass = 'bg-indigo-100 font-semibold';
-	const unselectedChipClass = 'border font-semibold text-blue-700';
+	const selectedChipClass = 'bg-secondary-container font-semibold';
+	const unselectedChipClass = 'border font-semibold text-primary';
 </script>
 
-<li class="rounded-[20px] border bg-white p-4">
-	<p class="font-mono text-sm font-semibold text-blue-700">{course.code}</p>
+<li class="rounded-[20px] border bg-surface p-4">
+	<p class="font-mono text-sm font-semibold text-primary">{course.code}</p>
 	<p class="font-semibold">{course.title}</p>
 	<div class="mt-3 flex flex-wrap gap-2">
 		<button
@@ -104,6 +104,6 @@
 		</button>
 	</div>
 	{#if historyMutation.isError || followingMutation.isError}
-		<p class="mt-2 text-sm text-red-700" role="alert">{m.onboarding_course_change_failed()}</p>
+		<p class="mt-2 text-sm text-error" role="alert">{m.onboarding_course_change_failed()}</p>
 	{/if}
 </li>

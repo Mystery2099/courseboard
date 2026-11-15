@@ -23,9 +23,9 @@
 <div class="desktop:flex">
 	<nav
 		aria-label={m.admin_title()}
-		class="border-b bg-slate-50 px-3 py-4 desktop:sticky desktop:top-0 desktop:h-dvh desktop:w-64 desktop:shrink-0 desktop:border-r desktop:border-b-0 desktop:py-6"
+		class="border-b bg-surface-sidebar px-3 py-4 desktop:sticky desktop:top-0 desktop:h-dvh desktop:w-64 desktop:shrink-0 desktop:border-r desktop:border-b-0 desktop:py-6"
 	>
-		<p class="px-3 font-mono text-sm font-semibold text-blue-700">{m.admin_eyebrow()}</p>
+		<p class="px-3 font-mono text-sm font-semibold text-primary">{m.admin_eyebrow()}</p>
 		<p class="px-3 text-2xl font-semibold">{m.admin_title()}</p>
 		<ul class="mt-4 flex gap-1 overflow-x-auto desktop:flex-col">
 			{#each adminSections as section (section.routeId)}
@@ -35,7 +35,7 @@
 						aria-current={page.route.id === section.routeId ? 'page' : undefined}
 						class={[
 							'block rounded-xl px-3 py-2 whitespace-nowrap',
-							page.route.id === section.routeId && 'bg-indigo-100 font-semibold'
+							page.route.id === section.routeId && 'bg-secondary-container font-semibold'
 						]}>{section.label()}</a
 					>
 				</li>

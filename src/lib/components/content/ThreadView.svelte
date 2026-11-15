@@ -101,12 +101,14 @@
 
 {#snippet replyCard(reply: ReplyResponse)}
 	{@const isAccepted = reply.id === post.acceptedReplyId}
-	<article class={['rounded-2xl p-3', isAccepted ? 'bg-emerald-50' : 'bg-slate-50']}>
+	<article
+		class={['rounded-2xl p-3', isAccepted ? 'bg-success-container' : 'bg-surface-container']}
+	>
 		<div class="flex flex-wrap items-center justify-between gap-2">
 			<ContentByline author={reply.author} createdAt={reply.createdAt} />
 			{#if isAccepted}
 				<span
-					class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-0.5 text-sm font-semibold text-emerald-900"
+					class="inline-flex items-center gap-1 rounded-full bg-success-container px-3 py-0.5 text-sm font-semibold text-on-success-container"
 					><Check size={14} /> {m.thread_accepted_answer()}</span
 				>
 			{/if}
@@ -138,7 +140,7 @@
 		<ThreadKindBadge kind={post.kind} />
 		{#if post.isLocked}
 			<span
-				class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-0.5 text-sm font-semibold text-slate-800"
+				class="inline-flex items-center gap-1 rounded-full bg-surface-container px-3 py-0.5 text-sm font-semibold text-on-surface"
 				><Lock size={14} /> {m.post_badge_locked()}</span
 			>
 		{/if}
@@ -146,7 +148,7 @@
 	<h2 class="mt-2 text-2xl font-semibold wrap-break-word">{post.title}</h2>
 	<div class="mt-2"><ContentByline author={post.author} createdAt={post.createdAt} /></div>
 	{#if post.editedAt}
-		<p class="mt-1 text-sm text-slate-600">
+		<p class="mt-1 text-sm text-on-surface-variant">
 			<time datetime={post.editedAt}
 				>{m.thread_edited({
 					date: new Date(post.editedAt).toLocaleDateString(getLocale())
@@ -157,10 +159,14 @@
 	{#if post.reviewData}
 		<ReviewFacts review={post.reviewData} />
 	{/if}
-	<p class="mt-4 wrap-break-word whitespace-pre-wrap">{post.bodyMarkdown}</p>
+	<p
+		class="mt-4 font-reading text-[17px] leading-[1.65] wrap-break-word whitespace-pre-wrap text-body desktop:text-lg desktop:leading-[1.7]"
+	>
+		{post.bodyMarkdown}
+	</p>
 	{#if post.viewerPermissions.canEditReview}
 		<details bind:open={isReviewEditorOpen} class="mt-4 rounded-[20px] border p-4">
-			<summary class="min-h-11 cursor-pointer py-2 font-semibold text-blue-700"
+			<summary class="min-h-11 cursor-pointer py-2 font-semibold text-primary"
 				>{m.thread_edit_review()}</summary
 			>
 			{#if isReviewEditorOpen}
@@ -188,7 +194,7 @@
 		>
 	{/if}
 	{#if actionError}
-		<p class="mt-2 text-sm text-red-700" role="alert">
+		<p class="mt-2 text-sm text-error" role="alert">
 			{describeRequestFailure(actionError, m.thread_action_failed)}
 		</p>
 	{/if}
@@ -249,7 +255,7 @@
 
 	<div class="mt-6">
 		{#if post.isLocked}
-			<p class="rounded-2xl bg-slate-100 p-4 text-sm" role="status">
+			<p class="rounded-2xl bg-surface-container p-4 text-sm" role="status">
 				{m.thread_locked_notice()}
 			</p>
 		{:else}

@@ -30,7 +30,7 @@
 	</h2>
 	<button
 		type="button"
-		class="inline-flex items-center gap-1 rounded-full bg-blue-700 px-4 py-1.5 font-semibold text-white"
+		class="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-1.5 font-semibold text-on-primary"
 		onclick={() => (isComposerOpen = true)}
 		><Plus size={18} />
 		{isQuestionChannel

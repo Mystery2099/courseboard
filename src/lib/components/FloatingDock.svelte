@@ -38,7 +38,7 @@
 
 <nav
 	aria-label={m.navigation_main()}
-	class="fixed inset-x-3 bottom-3 mx-auto flex h-[60px] max-w-[560px] items-center gap-2 rounded-full border bg-white px-2 shadow-lg"
+	class="fixed inset-x-3 bottom-3 mx-auto flex h-[60px] max-w-[560px] items-center gap-2 rounded-full border bg-surface px-2 shadow-lg"
 >
 	<a
 		href={resolve('/(app)/explore')}
@@ -49,7 +49,7 @@
 	</a>
 	<Dialog.Root bind:open={isSwitcherOpen}>
 		<Dialog.Trigger
-			class="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-sky-100 px-4 text-left"
+			class="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-primary-container px-4 text-left"
 			aria-current={currentCourse ? 'page' : undefined}
 		>
 			{#if currentCourse}
@@ -62,15 +62,17 @@
 			<ChevronUp size={18} class="ml-auto shrink-0" />
 		</Dialog.Trigger>
 		<Dialog.Portal>
-			<Dialog.Overlay class="fixed inset-0 z-40 bg-slate-900/50" />
+			<Dialog.Overlay class="fixed inset-0 z-40 bg-scrim" />
 			<Dialog.Content
-				class="fixed inset-x-0 bottom-0 z-50 max-h-[90dvh] overflow-y-auto rounded-t-[28px] bg-white p-4 pb-8"
+				class="fixed inset-x-0 bottom-0 z-50 max-h-[90dvh] overflow-y-auto rounded-t-[28px] bg-surface p-4 pb-8"
 			>
-				<Dialog.Title class="text-xs font-semibold tracking-wider text-slate-600 uppercase"
+				<Dialog.Title class="text-xs font-semibold tracking-wider text-on-surface-variant uppercase"
 					>{m.navigation_your_courses()}</Dialog.Title
 				>
 				{#if followedCourses.length === 0}
-					<p class="mt-2 text-sm text-slate-600">{m.navigation_followed_courses_empty()}</p>
+					<p class="mt-2 text-sm text-on-surface-variant">
+						{m.navigation_followed_courses_empty()}
+					</p>
 				{:else}
 					<ul class="mt-2 flex gap-3 overflow-x-auto pb-2">
 						{#each followedCourses as course (course.id)}
@@ -89,7 +91,7 @@
 				{/if}
 
 				{#if currentCourse}
-					<h2 class="mt-4 text-xs font-semibold tracking-wider text-slate-600 uppercase">
+					<h2 class="mt-4 text-xs font-semibold tracking-wider text-on-surface-variant uppercase">
 						{m.navigation_in_course({ courseCode: currentCourse.code })}
 					</h2>
 					<ul class="mt-1">
@@ -100,7 +102,7 @@
 									aria-current={channel === currentChannel ? 'page' : undefined}
 									class={[
 										'block rounded-xl px-4 py-3',
-										channel === currentChannel && 'bg-indigo-100 font-semibold'
+										channel === currentChannel && 'bg-secondary-container font-semibold'
 									]}>{COURSE_CHANNEL_LABELS[channel]()}</a
 								>
 							</li>
@@ -109,7 +111,7 @@
 				{/if}
 
 				<div class="mt-4 flex flex-col items-center gap-2">
-					<a href={resolve('/(app)/explore')} class="font-semibold text-blue-700"
+					<a href={resolve('/(app)/explore')} class="font-semibold text-primary"
 						>{m.navigation_explore_all_courses()}</a
 					>
 					{#if isAdministrator}

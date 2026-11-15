@@ -25,9 +25,9 @@
 
 <Dialog.Root bind:open>
 	<Dialog.Portal>
-		<Dialog.Overlay class="fixed inset-0 z-40 bg-slate-900/40" />
+		<Dialog.Overlay class="fixed inset-0 z-40 bg-scrim" />
 		<Dialog.Content
-			class="fixed inset-0 z-50 overflow-y-auto bg-white p-4 tablet:inset-auto tablet:top-1/2 tablet:left-1/2 tablet:max-h-[90dvh] tablet:w-[34rem] tablet:-translate-x-1/2 tablet:-translate-y-1/2 tablet:rounded-[24px] tablet:p-6 tablet:shadow-xl"
+			class="fixed inset-0 z-50 overflow-y-auto bg-surface p-4 tablet:inset-auto tablet:top-1/2 tablet:left-1/2 tablet:max-h-[90dvh] tablet:w-[34rem] tablet:-translate-x-1/2 tablet:-translate-y-1/2 tablet:rounded-[24px] tablet:p-6 tablet:shadow-xl"
 		>
 			<div class="mb-4 flex items-center gap-3">
 				<Dialog.Close class="-ml-2 rounded-full p-2" aria-label={m.common_close()}

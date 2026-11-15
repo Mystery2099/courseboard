@@ -5,6 +5,6 @@
 </script>
 
 <span class="min-w-0 flex-1">
-	<span class="block font-mono text-sm font-semibold text-blue-700">{course.code}</span>
+	<span class="block font-mono text-sm font-semibold text-primary">{course.code}</span>
 	<span class="block truncate font-semibold">{course.title}</span>
 </span>

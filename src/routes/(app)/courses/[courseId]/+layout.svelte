@@ -45,9 +45,9 @@
 <div class="desktop:flex">
 	<nav
 		aria-label={m.course_space_channels({ courseCode: data.course.code })}
-		class="sticky top-0 hidden h-dvh w-64 shrink-0 border-r bg-slate-50 px-3 py-6 desktop:block"
+		class="sticky top-0 hidden h-dvh w-64 shrink-0 border-r bg-surface-sidebar px-3 py-6 desktop:block"
 	>
-		<p class="px-3 font-mono text-sm font-semibold text-blue-700">{data.course.code}</p>
+		<p class="px-3 font-mono text-sm font-semibold text-primary">{data.course.code}</p>
 		<p class="px-3 font-semibold">{data.course.title}</p>
 		<ul class="mt-6 flex flex-col gap-1">
 			{#each COURSE_CHANNELS as channel (channel)}
@@ -57,7 +57,7 @@
 						aria-current={channel === currentChannel ? 'page' : undefined}
 						class={[
 							'block rounded-xl px-3 py-2',
-							channel === currentChannel && 'bg-indigo-100 font-semibold'
+							channel === currentChannel && 'bg-secondary-container font-semibold'
 						]}>{COURSE_CHANNEL_LABELS[channel]()}</a
 					>
 				</li>
@@ -67,18 +67,18 @@
 
 	<div class="min-w-0 flex-1">
 		<header class="mx-auto max-w-3xl px-4 pt-8">
-			<p class="font-mono text-sm font-semibold text-blue-700">
+			<p class="font-mono text-sm font-semibold text-primary">
 				{data.course.code} · {data.course.institution.name}
 			</p>
 			<h1 class="mt-1 text-3xl font-semibold">{data.course.title}</h1>
-			<p class="mt-2 text-slate-700">{data.course.description}</p>
+			<p class="mt-2 text-on-surface-variant">{data.course.description}</p>
 			<div class="mt-4 flex flex-wrap gap-2">
 				<form method="POST" action={followActionUrl} use:enhance>
 					<button
 						type="submit"
 						class={[
 							'inline-flex items-center gap-1 rounded-full px-5 py-2 font-semibold',
-							data.course.isFollowed ? 'bg-indigo-100' : 'bg-blue-700 text-white'
+							data.course.isFollowed ? 'bg-secondary-container' : 'bg-primary text-on-primary'
 						]}
 					>
 						{#if data.course.isFollowed}<Check size={18} />
@@ -98,7 +98,7 @@
 				<p class="mt-2 text-sm" role="alert">{describeErrorCode(page.form.followingError)}</p>
 			{/if}
 			{#if wasAddedToHistory}
-				<p class="mt-2 text-sm text-slate-600" role="status">
+				<p class="mt-2 text-sm text-on-surface-variant" role="status">
 					{m.course_space_added_to_history()}
 				</p>
 			{/if}
@@ -112,7 +112,8 @@
 						aria-current={channel === currentChannel ? 'page' : undefined}
 						class={[
 							'shrink-0 rounded-full border px-4 py-1.5',
-							channel === currentChannel && 'border-transparent bg-indigo-100 font-semibold'
+							channel === currentChannel &&
+								'border-transparent bg-secondary-container font-semibold'
 						]}>{COURSE_CHANNEL_LABELS[channel]()}</a
 					>
 				{/each}

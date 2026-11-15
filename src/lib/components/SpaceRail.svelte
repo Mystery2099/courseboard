@@ -28,15 +28,15 @@
 <Tooltip.Provider delayDuration={300}>
 	<nav
 		aria-label={m.navigation_spaces()}
-		class="sticky top-0 flex h-dvh w-[72px] shrink-0 flex-col items-center gap-3 border-r bg-slate-100 py-4"
+		class="sticky top-0 flex h-dvh w-[72px] shrink-0 flex-col items-center gap-3 border-r bg-surface-container py-4"
 	>
 		<a
 			href={resolve('/(app)/explore')}
 			aria-label={m.navigation_explore()}
 			aria-current={isExploreCurrent ? 'page' : undefined}
 			class={[
-				'flex size-12 items-center justify-center rounded-[15px] bg-white',
-				isExploreCurrent && 'ring-3 ring-blue-700'
+				'flex size-12 items-center justify-center rounded-[15px] bg-surface',
+				isExploreCurrent && 'ring-3 ring-primary'
 			]}
 		>
 			<Compass size={22} />
@@ -62,10 +62,12 @@
 							<Tooltip.Content
 								side="right"
 								sideOffset={8}
-								class="z-50 rounded-lg bg-slate-900 px-3 py-1.5 text-sm text-white"
+								class="z-50 rounded-lg bg-inverse-surface px-3 py-1.5 text-sm text-inverse-on-surface"
 							>
 								<span class="font-mono">{course.code}</span> · {course.title}
-								<span class="block text-xs text-slate-300">{course.institutionName}</span>
+								<span class="block text-xs text-inverse-on-surface/80"
+									>{course.institutionName}</span
+								>
 							</Tooltip.Content>
 						</Tooltip.Portal>
 					</Tooltip.Root>
@@ -76,7 +78,7 @@
 			<a
 				href={resolve('/(app)/admin/invitations')}
 				aria-label={m.navigation_admin()}
-				class="flex size-12 items-center justify-center rounded-[15px] bg-slate-800 text-white"
+				class="flex size-12 items-center justify-center rounded-[15px] bg-inverse-surface text-inverse-on-surface"
 			>
 				<Shield size={22} />
 			</a>
@@ -85,7 +87,7 @@
 			href={resolve('/(app)/profile')}
 			aria-label={m.navigation_your_profile()}
 			aria-current={isProfileCurrent ? 'page' : undefined}
-			class={['rounded-full', isProfileCurrent && 'ring-3 ring-blue-700 ring-offset-2']}
+			class={['rounded-full', isProfileCurrent && 'ring-3 ring-primary ring-offset-2']}
 		>
 			<UserAvatar
 				username={profile.username}

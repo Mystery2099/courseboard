@@ -137,20 +137,20 @@
 				aria-labelledby="history-course-label"
 			>
 				<div class="min-w-0">
-					<p class="font-mono text-sm text-blue-700">{course.code} · {course.institution.name}</p>
+					<p class="font-mono text-sm text-primary">{course.code} · {course.institution.name}</p>
 					<p class="truncate font-semibold">{course.title}</p>
 				</div>
 				{#if !editedEntry && !presetCourse}
 					<button
 						type="button"
-						class="shrink-0 font-semibold text-blue-700"
+						class="shrink-0 font-semibold text-primary"
 						onclick={() => (isChoosingCourse = true)}>{m.common_change()}</button
 					>
 				{/if}
 			</div>
 		{/if}
 		{#if fieldErrors.course}
-			<p class="text-sm text-red-700" role="alert">{fieldErrors.course}</p>
+			<p class="text-sm text-error" role="alert">{fieldErrors.course}</p>
 		{/if}
 	</div>
 
@@ -159,7 +159,7 @@
 		<div class="mt-1 grid grid-cols-3 overflow-hidden rounded-full border">
 			{#each HISTORY_STATUSES as option (option)}
 				<label
-					class="cursor-pointer border-l py-2 text-center first:border-l-0 has-checked:bg-indigo-100 has-checked:font-semibold has-focus-visible:outline-2"
+					class="cursor-pointer border-l py-2 text-center first:border-l-0 has-checked:bg-secondary-container has-checked:font-semibold has-focus-visible:outline-2"
 				>
 					<input type="radio" class="sr-only" value={option} bind:group={status} />
 					{HISTORY_STATUS_LABELS[option]()}
@@ -174,7 +174,7 @@
 			<label class="flex-1">
 				<span class="sr-only">{m.history_form_season()}</span>
 				<select
-					class="w-full rounded-2xl border-slate-300 px-4 py-2"
+					class="w-full rounded-2xl border-outline px-4 py-2"
 					bind:value={season}
 					aria-invalid={fieldErrors.term ? 'true' : undefined}
 				>
@@ -189,7 +189,7 @@
 			<label class="flex-1">
 				<span class="sr-only">{m.history_form_year()}</span>
 				<select
-					class="w-full rounded-2xl border-slate-300 px-4 py-2 disabled:opacity-50"
+					class="w-full rounded-2xl border-outline px-4 py-2 disabled:opacity-50"
 					bind:value={year}
 					disabled={season === ''}
 				>
@@ -200,7 +200,7 @@
 			</label>
 		</div>
 		{#if fieldErrors.term}
-			<p class="mt-1 text-sm text-red-700" role="alert">{fieldErrors.term}</p>
+			<p class="mt-1 text-sm text-error" role="alert">{fieldErrors.term}</p>
 		{/if}
 	</fieldset>
 
@@ -208,19 +208,19 @@
 		<legend class="text-sm font-semibold">{m.history_form_visibility()}</legend>
 		<div class="mt-1 grid grid-cols-2 gap-2">
 			<label
-				class="cursor-pointer rounded-2xl border py-2 text-center has-checked:border-blue-700 has-checked:bg-indigo-100 has-checked:font-semibold has-focus-visible:outline-2"
+				class="cursor-pointer rounded-2xl border py-2 text-center has-checked:border-primary has-checked:bg-secondary-container has-checked:font-semibold has-focus-visible:outline-2"
 			>
 				<input type="radio" class="sr-only" value="private" bind:group={visibility} />
 				{m.history_visibility_private()}
 			</label>
 			<label
-				class="cursor-pointer rounded-2xl border py-2 text-center has-checked:border-blue-700 has-checked:bg-indigo-100 has-checked:font-semibold has-focus-visible:outline-2"
+				class="cursor-pointer rounded-2xl border py-2 text-center has-checked:border-primary has-checked:bg-secondary-container has-checked:font-semibold has-focus-visible:outline-2"
 			>
 				<input type="radio" class="sr-only" value="visible" bind:group={visibility} />
 				{m.history_form_visible_on_profile()}
 			</label>
 		</div>
-		<p class="mt-1 text-sm text-slate-600">
+		<p class="mt-1 text-sm text-on-surface-variant">
 			{visibility === 'private'
 				? m.history_form_private_explanation()
 				: m.history_form_visible_explanation()}
@@ -233,17 +233,17 @@
 			>{m.history_form_private_note_hint()}</span
 		>
 		<textarea
-			class="min-h-20 rounded-2xl border-slate-300 px-4 py-2"
+			class="min-h-20 rounded-2xl border-outline px-4 py-2"
 			bind:value={privateNote}
 			maxlength={PRIVATE_NOTE_MAX_LENGTH}
 			aria-invalid={fieldErrors.privateNote ? 'true' : undefined}></textarea>
 		{#if fieldErrors.privateNote}
-			<p class="text-sm text-red-700" role="alert">{fieldErrors.privateNote}</p>
+			<p class="text-sm text-error" role="alert">{fieldErrors.privateNote}</p>
 		{/if}
 	</label>
 
 	{#if requestError}
-		<p class="text-sm text-red-700" role="alert">
+		<p class="text-sm text-error" role="alert">
 			{describeRequestFailure(requestError, m.history_form_save_failed)}
 		</p>
 	{/if}
@@ -251,7 +251,7 @@
 	<div class="flex flex-wrap items-center gap-2">
 		<button
 			type="submit"
-			class="rounded-full bg-blue-700 px-5 py-2 font-semibold text-white disabled:opacity-50"
+			class="rounded-full bg-primary px-5 py-2 font-semibold text-on-primary disabled:opacity-50"
 			disabled={isBusy}>{saveMutation.isPending ? m.common_saving() : m.common_save()}</button
 		>
 		<button type="button" class="rounded-full border px-5 py-2" onclick={() => onDone('cancelled')}
@@ -263,7 +263,7 @@
 				<span class="text-sm">{m.history_form_delete_confirm()}</span>
 				<button
 					type="button"
-					class="rounded-full bg-red-700 px-4 py-2 font-semibold text-white disabled:opacity-50"
+					class="rounded-full bg-error px-4 py-2 font-semibold text-on-error disabled:opacity-50"
 					disabled={isBusy}
 					onclick={() => deleteMutation.mutate(editedEntry.id)}>{m.common_delete()}</button
 				>
@@ -275,7 +275,7 @@
 			{:else}
 				<button
 					type="button"
-					class="rounded-full px-4 py-2 text-red-700"
+					class="rounded-full px-4 py-2 text-error"
 					onclick={() => (isConfirmingDelete = true)}>{m.history_form_delete_entry()}</button
 				>
 			{/if}

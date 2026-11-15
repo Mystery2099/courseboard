@@ -7,8 +7,8 @@
 
 <span
 	class={[
-		'flex size-12 shrink-0 flex-col items-center justify-center rounded-[15px] bg-sky-100 font-mono text-[11px] leading-tight font-semibold text-slate-900',
-		isCurrent && 'ring-3 ring-blue-700'
+		'flex size-12 shrink-0 flex-col items-center justify-center rounded-[15px] bg-primary-container font-mono text-[11px] leading-tight font-semibold text-on-primary-container',
+		isCurrent && 'ring-3 ring-primary'
 	]}
 	aria-hidden="true"
 >

@@ -11,12 +11,12 @@
 <div class="flex flex-wrap items-center justify-between gap-4">
 	<h1 class="text-2xl font-semibold">{m.admin_section_catalog()}</h1>
 	<form method="POST" action="?/loadDemoCatalog" use:enhance>
-		<button type="submit" class="rounded-full bg-blue-700 px-5 py-2 font-semibold text-white">
+		<button type="submit" class="rounded-full bg-primary px-5 py-2 font-semibold text-on-primary">
 			{m.onboarding_load_demo_catalog()}
 		</button>
 	</form>
 </div>
-<p class="mt-2 text-sm text-slate-600">
+<p class="mt-2 text-sm text-on-surface-variant">
 	{m.admin_catalog_demo_explanation()}
 </p>
 {#if form?.demoCatalogLoad}
@@ -33,9 +33,9 @@
 	</p>
 {/if}
 
-<div class="mt-6 overflow-x-auto rounded-[20px] border bg-white">
+<div class="mt-6 overflow-x-auto rounded-[20px] border bg-surface">
 	<table class="w-full text-left text-sm">
-		<thead class="text-xs tracking-wider text-slate-600 uppercase">
+		<thead class="text-xs tracking-wider text-on-surface-variant uppercase">
 			<tr>
 				<th class="px-4 py-3">{m.admin_catalog_code()}</th>
 				<th class="px-4">{m.admin_catalog_name()}</th>
@@ -47,10 +47,13 @@
 				<tr class="border-t">
 					<td class="px-4 py-3 font-mono font-semibold whitespace-nowrap">{course.code}</td>
 					<td class="px-4">{course.title}</td>
-					<td class="px-4 text-slate-600">{course.institutionName}</td>
+					<td class="px-4 text-on-surface-variant">{course.institutionName}</td>
 				</tr>
 			{:else}
-				<tr><td colspan="3" class="px-4 py-3 text-slate-600">{m.admin_catalog_empty()}</td></tr>
+				<tr
+					><td colspan="3" class="px-4 py-3 text-on-surface-variant">{m.admin_catalog_empty()}</td
+					></tr
+				>
 			{/each}
 		</tbody>
 	</table>

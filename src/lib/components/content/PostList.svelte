@@ -68,7 +68,7 @@
 				type="button"
 				class={[
 					'rounded-full border px-4 py-1.5 text-sm',
-					option === filter && 'border-transparent bg-indigo-100 font-semibold'
+					option === filter && 'border-transparent bg-secondary-container font-semibold'
 				]}
 				aria-pressed={option === filter}
 				onclick={() => (filter = option)}>{POST_LIST_FILTER_LABELS[option]()}</button
@@ -78,38 +78,38 @@
 {/if}
 
 {#if postsQuery.isPending}
-	<p class="mt-4 text-sm text-slate-600">{m.common_loading()}</p>
+	<p class="mt-4 text-sm text-on-surface-variant">{m.common_loading()}</p>
 {:else if postsQuery.isError && posts.length === 0}
-	<p class="mt-4 text-sm text-red-700" role="alert">{m.post_list_load_failed()}</p>
+	<p class="mt-4 text-sm text-error" role="alert">{m.post_list_load_failed()}</p>
 {:else if posts.length === 0}
-	<p class="mt-4 text-sm text-slate-600">
+	<p class="mt-4 text-sm text-on-surface-variant">
 		{filter === 'unanswered' ? m.post_list_all_answered() : emptyMessage}
 	</p>
 {:else}
-	<ul class="mt-4 divide-y overflow-hidden rounded-[20px] border bg-white">
+	<ul class="mt-4 divide-y overflow-hidden rounded-[20px] border bg-surface">
 		{#each posts as post (post.id)}
 			<li>
 				<a
 					href={resolve(THREAD_ROUTE_IDS[post.kind], { courseId, postId: post.id })}
-					class="block px-4 py-3 hover:bg-slate-50"
+					class="block px-4 py-3 hover:bg-surface-container"
 				>
 					<span class="flex flex-wrap items-center gap-2">
 						{#if kind === null}<ThreadKindBadge kind={post.kind} />{/if}
 						{#if post.hasAcceptedReply}
 							<span
-								class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-0.5 text-sm font-semibold text-emerald-900"
+								class="inline-flex items-center gap-1 rounded-full bg-success-container px-3 py-0.5 text-sm font-semibold text-on-success-container"
 								><Check size={14} /> {m.post_badge_answered()}</span
 							>
 						{/if}
 						{#if post.isLocked}
 							<span
-								class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-0.5 text-sm font-semibold text-slate-800"
+								class="inline-flex items-center gap-1 rounded-full bg-surface-container px-3 py-0.5 text-sm font-semibold text-on-surface"
 								><Lock size={14} /> {m.post_badge_locked()}</span
 							>
 						{/if}
 					</span>
 					<span class="mt-1 block font-semibold wrap-break-word">{post.title}</span>
-					<span class="mt-1 block text-sm text-slate-600">
+					<span class="mt-1 block text-sm text-on-surface-variant">
 						{post.author.displayName} · {formatReplyCount(post.replyCount)} ·
 						<time datetime={post.lastActivityAt}>{formatRelativeTime(post.lastActivityAt)}</time>
 					</span>

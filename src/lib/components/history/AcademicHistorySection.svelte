@@ -65,7 +65,7 @@
 				type="button"
 				class={[
 					'rounded-full border px-4 py-1.5',
-					isPreviewingAsOthers && 'border-transparent bg-indigo-100 font-semibold'
+					isPreviewingAsOthers && 'border-transparent bg-secondary-container font-semibold'
 				]}
 				aria-pressed={isPreviewingAsOthers}
 				onclick={() => (isPreviewingAsOthers = !isPreviewingAsOthers)}
@@ -74,7 +74,7 @@
 			{#if !isPreviewingAsOthers}
 				<button
 					type="button"
-					class="inline-flex items-center gap-1 rounded-full bg-blue-700 px-4 py-1.5 font-semibold text-white"
+					class="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-1.5 font-semibold text-on-primary"
 					onclick={() => openEditor(null)}><Plus size={18} /> {m.history_add_course()}</button
 				>
 			{/if}
@@ -82,38 +82,38 @@
 	</div>
 
 	{#if isPreviewingAsOthers}
-		<p class="mt-2 text-sm text-slate-600">
+		<p class="mt-2 text-sm text-on-surface-variant">
 			{m.history_preview_explanation()}
-			<a class="font-semibold text-blue-700" href={resolve('/(app)/users/[username]', { username })}
+			<a class="font-semibold text-primary" href={resolve('/(app)/users/[username]', { username })}
 				>{m.history_open_profile_page()}</a
 			>
 		</p>
 		{#if visibleHistoryQuery.isPending}
-			<p class="mt-4 text-sm text-slate-600">{m.history_preview_loading()}</p>
+			<p class="mt-4 text-sm text-on-surface-variant">{m.history_preview_loading()}</p>
 		{:else if visibleHistoryQuery.isError}
-			<p class="mt-4 text-sm text-red-700" role="alert">{m.history_preview_failed()}</p>
+			<p class="mt-4 text-sm text-error" role="alert">{m.history_preview_failed()}</p>
 		{:else}
 			<VisibleHistoryList entries={visibleHistoryQuery.data.entries} />
 		{/if}
 	{:else}
-		<p class="mt-2 text-sm text-slate-600">
+		<p class="mt-2 text-sm text-on-surface-variant">
 			{m.history_explanation()}
 		</p>
 		{#if ownHistoryQuery.isError}
-			<p class="mt-2 text-sm text-slate-600" role="status">
+			<p class="mt-2 text-sm text-on-surface-variant" role="status">
 				{m.history_refresh_failed()}
 			</p>
 		{/if}
 		{#if ownGroups.length === 0}
-			<div class="mt-4 rounded-[20px] border bg-white p-4">
+			<div class="mt-4 rounded-[20px] border bg-surface p-4">
 				<p class="font-semibold">{m.history_empty_title()}</p>
-				<p class="mt-1 text-sm text-slate-600">
+				<p class="mt-1 text-sm text-on-surface-variant">
 					{m.history_empty_detail()}
 				</p>
 			</div>
 		{:else}
 			{#each ownGroups as group (group.key)}
-				<div class="mt-4 overflow-hidden rounded-[20px] border bg-white">
+				<div class="mt-4 overflow-hidden rounded-[20px] border bg-surface">
 					<h3 class="border-b px-4 py-2 text-sm font-semibold tracking-wide uppercase">
 						{group.heading}
 					</h3>
@@ -122,7 +122,7 @@
 							<li>
 								<button
 									type="button"
-									class="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50"
+									class="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-surface-container"
 									aria-label={m.history_edit_entry_label({
 										courseCode: entry.course.code,
 										courseTitle: entry.course.title
@@ -132,7 +132,7 @@
 									<HistoryCourseLabel course={entry.course} />
 									<span class="flex flex-col items-end gap-1">
 										<HistoryStatusBadge status={entry.status} />
-										<span class="text-sm text-slate-600">
+										<span class="text-sm text-on-surface-variant">
 											{entry.visibility === 'visible'
 												? m.history_visibility_visible()
 												: m.history_visibility_private()}{entry.privateNote

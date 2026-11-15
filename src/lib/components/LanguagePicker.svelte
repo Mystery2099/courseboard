@@ -15,7 +15,7 @@
 <label class="flex items-center gap-2 text-sm">
 	<span class={isLabelVisible ? 'font-semibold' : 'sr-only'}>{m.language_picker_label()}</span>
 	<select
-		class="rounded-2xl border-slate-300 py-1.5 pr-8 pl-3 text-sm"
+		class="rounded-2xl border-outline py-1.5 pr-8 pl-3 text-sm"
 		value={getLocale()}
 		onchange={(event) => {
 			const locale = event.currentTarget.value;
