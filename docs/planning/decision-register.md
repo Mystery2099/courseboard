@@ -55,6 +55,7 @@ When we settle something, add it here with what we chose, what we rejected, and 
 - **Post edit history:** posts only show an edited timestamp.
 - **Language in the URL (`/es/...`):** it only helps search engines, and nothing here is public. A cookie keeps links the same for everyone.
 - **Translating content:** posts, reviews, and catalog data are shown as written. Only the app's own text is translated.
+- **Sentence-by-sentence machine translation** (inlang's free service, translatex's keyless Google and Edge endpoints, offline Argos Translate): on the same test messages they used *usted* or the wrong terms, dropped leading spaces, and two weakened privacy wording, such as "only you ever see this" becoming "sólo se ve esto". Gemini through `agy` follows the [translation guide](../../messages/translation-guide.md) and is covered by my existing subscription. The Google Cloud Translation API and DeepL need a card on file, which the free-only rule excludes (November 15, 2026).
 - **Automated backups through GitHub Actions:** they would store user data, including email addresses, as build artifacts.
 
 ## Open questions

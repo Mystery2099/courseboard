@@ -22,6 +22,7 @@
 		"lint": "prettier --check . && eslint .",
 		"i18n:compile": "paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide --strategy cookie preferredLanguage baseLocale --silent",
 		"i18n:check": "inlang check --project ./project.inlang",
+		"i18n:translate": "tsx scripts/i18n/MessageTranslator.ts",
 		"format": "prettier --write .",
 		"test:unit": "vitest",
 		"test": "pnpm run test:unit --run && pnpm run test:e2e",
