@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createQuery, useQueryClient } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
@@ -93,12 +93,13 @@
 {/if}
 
 {#if context.ownReviewId && !isComposerOpen}
-	<a
-		class={[buttonClass('outlined'), 'mt-4']}
+	<Button
+		variant="outlined"
+		class="mt-4"
 		href={resolve('/(app)/courses/[courseId]/reviews/[postId]', {
 			courseId: course.id,
 			postId: context.ownReviewId
-		})}>{m.reviews_open_or_edit_own()}</a
+		})}>{m.reviews_open_or_edit_own()}</Button
 	>
 {:else if context.attempts.length === 0 && !isComposerOpen}
 	<div class="mt-4 rounded-card border p-4">
@@ -106,10 +107,8 @@
 		<p class="mt-1 text-sm text-on-surface-variant">
 			{m.reviews_history_required_detail()}
 		</p>
-		<button
-			type="button"
-			class={[buttonClass('outlined'), 'mt-3']}
-			onclick={() => (isHistoryEditorOpen = true)}>{m.common_add_to_history()}</button
+		<Button variant="outlined" class="mt-3" onclick={() => (isHistoryEditorOpen = true)}
+			>{m.common_add_to_history()}</Button
 		>
 	</div>
 {:else}

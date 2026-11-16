@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { buttonClass, iconButtonClass } from '#lib/components/ui/ControlStyles.ts';
+	import { Button, buttonVariants } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
 	import Search from 'lucide-svelte/icons/search';
@@ -41,7 +41,7 @@
 		{#if step === 'profile'}
 			<button
 				type="button"
-				class={[iconButtonClass(), '-ml-2']}
+				class={[buttonVariants({ variant: 'ghost', size: 'icon' }), '-ml-2']}
 				aria-label={m.onboarding_back_to_school()}
 				onclick={() => (step = 'school')}><ChevronLeft size={24} /></button
 			>
@@ -86,11 +86,12 @@
 					<p class="mt-6 text-on-surface-variant" role="status">
 						{m.onboarding_no_schools_administrator()}
 					</p>
-					<button
+					<Button
+						variant="outlined"
+						class="mt-4"
 						type="submit"
 						formaction="?/loadDemoCatalog"
-						formnovalidate
-						class={[buttonClass('outlined'), 'mt-4']}>{m.onboarding_load_demo_catalog()}</button
+						formnovalidate>{m.onboarding_load_demo_catalog()}</Button
 					>
 				{:else}
 					<p class="mt-6 text-on-surface-variant" role="status">
@@ -142,11 +143,11 @@
 			{/if}
 
 			<div class="mt-auto pt-8">
-				<button
-					type="button"
-					class={[buttonClass('filled'), 'w-full']}
+				<Button
+					variant="filled"
+					class="w-full"
 					disabled={!primaryInstitutionId}
-					onclick={() => (step = 'profile')}>{m.common_continue()}</button
+					onclick={() => (step = 'profile')}>{m.common_continue()}</Button
 				>
 			</div>
 		{:else}
@@ -202,8 +203,8 @@
 			{/if}
 
 			<div class="mt-auto pt-8">
-				<button type="submit" class={[buttonClass('filled'), 'w-full']} disabled={isSubmitting}
-					>{isSubmitting ? m.common_saving() : m.common_continue()}</button
+				<Button variant="filled" class="w-full" type="submit" disabled={isSubmitting}
+					>{isSubmitting ? m.common_saving() : m.common_continue()}</Button
 				>
 			</div>
 		{/if}

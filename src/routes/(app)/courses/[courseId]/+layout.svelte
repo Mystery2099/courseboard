@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { buttonClass, filterChipClass } from '#lib/components/ui/ControlStyles.ts';
+	import { toggleVariants } from '#lib/components/ui/toggle/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
@@ -75,18 +76,17 @@
 			<p class="mt-2 text-on-surface-variant">{data.course.description}</p>
 			<div class="mt-4 flex flex-wrap gap-2">
 				<form method="POST" action={followActionUrl} use:enhance>
-					<button type="submit" class={buttonClass(data.course.isFollowed ? 'tonal' : 'filled')}>
+					<Button variant={data.course.isFollowed ? 'tonal' : 'filled'} type="submit">
 						{#if data.course.isFollowed}<Check size={18} />
 							{m.course_space_following()}{:else}{m.course_space_follow()}{/if}
-					</button>
+					</Button>
 				</form>
-				<button
-					type="button"
-					class={buttonClass('outlined')}
+				<Button
+					variant="outlined"
 					onclick={() => {
 						wasAddedToHistory = false;
 						isHistoryEditorOpen = true;
-					}}>{m.course_space_add_to_history()}</button
+					}}>{m.course_space_add_to_history()}</Button
 				>
 			</div>
 			{#if page.form?.followingError}
@@ -105,8 +105,7 @@
 					<a
 						href={resolve(COURSE_CHANNEL_ROUTE_IDS[channel], { courseId: data.course.id })}
 						aria-current={channel === currentChannel ? 'page' : undefined}
-						class={filterChipClass(channel === currentChannel)}
-						>{COURSE_CHANNEL_LABELS[channel]()}</a
+						class={toggleVariants({ variant: 'chip' })}>{COURSE_CHANNEL_LABELS[channel]()}</a
 					>
 				{/each}
 			</nav>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { describeValidationIssue } from '#lib/client/ErrorPresentation.ts';
 	import { REPLY_BODY_MAX_LENGTH, createReplySchema } from '#lib/contracts/PostContract.ts';
@@ -46,11 +46,9 @@
 		<p class="text-sm text-error" role="alert">{errorMessage}</p>
 	{/if}
 	<div class="flex gap-2">
-		<button type="submit" class={buttonClass('filled')}>{m.common_reply()}</button>
+		<Button variant="filled" type="submit">{m.common_reply()}</Button>
 		{#if onCancel}
-			<button type="button" class={buttonClass('outlined')} onclick={onCancel}
-				>{m.common_cancel()}</button
-			>
+			<Button variant="outlined" onclick={onCancel}>{m.common_cancel()}</Button>
 		{/if}
 	</div>
 </form>

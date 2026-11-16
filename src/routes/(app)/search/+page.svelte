@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { toggleVariants } from '#lib/components/ui/toggle/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { resolve } from '$app/paths';
 	import SearchIcon from 'lucide-svelte/icons/search';
 	import CourseCodeTile from '#lib/components/CourseCodeTile.svelte';
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
-	import { buttonClass, filterChipClass } from '#lib/components/ui/ControlStyles.ts';
 	import { formatRelativeTime, THREAD_KIND_LABELS } from '#lib/client/content/PostPresentation.ts';
 	import {
 		formatTerm,
@@ -119,7 +120,7 @@
 					</select>
 				</label>
 			{/if}
-			<button type="submit" class={buttonClass('filled', 'compact')}>{m.search_submit()}</button>
+			<Button variant="filled" size="compact" type="submit">{m.search_submit()}</Button>
 		</div>
 	</form>
 
@@ -133,7 +134,7 @@
 					status: undefined
 				})}"
 				aria-current={scope === query.scope ? 'page' : undefined}
-				class={filterChipClass(scope === query.scope)}>{SCOPE_LABELS[scope]()}</a
+				class={toggleVariants({ variant: 'chip' })}>{SCOPE_LABELS[scope]()}</a
 			>
 		{/each}
 	</nav>
@@ -156,13 +157,14 @@
 				{/if}
 			</p>
 			{#if search.institution}
-				<a
+				<Button
+					variant="outlined"
+					class="mt-4"
 					href="{resolve('/(app)/search')}?{searchQueryString({
 						institutionId: '',
 						page: undefined,
 						courseId: undefined
-					})}"
-					class={[buttonClass('outlined'), 'mt-4']}>{m.search_try_all_schools()}</a
+					})}">{m.search_try_all_schools()}</Button
 				>
 			{/if}
 		</div>
@@ -172,9 +174,11 @@
 		<div class="mt-8 flex items-center justify-between gap-3">
 			<h2 class="text-xl font-bold">{title}</h2>
 			{#if !isPaged && hasMore}
-				<a
+				<Button
+					variant="text"
+					size="compact"
 					href="{resolve('/(app)/search')}?{searchQueryString({ scope, page: undefined })}"
-					class={buttonClass('text', 'compact')}>{m.search_see_all()}</a
+					>{m.search_see_all()}</Button
 				>
 			{/if}
 		</div>
@@ -271,15 +275,19 @@
 	{#if isPaged && activeSection && (query.page > 1 || activeSection.hasMore)}
 		<div class="mt-4 flex gap-2">
 			{#if query.page > 1}
-				<a
+				<Button
+					variant="outlined"
+					size="compact"
 					href="{resolve('/(app)/search')}?{searchQueryString({ page: query.page - 1 })}"
-					class={buttonClass('outlined', 'compact')}>{m.search_previous_page()}</a
+					>{m.search_previous_page()}</Button
 				>
 			{/if}
 			{#if activeSection.hasMore && query.page < SEARCH_MAX_PAGE}
-				<a
+				<Button
+					variant="outlined"
+					size="compact"
 					href="{resolve('/(app)/search')}?{searchQueryString({ page: query.page + 1 })}"
-					class={buttonClass('outlined', 'compact')}>{m.search_next_page()}</a
+					>{m.search_next_page()}</Button
 				>
 			{/if}
 		</div>

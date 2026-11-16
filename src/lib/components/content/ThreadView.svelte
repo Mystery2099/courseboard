@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { buttonClass, statusChipClass } from '#lib/components/ui/ControlStyles.ts';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery, createMutation, createQuery } from '@tanstack/svelte-query';
 	import { useQueryClient } from '@tanstack/svelte-query';
@@ -108,27 +109,23 @@
 		<div class="flex flex-wrap items-center justify-between gap-2">
 			<ContentByline author={reply.author} createdAt={reply.createdAt} />
 			{#if isAccepted}
-				<span class={statusChipClass('success')}
-					><Check size={14} /> {m.thread_accepted_answer()}</span
-				>
+				<Badge variant="success"><Check size={14} /> {m.thread_accepted_answer()}</Badge>
 			{/if}
 		</div>
 		<p class="mt-2 wrap-break-word whitespace-pre-wrap">{reply.bodyMarkdown}</p>
 		<div class="mt-2 flex flex-wrap gap-2 text-sm">
 			{#if reply.parentReplyId === null && !post.isLocked}
-				<button
-					type="button"
-					class={buttonClass('outlined', 'compact')}
-					onclick={() => (replyTargetId = reply.id)}>{m.common_reply()}</button
+				<Button variant="outlined" size="compact" onclick={() => (replyTargetId = reply.id)}
+					>{m.common_reply()}</Button
 				>
 			{/if}
 			{#if post.viewerPermissions.canChooseAcceptedReply}
-				<button
-					type="button"
-					class={buttonClass('outlined', 'compact')}
+				<Button
+					variant="outlined"
+					size="compact"
 					disabled={acceptedReplyMutation.isPending}
 					onclick={() => acceptedReplyMutation.mutate(isAccepted ? null : reply.id)}
-					>{isAccepted ? m.thread_clear_accepted_answer() : m.thread_accept_answer()}</button
+					>{isAccepted ? m.thread_clear_accepted_answer() : m.thread_accept_answer()}</Button
 				>
 			{/if}
 		</div>
@@ -139,7 +136,7 @@
 	<div class="flex flex-wrap items-center gap-2">
 		<ThreadKindBadge kind={post.kind} />
 		{#if post.isLocked}
-			<span class={statusChipClass('neutral')}><Lock size={14} /> {m.post_badge_locked()}</span>
+			<Badge variant="neutral"><Lock size={14} /> {m.post_badge_locked()}</Badge>
 		{/if}
 	</div>
 	<h2 class="mt-2 text-2xl font-semibold wrap-break-word">{post.title}</h2>
@@ -182,12 +179,13 @@
 		</details>
 	{/if}
 	{#if post.viewerPermissions.canLock}
-		<button
-			type="button"
-			class={[buttonClass('outlined', 'compact'), 'mt-4']}
+		<Button
+			variant="outlined"
+			size="compact"
+			class="mt-4"
 			disabled={lockMutation.isPending}
 			onclick={() => lockMutation.mutate(!post.isLocked)}
-			>{post.isLocked ? m.thread_unlock() : m.thread_lock()}</button
+			>{post.isLocked ? m.thread_unlock() : m.thread_lock()}</Button
 		>
 	{/if}
 	{#if actionError}
@@ -231,12 +229,13 @@
 	</ul>
 
 	{#if repliesQuery.hasNextPage}
-		<button
-			type="button"
-			class={[buttonClass('outlined', 'compact'), 'mt-3']}
+		<Button
+			variant="outlined"
+			size="compact"
+			class="mt-3"
 			disabled={repliesQuery.isFetchingNextPage}
 			onclick={() => repliesQuery.fetchNextPage()}
-			>{repliesQuery.isFetchingNextPage ? m.common_loading() : m.thread_load_more_replies()}</button
+			>{repliesQuery.isFetchingNextPage ? m.common_loading() : m.thread_load_more_replies()}</Button
 		>
 	{/if}
 

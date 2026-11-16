@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { tick, untrack } from 'svelte';
@@ -279,18 +279,15 @@
 			</p>
 		{/if}
 		<div class="flex flex-wrap gap-2">
-			<button type="submit" class={buttonClass('filled')} disabled={saveMutation.isPending}
+			<Button variant="filled" type="submit" disabled={saveMutation.isPending}
 				>{saveMutation.isPending
 					? m.common_saving()
 					: editedReview
 						? m.common_save_changes()
-						: m.review_form_publish()}</button
+						: m.review_form_publish()}</Button
 			>
-			<button
-				type="button"
-				class={buttonClass('outlined')}
-				disabled={saveMutation.isPending}
-				onclick={onCancel}>{m.common_cancel()}</button
+			<Button variant="outlined" disabled={saveMutation.isPending} onclick={onCancel}
+				>{m.common_cancel()}</Button
 			>
 		</div>
 	</fieldset>

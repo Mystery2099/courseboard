@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { buttonClass, iconButtonClass } from '#lib/components/ui/ControlStyles.ts';
+	import { Button, buttonVariants } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { Dialog } from 'bits-ui';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
@@ -62,8 +62,9 @@
 			class="fixed inset-0 z-50 overflow-y-auto bg-surface p-4 tablet:inset-auto tablet:top-1/2 tablet:left-1/2 tablet:max-h-[90dvh] tablet:w-[40rem] tablet:-translate-x-1/2 tablet:-translate-y-1/2 tablet:rounded-sheet tablet:p-6 tablet:shadow-xl"
 		>
 			<div class="mb-4 flex items-center gap-3">
-				<Dialog.Close class={[iconButtonClass(), '-ml-2']} aria-label={m.common_close()}
-					><X size={22} /></Dialog.Close
+				<Dialog.Close
+					class={[buttonVariants({ variant: 'ghost', size: 'icon' }), '-ml-2']}
+					aria-label={m.common_close()}><X size={22} /></Dialog.Close
 				>
 				<Dialog.Title class="text-xl font-semibold">
 					{kind === 'question'
@@ -109,12 +110,14 @@
 					</p>
 				{/if}
 				<div class="flex gap-2">
-					<button type="submit" class={buttonClass('filled')} disabled={publishMutation.isPending}
+					<Button variant="filled" type="submit" disabled={publishMutation.isPending}
 						>{publishMutation.isPending
 							? m.post_composer_posting()
-							: m.post_composer_post()}</button
+							: m.post_composer_post()}</Button
 					>
-					<Dialog.Close class={buttonClass('outlined')}>{m.common_cancel()}</Dialog.Close>
+					<Dialog.Close class={buttonVariants({ variant: 'outlined' })}
+						>{m.common_cancel()}</Dialog.Close
+					>
 				</div>
 			</form>
 		</Dialog.Content>

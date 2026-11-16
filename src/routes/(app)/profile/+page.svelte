@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
+	import { Button, buttonVariants } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
 	import { SignOutButton, UserButton, useClerkContext } from 'svelte-clerk';
@@ -73,13 +73,9 @@
 					/>
 				</label>
 				<div class="flex gap-2">
-					<button type="submit" class={buttonClass('filled')} disabled={isSaving}
-						>{m.common_save()}</button
-					>
-					<button
-						type="button"
-						class={buttonClass('outlined')}
-						onclick={() => (isEditingDisplayName = false)}>{m.common_cancel()}</button
+					<Button variant="filled" type="submit" disabled={isSaving}>{m.common_save()}</Button>
+					<Button variant="outlined" onclick={() => (isEditingDisplayName = false)}
+						>{m.common_cancel()}</Button
 					>
 				</div>
 			</form>
@@ -91,10 +87,8 @@
 		{:else}
 			<div class="mt-2 flex items-center justify-between gap-4">
 				<p>{data.profile.displayName}</p>
-				<button
-					type="button"
-					class={buttonClass('outlined', 'compact')}
-					onclick={() => (isEditingDisplayName = true)}>{m.common_edit()}</button
+				<Button variant="outlined" size="compact" onclick={() => (isEditingDisplayName = true)}
+					>{m.common_edit()}</Button
 				>
 			</div>
 			{#if form?.displayNameSaved}
@@ -128,15 +122,17 @@
 						: m.profile_school_shown()}
 				</p>
 			</div>
-			<button
+			<Button
+				variant="outlined"
+				size="compact"
+				class="shrink-0"
 				type="submit"
 				name="isPrimaryInstitutionHidden"
 				value={data.profile.isPrimaryInstitutionHidden ? 'false' : 'true'}
-				class={[buttonClass('outlined', 'compact'), 'shrink-0']}
 				disabled={isSavingInstitutionVisibility}
 				>{data.profile.isPrimaryInstitutionHidden
 					? m.profile_school_show()
-					: m.profile_school_hide()}</button
+					: m.profile_school_hide()}</Button
 			>
 		</form>
 		{#if form?.institutionVisibilityError}
@@ -164,7 +160,9 @@
 		</p>
 		<div class="mt-3 flex items-center gap-4">
 			<UserButton />
-			<SignOutButton class={buttonClass('outlined', 'compact')}>{m.auth_sign_out()}</SignOutButton>
+			<SignOutButton class={buttonVariants({ variant: 'outlined', size: 'compact' })}
+				>{m.auth_sign_out()}</SignOutButton
+			>
 		</div>
 	</section>
 </main>

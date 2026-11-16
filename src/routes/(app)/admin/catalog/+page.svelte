@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
@@ -12,9 +12,9 @@
 <div class="flex flex-wrap items-center justify-between gap-4">
 	<h1 class="text-2xl font-semibold">{m.admin_section_catalog()}</h1>
 	<form method="POST" action="?/loadDemoCatalog" use:enhance>
-		<button type="submit" class={buttonClass('filled')}>
+		<Button variant="filled" type="submit">
 			{m.onboarding_load_demo_catalog()}
-		</button>
+		</Button>
 	</form>
 </div>
 <p class="mt-2 text-sm text-on-surface-variant">

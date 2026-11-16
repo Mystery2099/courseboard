@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { statusChipClass } from '#lib/components/ui/ControlStyles.ts';
+	import { badgeVariants } from '#lib/components/ui/badge/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { resolve } from '$app/paths';
 	import { createQuery } from '@tanstack/svelte-query';
@@ -67,12 +67,12 @@
 	{#if data.person.primaryInstitution || otherInstitutionNames.length > 0}
 		<ul class="mt-4 flex flex-wrap gap-2" aria-label={m.person_schools()}>
 			{#if data.person.primaryInstitution}
-				<li class={statusChipClass('secondary')}>
+				<li class={badgeVariants({ variant: 'secondary' })}>
 					{data.person.primaryInstitution.name}
 				</li>
 			{/if}
 			{#each otherInstitutionNames as institutionName (institutionName)}
-				<li class={statusChipClass('neutral')}>{institutionName}</li>
+				<li class={badgeVariants({ variant: 'neutral' })}>{institutionName}</li>
 			{/each}
 		</ul>
 	{/if}

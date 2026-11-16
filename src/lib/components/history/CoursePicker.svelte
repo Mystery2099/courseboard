@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery, createQuery } from '@tanstack/svelte-query';
 	import { untrack } from 'svelte';
@@ -87,11 +87,12 @@
 			{/each}
 		</ul>
 		{#if coursesQuery.hasNextPage}
-			<button
-				type="button"
-				class={[buttonClass('outlined', 'compact'), 'self-start']}
+			<Button
+				variant="outlined"
+				size="compact"
+				class="self-start"
 				disabled={coursesQuery.isFetchingNextPage}
-				onclick={() => coursesQuery.fetchNextPage()}>{m.common_load_more()}</button
+				onclick={() => coursesQuery.fetchNextPage()}>{m.common_load_more()}</Button
 			>
 		{/if}
 	{/if}

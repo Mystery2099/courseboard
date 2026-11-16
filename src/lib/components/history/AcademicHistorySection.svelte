@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
@@ -62,18 +62,16 @@
 	<div class="flex flex-wrap items-center justify-between gap-3">
 		<h2 id="history-heading" class="text-xl font-semibold">{m.history_heading()}</h2>
 		<div class="flex gap-2">
-			<button
-				type="button"
-				class={buttonClass(isPreviewingAsOthers ? 'tonal' : 'outlined', 'compact')}
+			<Button
+				variant={isPreviewingAsOthers ? 'tonal' : 'outlined'}
+				size="compact"
 				aria-pressed={isPreviewingAsOthers}
 				onclick={() => (isPreviewingAsOthers = !isPreviewingAsOthers)}
-				>{m.history_preview_as_others()}</button
+				>{m.history_preview_as_others()}</Button
 			>
 			{#if !isPreviewingAsOthers}
-				<button
-					type="button"
-					class={buttonClass('filled', 'compact')}
-					onclick={() => openEditor(null)}><Plus size={18} /> {m.history_add_course()}</button
+				<Button variant="filled" size="compact" onclick={() => openEditor(null)}
+					><Plus size={18} /> {m.history_add_course()}</Button
 				>
 			{/if}
 		</div>

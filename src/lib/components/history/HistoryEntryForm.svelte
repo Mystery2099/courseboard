@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { untrack } from 'svelte';
@@ -250,26 +250,21 @@
 	{/if}
 
 	<div class="flex flex-wrap items-center gap-2">
-		<button type="submit" class={buttonClass('filled')} disabled={isBusy}
-			>{saveMutation.isPending ? m.common_saving() : m.common_save()}</button
+		<Button variant="filled" type="submit" disabled={isBusy}
+			>{saveMutation.isPending ? m.common_saving() : m.common_save()}</Button
 		>
-		<button type="button" class={buttonClass('outlined')} onclick={() => onDone('cancelled')}
-			>{m.common_cancel()}</button
-		>
+		<Button variant="outlined" onclick={() => onDone('cancelled')}>{m.common_cancel()}</Button>
 		{#if editedEntry}
 			<span class="flex-1"></span>
 			{#if isConfirmingDelete}
 				<span class="text-sm">{m.history_form_delete_confirm()}</span>
-				<button
-					type="button"
-					class={buttonClass('destructive')}
+				<Button
+					variant="destructive"
 					disabled={isBusy}
-					onclick={() => deleteMutation.mutate(editedEntry.id)}>{m.common_delete()}</button
+					onclick={() => deleteMutation.mutate(editedEntry.id)}>{m.common_delete()}</Button
 				>
-				<button
-					type="button"
-					class={buttonClass('outlined')}
-					onclick={() => (isConfirmingDelete = false)}>{m.history_form_keep()}</button
+				<Button variant="outlined" onclick={() => (isConfirmingDelete = false)}
+					>{m.history_form_keep()}</Button
 				>
 			{:else}
 				<button

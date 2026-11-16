@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { iconButtonClass } from '#lib/components/ui/ControlStyles.ts';
+	import { buttonVariants } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { Dialog } from 'bits-ui';
 	import X from 'lucide-svelte/icons/x';
@@ -31,8 +31,9 @@
 			class="fixed inset-0 z-50 overflow-y-auto bg-surface p-4 tablet:inset-auto tablet:top-1/2 tablet:left-1/2 tablet:max-h-[90dvh] tablet:w-[34rem] tablet:-translate-x-1/2 tablet:-translate-y-1/2 tablet:rounded-sheet tablet:p-6 tablet:shadow-xl"
 		>
 			<div class="mb-4 flex items-center gap-3">
-				<Dialog.Close class={[iconButtonClass(), '-ml-2']} aria-label={m.common_close()}
-					><X size={22} /></Dialog.Close
+				<Dialog.Close
+					class={[buttonVariants({ variant: 'ghost', size: 'icon' }), '-ml-2']}
+					aria-label={m.common_close()}><X size={22} /></Dialog.Close
 				>
 				<Dialog.Title class="text-xl font-semibold">
 					{editedEntry ? m.history_editor_edit_title() : m.common_add_to_history()}
