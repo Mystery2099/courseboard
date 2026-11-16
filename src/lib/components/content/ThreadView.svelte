@@ -139,9 +139,10 @@
 			<Badge variant="neutral"><Lock size={14} /> {m.post_badge_locked()}</Badge>
 		{/if}
 	</div>
-	<h2 class="mt-2 text-2xl leading-tight font-bold wrap-break-word desktop:text-3xl">
+	<!-- The thread is the page's subject, so its title is the page heading. -->
+	<h1 class="mt-2 text-2xl leading-tight font-bold wrap-break-word desktop:text-3xl">
 		{post.title}
-	</h2>
+	</h1>
 	<div class="mt-2"><ContentByline author={post.author} createdAt={post.createdAt} /></div>
 	{#if post.editedAt}
 		<p class="mt-1 text-sm text-on-surface-variant">
@@ -198,7 +199,7 @@
 </article>
 
 <section class="mt-8" aria-labelledby="replies-heading">
-	<h3 id="replies-heading" class="text-lg font-semibold">{formatReplyCount(post.replyCount)}</h3>
+	<h2 id="replies-heading" class="text-lg font-semibold">{formatReplyCount(post.replyCount)}</h2>
 
 	<ul class="mt-3 flex flex-col gap-3">
 		{#each replyBranches as branch (branch.reply.id)}

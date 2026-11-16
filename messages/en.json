@@ -50,6 +50,7 @@
 	"course_space_following": "Following",
 	"course_space_follow": "Follow",
 	"course_space_add_to_history": "Add to my history",
+	"course_space_back_to_channel": "Back to {channel}",
 	"course_space_added_to_history": "Added to your history. Following is separate and hasn't changed.",
 	"course_overview_empty": "Nothing has been posted in this course yet. Ask a question or start a discussion from their channels.",
 	"explore_title": "Explore",
