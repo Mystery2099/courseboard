@@ -5,6 +5,7 @@
 	import { Dialog } from 'bits-ui';
 	import ChevronUp from 'lucide-svelte/icons/chevron-up';
 	import Compass from 'lucide-svelte/icons/compass';
+	import Search from 'lucide-svelte/icons/search';
 	import type { FollowedCourseResponse } from '#lib/contracts/CourseFollowingContract.ts';
 	import {
 		COURSE_CHANNELS,
@@ -121,6 +122,13 @@
 			</Dialog.Content>
 		</Dialog.Portal>
 	</Dialog.Root>
+	<a
+		href={resolve('/(app)/search')}
+		aria-label={m.navigation_search()}
+		class="flex size-11 items-center justify-center rounded-full"
+	>
+		<Search size={22} />
+	</a>
 	<a
 		href={resolve('/(app)/profile')}
 		aria-label={m.navigation_your_profile()}

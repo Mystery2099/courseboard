@@ -3,7 +3,7 @@
 **Course:** CISY 8503, Applied Database Management  
 **Assignment:** NoSQL Database Lab 1  
 **Name:** Still a working title  
-**Status:** Early implementation. Professor Enke approved the proposal on November 4, 2026. Invitations, onboarding, profiles, history, course discovery, following, discussions, and structured reviews are built; search, content safety, and realtime updates remain planned.
+**Status:** Early implementation. Professor Enke approved the proposal on November 4, 2026. Invitations, onboarding, profiles, history, course discovery, following, discussions, structured reviews, and search are built; content safety, and realtime updates remain planned.
 
 **Last documentation review:** November 14, 2026
 

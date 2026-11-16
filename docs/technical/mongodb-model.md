@@ -33,11 +33,11 @@ These are starting points; I don't plan on creating all eleven right away. We st
 - **Courses (built):** unique `(institutionId, normalizedCode)`, which also serves browsing one school's courses in code order with a code cursor. Revisit if campuses or cross-listed courses need separate entries.
 - **Spaces (built):** unique `courseId`.
 - **Memberships (built):** unique `(userId, spaceId)` for following and follow-state checks, plus `(userId, followedAt)` for the followed-course list, which joins courses and institutions with `$lookup`.
-- **Histories (built):** `(userId, courseId)` for an owner's history, another user's visible entries, and later review-eligibility checks. It isn't unique, because repeated attempts give one user several entries for a course. `(courseId, visibility)` for people filtering waits until query plans show it's needed.
+- **Histories (built):** `(userId, courseId)` for an owner's history, another user's visible entries, and later review-eligibility checks. It isn't unique, because repeated attempts give one user several entries for a course. `(courseId, visibility, status)` and `(visibility, status)` for people filtering; see [search and people filtering](#search-and-people-filtering-built-november-16-2026).
 - **Posts (built):** `(spaceId, kind, lastActivityAt, _id)` for a course view ordered by activity; Overview asks for every kind with `$in`, and MongoDB merges the sorted runs. `(spaceId, kind, createdAt, _id)` for Newest and Unanswered, added after `explain()` showed them sorting in memory. The unique partial `(courseId, authorId)` index where `kind = review` enforces one review per user per course, including concurrent submissions. Its course prefix also serves the published-review match for statistics; the local verification used `IXSCAN`.
 - **Replies (built):** `(postId, _id)` for a thread's replies in the order they were written. ObjectIds sort by creation time to the second, and within a second only when one server process wrote them, which holds while the app runs as a single instance; the thread page doesn't depend on a nested reply following its parent. Unique `(authorId, submissionId)` so a retried submission is stored once.
 - **Reports:** `(spaceId, state, createdAt)` for moderation queues.
-- **Search:** use MongoDB text indexes for initial full-text search, plus ordinary indexes for course codes and structured filters. Defer Atlas Search.
+- **Search:** text indexes on courses (`title`, `code`, `description`) and posts (`title`, `bodyMarkdown`), a `normalizedCode` index for code lookup across schools, and the history indexes above for people filtering. Atlas Search stays deferred.
 
 I don't want every imaginable index created 'just in case.' Seed believable fictional data, look at the actual query shapes and plans, and add indexes that solve real problems.
 
@@ -52,6 +52,25 @@ I don't want every imaginable index created 'just in case.' Seed believable fict
 7. **Course statistics:** aggregate published reviews, not grades or history records.
 8. **Moderation:** show a moderator only reports for spaces they're permitted to manage.
 9. **Search:** filter posts and courses by context without including private information in matches or snippets.
+
+## Search and people filtering (built November 16, 2026)
+
+One search page with four scopes: **Everything**, **Courses**, **Posts**, and **People**. Communities stay deferred. Everything shows the top few of each kind with a link to its full list. Results come from `GET /api/search`, and the page renders the first set on the server. Every list is bounded: 20 results per page and at most five pages, which is plenty for a course catalog and keeps text search cheap without needing cursors over relevance scores.
+
+**Courses.** If the query normalizes to something that looks like a course code (letters followed by digits, such as `cisy 2253` becoming `CISY2253`), match `normalizedCode` by prefix. With a school chosen, that uses the existing `(institutionId, normalizedCode)` index; across all schools it needs a `normalizedCode` index. Otherwise use a text index on `title` (weight 3), `code` (2), and `description` (1), sorted by text score. The school filter defaults to the searcher's primary school, and the empty state offers **Search all schools**, as in the mockup.
+
+**Posts.** A text index on `title` (weight 3) and `bodyMarkdown` (1), leaving out removed and deleted posts, sorted by text score and then `lastActivityAt`. Posts are visible to every admitted user, so the only privacy rule is excluding removed and deleted ones. The snippet is cut on the server from the body's plain text, around the first matched word, at about 160 characters, on word boundaries. Results show the course code, the post kind, and the author, like the mockup.
+
+**People.** This is the lab's user filtering, and the strictest part. Filters: name or username, school, course, and history status. The rules:
+
+- **Only visible history entries are ever queried.** Every pipeline over `academicHistories` starts with `visibility: 'visible'`, so a private entry can't match, count, or appear in a result.
+- **Course and status filters** run against `academicHistories` (`courseId`, `visibility: 'visible'`, `status`), group by `userId`, then `$lookup` the users. That needs a `(courseId, visibility, status)` index, which replaces the deferred `(courseId, visibility)` one. A status filter across all schools has no course to start from, so it uses `(visibility, status)`; without it `explain()` showed a collection scan.
+- **School filter:** a person matches if their primary school is that school and isn't hidden, *or* they have a visible entry for one of that school's courses. A hidden primary school never matches, as the privacy table requires. A course filter has to belong to the chosen school; one left over from another school is dropped instead of overriding the school.
+- **Name filter:** a username prefix, or the start of a word in the display name, case-insensitively. Matching either one can't use an index, so a name-only search scans the accounts. It's acceptable while the other filters and the 20-result limit bound the work, and `explain()` will show whether that stays true.
+- **Who appears:** only admitted, active, onboarded accounts. Suspended users and accounts without a profile never appear.
+- **What a result shows:** username, display name, initials, the primary school only if it isn't hidden, and only the visible entries that matched the filter (course, status, and term, labeled self-reported). Never a count of entries, never a hint that hidden ones exist, and never a private note.
+
+Each index was checked with `explain()` against the demo data, and the plans are in the [verification log](../implementation/verification-log.md).
 
 ## Review aggregation example
 

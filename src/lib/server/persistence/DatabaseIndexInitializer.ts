@@ -8,6 +8,7 @@ import { replyRepository } from '#lib/server/content/ReplyRepository.ts';
 import { reviewRepository } from '#lib/server/content/ReviewRepository.ts';
 import { academicHistoryRepository } from '#lib/server/history/AcademicHistoryRepository.ts';
 import { applicationUserRepository } from '#lib/server/users/ApplicationUserRepository.ts';
+import { peopleSearchRepository } from '#lib/server/users/PeopleSearchRepository.ts';
 
 const RETRY_DELAY_MILLISECONDS = 30_000;
 
@@ -57,7 +58,8 @@ export class DatabaseIndexInitializer {
 			academicHistoryRepository.ensureIndexes(),
 			postRepository.ensureIndexes(),
 			replyRepository.ensureIndexes(),
-			reviewRepository.ensureIndexes()
+			reviewRepository.ensureIndexes(),
+			peopleSearchRepository.ensureIndexes()
 		]);
 	}
 }

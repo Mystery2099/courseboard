@@ -36,6 +36,7 @@
 			followedCourses={data.followedCourses}
 			currentCourseId={currentCourse?.id ?? null}
 			isExploreCurrent={page.route.id === '/(app)/explore'}
+			isSearchCurrent={page.route.id === '/(app)/search'}
 			{isProfileCurrent}
 			{isAdministrator}
 			{profile}
