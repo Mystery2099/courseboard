@@ -11,7 +11,7 @@ const twMerge = extendTailwindMerge({
 			breakpoint: ['tablet', 'desktop', 'wide']
 		},
 		classGroups: {
-			'font-size': ['text-overline']
+			'font-size': ['text-overline', 'text-headline']
 		}
 	}
 });

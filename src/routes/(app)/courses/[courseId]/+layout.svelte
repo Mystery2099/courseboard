@@ -59,7 +59,7 @@
 					<a
 						href={resolve(COURSE_CHANNEL_ROUTE_IDS[channel], { courseId: data.course.id })}
 						aria-current={channel === currentChannel ? 'page' : undefined}
-						class="flex min-h-11 items-center rounded-xl px-3 transition-colors duration-150 hover:bg-on-surface/8 aria-[current=page]:bg-secondary-container aria-[current=page]:font-semibold aria-[current=page]:text-on-secondary-container"
+						class="flex min-h-11 items-center rounded-xl navigation-item px-3"
 						>{COURSE_CHANNEL_LABELS[channel]()}</a
 					>
 				</li>
@@ -94,7 +94,7 @@
 					<p class="font-mono text-sm font-semibold text-primary">
 						{data.course.code} · {data.course.institution.name}
 					</p>
-					<h1 class="mt-1 text-3xl font-bold">{data.course.title}</h1>
+					<h1 class="mt-1 text-headline font-bold">{data.course.title}</h1>
 					<p class="mt-2 text-on-surface-variant">{data.course.description}</p>
 					<div class="mt-4 flex flex-wrap gap-2">
 						<form method="POST" action={followActionUrl} use:enhance>

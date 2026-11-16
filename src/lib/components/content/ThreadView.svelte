@@ -140,7 +140,7 @@
 		{/if}
 	</div>
 	<!-- The thread is the page's subject, so its title is the page heading. -->
-	<h1 class="mt-2 text-2xl leading-tight font-bold wrap-break-word desktop:text-3xl">
+	<h1 class="mt-2 text-2xl leading-tight font-bold wrap-break-word desktop:text-headline">
 		{post.title}
 	</h1>
 	<div class="mt-2"><ContentByline author={post.author} createdAt={post.createdAt} /></div>

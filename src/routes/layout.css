@@ -91,6 +91,10 @@
 	--breakpoint-tablet: 600px;
 	--breakpoint-desktop: 900px;
 	--breakpoint-wide: 1280px;
+
+	/* Screen and thread titles (the handoff's `headline`, 24–28px). */
+	--text-headline: 1.75rem;
+	--text-headline--line-height: 1.15;
 }
 
 @theme inline {
@@ -250,4 +254,12 @@
 	font-weight: 700;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
+}
+
+/*
+ * Hover and current-page states for navigation rows (channel lists, the switcher sheet). Shared so
+ * a new theme changes them in one place; callers add size and spacing.
+ */
+@utility navigation-item {
+	@apply transition-colors duration-150 hover:bg-on-surface/8 aria-[current=page]:bg-secondary-container aria-[current=page]:font-semibold aria-[current=page]:text-on-secondary-container;
 }

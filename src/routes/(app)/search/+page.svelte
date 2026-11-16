@@ -246,7 +246,7 @@
 
 	{#if search.posts && search.posts.results.length > 0}
 		{@render sectionHeading(m.search_scope_posts(), 'posts', search.posts.hasMore)}
-		<ul class="mt-3 divide-y overflow-hidden rounded-card border bg-surface">
+		<ul class="mt-2 divide-y border-y">
 			{#each search.posts.results as post (post.id)}
 				<li>
 					<a
@@ -254,7 +254,7 @@
 							courseId: post.courseId,
 							postId: post.id
 						})}
-						class="block px-4 py-3 transition-colors duration-150 hover:bg-surface-container"
+						class="-mx-2 block rounded-xl px-2 py-4 transition-colors duration-150 hover:bg-surface-container"
 					>
 						<span class="block text-sm text-on-surface-variant">
 							{m.search_post_meta({

@@ -11,7 +11,9 @@
 
 	const currentCourse = $derived(page.data.course ?? null);
 	const currentChannel = $derived(findCourseChannel(page.route.id));
-	const isProfileCurrent = $derived(page.route.id === '/(app)/profile');
+	const isProfileCurrent = $derived(
+		page.route.id === '/(app)/profile' || page.route.id === '/(app)/settings'
+	);
 	const isAdministrator = $derived(data.currentUser?.role === 'administrator');
 
 	const clerkContext = useClerkContext();
@@ -42,7 +44,7 @@
 			{profile}
 		/>
 	</div>
-	<div class="min-w-0 flex-1 pb-28 desktop:pb-0">
+	<div class="min-w-0 flex-1 pb-[calc(7rem+env(safe-area-inset-bottom))] desktop:pb-0">
 		{@render children()}
 	</div>
 	<div class="desktop:hidden">

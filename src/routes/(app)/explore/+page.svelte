@@ -16,7 +16,7 @@
 <svelte:head><title>{m.explore_title()}</title></svelte:head>
 
 <main class="mx-auto max-w-3xl px-4 py-8">
-	<h1 class="text-3xl font-bold">{m.explore_title()}</h1>
+	<h1 class="text-headline font-bold">{m.explore_title()}</h1>
 
 	{#if !data.catalog}
 		<p class="mt-4 text-on-surface-variant">{m.explore_no_courses()}</p>

@@ -42,7 +42,7 @@
 <!-- One-row dock (design handoff): 60px tall, floating 24px above the bottom on tall phones. -->
 <nav
 	aria-label={m.navigation_main()}
-	class="fixed inset-x-3 bottom-2.5 z-40 mx-auto flex h-[60px] max-w-[560px] items-center gap-1 rounded-full border bg-surface px-1.5 shadow-floating [@media(min-height:700px)]:bottom-6"
+	class="fixed inset-x-3 bottom-[calc(10px+env(safe-area-inset-bottom))] z-40 mx-auto flex h-[60px] max-w-[560px] items-center gap-1 rounded-full border bg-surface px-1.5 shadow-floating [@media(min-height:700px)]:bottom-[calc(24px+env(safe-area-inset-bottom))]"
 >
 	<a
 		href={resolve('/(app)/explore')}
@@ -107,7 +107,7 @@
 								<a
 									href={resolve(COURSE_CHANNEL_ROUTE_IDS[channel], { courseId: currentCourse.id })}
 									aria-current={channel === currentChannel ? 'page' : undefined}
-									class="flex min-h-12 items-center gap-2 rounded-2xl px-4 text-lg transition-colors duration-150 hover:bg-on-surface/8 aria-[current=page]:bg-secondary-container aria-[current=page]:font-semibold aria-[current=page]:text-on-secondary-container"
+									class="flex min-h-12 items-center gap-2 rounded-2xl navigation-item px-4 text-lg"
 								>
 									{COURSE_CHANNEL_LABELS[channel]()}
 									{#if channel === currentChannel}<Check size={18} aria-hidden="true" />{/if}

@@ -10,7 +10,7 @@
 		size = 'default',
 		...restProps
 	}: WithoutChild<SelectPrimitive.TriggerProps> & {
-		size?: 'default' | 'chip';
+		size?: 'default';
 	} = $props();
 </script>
 
@@ -19,7 +19,7 @@
 	data-slot="select-trigger"
 	data-size={size}
 	class={cn(
-		"flex w-fit items-center justify-between gap-2 border border-outline bg-surface whitespace-nowrap text-on-surface transition-colors duration-150 select-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-2 aria-invalid:border-error data-placeholder:text-on-surface-variant data-[size=chip]:relative data-[size=chip]:min-h-9 data-[size=chip]:rounded-chip data-[size=chip]:bg-transparent data-[size=chip]:px-4 data-[size=chip]:text-sm data-[size=chip]:after:absolute data-[size=chip]:after:inset-x-0 data-[size=chip]:after:-inset-y-1.5 data-[size=chip]:hover:bg-on-surface/8 data-[size=default]:min-h-12 data-[size=default]:rounded-field data-[size=default]:px-4 data-[size=default]:text-base *:data-[slot=select-value]:line-clamp-1 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+		"flex min-h-12 w-fit items-center justify-between gap-2 rounded-field border border-outline bg-surface px-4 text-base whitespace-nowrap text-on-surface transition-colors duration-150 select-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-2 aria-invalid:border-error data-placeholder:text-on-surface-variant *:data-[slot=select-value]:line-clamp-1 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
 		className
 	)}
 	{...restProps}

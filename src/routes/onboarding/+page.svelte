@@ -76,7 +76,7 @@
 		</p>
 
 		{#if step === 'school'}
-			<h1 class="mt-2 text-3xl font-bold">{m.onboarding_school_heading()}</h1>
+			<h1 class="mt-2 text-headline font-bold">{m.onboarding_school_heading()}</h1>
 			<p class="mt-2 text-on-surface-variant">
 				{m.onboarding_school_detail()}
 			</p>
@@ -118,7 +118,7 @@
 					<div class="flex flex-col gap-2">
 						{#each matchingInstitutions as institution (institution.id)}
 							<label
-								class="flex min-h-16 cursor-pointer items-center justify-between gap-4 rounded-2xl border-2 border-outline-variant bg-surface px-4 py-3 transition-colors duration-150 hover:bg-surface-container has-checked:border-primary has-checked:bg-secondary-container has-checked:text-on-secondary-container"
+								class="flex min-h-16 cursor-pointer items-center justify-between gap-4 rounded-2xl border-2 border-outline bg-surface px-4 py-3 transition-colors duration-150 hover:bg-surface-container has-checked:border-primary has-checked:bg-secondary-container has-checked:text-on-secondary-container"
 							>
 								<span class="font-semibold">{institution.name}</span>
 								<input
@@ -152,7 +152,7 @@
 				>
 			</div>
 		{:else}
-			<h1 class="mt-2 text-3xl font-bold">{m.onboarding_profile_heading()}</h1>
+			<h1 class="mt-2 text-headline font-bold">{m.onboarding_profile_heading()}</h1>
 			<p class="mt-2 text-on-surface-variant">
 				{m.onboarding_profile_detail()}
 			</p>
