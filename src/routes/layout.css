@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 @import '@fontsource-variable/inter/wght.css';
 @import '@fontsource-variable/space-grotesk/wght.css';
 @import '@fontsource-variable/literata/wght.css';
@@ -121,6 +122,26 @@
 	--color-inverse-surface: var(--inverse-surface);
 	--color-inverse-on-surface: var(--inverse-on-surface);
 	--color-scrim: var(--scrim);
+	--color-grid-line: var(--grid-line);
+
+	/*
+	 * shadcn-svelte's names, aliased to Blueprint roles so generated components need no palette of
+	 * their own. A new theme (such as high contrast) only redefines the roles above.
+	 */
+	--color-foreground: var(--on-surface);
+	--color-muted: var(--surface-container);
+	--color-muted-foreground: var(--on-surface-variant);
+	--color-popover: var(--surface);
+	--color-popover-foreground: var(--on-surface);
+	--color-accent: var(--secondary-container);
+	--color-accent-foreground: var(--on-secondary-container);
+	--color-secondary: var(--secondary-container);
+	--color-secondary-foreground: var(--on-secondary-container);
+	--color-primary-foreground: var(--on-primary);
+	--color-destructive: var(--error);
+	--color-border: var(--outline-variant);
+	--color-input: var(--outline);
+	--color-ring: var(--primary);
 
 	--font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
 	--font-heading: 'Space Grotesk Variable', 'Inter Variable', ui-sans-serif, sans-serif;
