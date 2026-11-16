@@ -19,7 +19,7 @@
 {:else}
 	{#each groups as group (group.key)}
 		<div class="mt-4 overflow-hidden rounded-card border bg-surface">
-			<h3 class="border-b px-4 py-2 text-sm font-semibold tracking-wide uppercase">
+			<h3 class="border-b px-4 py-3 text-overline text-on-surface-variant">
 				{group.heading}
 			</h3>
 			<ul class="divide-y">
@@ -27,7 +27,7 @@
 					<li>
 						<a
 							href={resolve('/(app)/courses/[courseId]', { courseId: entry.course.id })}
-							class="flex items-center gap-3 px-4 py-3 hover:bg-surface-container"
+							class="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-surface-container"
 						>
 							<HistoryCourseLabel course={entry.course} />
 							<HistoryStatusBadge status={entry.status} />

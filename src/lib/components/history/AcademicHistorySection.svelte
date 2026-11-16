@@ -3,6 +3,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
+	import Ellipsis from 'lucide-svelte/icons/ellipsis';
 	import Plus from 'lucide-svelte/icons/plus';
 	import {
 		AcademicHistoryApiClient,
@@ -58,7 +59,7 @@
 	const ownGroups = $derived(groupHistoryEntries(ownHistoryQuery.data.entries));
 </script>
 
-<section class="mt-8" aria-labelledby="history-heading">
+<section aria-labelledby="history-heading">
 	<div class="flex flex-wrap items-center justify-between gap-3">
 		<h2 id="history-heading" class="text-xl font-semibold">{m.history_heading()}</h2>
 		<div class="flex gap-2">
@@ -110,7 +111,7 @@
 		{:else}
 			{#each ownGroups as group (group.key)}
 				<div class="mt-4 overflow-hidden rounded-card border bg-surface">
-					<h3 class="border-b px-4 py-2 text-sm font-semibold tracking-wide uppercase">
+					<h3 class="border-b px-4 py-3 text-overline text-on-surface-variant">
 						{group.heading}
 					</h3>
 					<ul class="divide-y">
@@ -118,7 +119,7 @@
 							<li>
 								<button
 									type="button"
-									class="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-surface-container"
+									class="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-150 hover:bg-surface-container"
 									aria-label={m.history_edit_entry_label({
 										courseCode: entry.course.code,
 										courseTitle: entry.course.title
@@ -126,9 +127,11 @@
 									onclick={() => openEditor(entry)}
 								>
 									<HistoryCourseLabel course={entry.course} />
-									<span class="flex flex-col items-end gap-1">
+									<span
+										class="flex flex-col items-end gap-1 desktop:w-64 desktop:flex-row desktop:items-center desktop:gap-4"
+									>
 										<HistoryStatusBadge status={entry.status} />
-										<span class="text-sm text-on-surface-variant">
+										<span class="text-sm text-on-surface-variant desktop:flex-1">
 											{entry.visibility === 'visible'
 												? m.history_visibility_visible()
 												: m.history_visibility_private()}{entry.privateNote
@@ -136,6 +139,10 @@
 												: ''}
 										</span>
 									</span>
+									<Ellipsis
+										size={20}
+										class="hidden shrink-0 text-on-surface-variant desktop:block"
+									/>
 								</button>
 							</li>
 						{/each}
