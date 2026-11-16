@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { Button } from '#lib/components/ui/button/index.js';
+	import * as AlertDialog from '#lib/components/ui/alert-dialog/index.js';
+	import { Button, buttonVariants } from '#lib/components/ui/button/index.js';
+	import * as ToggleGroup from '#lib/components/ui/toggle-group/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { untrack } from 'svelte';
@@ -64,6 +66,7 @@
 	let privateNote = $state(initial.privateNote);
 	let fieldErrors = $state<Record<string, string | undefined>>({});
 	let isConfirmingDelete = $state(false);
+	let keepEntryButton = $state<HTMLButtonElement | null>(null);
 
 	const yearOptions = $derived.by(() => {
 		const latestYear = new Date().getFullYear() + 2;
@@ -134,18 +137,21 @@
 			/>
 		{:else if course}
 			<div
-				class="flex items-center justify-between gap-3 rounded-2xl border px-4 py-3"
+				class="flex items-center justify-between gap-3 rounded-field border border-outline px-4 py-3"
 				aria-labelledby="history-course-label"
 			>
 				<div class="min-w-0">
-					<p class="font-mono text-sm text-primary">{course.code} · {course.institution.name}</p>
+					<p class="font-mono text-sm font-semibold text-primary">
+						{course.code} · {course.institution.name}
+					</p>
 					<p class="truncate font-semibold">{course.title}</p>
 				</div>
 				{#if !editedEntry && !presetCourse}
-					<button
-						type="button"
-						class="shrink-0 font-semibold text-primary"
-						onclick={() => (isChoosingCourse = true)}>{m.common_change()}</button
+					<Button
+						variant="text"
+						size="compact"
+						class="shrink-0"
+						onclick={() => (isChoosingCourse = true)}>{m.common_change()}</Button
 					>
 				{/if}
 			</div>
@@ -155,29 +161,30 @@
 		{/if}
 	</div>
 
-	<fieldset>
-		<legend class="text-sm font-semibold">{m.history_form_status()}</legend>
-		<div class="mt-1 grid grid-cols-3 overflow-hidden rounded-full border">
+	<div class="flex flex-col gap-1.5">
+		<span class="text-sm font-semibold" id="history-status-label">{m.history_form_status()}</span>
+		<ToggleGroup.Root
+			type="single"
+			variant="segment"
+			aria-labelledby="history-status-label"
+			bind:value={() => status, (option) => option && (status = option as HistoryStatus)}
+		>
 			{#each HISTORY_STATUSES as option (option)}
-				<label
-					class="cursor-pointer border-l py-2 text-center first:border-l-0 has-checked:bg-secondary-container has-checked:font-semibold has-focus-visible:outline-2"
-				>
-					<input type="radio" class="sr-only" value={option} bind:group={status} />
-					{HISTORY_STATUS_LABELS[option]()}
-				</label>
+				<ToggleGroup.Item value={option}>{HISTORY_STATUS_LABELS[option]()}</ToggleGroup.Item>
 			{/each}
-		</div>
-	</fieldset>
+		</ToggleGroup.Root>
+	</div>
 
 	<fieldset>
 		<legend class="text-sm font-semibold">{m.history_form_term()}</legend>
-		<div class="mt-1 flex gap-2">
+		<div class="mt-1.5 flex gap-2">
 			<label class="flex-1">
 				<span class="sr-only">{m.history_form_season()}</span>
 				<select
-					class="w-full rounded-field border-outline px-4 py-2"
+					class="min-h-12 w-full rounded-field border-outline px-4 text-base"
 					bind:value={season}
 					aria-invalid={fieldErrors.term ? 'true' : undefined}
+					aria-describedby={fieldErrors.term ? 'history-term-error' : undefined}
 				>
 					{#if status === 'planning' || season === ''}
 						<option value="">{m.history_form_no_term()}</option>
@@ -190,7 +197,7 @@
 			<label class="flex-1">
 				<span class="sr-only">{m.history_form_year()}</span>
 				<select
-					class="w-full rounded-field border-outline px-4 py-2 disabled:opacity-50"
+					class="min-h-12 w-full rounded-field border-outline px-4 text-base disabled:opacity-50"
 					bind:value={year}
 					disabled={season === ''}
 				>
@@ -201,21 +208,21 @@
 			</label>
 		</div>
 		{#if fieldErrors.term}
-			<p class="mt-1 text-sm text-error" role="alert">{fieldErrors.term}</p>
+			<p id="history-term-error" class="mt-1 text-sm text-error" role="alert">{fieldErrors.term}</p>
 		{/if}
 	</fieldset>
 
 	<fieldset>
 		<legend class="text-sm font-semibold">{m.history_form_visibility()}</legend>
-		<div class="mt-1 grid grid-cols-2 gap-2">
+		<div class="mt-1.5 grid grid-cols-2 gap-2">
 			<label
-				class="cursor-pointer rounded-2xl border py-2 text-center has-checked:border-primary has-checked:bg-secondary-container has-checked:font-semibold has-focus-visible:outline-2"
+				class="flex min-h-12 cursor-pointer items-center justify-center rounded-2xl border-2 border-outline-variant px-3 text-center font-semibold transition-colors duration-150 hover:bg-on-surface/8 has-checked:border-primary has-checked:bg-secondary-container has-checked:text-on-secondary-container has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary"
 			>
 				<input type="radio" class="sr-only" value="private" bind:group={visibility} />
 				{m.history_visibility_private()}
 			</label>
 			<label
-				class="cursor-pointer rounded-2xl border py-2 text-center has-checked:border-primary has-checked:bg-secondary-container has-checked:font-semibold has-focus-visible:outline-2"
+				class="flex min-h-12 cursor-pointer items-center justify-center rounded-2xl border-2 border-outline-variant px-3 text-center font-semibold transition-colors duration-150 hover:bg-on-surface/8 has-checked:border-primary has-checked:bg-secondary-container has-checked:text-on-secondary-container has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary"
 			>
 				<input type="radio" class="sr-only" value="visible" bind:group={visibility} />
 				{m.history_form_visible_on_profile()}
@@ -234,12 +241,15 @@
 			>{m.history_form_private_note_hint()}</span
 		>
 		<textarea
-			class="min-h-20 rounded-field border-outline px-4 py-2"
+			class="min-h-24 rounded-field border-outline px-4 py-3 text-base"
 			bind:value={privateNote}
 			maxlength={PRIVATE_NOTE_MAX_LENGTH}
-			aria-invalid={fieldErrors.privateNote ? 'true' : undefined}></textarea>
+			aria-invalid={fieldErrors.privateNote ? 'true' : undefined}
+			aria-describedby={fieldErrors.privateNote ? 'history-note-error' : undefined}></textarea>
 		{#if fieldErrors.privateNote}
-			<p class="text-sm text-error" role="alert">{fieldErrors.privateNote}</p>
+			<p id="history-note-error" class="text-sm text-error" role="alert">
+				{fieldErrors.privateNote}
+			</p>
 		{/if}
 	</label>
 
@@ -256,23 +266,35 @@
 		<Button variant="outlined" onclick={() => onDone('cancelled')}>{m.common_cancel()}</Button>
 		{#if editedEntry}
 			<span class="flex-1"></span>
-			{#if isConfirmingDelete}
-				<span class="text-sm">{m.history_form_delete_confirm()}</span>
-				<Button
-					variant="destructive"
-					disabled={isBusy}
-					onclick={() => deleteMutation.mutate(editedEntry.id)}>{m.common_delete()}</Button
-				>
-				<Button variant="outlined" onclick={() => (isConfirmingDelete = false)}
-					>{m.history_form_keep()}</Button
-				>
-			{:else}
-				<button
+			<AlertDialog.Root bind:open={isConfirmingDelete}>
+				<AlertDialog.Trigger
 					type="button"
-					class="rounded-full px-4 py-2 text-error"
-					onclick={() => (isConfirmingDelete = true)}>{m.history_form_delete_entry()}</button
+					class={buttonVariants({ variant: 'text', class: 'text-error' })}
+					>{m.history_form_delete_entry()}</AlertDialog.Trigger
 				>
-			{/if}
+				<AlertDialog.Content
+					onOpenAutoFocus={(event) => {
+						event.preventDefault();
+						keepEntryButton?.focus();
+					}}
+				>
+					<AlertDialog.Header>
+						<AlertDialog.Title>{m.history_form_delete_confirm()}</AlertDialog.Title>
+					</AlertDialog.Header>
+					<AlertDialog.Footer>
+						<!-- Cancel takes focus when the dialog opens, so Enter never deletes by accident. -->
+						<AlertDialog.Cancel bind:ref={keepEntryButton}
+							>{m.history_form_keep()}</AlertDialog.Cancel
+						>
+						<AlertDialog.Action
+							variant="destructive"
+							disabled={isBusy}
+							onclick={() => deleteMutation.mutate(editedEntry.id)}
+							>{m.common_delete()}</AlertDialog.Action
+						>
+					</AlertDialog.Footer>
+				</AlertDialog.Content>
+			</AlertDialog.Root>
 		{/if}
 	</div>
 </form>
