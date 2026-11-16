@@ -27,7 +27,7 @@
 					<li>
 						<a
 							href={resolve('/(app)/courses/[courseId]', { courseId: entry.course.id })}
-							class="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-surface-container"
+							class="flex min-h-16 items-center gap-3 state-layer px-4 py-3 transition-colors duration-150 [--state-base:var(--surface)]"
 						>
 							<HistoryCourseLabel course={entry.course} />
 							<HistoryStatusBadge status={entry.status} />

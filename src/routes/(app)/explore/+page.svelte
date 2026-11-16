@@ -64,7 +64,7 @@
 				<li>
 					<a
 						href={resolve('/(app)/courses/[courseId]', { courseId: course.id })}
-						class="flex min-h-18 items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-surface-container"
+						class="flex min-h-18 items-center gap-4 state-layer px-4 py-3 transition-colors duration-150 [--state-base:var(--surface)]"
 					>
 						<CourseCodeTile code={course.code} />
 						<span class="min-w-0 flex-1">

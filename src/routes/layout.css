@@ -46,6 +46,15 @@
 	--scrim: rgb(15 26 51 / 0.45);
 	--floating-shadow: 0 6px 20px rgb(15 26 51 / 0.14);
 	--dialog-shadow: 0 24px 60px rgb(15 26 51 / 0.35);
+	--raised-shadow: 0 2px 6px rgb(15 26 51 / 0.2);
+
+	/*
+	 * State layers: how much of a control's content color is mixed over its background on hover
+	 * and press. Stronger than Material's 8% so hover reads clearly; a high-contrast theme can raise
+	 * them further.
+	 */
+	--state-hover: 14%;
+	--state-pressed: 24%;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -82,6 +91,7 @@
 		--scrim: rgb(0 0 0 / 0.6);
 		--floating-shadow: 0 6px 20px rgb(0 0 0 / 0.5);
 		--dialog-shadow: 0 24px 60px rgb(0 0 0 / 0.5);
+		--raised-shadow: 0 2px 6px rgb(0 0 0 / 0.55);
 	}
 }
 
@@ -160,9 +170,16 @@
 
 	--shadow-floating: var(--floating-shadow);
 	--shadow-dialog: var(--dialog-shadow);
+	--shadow-raised: var(--raised-shadow);
 }
 
 @layer base {
+	/* Tailwind 4 leaves buttons with the default arrow; a pointer helps show what's clickable. */
+	button:not(:disabled),
+	[role='button']:not([aria-disabled='true']) {
+		cursor: pointer;
+	}
+
 	html {
 		background-color: var(--background);
 		color: var(--on-surface);
@@ -278,5 +295,33 @@
  * a new theme changes them in one place; callers add size and spacing.
  */
 @utility navigation-item {
-	@apply transition-colors duration-150 hover:bg-on-surface/8 aria-[current=page]:bg-secondary-container aria-[current=page]:font-semibold aria-[current=page]:text-on-secondary-container;
+	@apply state-layer transition-colors duration-150 aria-[current=page]:bg-secondary-container aria-[current=page]:font-semibold aria-[current=page]:text-on-secondary-container aria-[current=page]:[--state-base:var(--secondary-container)] aria-[current=page]:[--state-color:var(--on-secondary-container)];
+}
+
+/*
+ * Hover and pressed states. The control's content color (--state-color, on-surface by default) is
+ * mixed over its background (--state-base, transparent by default). Filled controls set both, for
+ * example `[--state-base:var(--primary)] [--state-color:var(--on-primary)]`.
+ */
+@utility state-layer {
+	&:hover:not(:disabled, [aria-disabled='true'], [data-disabled]) {
+		background-color: color-mix(
+			in oklab,
+			var(--state-base, transparent),
+			var(--state-color, var(--on-surface)) var(--state-hover)
+		);
+	}
+
+	&:active:not(:disabled, [aria-disabled='true'], [data-disabled]) {
+		background-color: color-mix(
+			in oklab,
+			var(--state-base, transparent),
+			var(--state-color, var(--on-surface)) var(--state-pressed)
+		);
+	}
+}
+
+/* The same state layer tinted with primary, for outlined and text controls. */
+@utility state-layer-primary {
+	@apply state-layer [--state-color:var(--primary)];
 }

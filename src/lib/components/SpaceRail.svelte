@@ -38,7 +38,7 @@
 			aria-label={m.navigation_explore()}
 			aria-current={isExploreCurrent ? 'page' : undefined}
 			class={[
-				'flex size-12 items-center justify-center rounded-tile bg-surface',
+				'flex size-12 items-center justify-center rounded-tile state-layer bg-surface transition-colors duration-150 [--state-base:var(--surface)]',
 				isExploreCurrent && 'ring-3 ring-primary'
 			]}
 		>
@@ -49,7 +49,7 @@
 			aria-label={m.navigation_search()}
 			aria-current={isSearchCurrent ? 'page' : undefined}
 			class={[
-				'flex size-12 items-center justify-center rounded-tile bg-surface',
+				'flex size-12 items-center justify-center rounded-tile state-layer bg-surface transition-colors duration-150 [--state-base:var(--surface)]',
 				isSearchCurrent && 'ring-3 ring-primary'
 			]}
 		>
@@ -64,6 +64,7 @@
 							{#snippet child({ props })}
 								<a
 									{...props}
+									class="group/tile block rounded-tile"
 									href={resolve('/(app)/courses/[courseId]', { courseId: course.id })}
 									aria-label="{course.code} {course.title}"
 									aria-current={course.id === currentCourseId ? 'page' : undefined}
@@ -84,7 +85,7 @@
 			<a
 				href={resolve('/(app)/admin/invitations')}
 				aria-label={m.navigation_admin()}
-				class="flex size-12 items-center justify-center rounded-tile bg-inverse-surface text-inverse-on-surface"
+				class="flex size-12 items-center justify-center rounded-tile state-layer bg-inverse-surface text-inverse-on-surface transition-colors duration-150 [--state-base:var(--inverse-surface)] [--state-color:var(--inverse-on-surface)]"
 			>
 				<Shield size={22} />
 			</a>

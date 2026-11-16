@@ -231,7 +231,7 @@
 				<li>
 					<a
 						href={resolve('/(app)/courses/[courseId]', { courseId: course.id })}
-						class="flex h-full flex-col rounded-card border bg-surface px-5 py-4 transition-colors duration-150 hover:bg-surface-container"
+						class="flex h-full flex-col rounded-card border state-layer bg-surface px-5 py-4 transition-colors duration-150 [--state-base:var(--surface)]"
 					>
 						<span class="font-mono text-sm font-semibold text-primary"
 							>{course.code} · {course.institutionName}</span
@@ -255,7 +255,7 @@
 							courseId: post.courseId,
 							postId: post.id
 						})}
-						class="-mx-2 block rounded-xl px-2 py-4 transition-colors duration-150 hover:bg-surface-container"
+						class="-mx-2 block rounded-xl state-layer px-2 py-4 transition-colors duration-150 [--state-base:var(--background)]"
 					>
 						<span class="block text-sm text-on-surface-variant">
 							{m.search_post_meta({
@@ -280,7 +280,7 @@
 				<li>
 					<a
 						href={resolve('/(app)/users/[username]', { username: person.username })}
-						class="flex items-start gap-3 px-4 py-3 hover:bg-surface-container"
+						class="flex items-start gap-3 state-layer px-4 py-3 transition-colors duration-150 [--state-base:var(--surface)]"
 					>
 						<UserAvatar username={person.username} displayName={person.displayName} />
 						<span class="min-w-0">

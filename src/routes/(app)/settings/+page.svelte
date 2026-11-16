@@ -41,7 +41,7 @@
 
 	// Rows sit in a rounded, clipped list, so their focus ring is drawn inside the row.
 	const ROW = 'flex min-h-16 items-center justify-between gap-4 px-4 py-3';
-	const ROW_BUTTON = `${ROW} w-full text-left transition-colors duration-150 hover:bg-on-surface/8 focus-visible:-outline-offset-2 disabled:cursor-wait disabled:opacity-60`;
+	const ROW_BUTTON = `${ROW} w-full text-left transition-colors duration-150 state-layer focus-visible:-outline-offset-2 disabled:cursor-wait disabled:opacity-60`;
 </script>
 
 <svelte:head><title>{m.settings_title()}</title></svelte:head>

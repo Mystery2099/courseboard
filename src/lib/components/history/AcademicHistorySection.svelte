@@ -119,7 +119,7 @@
 							<li>
 								<button
 									type="button"
-									class="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-150 hover:bg-surface-container"
+									class="flex min-h-16 w-full items-center gap-3 state-layer px-4 py-3 text-left transition-colors duration-150 [--state-base:var(--surface)]"
 									aria-label={m.history_edit_entry_label({
 										courseCode: entry.course.code,
 										courseTitle: entry.course.title

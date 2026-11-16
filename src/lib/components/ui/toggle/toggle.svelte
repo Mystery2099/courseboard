@@ -8,9 +8,9 @@
 		base: "relative inline-flex shrink-0 items-center justify-center gap-1.5 text-sm whitespace-nowrap transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
 		variants: {
 			variant: {
-				chip: 'min-h-9 rounded-chip border border-outline px-4 text-on-surface after:absolute after:inset-x-0 after:-inset-y-1.5 hover:bg-on-surface/8 data-[state=on]:border-transparent data-[state=on]:bg-secondary-container data-[state=on]:font-semibold data-[state=on]:text-on-secondary-container aria-[current=page]:border-transparent aria-[current=page]:bg-secondary-container aria-[current=page]:font-semibold aria-[current=page]:text-on-secondary-container',
+				chip: 'min-h-9 rounded-chip border border-outline px-4 text-on-surface after:absolute after:inset-x-0 after:-inset-y-1.5 state-layer data-[state=on]:border-transparent data-[state=on]:[--state-base:var(--secondary-container)] data-[state=on]:[--state-color:var(--on-secondary-container)] aria-[current=page]:[--state-base:var(--secondary-container)] aria-[current=page]:[--state-color:var(--on-secondary-container)] data-[state=on]:bg-secondary-container data-[state=on]:font-semibold data-[state=on]:text-on-secondary-container aria-[current=page]:border-transparent aria-[current=page]:bg-secondary-container aria-[current=page]:font-semibold aria-[current=page]:text-on-secondary-container',
 				segment:
-					'min-h-11 flex-1 border border-outline px-4 font-semibold text-on-surface not-first:-ml-px first:rounded-l-full last:rounded-r-full hover:bg-on-surface/8 data-[state=on]:z-1 data-[state=on]:bg-secondary-container data-[state=on]:text-on-secondary-container'
+					'min-h-11 flex-1 border border-outline px-4 font-semibold text-on-surface not-first:-ml-px first:rounded-l-full last:rounded-r-full state-layer data-[state=on]:z-1 data-[state=on]:[--state-base:var(--secondary-container)] data-[state=on]:[--state-color:var(--on-secondary-container)] data-[state=on]:bg-secondary-container data-[state=on]:text-on-secondary-container'
 			}
 		},
 		defaultVariants: {

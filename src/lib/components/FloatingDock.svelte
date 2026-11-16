@@ -50,14 +50,14 @@
 	<a
 		href={resolve('/(app)/explore')}
 		aria-label={m.navigation_explore()}
-		class="flex size-12 shrink-0 items-center justify-center gap-2 rounded-full text-on-surface transition-colors duration-150 hover:bg-on-surface/8 tablet:w-auto tablet:px-3"
+		class="flex size-12 shrink-0 items-center justify-center gap-2 rounded-full state-layer text-on-surface transition-colors duration-150 tablet:w-auto tablet:px-3"
 	>
 		<Compass size={24} />
 		<span class="hidden text-sm font-semibold tablet:inline">{m.navigation_explore()}</span>
 	</a>
 	<Drawer.Root bind:open={isSwitcherOpen}>
 		<Drawer.Trigger
-			class="flex h-12 min-w-0 flex-1 items-center gap-2 rounded-full bg-primary-container px-4 text-left text-on-primary-container"
+			class="flex h-12 min-w-0 flex-1 items-center gap-2 rounded-full state-layer bg-primary-container px-4 text-left text-on-primary-container transition-colors duration-150 [--state-base:var(--primary-container)] [--state-color:var(--on-primary-container)]"
 			aria-current={currentCourse ? 'page' : undefined}
 		>
 			{#if currentCourse}
@@ -92,7 +92,7 @@
 									href={resolve('/(app)/courses/[courseId]', { courseId: course.id })}
 									aria-label="{course.code} {course.title}"
 									aria-current={course.id === currentCourse?.id ? 'page' : undefined}
-									class="block rounded-tile p-1"
+									class="group/tile block rounded-tile p-1"
 								>
 									<CourseCodeTile code={course.code} isCurrent={course.id === currentCourse?.id} />
 								</a>
@@ -137,7 +137,7 @@
 	<a
 		href={resolve('/(app)/search')}
 		aria-label={m.navigation_search()}
-		class="flex size-12 shrink-0 items-center justify-center gap-2 rounded-full text-on-surface transition-colors duration-150 hover:bg-on-surface/8 tablet:w-auto tablet:px-3"
+		class="flex size-12 shrink-0 items-center justify-center gap-2 rounded-full state-layer text-on-surface transition-colors duration-150 tablet:w-auto tablet:px-3"
 	>
 		<Search size={24} />
 		<span class="hidden text-sm font-semibold tablet:inline">{m.navigation_search()}</span>

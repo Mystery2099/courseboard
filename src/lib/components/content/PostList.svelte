@@ -91,7 +91,7 @@
 			<li>
 				<a
 					href={resolve(THREAD_ROUTE_IDS[post.kind], { courseId, postId: post.id })}
-					class="block px-4 py-3 hover:bg-surface-container"
+					class="block state-layer px-4 py-3 transition-colors duration-150 [--state-base:var(--surface)]"
 				>
 					<span class="flex flex-wrap items-center gap-2">
 						{#if kind === null}<ThreadKindBadge kind={post.kind} />{/if}
