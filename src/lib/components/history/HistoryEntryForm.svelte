@@ -4,7 +4,7 @@
 	import * as ToggleGroup from '#lib/components/ui/toggle-group/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
-	import { untrack } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import { describeFieldIssues, describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 	import { reviewQueryKeys } from '#lib/client/content/ReviewApiClient.ts';
 	import {
@@ -34,12 +34,18 @@
 		editedEntry,
 		presetCourse,
 		defaultInstitutionId,
+		formId,
+		isBusy = $bindable(false),
 		onDone
 	}: {
 		/** Null when recording a new entry. */
 		editedEntry: OwnHistoryEntryResponse | null;
 		presetCourse: HistoryCourseResponse | null;
 		defaultInstitutionId: string | null;
+		/** Lets a submit button outside the form, such as a dialog header's, submit it. */
+		formId?: string;
+		/** True while saving or deleting, for buttons outside the form. */
+		isBusy?: boolean;
 		onDone: (outcome: 'saved' | 'deleted' | 'cancelled') => void;
 	} = $props();
 
@@ -100,7 +106,9 @@
 	}));
 
 	const requestError = $derived(saveMutation.error ?? deleteMutation.error);
-	const isBusy = $derived(saveMutation.isPending || deleteMutation.isPending);
+	$effect(() => {
+		isBusy = saveMutation.isPending || deleteMutation.isPending;
+	});
 
 	function save(event: SubmitEvent) {
 		event.preventDefault();
@@ -116,6 +124,8 @@
 		});
 		if (!parsed.success) {
 			fieldErrors = describeFieldIssues(parsed.error);
+			const form = event.currentTarget as HTMLFormElement;
+			void tick().then(() => form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
 			return;
 		}
 		fieldErrors = {};
@@ -123,7 +133,7 @@
 	}
 </script>
 
-<form class="flex flex-col gap-5" onsubmit={save} novalidate>
+<form id={formId} class="flex flex-col gap-5" onsubmit={save} novalidate>
 	<div class="flex flex-col gap-1">
 		<span class="text-sm font-semibold" id="history-course-label">{m.history_form_course()}</span>
 		{#if isChoosingCourse && !editedEntry}
@@ -260,10 +270,13 @@
 	{/if}
 
 	<div class="flex flex-wrap items-center gap-2">
-		<Button variant="filled" type="submit" disabled={isBusy}
+		<!-- On phones the dialog header carries Save, and its close button cancels. -->
+		<Button variant="filled" type="submit" class="max-tablet:hidden" disabled={isBusy}
 			>{saveMutation.isPending ? m.common_saving() : m.common_save()}</Button
 		>
-		<Button variant="outlined" onclick={() => onDone('cancelled')}>{m.common_cancel()}</Button>
+		<Button variant="outlined" class="max-tablet:hidden" onclick={() => onDone('cancelled')}
+			>{m.common_cancel()}</Button
+		>
 		{#if editedEntry}
 			<span class="flex-1"></span>
 			<AlertDialog.Root bind:open={isConfirmingDelete}>
