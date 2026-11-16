@@ -94,8 +94,8 @@
 			aria-label={m.navigation_your_profile()}
 			aria-current={isProfileCurrent ? 'page' : undefined}
 			class={[
-				'rounded-full',
-				isProfileCurrent && 'ring-3 ring-primary ring-offset-2 ring-offset-surface-container'
+				'flex size-12 items-center justify-center rounded-full',
+				isProfileCurrent && 'ring-3 ring-primary'
 			]}
 		>
 			<UserAvatar
