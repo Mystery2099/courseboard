@@ -18,9 +18,13 @@ The screens had drifted from the exports in `docs/design/`, and buttons and chip
 - Search filters live outside the search form (linked with the `form` attribute), so their change events never reach the form. The handler sits on each select.
 - `@tailwindcss/forms` draws its own arrow on every `select`, which doubled the chevron on the filter chips.
 
+### Reviews from other models
+
+After each larger change, Codex (GPT-6.1 Sol) and OpenCode (GLM-5.3 Flash) reviewed the diff and the running app. Most findings held up: the profile edit form overflowing the new sidebar, a 40px search button, a 2.7:1 switch thumb in dark, a white ring offset showing as a halo in dark, and settings living on the profile instead of their own screen. Some didn't: one reported that filter changes lost focus, but SvelteKit 3 replaced `keepFocus` with `reset: false`, and the browser check showed focus staying put. Every finding got checked before anything changed.
+
 ### Left as designed differences
 
-Some parts of the designs need data or features that aren't built: member counts and "you're taking it" on course rows, the subject filter on Explore (a client-side filter would only see one page), the profile's Reviews and Posts tabs and statistics, and the review list's split-pane reader.
+Some parts of the designs need data or features that aren't built: member counts and "you're taking it" on course rows, the subject filter on Explore (a client-side filter would only see one page), the profile's Reviews and Posts tabs and statistics, result counts on search, counts in the switcher sheet, the dock's create button and reading bar, and the review list's split-pane reader. Dark mode still follows the system setting; the high-contrast theme can be its own block of role values without changing that.
 
 ## Localization (November 15, 2026)
 
