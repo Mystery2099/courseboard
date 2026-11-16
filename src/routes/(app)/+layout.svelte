@@ -42,7 +42,7 @@
 			{profile}
 		/>
 	</div>
-	<div class="min-w-0 flex-1 pb-24 desktop:pb-0">
+	<div class="min-w-0 flex-1 pb-28 desktop:pb-0">
 		{@render children()}
 	</div>
 	<div class="desktop:hidden">
