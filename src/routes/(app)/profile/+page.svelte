@@ -51,13 +51,13 @@
 	<div
 		class="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-8 desktop:border-r desktop:bg-surface-sidebar desktop:px-8 desktop:pt-6"
 	>
-		<section class="rounded-card border bg-surface p-4">
+		<section class="@container rounded-card border bg-surface p-4">
 			<h2 class="text-lg font-semibold">{m.profile_display_name()}</h2>
 			{#if isEditingDisplayName}
 				<form
 					method="POST"
 					action="?/updateDisplayName"
-					class="mt-3 flex flex-col gap-3 tablet:flex-row"
+					class="mt-3 flex flex-col gap-3 @md:flex-row"
 					use:enhance={() => {
 						isSaving = true;
 						return async ({ result, update }) => {
@@ -67,7 +67,7 @@
 						};
 					}}
 				>
-					<label class="flex-1">
+					<label class="min-w-0 flex-1">
 						<span class="sr-only">{m.profile_display_name()}</span>
 						<input
 							name="displayName"

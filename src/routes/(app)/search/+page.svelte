@@ -78,9 +78,9 @@
 
 <svelte:head><title>{m.search_title()}</title></svelte:head>
 
-<main class="mx-auto max-w-3xl px-4 py-8">
+<main class="mx-auto max-w-3xl px-4 py-8 desktop:max-w-5xl desktop:px-8">
 	<h1 class="sr-only">{m.search_title()}</h1>
-	<form id="search-form" method="GET" role="search" class="relative">
+	<form id="search-form" method="GET" role="search" class="relative desktop:max-w-3xl">
 		<input type="hidden" name="scope" value={query.scope} />
 		<label class="relative block">
 			<span class="sr-only">{m.search_label()}</span>
@@ -94,14 +94,14 @@
 				value={query.q}
 				maxlength="100"
 				placeholder={m.search_placeholder()}
-				class="min-h-13 w-full rounded-full border-outline py-3 pr-14 pl-13 text-base"
+				class="min-h-13 w-full rounded-full border-outline py-3 pr-15 pl-13 text-base"
 			/>
 		</label>
 		<Button
 			type="submit"
 			variant="filled"
 			size="icon"
-			class="absolute top-1/2 right-1.5 size-10 -translate-y-1/2"
+			class="absolute top-1/2 right-1 -translate-y-1/2"
 			aria-label={m.search_submit()}><ArrowRight /></Button
 		>
 	</form>
@@ -225,7 +225,7 @@
 
 	{#if search.courses && search.courses.results.length > 0}
 		{@render sectionHeading(m.search_scope_courses(), 'courses', search.courses.hasMore)}
-		<ul class="mt-3 grid gap-3 tablet:grid-cols-2">
+		<ul class="mt-3 grid gap-3 tablet:grid-cols-2 desktop:grid-cols-3">
 			{#each search.courses.results as course (course.id)}
 				<li>
 					<a
