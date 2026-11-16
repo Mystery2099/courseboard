@@ -58,6 +58,8 @@
 		const parameters = new URLSearchParams(
 			[...formData.entries()].map(([key, value]) => [key, String(value)])
 		);
+		// The path comes from resolve(); only the query string is added.
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		void goto(`${resolve('/(app)/search')}?${parameters}`, { reset: false });
 	}
 
