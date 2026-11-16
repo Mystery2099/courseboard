@@ -155,10 +155,13 @@
 		outline-offset: 2px;
 	}
 
-	/* @tailwindcss/forms hard-codes white fields and a blue focus ring; use the roles instead. */
+	/*
+	 * @tailwindcss/forms hard-codes white fields and a blue focus ring; use the roles instead.
+	 * `:root` lifts `select` and `textarea` above the plugin's own element selectors.
+	 */
 	input:not([type='checkbox'], [type='radio']),
-	select,
-	textarea {
+	:root select,
+	:root textarea {
 		background-color: var(--surface);
 		color: var(--on-surface);
 		border-color: var(--outline);

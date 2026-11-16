@@ -1,4 +1,5 @@
 import type { ClientSession, Collection, Filter, ObjectId } from 'mongodb';
+import { COURSES_COLLECTION_NAME } from '#lib/server/catalog/Course.ts';
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
 import { ContentAuthorLookup } from './ContentAuthorLookup.ts';
 import {
@@ -8,6 +9,17 @@ import {
 	type PostPageCriteria,
 	type PostSummary
 } from './Post.ts';
+
+export interface PostSearchRow {
+	_id: ObjectId;
+	courseId: ObjectId;
+	courseCode: string;
+	kind: PostDocument['kind'];
+	title: string;
+	bodyMarkdown: string;
+	lastActivityAt: Date;
+	authorDisplayName: string;
+}
 
 export class PostRepository {
 	private static readonly SUMMARY_FIELDS = {
@@ -35,6 +47,58 @@ export class PostRepository {
 		await this.collection().createIndex({ spaceId: 1, kind: 1, lastActivityAt: -1, _id: -1 });
 		// Newest and Unanswered order by creation; without this they sort every post of the kind.
 		await this.collection().createIndex({ spaceId: 1, kind: 1, createdAt: -1, _id: -1 });
+		await this.collection().createIndex(
+			{ title: 'text', bodyMarkdown: 'text' },
+			{ name: 'post_text', weights: { title: 3, bodyMarkdown: 1 } }
+		);
+	}
+
+	/**
+	 * Published posts matching `text`, most relevant first, limited to `courseIds` when given. Rows
+	 * include the body so the service can cut a snippet; the course code is joined in.
+	 */
+	async searchPublished(
+		text: string,
+		courseIds: ObjectId[] | null,
+		skip: number,
+		limit: number
+	): Promise<PostSearchRow[]> {
+		return this.collection()
+			.aggregate<PostSearchRow>([
+				{
+					$match: {
+						$text: { $search: text },
+						state: { $nin: ['removed', 'deleted'] },
+						...(courseIds && { courseId: { $in: courseIds } })
+					}
+				},
+				{ $sort: { score: { $meta: 'textScore' }, lastActivityAt: -1, _id: -1 } },
+				{ $skip: skip },
+				{ $limit: limit },
+				...ContentAuthorLookup.STAGES,
+				{
+					$lookup: {
+						from: COURSES_COLLECTION_NAME,
+						localField: 'courseId',
+						foreignField: '_id',
+						as: 'course',
+						pipeline: [{ $project: { _id: 0, code: 1 } }]
+					}
+				},
+				{ $unwind: '$course' },
+				{
+					$project: {
+						courseId: 1,
+						kind: 1,
+						title: 1,
+						bodyMarkdown: 1,
+						lastActivityAt: 1,
+						authorDisplayName: '$author.displayName',
+						courseCode: '$course.code'
+					}
+				}
+			])
+			.toArray();
 	}
 
 	async insert(post: PostDocument): Promise<void> {

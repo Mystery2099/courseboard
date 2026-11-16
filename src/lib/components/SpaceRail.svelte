@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { Tooltip } from 'bits-ui';
 	import Compass from 'lucide-svelte/icons/compass';
+	import Search from 'lucide-svelte/icons/search';
 	import Shield from 'lucide-svelte/icons/shield';
 	import type { FollowedCourseResponse } from '#lib/contracts/CourseFollowingContract.ts';
 	import CourseCodeTile from './CourseCodeTile.svelte';
@@ -12,6 +13,7 @@
 		followedCourses,
 		currentCourseId,
 		isExploreCurrent,
+		isSearchCurrent,
 		isProfileCurrent,
 		isAdministrator,
 		profile
@@ -19,6 +21,7 @@
 		followedCourses: FollowedCourseResponse[];
 		currentCourseId: string | null;
 		isExploreCurrent: boolean;
+		isSearchCurrent: boolean;
 		isProfileCurrent: boolean;
 		isAdministrator: boolean;
 		profile: { username: string; displayName: string; imageUrl: string | null };
@@ -40,6 +43,17 @@
 			]}
 		>
 			<Compass size={22} />
+		</a>
+		<a
+			href={resolve('/(app)/search')}
+			aria-label={m.navigation_search()}
+			aria-current={isSearchCurrent ? 'page' : undefined}
+			class={[
+				'flex size-12 items-center justify-center rounded-tile bg-surface',
+				isSearchCurrent && 'ring-3 ring-primary'
+			]}
+		>
+			<Search size={22} />
 		</a>
 		<hr class="w-8" />
 		<ul class="flex min-h-0 flex-1 flex-col items-center gap-3 overflow-y-auto">
