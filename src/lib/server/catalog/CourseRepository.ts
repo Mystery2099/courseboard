@@ -17,6 +17,8 @@ export interface CatalogCourse {
 	institutionName: string;
 }
 
+export type CourseOption = Pick<CourseDocument, '_id' | 'code' | 'title'>;
+
 /** A course in search results, with its school's name joined in. */
 export interface CourseSearchRow {
 	_id: ObjectId;
@@ -101,12 +103,14 @@ export class CourseRepository {
 		);
 	}
 
-	/** The IDs of one school's courses, for limiting other searches to that school. */
-	async findIdsByInstitution(institutionId: ObjectId, limit: number): Promise<ObjectId[]> {
-		const courses = await this.collection()
-			.find({ institutionId }, { projection: { _id: 1 }, limit })
+	/** One school's courses in code order, for limiting other searches to that school. */
+	async findOptionsByInstitution(institutionId: ObjectId, limit: number): Promise<CourseOption[]> {
+		return this.collection()
+			.find<CourseOption>(
+				{ institutionId },
+				{ projection: { code: 1, title: 1 }, sort: { normalizedCode: 1 }, limit }
+			)
 			.toArray();
-		return courses.map((course) => course._id);
 	}
 
 	private aggregateSearchRows(

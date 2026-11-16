@@ -45,17 +45,27 @@ export class SearchService {
 		private readonly people: PeopleSearchRepository
 	) {}
 
-	async search(query: ParsedSearchQuery, actor: ApplicationUser | null): Promise<SearchResponse> {
+	async search(
+		requestedQuery: ParsedSearchQuery,
+		actor: ApplicationUser | null
+	): Promise<SearchResponse> {
 		const user = AccessPolicy.requireAdmittedUser(actor);
 		await DatabaseIndexInitializer.ensureIndexes();
 
-		const institution = await this.resolveInstitution(query, user);
+		const institution = await this.resolveInstitution(requestedQuery, user);
+		const institutionCourses = institution
+			? await this.courses.findOptionsByInstitution(institution._id, INSTITUTION_COURSE_LIMIT)
+			: null;
 		const scope: ResolvedScope = {
 			institutionId: institution?._id ?? null,
-			institutionCourseIds: institution
-				? await this.courses.findIdsByInstitution(institution._id, INSTITUTION_COURSE_LIMIT)
-				: null
+			institutionCourseIds: institutionCourses?.map((course) => course._id) ?? null
 		};
+		// A course left selected from another school would silently override the school filter.
+		const isCourseAtSchool =
+			!requestedQuery.courseId ||
+			!institutionCourses ||
+			institutionCourses.some((course) => course._id.toHexString() === requestedQuery.courseId);
+		const query = isCourseAtSchool ? requestedQuery : { ...requestedQuery, courseId: undefined };
 		const isPreview = query.scope === 'everything';
 		const limit = isPreview ? SEARCH_PREVIEW_SIZE : SEARCH_PAGE_SIZE;
 		const skip = isPreview ? 0 : (query.page - 1) * SEARCH_PAGE_SIZE;
@@ -78,7 +88,15 @@ export class SearchService {
 				: null,
 			courses,
 			posts,
-			people
+			people,
+			courseOptions:
+				query.scope === 'people'
+					? (institutionCourses ?? []).map((course) => ({
+							id: course._id.toHexString(),
+							code: course.code,
+							title: course.title
+						}))
+					: []
 		};
 	}
 

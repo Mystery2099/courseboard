@@ -94,12 +94,12 @@
 				</select>
 			</label>
 			{#if query.scope === 'people'}
-				{#if data.courseOptions.length > 0}
+				{#if search.courseOptions.length > 0}
 					<label class="flex flex-col gap-1 text-sm">
 						<span class="font-semibold">{m.search_course()}</span>
 						<select name="courseId" class="rounded-field py-2 pr-8 pl-3 text-base">
 							<option value="">{m.search_any_course()}</option>
-							{#each data.courseOptions as course (course.id)}
+							{#each search.courseOptions as course (course.id)}
 								<option value={course.id} selected={course.id === query.courseId}
 									>{course.code} · {course.title}</option
 								>

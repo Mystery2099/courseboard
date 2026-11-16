@@ -13,11 +13,5 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		searchService.search(query, user),
 		courseCatalogService.listInstitutions(user)
 	]);
-	// People can be filtered by a course at the chosen school.
-	const courseOptions =
-		query.scope === 'people' && search.institution
-			? ((await courseCatalogService.browseCourses({ institutionId: search.institution.id }, user))
-					?.courses ?? [])
-			: [];
-	return { search, institutions, courseOptions };
+	return { search, institutions };
 };

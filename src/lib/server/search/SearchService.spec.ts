@@ -29,6 +29,8 @@ const searcher: ApplicationUser = {
 	}
 };
 
+const schoolCourse = { _id: new ObjectId(), code: 'CISY 7013', title: 'NoSQL Data Systems' };
+
 function courseRows(count: number): CourseSearchRow[] {
 	return Array.from({ length: count }, (_, index) => ({
 		_id: new ObjectId(),
@@ -48,7 +50,7 @@ function createService() {
 		_id: institutionId,
 		name: 'Alfred State College'
 	}));
-	vi.spyOn(courses, 'findIdsByInstitution').mockResolvedValue([]);
+	vi.spyOn(courses, 'findOptionsByInstitution').mockResolvedValue([schoolCourse]);
 	const searchByCodePrefix = vi.spyOn(courses, 'searchByCodePrefix').mockResolvedValue([]);
 	const searchByText = vi.spyOn(courses, 'searchByText').mockResolvedValue([]);
 	const searchPosts = vi.spyOn(posts, 'searchPublished').mockResolvedValue([]);
@@ -102,7 +104,7 @@ describe('search service', () => {
 
 		expect(empty).toMatchObject({ courses: null, posts: null, people: null });
 		expect(searchByText).toHaveBeenCalledTimes(1);
-		expect(searchPosts).toHaveBeenCalledWith('ana', [], 0, SEARCH_PREVIEW_SIZE + 1);
+		expect(searchPosts).toHaveBeenCalledWith('ana', [schoolCourse._id], 0, SEARCH_PREVIEW_SIZE + 1);
 		expect(searchPeople).toHaveBeenCalledTimes(1);
 	});
 
@@ -120,6 +122,26 @@ describe('search service', () => {
 			0,
 			SEARCH_PAGE_SIZE + 1
 		);
+	});
+
+	it('drops a course that belongs to another school instead of ignoring the school', async () => {
+		const { search, searchPeople } = createService();
+		const otherSchoolCourseId = new ObjectId().toHexString();
+
+		const mismatched = await search({ scope: 'people', courseId: otherSchoolCourseId });
+		const matching = await search({ scope: 'people', courseId: schoolCourse._id.toHexString() });
+
+		expect(mismatched.query.courseId).toBeUndefined();
+		expect(searchPeople).toHaveBeenNthCalledWith(
+			1,
+			expect.objectContaining({ courseId: null }),
+			0,
+			SEARCH_PAGE_SIZE + 1
+		);
+		expect(matching.query.courseId).toBe(schoolCourse._id.toHexString());
+		expect(matching.courseOptions).toEqual([
+			{ id: schoolCourse._id.toHexString(), code: 'CISY 7013', title: 'NoSQL Data Systems' }
+		]);
 	});
 
 	it('refuses a suspended account', async () => {

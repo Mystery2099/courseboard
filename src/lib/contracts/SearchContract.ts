@@ -73,11 +73,20 @@ export interface SearchSection<Result> {
 	hasMore: boolean;
 }
 
+export interface SearchCourseOption {
+	id: string;
+	code: string;
+	title: string;
+}
+
 export interface SearchResponse {
+	/** The search as it ran: a course from outside the chosen school is dropped. */
 	query: ParsedSearchQuery;
 	/** The school the search was limited to, or null for all schools. */
 	institution: { id: string; name: string } | null;
 	courses: SearchSection<CourseSearchResult> | null;
 	posts: SearchSection<PostSearchResult> | null;
 	people: SearchSection<PersonSearchResult> | null;
+	/** The chosen school's courses for the People course filter; empty in other scopes. */
+	courseOptions: SearchCourseOption[];
 }
