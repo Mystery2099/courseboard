@@ -7,12 +7,15 @@
 	let { author, createdAt }: { author: PostAuthorResponse; createdAt: string } = $props();
 </script>
 
-<div class="flex items-center gap-2 text-sm">
-	<UserAvatar username={author.username} displayName={author.displayName} size={28} />
+<!-- The avatar and name are one link, 44px tall, so the whole author is an easy target. -->
+<div class="flex flex-wrap items-center gap-x-1 text-sm">
 	<a
-		class="font-semibold hover:underline"
-		href={resolve('/(app)/users/[username]', { username: author.username })}>{author.displayName}</a
+		class="-ml-1 inline-flex min-h-11 items-center gap-2 rounded-full pr-2 pl-1 font-semibold hover:underline"
+		href={resolve('/(app)/users/[username]', { username: author.username })}
 	>
+		<UserAvatar username={author.username} displayName={author.displayName} size={28} />
+		{author.displayName}
+	</a>
 	<span class="text-on-surface-variant">
 		· <time datetime={createdAt}>{formatRelativeTime(createdAt)}</time>
 	</span>
