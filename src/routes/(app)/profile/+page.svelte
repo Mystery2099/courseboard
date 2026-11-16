@@ -49,7 +49,7 @@
 	</div>
 
 	<div
-		class="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-8 desktop:border-r desktop:pt-6 desktop:bg-surface-sidebar desktop:px-8"
+		class="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-8 desktop:border-r desktop:bg-surface-sidebar desktop:px-8 desktop:pt-6"
 	>
 		<section class="rounded-card border bg-surface p-4">
 			<h2 class="text-lg font-semibold">{m.profile_display_name()}</h2>

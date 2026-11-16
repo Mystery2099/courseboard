@@ -102,7 +102,9 @@
 							<Badge variant="neutral"><Lock size={14} /> {m.post_badge_locked()}</Badge>
 						{/if}
 					</span>
-					<span class="mt-1 block font-semibold wrap-break-word">{post.title}</span>
+					<span class="mt-1 block font-heading text-lg leading-snug font-bold wrap-break-word"
+						>{post.title}</span
+					>
 					<span class="mt-1 block text-sm text-on-surface-variant">
 						{post.author.displayName} · {formatReplyCount(post.replyCount)} ·
 						<time datetime={post.lastActivityAt}>{formatRelativeTime(post.lastActivityAt)}</time>

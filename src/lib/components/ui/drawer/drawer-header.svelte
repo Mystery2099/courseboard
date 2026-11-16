@@ -14,7 +14,7 @@
 	bind:this={ref}
 	data-slot="drawer-header"
 	class={cn(
-		'tablet:gap-0.5 tablet:text-left flex flex-col gap-0.5 p-4 group-data-[vaul-drawer-direction=bottom]/drawer-content:text-center group-data-[vaul-drawer-direction=top]/drawer-content:text-center',
+		'flex flex-col gap-0.5 p-4 group-data-[vaul-drawer-direction=bottom]/drawer-content:text-center group-data-[vaul-drawer-direction=top]/drawer-content:text-center tablet:gap-0.5 tablet:text-left',
 		className
 	)}
 	{...restProps}

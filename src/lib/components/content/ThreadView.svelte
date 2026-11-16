@@ -139,7 +139,9 @@
 			<Badge variant="neutral"><Lock size={14} /> {m.post_badge_locked()}</Badge>
 		{/if}
 	</div>
-	<h2 class="mt-2 text-2xl font-semibold wrap-break-word">{post.title}</h2>
+	<h2 class="mt-2 text-2xl leading-tight font-bold wrap-break-word desktop:text-3xl">
+		{post.title}
+	</h2>
 	<div class="mt-2"><ContentByline author={post.author} createdAt={post.createdAt} /></div>
 	{#if post.editedAt}
 		<p class="mt-1 text-sm text-on-surface-variant">
