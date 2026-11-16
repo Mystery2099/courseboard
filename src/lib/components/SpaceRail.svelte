@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from '#lib/paraglide/messages.js';
 	import { resolve } from '$app/paths';
-	import { Tooltip } from 'bits-ui';
+	import * as Tooltip from '#lib/components/ui/tooltip/index.js';
 	import Compass from 'lucide-svelte/icons/compass';
 	import Search from 'lucide-svelte/icons/search';
 	import Shield from 'lucide-svelte/icons/shield';
@@ -72,18 +72,10 @@
 								</a>
 							{/snippet}
 						</Tooltip.Trigger>
-						<Tooltip.Portal>
-							<Tooltip.Content
-								side="right"
-								sideOffset={8}
-								class="z-50 rounded-lg bg-inverse-surface px-3 py-1.5 text-sm text-inverse-on-surface"
-							>
-								<span class="font-mono">{course.code}</span> · {course.title}
-								<span class="block text-xs text-inverse-on-surface/80"
-									>{course.institutionName}</span
-								>
-							</Tooltip.Content>
-						</Tooltip.Portal>
+						<Tooltip.Content side="right" sideOffset={8} class="block">
+							<span class="font-mono">{course.code}</span> · {course.title}
+							<span class="block text-xs">{course.institutionName}</span>
+						</Tooltip.Content>
 					</Tooltip.Root>
 				</li>
 			{/each}
