@@ -44,23 +44,27 @@
 </script>
 
 <h2 class="text-xl font-semibold">{m.reviews_heading()}</h2>
-<dl class="mt-4 grid grid-cols-3 gap-3 border-y py-4">
-	<div class="flex flex-col-reverse">
-		<dt class="text-sm text-on-surface-variant">{m.reviews_statistic_count()}</dt>
-		<dd class="text-2xl font-semibold">{statistics.reviewCount}</dd>
+<dl class="mt-4 grid grid-cols-3 gap-2">
+	<div class="rounded-2xl bg-surface-container px-3 py-2.5">
+		<dt class="text-xs text-on-surface-variant tablet:text-sm">{m.reviews_statistic_count()}</dt>
+		<dd class="mt-0.5 font-heading text-xl font-bold">{statistics.reviewCount}</dd>
 	</div>
-	<div class="flex flex-col-reverse">
-		<dt class="text-sm text-on-surface-variant">{m.reviews_statistic_workload()}</dt>
-		<dd class="text-2xl font-semibold">
+	<div class="rounded-2xl bg-surface-container px-3 py-2.5">
+		<dt class="text-xs text-on-surface-variant tablet:text-sm">{m.reviews_statistic_workload()}</dt>
+		<dd class="mt-0.5 font-heading text-xl font-bold">
 			{statistics.averageWorkload === null
 				? m.reviews_statistic_not_yet()
 				: decimalFormat.format(statistics.averageWorkload)}
-			{#if statistics.averageWorkload !== null}<span class="text-sm">/ 5</span>{/if}
+			{#if statistics.averageWorkload !== null}<span
+					class="text-sm font-medium text-on-surface-variant">/ 5</span
+				>{/if}
 		</dd>
 	</div>
-	<div class="flex flex-col-reverse">
-		<dt class="text-sm text-on-surface-variant">{m.reviews_statistic_take_again()}</dt>
-		<dd class="text-2xl font-semibold">
+	<div class="rounded-2xl bg-surface-container px-3 py-2.5">
+		<dt class="text-xs text-on-surface-variant tablet:text-sm">
+			{m.reviews_statistic_take_again()}
+		</dt>
+		<dd class="mt-0.5 font-heading text-xl font-bold">
 			{statistics.wouldTakeAgainPercentage === null
 				? m.reviews_statistic_not_yet()
 				: percentFormat.format(statistics.wouldTakeAgainPercentage / 100)}
