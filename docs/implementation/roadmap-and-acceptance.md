@@ -31,7 +31,7 @@
 
 - [x] Implement one review per user/course, Taking/Took eligibility, disclosure warning, and publication-time participation snapshot. *Built with an expandable composer, editable feedback and ratings, and review threads using the existing replies. Status and term stay fixed even when history changes.*
 - [x] Aggregate review count, workload, and would-take-again results from published nonremoved reviews. *Computed from review posts only, without reading history. Empty courses have no averages.*
-- [ ] Implement course/post search and privacy-safe people filtering with stable bounded pagination.
+- [x] Implement course/post search and privacy-safe people filtering with stable bounded pagination.
 - [ ] Inspect actual query plans and add indexes for demonstrated query shapes.
 - [ ] Verify that private records never affect another user's matches, snippets, counts, or statistics.
 
