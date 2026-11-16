@@ -232,11 +232,16 @@
 		--tw-ring-color: var(--primary);
 	}
 
-	/* Every border defaults to the divider role instead of Tailwind's gray. */
+	/*
+	 * Every border defaults to the divider role instead of Tailwind's gray. Outlines start out
+	 * primary, so focus only turns the ring on: `transition-colors` also animates outline-color, and
+	 * starting from currentColor left some focus rings near-white in dark.
+	 */
 	*,
 	::before,
 	::after {
 		border-color: var(--outline-variant);
+		outline-color: var(--primary);
 	}
 }
 

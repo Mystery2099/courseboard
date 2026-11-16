@@ -39,7 +39,10 @@
 	afterNavigate(() => (isSwitcherOpen = false));
 </script>
 
-<!-- One-row dock (design handoff): 60px tall, floating 24px above the bottom on tall phones. -->
+<!--
+	One-row dock (design handoff): 60px tall, floating 24px above the bottom on tall phones. Icons only
+	on phones; tablets show labels, which the accessible names contain.
+-->
 <nav
 	aria-label={m.navigation_main()}
 	class="fixed inset-x-3 bottom-[calc(10px+env(safe-area-inset-bottom))] z-40 mx-auto flex h-[60px] max-w-[560px] items-center gap-1 rounded-full border bg-surface px-1.5 shadow-floating [@media(min-height:700px)]:bottom-[calc(24px+env(safe-area-inset-bottom))]"
@@ -47,9 +50,10 @@
 	<a
 		href={resolve('/(app)/explore')}
 		aria-label={m.navigation_explore()}
-		class="flex size-12 shrink-0 items-center justify-center rounded-full text-on-surface transition-colors duration-150 hover:bg-on-surface/8"
+		class="flex size-12 shrink-0 items-center justify-center gap-2 rounded-full text-on-surface transition-colors duration-150 hover:bg-on-surface/8 tablet:w-auto tablet:px-3"
 	>
 		<Compass size={24} />
+		<span class="hidden text-sm font-semibold tablet:inline">{m.navigation_explore()}</span>
 	</a>
 	<Drawer.Root bind:open={isSwitcherOpen}>
 		<Drawer.Trigger
@@ -133,15 +137,16 @@
 	<a
 		href={resolve('/(app)/search')}
 		aria-label={m.navigation_search()}
-		class="flex size-12 shrink-0 items-center justify-center rounded-full text-on-surface transition-colors duration-150 hover:bg-on-surface/8"
+		class="flex size-12 shrink-0 items-center justify-center gap-2 rounded-full text-on-surface transition-colors duration-150 hover:bg-on-surface/8 tablet:w-auto tablet:px-3"
 	>
 		<Search size={24} />
+		<span class="hidden text-sm font-semibold tablet:inline">{m.navigation_search()}</span>
 	</a>
 	<a
 		href={resolve('/(app)/profile')}
 		aria-label={m.navigation_your_profile()}
 		aria-current={isProfileCurrent ? 'page' : undefined}
-		class="flex size-12 shrink-0 items-center justify-center rounded-full"
+		class="flex size-12 shrink-0 items-center justify-center gap-2 rounded-full text-on-surface tablet:w-auto tablet:pr-3 tablet:pl-1.5"
 	>
 		<UserAvatar
 			username={profile.username}
@@ -149,5 +154,6 @@
 			imageUrl={profile.imageUrl}
 			size={32}
 		/>
+		<span class="hidden text-sm font-semibold tablet:inline">{m.navigation_profile()}</span>
 	</a>
 </nav>
