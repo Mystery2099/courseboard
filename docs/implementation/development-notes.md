@@ -2,6 +2,26 @@
 
 Problems that cost real time, what I tried, and what stuck. The [decision register](../planning/decision-register.md) records the outcome; this records how I got there, for the development reflections. Newest topic first.
 
+## Matching the designs with shadcn-svelte (November 16, 2026)
+
+The screens had drifted from the exports in `docs/design/`, and buttons and chips came from a hand-written file of class lists. I moved the controls to shadcn-svelte components, which keep Bits UI underneath, and then went through the built screens against the designs.
+
+### Setting it up
+
+`shadcn-svelte init` only asks for a design preset interactively, so I wrote `components.json` by hand and used `add`. The generated components assume shadcn's palette (`foreground`, `muted`, `accent`), Tailwind's default breakpoints, `dark:` overrides, and their own focus rings. I aliased shadcn's color names to the Blueprint roles in `layout.css`, mapped `sm:` and `md:` to the app's tiers, and removed the `dark:` classes and focus rings so the roles and the one global `:focus-visible` ring stay in charge. A future theme, such as high contrast, only has to redefine the role variables.
+
+`tailwind-merge` doesn't know the Blueprint theme names, so `cn()` was quietly dropping `text-overline` next to a text color. `cn()` now extends it with the app's fonts, radii, shadows, and breakpoints.
+
+### Things that broke
+
+- A Bits UI trigger inside a form renders a plain `<button>`, so the history editor's Delete trigger submitted the form and closed the editor. Triggers inside forms need `type="button"`.
+- Search filters live outside the search form (linked with the `form` attribute), so their change events never reach the form. The handler sits on each select.
+- `@tailwindcss/forms` draws its own arrow on every `select`, which doubled the chevron on the filter chips.
+
+### Left as designed differences
+
+Some parts of the designs need data or features that aren't built: member counts and "you're taking it" on course rows, the subject filter on Explore (a client-side filter would only see one page), the profile's Reviews and Posts tabs and statistics, and the review list's split-pane reader.
+
 ## Localization (November 15, 2026)
 
 I added English and Spanish with Paraglide JS before the app was feature complete. The [architecture](../technical/architecture.md#languages) describes how it works now.
