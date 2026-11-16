@@ -1,4 +1,4 @@
-# Academic Discussion Platform
+# Courseboard
 
 **Course:** CISY 8503, Applied Database Management  
 **Assignment:** NoSQL Database Lab 1  

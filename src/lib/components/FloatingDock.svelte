@@ -146,7 +146,7 @@
 		href={resolve('/(app)/profile')}
 		aria-label={m.navigation_your_profile()}
 		aria-current={isProfileCurrent ? 'page' : undefined}
-		class="flex size-12 shrink-0 items-center justify-center gap-2 rounded-full text-on-surface tablet:w-auto tablet:pr-3 tablet:pl-1.5"
+		class="flex size-12 shrink-0 items-center justify-center gap-2 rounded-full state-layer text-on-surface transition-colors duration-150 tablet:w-auto tablet:pr-3 tablet:pl-1.5"
 	>
 		<UserAvatar
 			username={profile.username}

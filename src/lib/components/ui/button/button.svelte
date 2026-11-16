@@ -10,13 +10,13 @@
 			// for hover and press (layout.css). Filled and tonal buttons also lift on hover.
 			variant: {
 				filled:
-					'state-layer bg-primary text-on-primary [--state-base:var(--primary)] [--state-color:var(--on-primary)] hover:shadow-raised',
+					'state-layer bg-primary text-on-primary [--state-base:var(--primary)] [--state-color:var(--on-surface)] hover:shadow-raised active:shadow-none',
 				tonal:
-					'state-layer bg-secondary-container text-on-secondary-container [--state-base:var(--secondary-container)] [--state-color:var(--on-secondary-container)] hover:shadow-raised',
+					'state-layer bg-secondary-container text-on-secondary-container [--state-base:var(--secondary-container)] [--state-color:var(--on-secondary-container)] hover:shadow-raised active:shadow-none',
 				outlined: 'state-layer-primary border border-outline text-primary hover:border-primary',
 				text: 'state-layer-primary text-primary',
 				destructive:
-					'state-layer bg-error text-on-error [--state-base:var(--error)] [--state-color:var(--on-error)] hover:shadow-raised',
+					'state-layer bg-error text-on-error [--state-base:var(--error)] [--state-color:var(--on-surface)] hover:shadow-raised active:shadow-none',
 				ghost: 'state-layer text-on-surface-variant hover:text-on-surface'
 			},
 			// Touch targets stay at least 44px on phones; desktop controls may shrink to 40 or 36px.

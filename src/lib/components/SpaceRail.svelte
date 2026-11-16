@@ -95,7 +95,7 @@
 			aria-label={m.navigation_your_profile()}
 			aria-current={isProfileCurrent ? 'page' : undefined}
 			class={[
-				'flex size-12 items-center justify-center rounded-full',
+				'flex size-12 items-center justify-center rounded-full state-layer transition-colors duration-150',
 				isProfileCurrent && 'ring-3 ring-primary'
 			]}
 		>

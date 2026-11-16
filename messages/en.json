@@ -32,7 +32,7 @@
 	"history_term": "{season} {year}",
 	"history_group_unscheduled": "Planning, no term yet",
 	"history_group_heading": "{term} · {institution}",
-	"app_name": "Academic Discussion Platform",
+	"app_name": "Courseboard",
 	"landing_account_suspended": "Your account is suspended.",
 	"landing_awaiting_invitation": "Your account doesn't have access yet. Open the invitation link you were sent, and sign in with the email address it was sent to.",
 	"landing_invitation_only": "Access is by invitation. Sign in to continue.",

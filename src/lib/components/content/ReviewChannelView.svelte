@@ -77,8 +77,10 @@
 {#if contextQuery.isError}
 	<p class="mt-3 text-sm text-error" role="alert">
 		{m.reviews_context_refresh_failed()}
-		<button type="button" class="underline" onclick={() => contextQuery.refetch()}
-			>{m.common_try_again()}</button
+		<button
+			type="button"
+			class="font-semibold underline underline-offset-2 hover:decoration-2"
+			onclick={() => contextQuery.refetch()}>{m.common_try_again()}</button
 		>
 	</p>
 {/if}
@@ -117,7 +119,9 @@
 	</div>
 {:else}
 	<details bind:open={isComposerOpen} class="mt-4 rounded-card border bg-surface p-4">
-		<summary class="min-h-11 cursor-pointer py-2 font-semibold text-primary">
+		<summary
+			class="-mx-3 flex min-h-11 items-center rounded-full state-layer-primary px-3 font-semibold text-primary transition-colors duration-150"
+		>
 			{m.reviews_write()}
 		</summary>
 		<div class="mt-4">

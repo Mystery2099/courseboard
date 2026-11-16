@@ -32,7 +32,7 @@
 	"history_term": "{season} {year}",
 	"history_group_unscheduled": "Planeando, sin período aún",
 	"history_group_heading": "{term} · {institution}",
-	"app_name": "Plataforma de Debate Académico",
+	"app_name": "Courseboard",
 	"landing_account_suspended": "Tu cuenta está suspendida.",
 	"landing_awaiting_invitation": "Tu cuenta aún no tiene acceso. Abre el enlace de invitación que te enviaron e inicia sesión con el correo electrónico al que se envió.",
 	"landing_invitation_only": "El acceso es solo por invitación. Inicia sesión para continuar.",

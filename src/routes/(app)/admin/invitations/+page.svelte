@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
 	import { describeErrorCode } from '#lib/client/ErrorPresentation.ts';
@@ -34,7 +35,7 @@
 			class="mt-1 rounded border px-2 py-1"
 		/>
 	</label>
-	<button type="submit" class="rounded border px-4 py-1">{m.admin_invitations_create()}</button>
+	<Button type="submit" variant="filled" size="compact">{m.admin_invitations_create()}</Button>
 </form>
 {#if form?.createError}<p class="mt-2 text-sm" role="alert">
 		{describeErrorCode(form.createError)}
@@ -53,11 +54,12 @@
 			class="mt-2 w-full rounded border px-2 py-1 font-mono text-xs"
 			onfocus={(event) => event.currentTarget.select()}
 		/>
-		<button
-			type="button"
-			class="mt-2 rounded border px-3 py-1"
+		<Button
+			variant="outlined"
+			size="compact"
+			class="mt-2"
 			onclick={() => navigator.clipboard.writeText(form?.createdInvitation?.link ?? '')}
-			>{m.admin_invitations_copy_link()}</button
+			>{m.admin_invitations_copy_link()}</Button
 		>
 	</div>
 {/if}
@@ -90,7 +92,9 @@
 				<td>
 					<form method="POST" action="?/revoke" use:enhance>
 						<input type="hidden" name="invitationId" value={invitation.id} />
-						<button type="submit" class="underline">{m.admin_invitations_revoke()}</button>
+						<Button type="submit" variant="text" size="compact"
+							>{m.admin_invitations_revoke()}</Button
+						>
 					</form>
 				</td>
 			</tr>

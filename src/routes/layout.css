@@ -55,6 +55,9 @@
 	 */
 	--state-hover: 14%;
 	--state-pressed: 24%;
+	/* Lighter steps for controls tinted with their own text color, so the text keeps 4.5:1. */
+	--state-hover-tinted: 10%;
+	--state-pressed-tinted: 14%;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -175,8 +178,10 @@
 
 @layer base {
 	/* Tailwind 4 leaves buttons with the default arrow; a pointer helps show what's clickable. */
-	button:not(:disabled),
-	[role='button']:not([aria-disabled='true']) {
+	button:not(:disabled, [aria-disabled='true']),
+	[role='button']:not([aria-disabled='true']),
+	select:not(:disabled),
+	summary {
 		cursor: pointer;
 	}
 
@@ -299,9 +304,10 @@
 }
 
 /*
- * Hover and pressed states. The control's content color (--state-color, on-surface by default) is
- * mixed over its background (--state-base, transparent by default). Filled controls set both, for
- * example `[--state-base:var(--primary)] [--state-color:var(--on-primary)]`.
+ * Hover and pressed states. A tint (--state-color, on-surface by default) is mixed over the control's
+ * background (--state-base, transparent by default). Containers tint with their own content color;
+ * filled and destructive buttons tint with on-surface instead, so pressing darkens them in light
+ * and lightens them in dark, and their text gains contrast rather than losing it.
  */
 @utility state-layer {
 	&:hover:not(:disabled, [aria-disabled='true'], [data-disabled]) {
@@ -321,7 +327,24 @@
 	}
 }
 
-/* The same state layer tinted with primary, for outlined and text controls. */
+/*
+ * Outlined and text controls tint with primary, the same color as their text, so they use the
+ * lighter tinted steps: at most 14% keeps primary text at 4.5:1 even on surface-container.
+ */
 @utility state-layer-primary {
-	@apply state-layer [--state-color:var(--primary)];
+	&:hover:not(:disabled, [aria-disabled='true'], [data-disabled]) {
+		background-color: color-mix(
+			in oklab,
+			var(--state-base, transparent),
+			var(--primary) var(--state-hover-tinted)
+		);
+	}
+
+	&:active:not(:disabled, [aria-disabled='true'], [data-disabled]) {
+		background-color: color-mix(
+			in oklab,
+			var(--state-base, transparent),
+			var(--primary) var(--state-pressed-tinted)
+		);
+	}
 }

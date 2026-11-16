@@ -163,7 +163,8 @@
 	</p>
 	{#if post.viewerPermissions.canEditReview}
 		<details bind:open={isReviewEditorOpen} class="mt-4 rounded-card border p-4">
-			<summary class="min-h-11 cursor-pointer py-2 font-semibold text-primary"
+			<summary
+				class="-mx-3 flex min-h-11 items-center rounded-full state-layer-primary px-3 font-semibold text-primary transition-colors duration-150"
 				>{m.thread_edit_review()}</summary
 			>
 			{#if isReviewEditorOpen}
