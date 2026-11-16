@@ -71,12 +71,12 @@
 	>
 		<input type="hidden" name="primaryInstitutionId" value={primaryInstitutionId} />
 
-		<p class="font-mono text-sm text-primary">
+		<p class="font-mono text-sm font-semibold text-primary">
 			{m.onboarding_step({ step: stepNumber, total: 3 })}
 		</p>
 
 		{#if step === 'school'}
-			<h1 class="mt-2 text-3xl font-semibold">{m.onboarding_school_heading()}</h1>
+			<h1 class="mt-2 text-3xl font-bold">{m.onboarding_school_heading()}</h1>
 			<p class="mt-2 text-on-surface-variant">
 				{m.onboarding_school_detail()}
 			</p>
@@ -109,7 +109,7 @@
 						type="search"
 						bind:value={institutionQuery}
 						placeholder={m.onboarding_search_schools()}
-						class="w-full rounded-full border-outline py-3 pr-4 pl-12"
+						class="min-h-13 w-full rounded-full border-outline py-3 pr-4 pl-12 text-base"
 					/>
 				</label>
 
@@ -118,11 +118,12 @@
 					<div class="flex flex-col gap-2">
 						{#each matchingInstitutions as institution (institution.id)}
 							<label
-								class="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border px-4 py-3 has-checked:border-primary has-checked:bg-secondary-container"
+								class="flex min-h-16 cursor-pointer items-center justify-between gap-4 rounded-2xl border-2 border-outline-variant bg-surface px-4 py-3 transition-colors duration-150 hover:bg-surface-container has-checked:border-primary has-checked:bg-secondary-container has-checked:text-on-secondary-container"
 							>
 								<span class="font-semibold">{institution.name}</span>
 								<input
 									type="radio"
+									class="size-5"
 									name="institutionChoice"
 									value={institution.id}
 									bind:group={primaryInstitutionId}
@@ -151,7 +152,7 @@
 				>
 			</div>
 		{:else}
-			<h1 class="mt-2 text-3xl font-semibold">{m.onboarding_profile_heading()}</h1>
+			<h1 class="mt-2 text-3xl font-bold">{m.onboarding_profile_heading()}</h1>
 			<p class="mt-2 text-on-surface-variant">
 				{m.onboarding_profile_detail()}
 			</p>
@@ -166,7 +167,7 @@
 					required
 					aria-invalid={form?.errors.displayName ? 'true' : undefined}
 					aria-describedby={form?.errors.displayName ? 'display-name-error' : undefined}
-					class="mt-2 w-full rounded-field border-outline px-4 py-3"
+					class="mt-2 min-h-12 w-full rounded-field border-outline px-4 py-3 text-base"
 				/>
 			</label>
 			{#if form?.errors.displayName}
@@ -177,7 +178,9 @@
 
 			<label class="mt-6 block">
 				<span class="font-semibold">{m.onboarding_username()}</span>
-				<span class="mt-2 flex items-center rounded-2xl border border-outline bg-surface px-4">
+				<span
+					class="mt-2 flex items-center rounded-field border border-outline bg-surface px-4 focus-within:border-2 focus-within:border-primary focus-within:px-[15px]"
+				>
 					<span class="text-on-surface-variant" aria-hidden="true">@</span>
 					<input
 						name="username"
@@ -189,7 +192,7 @@
 						required
 						aria-invalid={form?.errors.username ? 'true' : undefined}
 						aria-describedby="username-help"
-						class="w-full border-0 py-3 pl-1 focus:ring-0"
+						class="min-h-12 w-full border-0 bg-transparent py-3 pl-1 text-base focus:ring-0 focus:outline-none"
 					/>
 				</span>
 			</label>

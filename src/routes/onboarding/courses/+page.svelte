@@ -59,8 +59,10 @@
 		>
 	</div>
 
-	<p class="mt-8 font-mono text-sm text-primary">{m.onboarding_step({ step: 3, total: 3 })}</p>
-	<h1 class="mt-2 text-3xl font-semibold">{m.onboarding_courses_heading()}</h1>
+	<p class="mt-8 font-mono text-sm font-semibold text-primary">
+		{m.onboarding_step({ step: 3, total: 3 })}
+	</p>
+	<h1 class="mt-2 text-3xl font-bold">{m.onboarding_courses_heading()}</h1>
 	<p class="mt-2 text-on-surface-variant">
 		{m.onboarding_courses_detail({ term: formatTerm(currentTerm()) })}
 	</p>
