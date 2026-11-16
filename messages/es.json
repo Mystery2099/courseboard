@@ -56,7 +56,7 @@
 	"explore_no_courses": "Aún no se han añadido cursos.",
 	"explore_courses_at": "Cursos en {institution}",
 	"explore_change_institution": "Cambiar",
-	"explore_following_suffix": " · siguiendo",
+	"explore_following": "Siguiendo",
 	"explore_institution_empty": "Esta institución aún no tiene cursos.",
 	"explore_next_courses": "Siguientes cursos",
 	"explore_first_courses": "Volver a los primeros cursos",

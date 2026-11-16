@@ -56,7 +56,7 @@
 	"explore_no_courses": "No courses have been added yet.",
 	"explore_courses_at": "Courses at {institution}",
 	"explore_change_institution": "Change",
-	"explore_following_suffix": " · following",
+	"explore_following": "Following",
 	"explore_institution_empty": "This institution has no courses yet.",
 	"explore_next_courses": "Next courses",
 	"explore_first_courses": "Back to first courses",

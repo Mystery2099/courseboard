@@ -1,9 +1,11 @@
 <script lang="ts">
-	import { Button } from '#lib/components/ui/button/index.js';
+	import { Button, buttonVariants } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
-	import { DropdownMenu } from 'bits-ui';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
+	import Check from 'lucide-svelte/icons/check';
+	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import CourseCodeTile from '#lib/components/CourseCodeTile.svelte';
 	import type { PageProps } from './$types';
@@ -14,7 +16,7 @@
 <svelte:head><title>{m.explore_title()}</title></svelte:head>
 
 <main class="mx-auto max-w-3xl px-4 py-8">
-	<h1 class="text-3xl font-semibold">{m.explore_title()}</h1>
+	<h1 class="text-3xl font-bold">{m.explore_title()}</h1>
 
 	{#if !data.catalog}
 		<p class="mt-4 text-on-surface-variant">{m.explore_no_courses()}</p>
@@ -25,34 +27,34 @@
 			</h2>
 			{#if data.institutions.length > 1}
 				<DropdownMenu.Root>
-					<DropdownMenu.Trigger class="shrink-0 rounded-full border px-4 py-1.5"
-						>{m.explore_change_institution()} ▾</DropdownMenu.Trigger
+					<DropdownMenu.Trigger
+						class={buttonVariants({
+							variant: 'outlined',
+							size: 'compact',
+							class: 'text-on-surface'
+						})}>{m.explore_change_institution()} <ChevronDown /></DropdownMenu.Trigger
 					>
-					<DropdownMenu.Portal>
-						<DropdownMenu.Content
-							align="end"
-							sideOffset={8}
-							class="z-10 w-64 rounded-2xl border bg-surface p-2 shadow-lg"
-						>
-							{#each data.institutions as institution (institution.id)}
-								<DropdownMenu.Item>
-									{#snippet child({ props })}
-										<a
-											{...props}
-											href="{resolve('/(app)/explore')}?{new URLSearchParams({
-												institutionId: institution.id
-											})}"
-											aria-current={institution.id === data.catalog?.institution.id
-												? 'page'
-												: undefined}
-											class="block rounded-xl px-3 py-2 data-highlighted:bg-surface-container"
-											>{institution.name}</a
-										>
-									{/snippet}
-								</DropdownMenu.Item>
-							{/each}
-						</DropdownMenu.Content>
-					</DropdownMenu.Portal>
+					<DropdownMenu.Content align="end" sideOffset={8} class="w-72">
+						{#each data.institutions as institution (institution.id)}
+							<DropdownMenu.Item>
+								{#snippet child({ props })}
+									<a
+										{...props}
+										href="{resolve('/(app)/explore')}?{new URLSearchParams({
+											institutionId: institution.id
+										})}"
+										aria-current={institution.id === data.catalog?.institution.id
+											? 'page'
+											: undefined}
+										>{institution.name}
+										{#if institution.id === data.catalog?.institution.id}<Check
+												class="ml-auto"
+											/>{/if}</a
+									>
+								{/snippet}
+							</DropdownMenu.Item>
+						{/each}
+					</DropdownMenu.Content>
 				</DropdownMenu.Root>
 			{/if}
 		</div>
@@ -62,16 +64,16 @@
 				<li>
 					<a
 						href={resolve('/(app)/courses/[courseId]', { courseId: course.id })}
-						class="flex items-center gap-4 px-4 py-3 hover:bg-surface-container"
+						class="flex min-h-18 items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-surface-container"
 					>
 						<CourseCodeTile code={course.code} />
 						<span class="min-w-0 flex-1">
-							<span class="block truncate font-semibold">{course.title}</span>
-							<span class="block text-sm text-on-surface-variant">
-								<span class="font-mono">{course.code}</span>{course.isFollowed
-									? m.explore_following_suffix()
-									: ''}
-							</span>
+							<!-- The tile shows the code visually; screen readers get it here. -->
+							<span class="sr-only">{course.code}</span>
+							<span class="block truncate text-lg font-medium">{course.title}</span>
+							{#if course.isFollowed}
+								<span class="block text-sm text-on-surface-variant">{m.explore_following()}</span>
+							{/if}
 						</span>
 						<ChevronRight size={20} class="shrink-0" />
 					</a>
