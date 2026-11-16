@@ -24,6 +24,8 @@ After each larger change, Codex (GPT-6.1 Sol) and OpenCode (GLM-5.3 Flash) revie
 
 The third round scored the branch 7.5/10 (Codex) and 7/10 (GLM) and found a real layering bug: every field carried a `border-outline` utility, which outranks the base layer, so the error border never showed, and a new focus rule removed the red inset exactly when a failed submit moved focus to the field. Fields now leave border color to the base rules. Dialogs opened from ordinary buttons also dropped focus on close, because Bits UI only restores focus to its own trigger; `EditorDialog` remembers what had focus and returns there.
 
+Rounds 4 to 6 found smaller misses (byline links 20px tall, a reply error not linked to its field, review fields at 42px) and one more color bug: `transition-colors` animates outline-color, so focus rings started from currentColor and could look near-white in dark. Outlines now default to primary. When the preview browser stopped producing screenshots, a 40-image Playwright pack (design comparisons, focus rings, 200% zoom) let both reviewers finish the visual check. Round 6 ended at 10/10 (Codex) and 9.5/10 (GLM), both satisfied. Review-specific filters for the Reviews channel were left as future work rather than added to this pass.
+
 Clerk's own account dialog has 24 to 40px controls and no accessible name on its `role="dialog"`. That's Clerk's interface, reachable before this branch through its account menu, so it's recorded here rather than patched element by element.
 
 ### Left as designed differences
