@@ -109,7 +109,7 @@
 						type="search"
 						bind:value={institutionQuery}
 						placeholder={m.onboarding_search_schools()}
-						class="min-h-13 w-full rounded-full border-outline py-3 pr-4 pl-12 text-base"
+						class="min-h-13 w-full rounded-full py-3 pr-4 pl-12 text-base"
 					/>
 				</label>
 
@@ -167,7 +167,7 @@
 					required
 					aria-invalid={form?.errors.displayName ? 'true' : undefined}
 					aria-describedby={form?.errors.displayName ? 'display-name-error' : undefined}
-					class="mt-2 min-h-12 w-full rounded-field border-outline px-4 py-3 text-base"
+					class="mt-2 min-h-12 w-full rounded-field px-4 py-3 text-base"
 				/>
 			</label>
 			{#if form?.errors.displayName}

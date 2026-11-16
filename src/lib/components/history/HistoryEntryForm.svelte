@@ -114,6 +114,8 @@
 		event.preventDefault();
 		if (!course) {
 			fieldErrors = { course: m.history_form_course_required() };
+			const form = event.currentTarget as HTMLFormElement;
+			void tick().then(() => form.querySelector<HTMLElement>('[data-course-list] button')?.focus());
 			return;
 		}
 		const parsed = updateHistoryEntrySchema.safeParse({
@@ -139,6 +141,7 @@
 		{#if isChoosingCourse && !editedEntry}
 			<CoursePicker
 				{defaultInstitutionId}
+				errorId={fieldErrors.course ? 'history-course-error' : undefined}
 				onSelect={(selected) => {
 					course = selected;
 					isChoosingCourse = false;
@@ -167,7 +170,9 @@
 			</div>
 		{/if}
 		{#if fieldErrors.course}
-			<p class="text-sm text-error" role="alert">{fieldErrors.course}</p>
+			<p id="history-course-error" class="text-sm text-error" role="alert">
+				{fieldErrors.course}
+			</p>
 		{/if}
 	</div>
 
@@ -191,7 +196,7 @@
 			<label class="flex-1">
 				<span class="sr-only">{m.history_form_season()}</span>
 				<select
-					class="min-h-12 w-full rounded-field border-outline px-4 text-base"
+					class="min-h-12 w-full rounded-field px-4 text-base"
 					bind:value={season}
 					aria-invalid={fieldErrors.term ? 'true' : undefined}
 					aria-describedby={fieldErrors.term ? 'history-term-error' : undefined}
@@ -207,7 +212,7 @@
 			<label class="flex-1">
 				<span class="sr-only">{m.history_form_year()}</span>
 				<select
-					class="min-h-12 w-full rounded-field border-outline px-4 text-base disabled:opacity-50"
+					class="min-h-12 w-full rounded-field px-4 text-base disabled:opacity-50"
 					bind:value={year}
 					disabled={season === ''}
 				>
@@ -226,13 +231,13 @@
 		<legend class="text-sm font-semibold">{m.history_form_visibility()}</legend>
 		<div class="mt-1.5 grid grid-cols-2 gap-2">
 			<label
-				class="flex min-h-12 cursor-pointer items-center justify-center rounded-2xl border-2 border-outline px-3 text-center font-semibold transition-colors duration-150 hover:bg-on-surface/8 has-checked:border-primary has-checked:bg-secondary-container has-checked:text-on-secondary-container has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary"
+				class="flex min-h-12 cursor-pointer items-center justify-center rounded-2xl border-2 border-outline px-3 text-center font-semibold outline-primary transition-colors duration-150 hover:bg-on-surface/8 has-checked:border-primary has-checked:bg-secondary-container has-checked:text-on-secondary-container has-focus-visible:outline-2 has-focus-visible:outline-offset-2"
 			>
 				<input type="radio" class="sr-only" value="private" bind:group={visibility} />
 				{m.history_visibility_private()}
 			</label>
 			<label
-				class="flex min-h-12 cursor-pointer items-center justify-center rounded-2xl border-2 border-outline px-3 text-center font-semibold transition-colors duration-150 hover:bg-on-surface/8 has-checked:border-primary has-checked:bg-secondary-container has-checked:text-on-secondary-container has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary"
+				class="flex min-h-12 cursor-pointer items-center justify-center rounded-2xl border-2 border-outline px-3 text-center font-semibold outline-primary transition-colors duration-150 hover:bg-on-surface/8 has-checked:border-primary has-checked:bg-secondary-container has-checked:text-on-secondary-container has-focus-visible:outline-2 has-focus-visible:outline-offset-2"
 			>
 				<input type="radio" class="sr-only" value="visible" bind:group={visibility} />
 				{m.history_form_visible_on_profile()}
@@ -251,7 +256,7 @@
 			>{m.history_form_private_note_hint()}</span
 		>
 		<textarea
-			class="min-h-24 rounded-field border-outline px-4 py-3 text-base"
+			class="min-h-24 rounded-field px-4 py-3 text-base"
 			bind:value={privateNote}
 			maxlength={PRIVATE_NOTE_MAX_LENGTH}
 			aria-invalid={fieldErrors.privateNote ? 'true' : undefined}

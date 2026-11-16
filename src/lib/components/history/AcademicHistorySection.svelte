@@ -62,7 +62,7 @@
 <section aria-labelledby="history-heading">
 	<div class="flex flex-wrap items-center justify-between gap-3">
 		<h2 id="history-heading" class="text-xl font-semibold">{m.history_heading()}</h2>
-		<div class="flex gap-2">
+		<div class="flex flex-wrap gap-2">
 			<Button
 				variant={isPreviewingAsOthers ? 'tonal' : 'outlined'}
 				size="compact"

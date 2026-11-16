@@ -34,7 +34,7 @@
 	<label class="flex flex-col gap-1">
 		<span class="text-sm font-semibold">{label}</span>
 		<textarea
-			class="min-h-24 rounded-field border-outline px-4 py-2"
+			class="min-h-24 rounded-field px-4 py-2"
 			bind:value={bodyMarkdown}
 			maxlength={REPLY_BODY_MAX_LENGTH}
 			aria-invalid={errorMessage ? 'true' : undefined}

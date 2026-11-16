@@ -12,9 +12,12 @@
 
 	let {
 		defaultInstitutionId,
+		errorId,
 		onSelect
 	}: {
 		defaultInstitutionId: string | null;
+		/** The id of an error message about the choice, linked to the course list. */
+		errorId?: string;
 		onSelect: (course: HistoryCourseResponse) => void;
 	} = $props();
 
@@ -46,7 +49,7 @@
 	<label class="flex flex-col gap-1">
 		<span class="text-sm font-semibold">{m.course_picker_school()}</span>
 		<select
-			class="rounded-field border-outline px-4 py-2"
+			class="min-h-12 rounded-field px-4 text-base"
 			value={institutionId ?? ''}
 			onchange={(event) => (selectedInstitutionId = event.currentTarget.value)}
 			disabled={!institutionsQuery.data}
@@ -63,14 +66,16 @@
 		<p class="text-sm text-on-surface-variant">{m.course_picker_loading()}</p>
 	{:else}
 		<ul
+			data-course-list
 			class="max-h-72 divide-y overflow-y-auto rounded-card border"
 			aria-label={m.course_picker_courses()}
+			aria-describedby={errorId}
 		>
 			{#each courses as course (course.id)}
 				<li>
 					<button
 						type="button"
-						class="flex w-full items-center gap-3 px-4 py-2 text-left hover:bg-surface-container"
+						class="flex w-full items-center gap-3 px-4 py-2 text-left transition-colors duration-150 hover:bg-surface-container focus-visible:-outline-offset-2"
 						onclick={() =>
 							institution &&
 							onSelect({ id: course.id, code: course.code, title: course.title, institution })}

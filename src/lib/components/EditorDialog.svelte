@@ -25,6 +25,21 @@
 		isSubmitting = false,
 		children
 	}: Props = $props();
+
+	// These dialogs open from ordinary buttons rather than a Dialog.Trigger, so Bits UI has nothing
+	// to return focus to. Remember what had focus when the dialog opened and go back there.
+	let returnFocusTo: HTMLElement | null = null;
+	$effect.pre(() => {
+		if (open && document.activeElement instanceof HTMLElement) {
+			returnFocusTo = document.activeElement;
+		}
+	});
+
+	function restoreFocus(event: Event) {
+		if (!returnFocusTo?.isConnected) return;
+		event.preventDefault();
+		returnFocusTo.focus();
+	}
 </script>
 
 <!--
@@ -35,6 +50,7 @@
 <Dialog.Root bind:open>
 	<Dialog.Content
 		showCloseButton={false}
+		onCloseAutoFocus={restoreFocus}
 		class="inset-0 block max-h-dvh max-w-none translate-0 overflow-y-auto rounded-none p-0 shadow-none ring-0 tablet:inset-auto tablet:top-1/2 tablet:left-1/2 tablet:max-h-[90dvh] tablet:w-[36rem] tablet:max-w-[calc(100%-2rem)] tablet:-translate-1/2 tablet:rounded-sheet tablet:shadow-dialog tablet:ring-1"
 	>
 		<div

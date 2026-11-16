@@ -75,7 +75,7 @@
 			<span class="text-sm font-semibold">{m.common_title()}</span>
 			<input
 				type="text"
-				class="min-h-12 rounded-field border-outline px-4 py-2 text-base"
+				class="min-h-12 rounded-field px-4 py-2 text-base"
 				bind:value={title}
 				maxlength={POST_TITLE_MAX_LENGTH}
 				aria-invalid={fieldErrors.title ? 'true' : undefined}
@@ -92,7 +92,7 @@
 				{kind === 'question' ? m.post_composer_question_body() : m.post_composer_discussion_body()}
 			</span>
 			<textarea
-				class="min-h-48 rounded-field border-outline px-4 py-3 text-base"
+				class="min-h-48 rounded-field px-4 py-3 text-base"
 				bind:value={bodyMarkdown}
 				maxlength={POST_BODY_MAX_LENGTH}
 				aria-invalid={fieldErrors.bodyMarkdown ? 'true' : undefined}

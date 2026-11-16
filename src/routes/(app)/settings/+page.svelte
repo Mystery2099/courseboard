@@ -39,7 +39,9 @@
 		if (clerk && 'openUserProfile' in clerk) clerk.openUserProfile();
 	}
 
+	// Rows sit in a rounded, clipped list, so their focus ring is drawn inside the row.
 	const ROW = 'flex min-h-16 items-center justify-between gap-4 px-4 py-3';
+	const ROW_BUTTON = `${ROW} w-full text-left transition-colors duration-150 hover:bg-on-surface/8 focus-visible:-outline-offset-2 disabled:cursor-wait disabled:opacity-60`;
 </script>
 
 <svelte:head><title>{m.settings_title()}</title></svelte:head>
@@ -93,7 +95,7 @@
 								required
 								aria-invalid={form?.displayNameError ? 'true' : undefined}
 								aria-describedby={form?.displayNameError ? 'display-name-error' : undefined}
-								class="min-h-12 w-full rounded-field border-outline px-4 text-base"
+								class="min-h-12 w-full rounded-field px-4 text-base"
 							/>
 						</label>
 						<div class="flex gap-2">
@@ -133,7 +135,8 @@
 			<li>
 				<button
 					type="button"
-					class="{ROW} w-full text-left transition-colors duration-150 hover:bg-on-surface/8"
+					class={ROW_BUTTON}
+					disabled={!clerkContext.isLoaded}
 					onclick={openAccountManager}
 				>
 					<span class="min-w-0">
@@ -218,8 +221,7 @@
 
 	<ul class="mt-8 overflow-hidden rounded-card border bg-surface">
 		<li>
-			<SignOutButton
-				class="{ROW} w-full text-left font-semibold transition-colors duration-150 hover:bg-on-surface/8"
+			<SignOutButton class="{ROW_BUTTON} font-semibold"
 				>{m.auth_sign_out()}
 				<ChevronRight size={20} class="shrink-0 text-on-surface-variant" aria-hidden="true" />
 			</SignOutButton>

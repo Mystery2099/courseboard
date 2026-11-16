@@ -94,7 +94,7 @@
 				value={query.q}
 				maxlength="100"
 				placeholder={m.search_placeholder()}
-				class="min-h-13 w-full rounded-full border-outline py-3 pr-15 pl-13 text-base"
+				class="min-h-13 w-full rounded-full py-3 pr-15 pl-13 text-base"
 			/>
 		</label>
 		<Button
@@ -161,7 +161,7 @@
 		<label
 			class="{toggleVariants({
 				variant: 'chip'
-			})} items-stretch gap-0 pr-2 after:hidden focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary"
+			})} items-stretch gap-0 pr-2 outline-primary after:hidden focus-within:outline-2 focus-within:outline-offset-2"
 		>
 			<span class="self-center whitespace-nowrap">{label}:</span>
 			<!-- Taller than the chip it sits in, so the select itself is a 44px target. -->
