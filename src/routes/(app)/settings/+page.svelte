@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button, buttonVariants } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
+	import { tick } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
@@ -12,6 +13,21 @@
 	let { data, form }: PageProps = $props();
 
 	let isEditingDisplayName = $state(false);
+	let displayNameInput = $state<HTMLInputElement | null>(null);
+	let editDisplayNameButton = $state<HTMLButtonElement | null>(null);
+
+	// The control that started or ended editing disappears, so focus moves to its replacement.
+	async function startEditingDisplayName() {
+		isEditingDisplayName = true;
+		await tick();
+		displayNameInput?.focus();
+	}
+
+	async function stopEditingDisplayName() {
+		isEditingDisplayName = false;
+		await tick();
+		editDisplayNameButton?.focus();
+	}
 	let isSaving = $state(false);
 	let isSavingInstitutionVisibility = $state(false);
 </script>
@@ -42,39 +58,47 @@
 						return async ({ result, update }) => {
 							await update({ reset: false });
 							isSaving = false;
-							if (result.type === 'success') isEditingDisplayName = false;
+							if (result.type === 'success') {
+								await stopEditingDisplayName();
+							} else {
+								await tick();
+								displayNameInput?.focus();
+							}
 						};
 					}}
 				>
 					<label class="min-w-0 flex-1">
 						<span class="sr-only">{m.profile_display_name()}</span>
 						<input
+							bind:this={displayNameInput}
 							name="displayName"
 							value={form?.displayName ?? data.profile.displayName}
 							maxlength="50"
 							autocomplete="name"
 							required
 							aria-invalid={form?.displayNameError ? 'true' : undefined}
-							class="w-full rounded-field border-outline px-4 py-2"
+							aria-describedby={form?.displayNameError ? 'display-name-error' : undefined}
+							class="min-h-12 w-full rounded-field border-outline px-4 text-base"
 						/>
 					</label>
 					<div class="flex gap-2">
 						<Button variant="filled" type="submit" disabled={isSaving}>{m.common_save()}</Button>
-						<Button variant="outlined" onclick={() => (isEditingDisplayName = false)}
-							>{m.common_cancel()}</Button
-						>
+						<Button variant="outlined" onclick={stopEditingDisplayName}>{m.common_cancel()}</Button>
 					</div>
 				</form>
 				{#if form?.displayNameError}
-					<p class="mt-2 text-sm text-error" role="alert">
+					<p id="display-name-error" class="mt-2 text-sm text-error" role="alert">
 						{describeErrorCode(form.displayNameError)}
 					</p>
 				{/if}
 			{:else}
 				<div class="mt-2 flex items-center justify-between gap-4">
 					<p>{data.profile.displayName}</p>
-					<Button variant="outlined" size="compact" onclick={() => (isEditingDisplayName = true)}
-						>{m.common_edit()}</Button
+					<Button
+						variant="outlined"
+						size="compact"
+						bind:ref={editDisplayNameButton}
+						onclick={startEditingDisplayName}>{m.common_edit()}</Button
 					>
 				</div>
 				{#if form?.displayNameSaved}
@@ -145,7 +169,12 @@
 				{m.profile_account_explanation()}
 			</p>
 			<div class="mt-3 flex items-center gap-4">
-				<UserButton />
+				<!-- Clerk's trigger is 28px, and its unlayered styles outrank utilities, hence the ! -->
+				<UserButton
+					appearance={{
+						elements: { userButtonTrigger: 'size-11!', userButtonAvatarBox: 'size-11!' }
+					}}
+				/>
 				<SignOutButton class={buttonVariants({ variant: 'outlined', size: 'compact' })}
 					>{m.auth_sign_out()}</SignOutButton
 				>
