@@ -216,13 +216,13 @@
 		<legend class="text-sm font-semibold">{m.history_form_visibility()}</legend>
 		<div class="mt-1.5 grid grid-cols-2 gap-2">
 			<label
-				class="flex min-h-12 cursor-pointer items-center justify-center rounded-2xl border-2 border-outline-variant px-3 text-center font-semibold transition-colors duration-150 hover:bg-on-surface/8 has-checked:border-primary has-checked:bg-secondary-container has-checked:text-on-secondary-container has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary"
+				class="flex min-h-12 cursor-pointer items-center justify-center rounded-2xl border-2 border-outline px-3 text-center font-semibold transition-colors duration-150 hover:bg-on-surface/8 has-checked:border-primary has-checked:bg-secondary-container has-checked:text-on-secondary-container has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary"
 			>
 				<input type="radio" class="sr-only" value="private" bind:group={visibility} />
 				{m.history_visibility_private()}
 			</label>
 			<label
-				class="flex min-h-12 cursor-pointer items-center justify-center rounded-2xl border-2 border-outline-variant px-3 text-center font-semibold transition-colors duration-150 hover:bg-on-surface/8 has-checked:border-primary has-checked:bg-secondary-container has-checked:text-on-secondary-container has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary"
+				class="flex min-h-12 cursor-pointer items-center justify-center rounded-2xl border-2 border-outline px-3 text-center font-semibold transition-colors duration-150 hover:bg-on-surface/8 has-checked:border-primary has-checked:bg-secondary-container has-checked:text-on-secondary-container has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary"
 			>
 				<input type="radio" class="sr-only" value="visible" bind:group={visibility} />
 				{m.history_form_visible_on_profile()}
