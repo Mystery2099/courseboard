@@ -90,7 +90,10 @@ export class PeopleSearchRepository {
 					$group: {
 						_id: '$userId',
 						matchedEntries: {
-							$push: { courseCode: '$courseCode', status: '$status', term: '$term' }
+							$firstN: {
+								n: PeopleSearchRepository.MATCHED_ENTRY_LIMIT,
+								input: { courseCode: '$courseCode', status: '$status', term: '$term' }
+							}
 						}
 					}
 				},
@@ -111,9 +114,7 @@ export class PeopleSearchRepository {
 						displayName: '$user.displayName',
 						primaryInstitutionId: '$user.primaryInstitutionId',
 						primaryInstitutionHidden: '$user.primaryInstitutionHidden',
-						matchedEntries: {
-							$slice: ['$matchedEntries', PeopleSearchRepository.MATCHED_ENTRY_LIMIT]
-						}
+						matchedEntries: 1
 					}
 				},
 				...PeopleSearchRepository.pageAndResultStages(skip, limit)
