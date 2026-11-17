@@ -37,19 +37,17 @@ export class MarkdownRenderer {
 		parser.core.ruler.push('remove_disallowed_links', (state) => {
 			for (const blockToken of state.tokens) {
 				if (!blockToken.children) continue;
-				let isInsideRemovedLink = false;
+				// An autolink can sit inside a link's text, so openings and closings pair up like brackets.
+				const isOpenLinkAllowed: boolean[] = [];
 				blockToken.children = blockToken.children.filter((token) => {
 					if (token.type === 'link_open') {
-						isInsideRemovedLink = !MarkdownRenderer.ALLOWED_LINK_PATTERN.test(
+						const isAllowed = MarkdownRenderer.ALLOWED_LINK_PATTERN.test(
 							String(token.attrGet('href') ?? '')
 						);
-						return !isInsideRemovedLink;
+						isOpenLinkAllowed.push(isAllowed);
+						return isAllowed;
 					}
-					if (token.type === 'link_close' && isInsideRemovedLink) {
-						isInsideRemovedLink = false;
-						return false;
-					}
-					return true;
+					return token.type === 'link_close' ? (isOpenLinkAllowed.pop() ?? true) : true;
 				});
 			}
 		});

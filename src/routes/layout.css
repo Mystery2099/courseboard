@@ -376,7 +376,7 @@
 		overflow-wrap: anywhere;
 
 		& > * + *,
-		& :is(li, blockquote) > p + p {
+		& :is(li, blockquote) > * + * {
 			margin-top: 0.75em;
 		}
 

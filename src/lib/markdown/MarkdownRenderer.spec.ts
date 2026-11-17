@@ -65,6 +65,15 @@ describe('Markdown renderer', () => {
 		expect(html).not.toContain('](');
 	});
 
+	it('keeps an allowed autolink inside a refused link without a stray closing tag', () => {
+		expect(MarkdownRenderer.toHtml('[<https://ok.example>](javascript:x)', 2)).toBe(
+			'<p><a href="https://ok.example" rel="nofollow ugc noopener noreferrer">https://ok.example</a></p>\n'
+		);
+		expect(MarkdownRenderer.toHtml('[outer <javascript:alert(1)>](javascript:alert(2))', 2)).toBe(
+			'<p>outer javascript:alert(1)</p>\n'
+		);
+	});
+
 	it('allows web, email, and same-site links and marks them as user content', () => {
 		expect(MarkdownRenderer.toHtml('[docs](https://example.com/a)', 2)).toContain(
 			'<a href="https://example.com/a" rel="nofollow ugc noopener noreferrer">docs</a>'
