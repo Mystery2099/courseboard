@@ -357,5 +357,19 @@
 	"search_post_meta": "{courseCode} · {kind} · {author}",
 	"search_person_entry": "{courseCode} · {status} · {term} · autodeclarado",
 	"search_person_entry_no_term": "{courseCode} · {status} · autodeclarado",
-	"navigation_search": "Buscar"
+	"navigation_search": "Buscar",
+	"keyboard_shortcuts_title": "Atajos de teclado",
+	"keyboard_shortcuts_description": "Pulsa {keys} para mostrar u ocultar esta lista.",
+	"keyboard_shortcuts_section_general": "General",
+	"keyboard_shortcuts_section_navigation": "Navegación",
+	"keyboard_shortcuts_section_writing": "Escritura",
+	"keyboard_shortcut_toggle_list": "Mostrar u ocultar esta lista",
+	"keyboard_shortcut_search": "Buscar",
+	"keyboard_shortcut_previous_course": "Curso seguido anterior",
+	"keyboard_shortcut_next_course": "Siguiente curso seguido",
+	"keyboard_shortcut_previous_channel": "Canal anterior de un curso",
+	"keyboard_shortcut_next_channel": "Siguiente canal de un curso",
+	"keyboard_shortcut_submit": "Publicar, responder o guardar una reseña",
+	"settings_keyboard_shortcuts": "Atajos de teclado",
+	"settings_keyboard_shortcuts_hint": "Muestra los atajos para moverte y escribir."
 }

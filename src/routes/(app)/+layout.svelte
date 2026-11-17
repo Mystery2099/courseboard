@@ -5,6 +5,14 @@
 	import FloatingDock from '#lib/components/FloatingDock.svelte';
 	import SpaceRail from '#lib/components/SpaceRail.svelte';
 	import { findCourseChannel } from '#lib/client/navigation/CourseChannel.ts';
+	import { HotkeysProvider } from '@tanstack/svelte-hotkeys';
+	import {
+		KEYBOARD_SHORTCUTS,
+		PAGE_SHORTCUT_SCOPE
+	} from '#lib/client/hotkeys/KeyboardShortcuts.ts';
+	import { setKeyboardShortcutsDialogOpener } from '#lib/client/hotkeys/KeyboardShortcutsDialogContext.ts';
+	import KeyboardShortcutsDialog from '#lib/components/shortcuts/KeyboardShortcutsDialog.svelte';
+	import PageNavigationShortcuts from '#lib/components/shortcuts/PageNavigationShortcuts.svelte';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
@@ -23,6 +31,9 @@
 		imageUrl: clerkContext.user?.hasImage ? clerkContext.user.imageUrl : null
 	});
 
+	let isKeyboardShortcutsDialogOpen = $state(false);
+	setKeyboardShortcutsDialogOpener({ open: () => (isKeyboardShortcutsDialogOpen = true) });
+
 	$effect(() => {
 		if (!isSignedIn) return;
 		const realtimeConnection = new RealtimeConnection(
@@ -32,29 +43,39 @@
 	});
 </script>
 
-<div class="min-h-dvh desktop:flex">
-	<div class="hidden desktop:block">
-		<SpaceRail
+<HotkeysProvider appHotkeys={KEYBOARD_SHORTCUTS}>
+	<KeyboardShortcutsDialog bind:open={isKeyboardShortcutsDialogOpen} />
+	<HotkeysProvider scope={PAGE_SHORTCUT_SCOPE}>
+		<PageNavigationShortcuts
 			followedCourses={data.followedCourses}
 			currentCourseId={currentCourse?.id ?? null}
-			isExploreCurrent={page.route.id === '/(app)/explore'}
-			isSearchCurrent={page.route.id === '/(app)/search'}
-			{isProfileCurrent}
-			{isAdministrator}
-			{profile}
-		/>
-	</div>
-	<div class="min-w-0 flex-1 pb-[calc(7rem+env(safe-area-inset-bottom))] desktop:pb-0">
-		{@render children()}
-	</div>
-	<div class="desktop:hidden">
-		<FloatingDock
-			followedCourses={data.followedCourses}
-			{currentCourse}
 			{currentChannel}
-			{isProfileCurrent}
-			{isAdministrator}
-			{profile}
 		/>
+	</HotkeysProvider>
+	<div class="min-h-dvh desktop:flex">
+		<div class="hidden desktop:block">
+			<SpaceRail
+				followedCourses={data.followedCourses}
+				currentCourseId={currentCourse?.id ?? null}
+				isExploreCurrent={page.route.id === '/(app)/explore'}
+				isSearchCurrent={page.route.id === '/(app)/search'}
+				{isProfileCurrent}
+				{isAdministrator}
+				{profile}
+			/>
+		</div>
+		<div class="min-w-0 flex-1 pb-[calc(7rem+env(safe-area-inset-bottom))] desktop:pb-0">
+			{@render children()}
+		</div>
+		<div class="desktop:hidden">
+			<FloatingDock
+				followedCourses={data.followedCourses}
+				{currentCourse}
+				{currentChannel}
+				{isProfileCurrent}
+				{isAdministrator}
+				{profile}
+			/>
+		</div>
 	</div>
-</div>
+</HotkeysProvider>

@@ -357,5 +357,19 @@
 	"search_post_meta": "{courseCode} · {kind} · {author}",
 	"search_person_entry": "{courseCode} · {status} · {term} · self-reported",
 	"search_person_entry_no_term": "{courseCode} · {status} · self-reported",
-	"navigation_search": "Search"
+	"navigation_search": "Search",
+	"keyboard_shortcuts_title": "Keyboard shortcuts",
+	"keyboard_shortcuts_description": "Press {keys} to show or hide this list.",
+	"keyboard_shortcuts_section_general": "General",
+	"keyboard_shortcuts_section_navigation": "Navigation",
+	"keyboard_shortcuts_section_writing": "Writing",
+	"keyboard_shortcut_toggle_list": "Show or hide this list",
+	"keyboard_shortcut_search": "Search",
+	"keyboard_shortcut_previous_course": "Previous followed course",
+	"keyboard_shortcut_next_course": "Next followed course",
+	"keyboard_shortcut_previous_channel": "Previous channel in a course",
+	"keyboard_shortcut_next_channel": "Next channel in a course",
+	"keyboard_shortcut_submit": "Post, reply, or save a review",
+	"settings_keyboard_shortcuts": "Keyboard shortcuts",
+	"settings_keyboard_shortcuts_hint": "Shows the shortcuts for moving around and writing."
 }
