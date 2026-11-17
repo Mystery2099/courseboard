@@ -65,12 +65,15 @@ describe('Markdown renderer', () => {
 		expect(html).not.toContain('](');
 	});
 
-	it('keeps an allowed autolink inside a refused link without a stray closing tag', () => {
+	it('never nests links or leaves a stray closing tag', () => {
 		expect(MarkdownRenderer.toHtml('[<https://ok.example>](javascript:x)', 2)).toBe(
 			'<p><a href="https://ok.example" rel="nofollow ugc noopener noreferrer">https://ok.example</a></p>\n'
 		);
 		expect(MarkdownRenderer.toHtml('[outer <javascript:alert(1)>](javascript:alert(2))', 2)).toBe(
 			'<p>outer javascript:alert(1)</p>\n'
+		);
+		expect(MarkdownRenderer.toHtml('[before <https://a.example> after](/courses/abc)', 2)).toBe(
+			'<p><a href="/courses/abc" rel="nofollow ugc noopener noreferrer">before https://a.example after</a></p>\n'
 		);
 	});
 

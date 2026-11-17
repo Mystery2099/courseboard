@@ -38,16 +38,17 @@ export class MarkdownRenderer {
 			for (const blockToken of state.tokens) {
 				if (!blockToken.children) continue;
 				// An autolink can sit inside a link's text, so openings and closings pair up like brackets.
-				const isOpenLinkAllowed: boolean[] = [];
+				// A link inside a kept link is dropped too, because browsers can't nest them.
+				const isOpenLinkKept: boolean[] = [];
 				blockToken.children = blockToken.children.filter((token) => {
 					if (token.type === 'link_open') {
-						const isAllowed = MarkdownRenderer.ALLOWED_LINK_PATTERN.test(
-							String(token.attrGet('href') ?? '')
-						);
-						isOpenLinkAllowed.push(isAllowed);
-						return isAllowed;
+						const isKept =
+							!isOpenLinkKept.includes(true) &&
+							MarkdownRenderer.ALLOWED_LINK_PATTERN.test(String(token.attrGet('href') ?? ''));
+						isOpenLinkKept.push(isKept);
+						return isKept;
 					}
-					return token.type === 'link_close' ? (isOpenLinkAllowed.pop() ?? true) : true;
+					return token.type === 'link_close' ? (isOpenLinkKept.pop() ?? true) : true;
 				});
 			}
 		});
