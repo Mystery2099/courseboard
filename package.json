@@ -70,6 +70,7 @@
 		"@fontsource-variable/literata": "5.3.0",
 		"@fontsource-variable/space-grotesk": "5.3.0",
 		"@fontsource/ibm-plex-mono": "5.3.0",
+		"@tanstack/svelte-hotkeys": "0.25.1",
 		"@tanstack/svelte-query": "^6.3.10",
 		"bits-ui": "^2.20.5",
 		"lucide-svelte": "^1.0.1",
