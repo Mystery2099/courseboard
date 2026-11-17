@@ -73,6 +73,7 @@
 		"@tanstack/svelte-query": "^6.3.10",
 		"bits-ui": "^2.20.5",
 		"lucide-svelte": "^1.0.1",
+		"markdown-it": "15.0.3",
 		"mongodb": "^7.8.0",
 		"socket.io": "^4.8.4",
 		"socket.io-client": "^4.8.4",

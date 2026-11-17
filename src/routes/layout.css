@@ -366,3 +366,102 @@
 @utility list-row {
 	@apply state-layer transition-colors duration-150 focus-visible:-outline-offset-2;
 }
+
+/*
+ * Formatting inside user-written posts and replies (MarkdownBody). Text size and font come from
+ * the caller. Code blocks and tables scroll sideways on their own instead of widening the page.
+ */
+@layer components {
+	.markdown-body {
+		overflow-wrap: anywhere;
+
+		& > * + *,
+		& :is(li, blockquote) > * + * {
+			margin-top: 0.75em;
+		}
+
+		& :is(h2, h3, h4, h5, h6) {
+			font-family: var(--font-heading);
+			font-weight: 700;
+			line-height: 1.25;
+		}
+
+		& h2 {
+			font-size: 1.25em;
+		}
+
+		& h3 {
+			font-size: 1.125em;
+		}
+
+		& ul {
+			list-style: disc;
+			padding-left: 1.5em;
+		}
+
+		& ol {
+			list-style: decimal;
+			padding-left: 1.5em;
+		}
+
+		& li + li,
+		& li > :is(ul, ol) {
+			margin-top: 0.25em;
+		}
+
+		& a {
+			color: var(--primary);
+			text-decoration: underline;
+			text-underline-offset: 0.15em;
+		}
+
+		& blockquote {
+			border-left: 3px solid var(--outline-variant);
+			padding-left: 1em;
+			color: var(--on-surface-variant);
+		}
+
+		& code {
+			font-family: var(--font-mono);
+			font-size: 0.875em;
+			background-color: var(--surface-container);
+			border-radius: 4px;
+			padding: 0.1em 0.3em;
+		}
+
+		& :is(pre, .markdown-table) {
+			overflow-x: auto;
+		}
+
+		& pre {
+			overflow-wrap: normal;
+			background-color: var(--surface-container);
+			border-radius: var(--radius-chip);
+			padding: 0.75em 1em;
+			line-height: 1.5;
+
+			& code {
+				background-color: transparent;
+				padding: 0;
+			}
+		}
+
+		& table {
+			border-collapse: collapse;
+			overflow-wrap: normal;
+		}
+
+		& :is(th, td) {
+			border: 1px solid var(--outline-variant);
+			padding: 0.35em 0.75em;
+		}
+
+		& th {
+			font-weight: 600;
+		}
+
+		& hr {
+			border-color: var(--outline-variant);
+		}
+	}
+}

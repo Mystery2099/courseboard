@@ -1,3 +1,5 @@
+import { MarkdownRenderer } from '#lib/markdown/MarkdownRenderer.ts';
+
 /** Plain-text excerpts of post bodies for search results. */
 export class SearchSnippet {
 	static readonly MAX_LENGTH = 160;
@@ -5,18 +7,11 @@ export class SearchSnippet {
 
 	/**
 	 * About 160 characters of plain text around the first word of `query` found in `markdown`, with
-	 * Markdown symbols removed and an ellipsis where text was cut. Starts at the beginning when no
-	 * word is found, as with a stemmed text-index match.
+	 * an ellipsis where text was cut. Starts at the beginning when no word is found, as with a
+	 * stemmed text-index match.
 	 */
 	static around(markdown: string, query: string): string {
-		const text = markdown
-			.replace(/```[\s\S]*?```/g, ' ')
-			// Links and images keep their text and lose their address.
-			.replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
-			.replace(/^\s*(?:[-+*]|#{1,6}|>)\s+/gm, ' ')
-			.replace(/[*_`~|]+/g, ' ')
-			.replace(/\s+/g, ' ')
-			.trim();
+		const text = MarkdownRenderer.toPlainText(markdown);
 		const lowerText = text.toLowerCase();
 		const firstMatch = query
 			.toLowerCase()

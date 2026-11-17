@@ -23,6 +23,7 @@
 		type ReviewAttemptResponse,
 		type UpdateReviewRequest
 	} from '#lib/contracts/ReviewContract.ts';
+	import MarkdownFormattingHelp from './MarkdownFormattingHelp.svelte';
 
 	let {
 		courseId,
@@ -239,13 +240,16 @@
 				bind:value={bodyMarkdown}
 				maxlength={POST_BODY_MAX_LENGTH}
 				aria-invalid={fieldErrors.bodyMarkdown ? 'true' : undefined}
-				aria-describedby={fieldErrors.bodyMarkdown ? 'review-body-error' : undefined}></textarea>
+				aria-describedby={fieldErrors.bodyMarkdown
+					? 'review-body-help review-body-error'
+					: 'review-body-help'}></textarea>
 			{#if fieldErrors.bodyMarkdown}
 				<span id="review-body-error" class="text-sm text-error" role="alert">
 					{fieldErrors.bodyMarkdown}
 				</span>
 			{/if}
 		</label>
+		<MarkdownFormattingHelp id="review-body-help" />
 		{#if !editedReview && selectedAttempt}
 			<div class="border-l-2 border-on-warning-container pl-3">
 				<p id="review-disclosure" class="text-sm">

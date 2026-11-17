@@ -3,6 +3,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { describeValidationIssue } from '#lib/client/ErrorPresentation.ts';
 	import { REPLY_BODY_MAX_LENGTH, createReplySchema } from '#lib/contracts/PostContract.ts';
+	import MarkdownFormattingHelp from './MarkdownFormattingHelp.svelte';
 
 	let {
 		label,
@@ -14,7 +15,9 @@
 		onCancel?: () => void;
 	} = $props();
 
-	const errorId = $props.id();
+	const fieldId = $props.id();
+	const helpId = `${fieldId}-help`;
+	const errorId = `${fieldId}-error`;
 	let bodyMarkdown = $state('');
 	let errorMessage = $state<string | null>(null);
 	let bodyField = $state<HTMLTextAreaElement | null>(null);
@@ -42,11 +45,12 @@
 			bind:value={bodyMarkdown}
 			maxlength={REPLY_BODY_MAX_LENGTH}
 			aria-invalid={errorMessage ? 'true' : undefined}
-			aria-describedby={errorMessage ? errorId : undefined}
+			aria-describedby={errorMessage ? `${helpId} ${errorId}` : helpId}
 			onkeydown={(event) => {
 				if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) submit();
 			}}></textarea>
 	</label>
+	<MarkdownFormattingHelp id={helpId} />
 	{#if errorMessage}
 		<p id={errorId} class="text-sm text-error" role="alert">{errorMessage}</p>
 	{/if}

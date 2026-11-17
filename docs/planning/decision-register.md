@@ -1,6 +1,6 @@
 # Decisions and open questions
 
-**Last reviewed:** November 8, 2026
+**Last reviewed:** November 17, 2026
 
 I want one place to check whether something is actually decided, because otherwise a suggestion from an old design conversation can quietly turn into a requirement. The [product spec](../product/product-spec.md) describes how the app behaves; this file records what I chose, why, and what I turned down. Nothing is confirmed until I've actually chosen it, and an example screen doesn't decide anything on its own.
 
@@ -29,7 +29,7 @@ When we settle something, add it here with what we chose, what we rejected, and 
 | Images | Separate MongoDB collection, processed with Sharp; two per top-level post, 2 MB each, 100 MB total | No extra storage provider, and the quota fits well inside Atlas Free |
 | Search | MongoDB text indexes plus ordinary indexes for course codes and filters | Enough for the assignment; no fuzzy matching or autocomplete yet |
 | Search page and people filtering | One search page with Everything, Courses, Posts, and People scopes. Course codes match by prefix, other text through text indexes. People filtering queries only visible history entries and hidden primary schools never match. Results are bounded to 20 per page and five pages (November 15, 2026). See the [MongoDB model](../technical/mongodb-model.md#search-and-people-filtering-built-november-16-2026) | The lab requires user filtering, and private history must stay invisible to search, counts, and snippets. Relevance-sorted text search doesn't suit cursors, and a short bounded list is enough here |
-| Markdown | TanStack Markdown first, markdown-it if integration gets cumbersome | Raw HTML and external images disabled |
+| Markdown | markdown-it, pinned, in one `MarkdownRenderer` shared by server rendering, the browser, and search snippets. Raw HTML shows as text, links allow only `http`, `https`, `mailto`, and same-site paths, and images in a body show only their description. Tables, strikethrough, autolinks, and single line breaks are on; task lists and footnotes are off. A plain textarea with one line of formatting help, no toolbar or preview (November 17, 2026) | The API stays Markdown-only, and a reply that hasn't been sent yet already looks the way it will. It's the mature parser of the options and recognizes every kind of code block |
 | Profanity filter | Admin-managed list with exceptions; whole-word, case-insensitive; code exempt | Blocks submission with a clear message rather than masking or rewriting text |
 | Deletion | Account deletion anonymizes retained posts and reviews as Deleted user and removes private data | Discussions stay readable without keeping private history |
 | Client data | TanStack Query from the start, isolated per account | One owner for interactive server data |
@@ -50,7 +50,9 @@ When we settle something, add it here with what we chose, what we rejected, and 
 - **Production MFA:** Clerk requires a paid plan for it, which conflicts with staying strictly free.
 - **GridFS or object storage for images:** images are small enough for a plain collection, and object storage would add another provider.
 - **Atlas Search:** deferred; text indexes cover the initial search.
-- **Other Markdown libraries:** Marked doesn't sanitize its output; unified/remark/rehype needs more packages and pipeline configuration; MDsveX compiles Markdown into Svelte components, which is wrong for untrusted student posts.
+- **Other Markdown libraries:** TanStack Markdown (`@tanstack/markdown`) is small and fast, but it has no Svelte adapter, was six weeks old, follows a syntax subset without indented code blocks, and allows external images, frontmatter, and generated IDs by default. Marked passes raw HTML and `javascript:` links through. micromark took 33 seconds on a 145,000-character post, which would block the only server instance. unified/remark/rehype (and svelte-exmarkdown, built on it) needs more packages and pipeline configuration. MDsveX compiles Markdown into Svelte components, which is wrong for untrusted student posts.
+- **Rendering Markdown only on the server:** sending `bodyHtml` would keep the parser out of the browser, but the API would carry HTML and replies waiting to send would stay plain text.
+- **A Markdown toolbar and preview:** the design handoff shows both, but the spec leaves them out; a line of formatting help is enough for now.
 - **Separate backend, microservices, multiple packages, native clients:** keeping the layers separate in one app gives the same flexibility without extra infrastructure.
 - **Embedding academic history in `users`:** the approved proposal suggested it, and it would make an owner's history a single read. But a careless `find` on `users` could then return private notes, and that document is read on every request. Embedding still appears where data is small and owned by one document, such as review details on review posts.
 - **Post edit history:** posts only show an edited timestamp.

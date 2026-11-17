@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
+	import MarkdownBody from './MarkdownBody.svelte';
 	import type { PendingReply } from '#lib/client/content/ReplySubmissionQueue.svelte.ts';
 
 	let {
@@ -15,9 +16,11 @@
 </script>
 
 <div class="rounded-2xl border border-dashed p-3">
-	<p class="wrap-break-word whitespace-pre-wrap text-on-surface-variant">
-		{pendingReply.bodyMarkdown}
-	</p>
+	<MarkdownBody
+		class="text-on-surface-variant"
+		markdown={pendingReply.bodyMarkdown}
+		topHeadingLevel={3}
+	/>
 	{#if pendingReply.status === 'sending'}
 		<p class="mt-2 text-sm text-on-surface-variant" role="status">{m.pending_reply_sending()}</p>
 	{:else}

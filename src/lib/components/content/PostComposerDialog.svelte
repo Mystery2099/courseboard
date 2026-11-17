@@ -2,6 +2,7 @@
 	import { tick } from 'svelte';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import EditorDialog from '#lib/components/EditorDialog.svelte';
+	import MarkdownFormattingHelp from './MarkdownFormattingHelp.svelte';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { describeFieldIssues, describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
@@ -96,13 +97,16 @@
 				bind:value={bodyMarkdown}
 				maxlength={POST_BODY_MAX_LENGTH}
 				aria-invalid={fieldErrors.bodyMarkdown ? 'true' : undefined}
-				aria-describedby={fieldErrors.bodyMarkdown ? `${formId}-body-error` : undefined}></textarea>
+				aria-describedby={fieldErrors.bodyMarkdown
+					? `${formId}-body-help ${formId}-body-error`
+					: `${formId}-body-help`}></textarea>
 			{#if fieldErrors.bodyMarkdown}
 				<span id="{formId}-body-error" class="text-sm text-error" role="alert"
 					>{fieldErrors.bodyMarkdown}</span
 				>
 			{/if}
 		</label>
+		<MarkdownFormattingHelp id="{formId}-body-help" />
 		{#if publishMutation.error}
 			<p class="text-sm text-error" role="alert">
 				{describeRequestFailure(publishMutation.error, m.post_composer_publish_failed)}

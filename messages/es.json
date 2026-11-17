@@ -133,6 +133,7 @@
 	"review_form_take_again_placeholder": "Elige una respuesta",
 	"review_form_take_again_required": "Elige Sí o No.",
 	"review_form_body": "Tu reseña",
+	"markdown_formatting_help": "Formato: **negrita**, `código`, [texto](https://enlace), - listas, > citas y ``` en las líneas antes y después de un bloque de código.",
 	"review_form_disclosure": "Al publicar, se comparte tu estado {status} y el período {term} de este curso, aunque tu entrada del historial sea privada. Seguirá marcado como autodeclarado. La visibilidad y las notas de tu historial no cambiarán.",
 	"review_form_disclosure_acknowledgement": "Entiendo lo que se comparte al publicar.",
 	"review_form_disclosure_required": "Confirma que entiendes lo que se comparte al publicar.",

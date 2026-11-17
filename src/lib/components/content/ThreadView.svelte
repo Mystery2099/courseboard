@@ -19,6 +19,7 @@
 		ReplyResponse
 	} from '#lib/contracts/PostContract.ts';
 	import ContentByline from './ContentByline.svelte';
+	import MarkdownBody from './MarkdownBody.svelte';
 	import PendingReplyCard from './PendingReplyCard.svelte';
 	import ReplyComposer from './ReplyComposer.svelte';
 	import ThreadKindBadge from './ThreadKindBadge.svelte';
@@ -119,7 +120,7 @@
 				<Badge variant="success"><Check size={14} /> {m.thread_accepted_answer()}</Badge>
 			{/if}
 		</div>
-		<p class="mt-2 wrap-break-word whitespace-pre-wrap">{reply.bodyMarkdown}</p>
+		<MarkdownBody class="mt-2" markdown={reply.bodyMarkdown} topHeadingLevel={3} />
 		<div class="mt-2 flex flex-wrap gap-2 text-sm">
 			{#if reply.parentReplyId === null && !post.isLocked}
 				<Button variant="outlined" size="compact" onclick={() => (replyTargetId = reply.id)}
@@ -163,11 +164,11 @@
 	{#if post.reviewData}
 		<ReviewFacts review={post.reviewData} />
 	{/if}
-	<p
-		class="mt-4 font-reading text-[17px] leading-[1.65] wrap-break-word whitespace-pre-wrap text-body desktop:text-lg desktop:leading-[1.7]"
-	>
-		{post.bodyMarkdown}
-	</p>
+	<MarkdownBody
+		class="mt-4 font-reading text-[17px] leading-[1.65] text-body desktop:text-lg desktop:leading-[1.7]"
+		markdown={post.bodyMarkdown}
+		topHeadingLevel={2}
+	/>
 	{#if post.viewerPermissions.canEditReview}
 		<details bind:open={isReviewEditorOpen} class="group/disclosure mt-4 rounded-card border p-4">
 			<summary
