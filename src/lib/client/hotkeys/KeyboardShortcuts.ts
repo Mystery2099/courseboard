@@ -49,6 +49,7 @@ export const KEYBOARD_SHORTCUTS = defineAppHotkeys({
 	'navigation.search': {
 		hotkey: 'Mod+K',
 		meta: { name: 'Search', section: 'navigation', label: m.keyboard_shortcut_search },
+		// Off while typing, so leaving the page can't throw away an unsent reply.
 		options: { ignoreInputs: true }
 	},
 	'navigation.previousCourse': {
@@ -81,6 +82,9 @@ export const KEYBOARD_SHORTCUTS = defineAppHotkeys({
 	},
 	'writing.submit': {
 		hotkey: 'Mod+Enter',
-		meta: { name: 'Send or post', section: 'writing', label: m.keyboard_shortcut_submit }
+		meta: { name: 'Send or post', section: 'writing', label: m.keyboard_shortcut_submit },
+		// Forms register it from outside their dialog's scope; it only listens on the form anyway.
+		scope: 'global',
+		options: { requireReset: true }
 	}
 });

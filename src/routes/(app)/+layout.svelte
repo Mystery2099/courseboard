@@ -51,31 +51,31 @@
 			currentCourseId={currentCourse?.id ?? null}
 			{currentChannel}
 		/>
+		<div class="min-h-dvh desktop:flex">
+			<div class="hidden desktop:block">
+				<SpaceRail
+					followedCourses={data.followedCourses}
+					currentCourseId={currentCourse?.id ?? null}
+					isExploreCurrent={page.route.id === '/(app)/explore'}
+					isSearchCurrent={page.route.id === '/(app)/search'}
+					{isProfileCurrent}
+					{isAdministrator}
+					{profile}
+				/>
+			</div>
+			<div class="min-w-0 flex-1 pb-[calc(7rem+env(safe-area-inset-bottom))] desktop:pb-0">
+				{@render children()}
+			</div>
+			<div class="desktop:hidden">
+				<FloatingDock
+					followedCourses={data.followedCourses}
+					{currentCourse}
+					{currentChannel}
+					{isProfileCurrent}
+					{isAdministrator}
+					{profile}
+				/>
+			</div>
+		</div>
 	</HotkeysProvider>
-	<div class="min-h-dvh desktop:flex">
-		<div class="hidden desktop:block">
-			<SpaceRail
-				followedCourses={data.followedCourses}
-				currentCourseId={currentCourse?.id ?? null}
-				isExploreCurrent={page.route.id === '/(app)/explore'}
-				isSearchCurrent={page.route.id === '/(app)/search'}
-				{isProfileCurrent}
-				{isAdministrator}
-				{profile}
-			/>
-		</div>
-		<div class="min-w-0 flex-1 pb-[calc(7rem+env(safe-area-inset-bottom))] desktop:pb-0">
-			{@render children()}
-		</div>
-		<div class="desktop:hidden">
-			<FloatingDock
-				followedCourses={data.followedCourses}
-				{currentCourse}
-				{currentChannel}
-				{isProfileCurrent}
-				{isAdministrator}
-				{profile}
-			/>
-		</div>
-	</div>
 </HotkeysProvider>
