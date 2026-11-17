@@ -163,6 +163,6 @@ Paraglide JS compiles `messages/{locale}.json` into typed functions in `src/lib/
 
 ## Hosting and security
 
-Sessions, socket handshakes, user-generated Markdown, and uploads all need validation and abuse protection. The Markdown renderer must allow only attachment images, safe links, no raw HTML, bounded input, and the profanity filter's code exemptions. Image binaries live in their own MongoDB collection, and the 100 MB quota keeps them well inside Atlas Free's storage limit.
+Sessions, socket handshakes, user-generated Markdown, and uploads all need validation and abuse protection. Post and reply bodies are rendered by `MarkdownRenderer` (markdown-it) in `src/lib/markdown/`, the same way on the server and in the browser: raw HTML shows as text, links allow only `http`, `https`, `mailto`, and same-site paths, images show only their description because attachments are displayed separately, and input is bounded by the body length limits. The API sends Markdown, never HTML. The profanity filter will read code spans from the same parser. Image binaries live in their own MongoDB collection, and the 100 MB quota keeps them well inside Atlas Free's storage limit.
 
 Free-tier limits and provider features can change, so **check them when deploying** instead of treating an old estimate as a guarantee. Secrets stay out of the repo, sample data is fictional, and setup, backup/recovery, and deployment need to be documented.

@@ -140,10 +140,10 @@ Most of the basic controls can come from shadcn-svelte/Bits UI with the Blueprin
 | `ChannelNav` | links | list (≥1100) · picker (<1100) | course channels fixed: Overview, Questions, Reviews, Discussion |
 | `SpaceHeader` | Avatar, Button | course (stats, Join, Add to history) · community (owner, rules, Join) | blueprint grid background |
 | `PostCard` | Status chip, Avatar | feed · list-pane row · compact search result | title in Space Grotesk, excerpt in Literata, meta in Inter |
-| `PostBody` | Markdown renderer | post · review (adds facts grid) | renders Markdown: headings, lists, quote, code, images with caption. Shows “edited” in the meta line |
+| `PostBody` | Markdown renderer | post · review (adds facts grid) | renders Markdown: headings, lists, quote, code, tables. Images in the body show only their description; attachments display separately. Shows “edited” in the meta line |
 | `Reply` | Avatar | top level · nested (one level, 2px left rule) | Inter body. “Read more” past about 6 lines on mobile |
 | `NewItemsNotice` | Button | dock button (“2 new ↓”) · list bar (“1 new post · show it”) · feed pill (“↑ 3 new posts”) | never moves the content |
-| `MarkdownEditor` | Textarea, ToggleGroup, ImageTile | full screen (mobile) · inline (desktop reply, Focus) | toolbar: H, B, I, list, quote, code, image, Preview. Draft status line |
+| `MarkdownEditor` | Textarea, ToggleGroup, ImageTile | full screen (mobile) · inline (desktop reply, Focus) | not built as drawn: the spec has a plain textarea with one line of formatting help, no toolbar or Preview. Draft status line |
 | `ImageTile` | — | uploaded (with ALT badge) · uploading (progress ring + %) · failed (Retry) · add | 76px mobile. Small screens collapse tiles into a summary chip |
 | `MemberRow` | Avatar, Status chip | default · selected | shows academic status only if that entry is visible (see Privacy) |
 | `MemberPreview` | Popover (desktop), Drawer (mobile) | full · private | membership date, visible academic info, recent posts in this space |
