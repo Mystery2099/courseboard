@@ -3,6 +3,7 @@
 	import { cn, type WithoutChild, type WithoutChildrenOrChild } from '#lib/utils.js';
 	import AlertDialogOverlay from './alert-dialog-overlay.svelte';
 	import AlertDialogPortal from './alert-dialog-portal.svelte';
+	import ModalShortcutScope from '#lib/components/shortcuts/ModalShortcutScope.svelte';
 	import type { ComponentProps } from 'svelte';
 
 	let {
@@ -10,6 +11,7 @@
 		class: className,
 		size = 'default',
 		portalProps,
+		children,
 		...restProps
 	}: WithoutChild<AlertDialogPrimitive.ContentProps> & {
 		size?: 'default' | 'sm';
@@ -28,5 +30,9 @@
 			className
 		)}
 		{...restProps}
-	/>
+	>
+		<ModalShortcutScope>
+			{@render children?.()}
+		</ModalShortcutScope>
+	</AlertDialogPrimitive.Content>
 </AlertDialogPortal>

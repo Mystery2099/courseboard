@@ -6,6 +6,7 @@
 	import { cn, type WithoutChildrenOrChild } from '#lib/utils.js';
 	import DialogOverlay from './dialog-overlay.svelte';
 	import DialogPortal from './dialog-portal.svelte';
+	import ModalShortcutScope from '#lib/components/shortcuts/ModalShortcutScope.svelte';
 	import type { Snippet } from 'svelte';
 	import type { ComponentProps } from 'svelte';
 
@@ -34,7 +35,9 @@
 		)}
 		{...restProps}
 	>
-		{@render children?.()}
+		<ModalShortcutScope>
+			{@render children?.()}
+		</ModalShortcutScope>
 		{#if showCloseButton}
 			<DialogPrimitive.Close data-slot="dialog-close">
 				{#snippet child({ props })}

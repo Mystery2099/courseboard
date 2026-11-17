@@ -24,6 +24,7 @@
 		type UpdateReviewRequest
 	} from '#lib/contracts/ReviewContract.ts';
 	import MarkdownFormattingHelp from './MarkdownFormattingHelp.svelte';
+	import { submitFormOnShortcut } from '#lib/client/hotkeys/FormSubmitShortcut.ts';
 
 	let {
 		courseId,
@@ -141,7 +142,7 @@
 	}
 </script>
 
-<form bind:this={formElement} onsubmit={save} novalidate>
+<form bind:this={formElement} onsubmit={save} novalidate {@attach submitFormOnShortcut}>
 	<fieldset class="flex min-w-0 flex-col gap-5" disabled={saveMutation.isPending}>
 		<legend class="mb-4 text-lg font-semibold">
 			{editedReview ? m.review_form_edit_legend() : m.review_form_create_legend()}

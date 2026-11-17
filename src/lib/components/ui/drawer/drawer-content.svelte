@@ -4,6 +4,7 @@
 	import type { WithoutChildrenOrChild } from '#lib/utils.js';
 	import DrawerOverlay from './drawer-overlay.svelte';
 	import DrawerPortal from './drawer-portal.svelte';
+	import ModalShortcutScope from '#lib/components/shortcuts/ModalShortcutScope.svelte';
 	import type { ComponentProps } from 'svelte';
 
 	let {
@@ -32,6 +33,8 @@
 			aria-hidden="true"
 			class="mx-auto mt-3 hidden h-1 w-9 shrink-0 rounded-full bg-outline group-data-[vaul-drawer-direction=bottom]/drawer-content:block"
 		></div>
-		{@render children?.()}
+		<ModalShortcutScope>
+			{@render children?.()}
+		</ModalShortcutScope>
 	</DrawerPrimitive.Content>
 </DrawerPortal>

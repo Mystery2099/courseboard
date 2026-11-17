@@ -9,6 +9,7 @@
 	import { SignOutButton, useClerkContext } from 'svelte-clerk';
 	import LanguagePicker from '#lib/components/LanguagePicker.svelte';
 	import { describeErrorCode } from '#lib/client/ErrorPresentation.ts';
+	import { getKeyboardShortcutsDialogOpener } from '#lib/client/hotkeys/KeyboardShortcutsDialogContext.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
@@ -38,6 +39,8 @@
 		const clerk = clerkContext.clerk;
 		if (clerk && 'openUserProfile' in clerk) clerk.openUserProfile();
 	}
+
+	const keyboardShortcutsDialog = getKeyboardShortcutsDialogOpener();
 
 	// Rows sit in a rounded, clipped list, so their focus ring is drawn inside the row.
 	const ROW = 'flex min-h-16 items-center justify-between gap-4 px-4 py-3';
@@ -217,6 +220,19 @@
 			</li>
 		</ul>
 		<p class="mt-2 px-1 text-sm text-on-surface-variant">{m.profile_language_explanation()}</p>
+		<ul class="mt-4 overflow-hidden rounded-card border bg-surface">
+			<li>
+				<button type="button" class={ROW_BUTTON} onclick={keyboardShortcutsDialog.open}>
+					<span class="min-w-0">
+						<span class="block font-semibold">{m.settings_keyboard_shortcuts()}</span>
+						<span class="block text-sm text-on-surface-variant"
+							>{m.settings_keyboard_shortcuts_hint()}</span
+						>
+					</span>
+					<ChevronRight size={20} class="shrink-0 text-on-surface-variant" aria-hidden="true" />
+				</button>
+			</li>
+		</ul>
 	</section>
 
 	<ul class="mt-8 overflow-hidden rounded-card border bg-surface">

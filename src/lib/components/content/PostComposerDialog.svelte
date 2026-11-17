@@ -3,6 +3,7 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import EditorDialog from '#lib/components/EditorDialog.svelte';
 	import MarkdownFormattingHelp from './MarkdownFormattingHelp.svelte';
+	import { submitFormOnShortcut } from '#lib/client/hotkeys/FormSubmitShortcut.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { describeFieldIssues, describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
@@ -51,6 +52,7 @@
 
 	function submit(event: SubmitEvent) {
 		event.preventDefault();
+		if (publishMutation.isPending) return;
 		const parsed = createPostSchema.safeParse({ kind, title, bodyMarkdown });
 		if (!parsed.success) {
 			fieldErrors = describeFieldIssues(parsed.error);
@@ -71,7 +73,13 @@
 	{submitLabel}
 	isSubmitting={publishMutation.isPending}
 >
-	<form id={formId} class="flex flex-col gap-5" onsubmit={submit} novalidate>
+	<form
+		id={formId}
+		class="flex flex-col gap-5"
+		onsubmit={submit}
+		novalidate
+		{@attach submitFormOnShortcut}
+	>
 		<label class="flex flex-col gap-1">
 			<span class="text-sm font-semibold">{m.common_title()}</span>
 			<input

@@ -45,6 +45,7 @@ General communities, Experience posts, presence, a notification inbox, Focus mod
 | Client data | TanStack Query | Cache interactive server data from the start |
 | Realtime | Socket.IO with WebSocket transport | Authenticated course/thread subscriptions and reconnect handling |
 | Markdown | markdown-it | Render posts and replies safely, the same way on the server and in the browser |
+| Keyboard shortcuts | TanStack Hotkeys | Declare every shortcut in one place and list them in a shortcuts dialog |
 | Images | Sharp, binary storage in a separate MongoDB collection | Process small attachments without adding another storage provider |
 | UI | Tailwind CSS, Bits UI, selected shadcn-svelte components, Lucide | Build the Blueprint interface with accessible behavior |
 | Hosting | Render Free | Run the application separately from Atlas and my personal server |

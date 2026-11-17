@@ -19,6 +19,7 @@
 		type SearchScope
 	} from '#lib/contracts/SearchContract.ts';
 	import { THREAD_ROUTE_IDS } from '#lib/client/navigation/CourseChannel.ts';
+	import { SEARCH_QUERY_FIELD_ID } from '#lib/client/navigation/SearchField.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import type { PageProps } from './$types';
 
@@ -89,6 +90,7 @@
 				class="pointer-events-none absolute top-1/2 left-5 -translate-y-1/2 text-on-surface-variant"
 			/>
 			<input
+				id={SEARCH_QUERY_FIELD_ID}
 				type="search"
 				name="q"
 				value={query.q}
