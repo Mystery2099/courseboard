@@ -13,7 +13,7 @@
 		COURSE_CHANNEL_LABELS,
 		COURSE_CHANNEL_ROUTE_IDS,
 		findCourseChannel
-	} from '#lib/navigation/CourseChannel.ts';
+	} from '#lib/client/navigation/CourseChannel.ts';
 	import { describeErrorCode } from '#lib/client/ErrorPresentation.ts';
 	import type { LayoutProps } from './$types';
 

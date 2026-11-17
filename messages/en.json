@@ -150,6 +150,7 @@
 	"thread_action_failed": "That change could not be saved. Try again.",
 	"thread_reply_to": "Reply to {name}",
 	"thread_load_more_replies": "Load more replies",
+	"thread_replies_load_failed": "Replies couldn't be loaded. Try again.",
 	"thread_locked_notice": "This thread is locked, so it has no new replies.",
 	"thread_your_reply": "Your reply",
 	"common_save": "Save",

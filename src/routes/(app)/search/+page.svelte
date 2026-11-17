@@ -18,7 +18,7 @@
 		SEARCH_SCOPES,
 		type SearchScope
 	} from '#lib/contracts/SearchContract.ts';
-	import { THREAD_ROUTE_IDS } from '#lib/navigation/CourseChannel.ts';
+	import { THREAD_ROUTE_IDS } from '#lib/client/navigation/CourseChannel.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import type { PageProps } from './$types';
 

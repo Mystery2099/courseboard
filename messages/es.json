@@ -150,6 +150,7 @@
 	"thread_action_failed": "No se pudo guardar ese cambio. Inténtalo de nuevo.",
 	"thread_reply_to": "Responder a {name}",
 	"thread_load_more_replies": "Cargar más respuestas",
+	"thread_replies_load_failed": "No se pudieron cargar las respuestas. Inténtalo de nuevo.",
 	"thread_locked_notice": "Este hilo está cerrado, así que no admite respuestas nuevas.",
 	"thread_your_reply": "Tu respuesta",
 	"common_save": "Guardar",

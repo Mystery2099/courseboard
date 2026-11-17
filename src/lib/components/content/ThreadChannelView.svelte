@@ -5,7 +5,7 @@
 	import { resolve } from '$app/paths';
 	import Plus from 'lucide-svelte/icons/plus';
 	import type { PostListResponse, ThreadKind } from '#lib/contracts/PostContract.ts';
-	import { THREAD_ROUTE_IDS } from '#lib/navigation/CourseChannel.ts';
+	import { THREAD_ROUTE_IDS } from '#lib/client/navigation/CourseChannel.ts';
 	import PostComposerDialog from './PostComposerDialog.svelte';
 	import PostList from './PostList.svelte';
 
