@@ -3,6 +3,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { describeValidationIssue } from '#lib/client/ErrorPresentation.ts';
 	import { REPLY_BODY_MAX_LENGTH, createReplySchema } from '#lib/contracts/PostContract.ts';
+	import { submitFormOnShortcut } from '#lib/client/hotkeys/FormSubmitShortcut.ts';
 	import MarkdownFormattingHelp from './MarkdownFormattingHelp.svelte';
 
 	let {
@@ -36,7 +37,7 @@
 	}
 </script>
 
-<form class="flex flex-col gap-2" onsubmit={submit} novalidate>
+<form class="flex flex-col gap-2" onsubmit={submit} novalidate {@attach submitFormOnShortcut}>
 	<label class="flex flex-col gap-1">
 		<span class="text-sm font-semibold">{label}</span>
 		<textarea
@@ -45,10 +46,7 @@
 			bind:value={bodyMarkdown}
 			maxlength={REPLY_BODY_MAX_LENGTH}
 			aria-invalid={errorMessage ? 'true' : undefined}
-			aria-describedby={errorMessage ? `${helpId} ${errorId}` : helpId}
-			onkeydown={(event) => {
-				if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) submit();
-			}}></textarea>
+			aria-describedby={errorMessage ? `${helpId} ${errorId}` : helpId}></textarea>
 	</label>
 	<MarkdownFormattingHelp id={helpId} />
 	{#if errorMessage}
