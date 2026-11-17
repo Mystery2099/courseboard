@@ -24,6 +24,7 @@ export const REQUEST_ERROR_CODES = [
 	'history-required',
 	'review-exists',
 	'entry-limit-reached',
+	'entry-exists',
 	'username-unavailable',
 	'email-mismatch',
 	'invitation-unavailable',

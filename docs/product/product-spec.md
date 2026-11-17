@@ -26,7 +26,7 @@ Discussion lists default to newest activity, with Newest and Unanswered filters 
 
 ## Histories and profiles
 
-History entries are self-reported Planning, Taking, or Took records. Support repeated attempts with independent terms, statuses, and visibility. Terms use season and year; Planning may omit a term.
+History entries are self-reported Planning, Taking, or Took records. Support repeated attempts with independent terms, statuses, and visibility, with at most one entry per course and term. Terms use season and year; Planning may omit a term.
 
 Entries start Private. Visible on profile exposes permitted course, status, and term fields to other admitted users. Private notes stay private. Grade entry and storage are deferred. Own profiles include all entries and a Preview as others option.
 

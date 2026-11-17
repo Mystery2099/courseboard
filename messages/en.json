@@ -302,6 +302,7 @@
 	"error_history_required": "Choose a Taking or Took entry for this course. Your history may have changed.",
 	"error_review_exists": "You already have a review for this course. Edit it instead.",
 	"error_entry_limit_reached": "Your history has reached its entry limit.",
+	"error_entry_exists": "This course is already in your history for that term. Edit that entry instead.",
 	"error_username_unavailable": "That username is taken.",
 	"error_email_mismatch": "This invitation was sent to a different email address. Sign in with that address, or add and verify it in your account settings.",
 	"error_invitation_unavailable": "This invitation has expired, been revoked, or already been used. Ask an administrator for a new one.",

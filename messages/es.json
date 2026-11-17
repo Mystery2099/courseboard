@@ -302,6 +302,7 @@
 	"error_history_required": "Elige una entrada de Cursando o Cursado para este curso. Puede que tu historial haya cambiado.",
 	"error_review_exists": "Ya tienes una reseña de este curso. Edítala en su lugar.",
 	"error_entry_limit_reached": "Tu historial alcanzó su límite de entradas.",
+	"error_entry_exists": "Este curso ya está en tu historial para ese período. Edita esa entrada en su lugar.",
 	"error_username_unavailable": "Ese nombre de usuario ya está en uso.",
 	"error_email_mismatch": "Esta invitación se envió a otro correo electrónico. Inicia sesión con ese correo, o añádelo y verifícalo en la configuración de tu cuenta.",
 	"error_invitation_unavailable": "Esta invitación caducó, se revocó o ya se usó. Pide una nueva a una persona administradora.",

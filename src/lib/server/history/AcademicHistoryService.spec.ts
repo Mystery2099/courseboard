@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ObjectId } from 'mongodb';
 import { CourseRepository } from '#lib/server/catalog/CourseRepository.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
+import { DatabaseIndexInitializer } from '#lib/server/persistence/DatabaseIndexInitializer.ts';
 import { ApplicationUserRepository } from '#lib/server/users/ApplicationUserRepository.ts';
 import type { OwnHistoryEntry } from './AcademicHistoryEntry.ts';
 import { AcademicHistoryRepository } from './AcademicHistoryRepository.ts';
@@ -45,6 +46,7 @@ function createService() {
 		description: '',
 		spaceId: new ObjectId('000000000000000000000006')
 	});
+	vi.spyOn(DatabaseIndexInitializer, 'ensureIndexes').mockResolvedValue();
 	vi.spyOn(entries, 'countByUser').mockResolvedValue(0);
 	vi.spyOn(entries, 'findOwnEntry').mockResolvedValue(storedEntry);
 	return { service: new AcademicHistoryService(entries, courses, users), entries, courses, users };
@@ -55,7 +57,7 @@ afterEach(() => vi.restoreAllMocks());
 describe('academic history service', () => {
 	it('records a private entry for the acting user only', async () => {
 		const { service, entries } = createService();
-		const insert = vi.spyOn(entries, 'insert').mockResolvedValue();
+		const insert = vi.spyOn(entries, 'insertUnlessDuplicate').mockResolvedValue(true);
 
 		const result = await service.createEntry(
 			{
@@ -85,7 +87,7 @@ describe('academic history service', () => {
 		{ status: 'took', term: { season: 'spring', year: 2025 }, isValid: true }
 	])('requires a term unless planning: $status', async ({ status, term, isValid }) => {
 		const { service, entries } = createService();
-		const insert = vi.spyOn(entries, 'insert').mockResolvedValue();
+		const insert = vi.spyOn(entries, 'insertUnlessDuplicate').mockResolvedValue(true);
 		const create = service.createEntry({ courseId: courseId.toHexString(), status, term }, student);
 
 		if (isValid) await expect(create).resolves.toMatchObject({ kind: 'created' });
@@ -100,7 +102,7 @@ describe('academic history service', () => {
 		{ privateNote: 'Bell \u0007 character', isValid: false }
 	])('allows joiners but not control characters in notes: $privateNote', async (scenario) => {
 		const { service, entries } = createService();
-		vi.spyOn(entries, 'insert').mockResolvedValue();
+		vi.spyOn(entries, 'insertUnlessDuplicate').mockResolvedValue(true);
 		const create = service.createEntry(
 			{
 				courseId: courseId.toHexString(),
@@ -118,7 +120,7 @@ describe('academic history service', () => {
 	it('refuses an unknown course without writing', async () => {
 		const { service, entries, courses } = createService();
 		vi.spyOn(courses, 'findById').mockResolvedValue(null);
-		const insert = vi.spyOn(entries, 'insert');
+		const insert = vi.spyOn(entries, 'insertUnlessDuplicate');
 
 		const result = await service.createEntry(
 			{ courseId: courseId.toHexString(), status: 'planning', term: null },
@@ -129,10 +131,24 @@ describe('academic history service', () => {
 		expect(insert).not.toHaveBeenCalled();
 	});
 
+	it('refuses a second entry for the same course and term', async () => {
+		const { service, entries } = createService();
+		vi.spyOn(entries, 'insertUnlessDuplicate').mockResolvedValue(false);
+		const findOwnEntry = vi.spyOn(entries, 'findOwnEntry');
+
+		const result = await service.createEntry(
+			{ courseId: courseId.toHexString(), status: 'took', term: { season: 'spring', year: 2024 } },
+			student
+		);
+
+		expect(result).toEqual({ kind: 'entry-exists' });
+		expect(findOwnEntry).not.toHaveBeenCalled();
+	});
+
 	it('withdraws an entry that a concurrent request pushed over the limit', async () => {
 		const { service, entries } = createService();
 		vi.spyOn(entries, 'countByUser').mockResolvedValueOnce(199).mockResolvedValueOnce(201);
-		const insert = vi.spyOn(entries, 'insert').mockResolvedValue();
+		const insert = vi.spyOn(entries, 'insertUnlessDuplicate').mockResolvedValue(true);
 		const remove = vi.spyOn(entries, 'deleteOwned').mockResolvedValue(true);
 
 		const result = await service.createEntry(
@@ -147,11 +163,13 @@ describe('academic history service', () => {
 
 	it('changes and deletes entries only through the acting owner', async () => {
 		const { service, entries } = createService();
-		const update = vi.spyOn(entries, 'updateOwned').mockResolvedValue(false);
+		const update = vi.spyOn(entries, 'updateOwned').mockResolvedValue('not-found');
 		const remove = vi.spyOn(entries, 'deleteOwned').mockResolvedValue(false);
 		const changes = { status: 'took', term: { season: 'fall', year: 2026 }, visibility: 'visible' };
 
-		expect(await service.updateEntry(entryId.toHexString(), changes, student)).toBeNull();
+		expect(await service.updateEntry(entryId.toHexString(), changes, student)).toEqual({
+			kind: 'entry-not-found'
+		});
 		expect(await service.deleteEntry(entryId.toHexString(), student)).toBe(false);
 		expect(update).toHaveBeenCalledWith(
 			entryId,
