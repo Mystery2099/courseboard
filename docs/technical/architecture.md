@@ -150,6 +150,15 @@ Use TanStack Virtual for browsing lists once they grow enough to need it. Virtua
 
 TanStack Table and Superforms are possible later additions, only if admin tables or form handling actually need them.
 
+## Keyboard shortcuts
+
+TanStack Hotkeys (`@tanstack/svelte-hotkeys`, pinned while it's in beta) handles every shortcut. `src/lib/client/hotkeys/KeyboardShortcuts.ts` declares them all with `defineAppHotkeys`: the default keys, a translated label, and the section of the shortcuts dialog. The app layout passes them to `HotkeysProvider`, and the dialog lists them from `getAppHotkeyList()`, so a new shortcut shows up there without any other change.
+
+- **Adding a shortcut:** declare it in `KeyboardShortcuts.ts` with a label message in `messages/en.json` and `es.json`, then register it with `createHotkey` (or `createHotkeyAttachment` for one element) in the component that owns the action, passing `KEYBOARD_SHORTCUTS['the.id']` rather than its keys. `KeyboardShortcuts.spec.ts` fails if a shortcut has no modifier, label, or section, or reuses another's keys.
+- **Modifiers only:** single-character shortcuts would need a setting to turn them off (WCAG 2.1.4), and the design handoff rules them out for version one. Shortcuts with Alt or Shift are skipped while typing in a field; Ctrl or ⌘ ones still fire there, except search.
+- **Scopes:** navigation shortcuts run in the `page` scope. Every dialog, alert dialog, and drawer wraps its open content in `ModalShortcutScope`, an exclusive scope that turns the `page` scope off but keeps global shortcuts, so moving to another course can't throw away a draft in a dialog while Ctrl+Enter still sends it. The shortcuts list opens only over the page and closes with the same keys.
+- **Finding them:** Ctrl+/ (⌘/ on a Mac) opens the list from anywhere outside a dialog, and Settings has a Keyboard shortcuts row for people who don't know the keys yet. Key labels follow the browser's platform; the dialog renders only in the browser, so server rendering never shows them.
+
 ## Languages
 
 Paraglide JS compiles `messages/{locale}.json` into typed functions in `src/lib/paraglide/`, which is generated and ignored by Git. `pnpm check` compiles first, so an unknown message key or a missing parameter fails type checking. `pnpm i18n:check` reports messages missing from a locale. A missing translation falls back to English at runtime.
