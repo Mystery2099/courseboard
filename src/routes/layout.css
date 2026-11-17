@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 @import '@fontsource-variable/inter/wght.css';
 @import '@fontsource-variable/space-grotesk/wght.css';
 @import '@fontsource-variable/literata/wght.css';
@@ -45,6 +46,18 @@
 	--scrim: rgb(15 26 51 / 0.45);
 	--floating-shadow: 0 6px 20px rgb(15 26 51 / 0.14);
 	--dialog-shadow: 0 24px 60px rgb(15 26 51 / 0.35);
+	--raised-shadow: 0 2px 6px rgb(15 26 51 / 0.2);
+
+	/*
+	 * State layers: how much of a control's content color is mixed over its background on hover
+	 * and press. Stronger than Material's 8% so hover reads clearly; a high-contrast theme can raise
+	 * them further.
+	 */
+	--state-hover: 14%;
+	--state-pressed: 24%;
+	/* Lighter steps for controls tinted with their own text color, so the text keeps 4.5:1. */
+	--state-hover-tinted: 10%;
+	--state-pressed-tinted: 14%;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -81,6 +94,7 @@
 		--scrim: rgb(0 0 0 / 0.6);
 		--floating-shadow: 0 6px 20px rgb(0 0 0 / 0.5);
 		--dialog-shadow: 0 24px 60px rgb(0 0 0 / 0.5);
+		--raised-shadow: 0 2px 6px rgb(0 0 0 / 0.55);
 	}
 }
 
@@ -90,6 +104,10 @@
 	--breakpoint-tablet: 600px;
 	--breakpoint-desktop: 900px;
 	--breakpoint-wide: 1280px;
+
+	/* Screen and thread titles (the handoff's `headline`, 24–28px). */
+	--text-headline: 1.75rem;
+	--text-headline--line-height: 1.15;
 }
 
 @theme inline {
@@ -121,6 +139,26 @@
 	--color-inverse-surface: var(--inverse-surface);
 	--color-inverse-on-surface: var(--inverse-on-surface);
 	--color-scrim: var(--scrim);
+	--color-grid-line: var(--grid-line);
+
+	/*
+	 * shadcn-svelte's names, aliased to Blueprint roles so generated components need no palette of
+	 * their own. A new theme (such as high contrast) only redefines the roles above.
+	 */
+	--color-foreground: var(--on-surface);
+	--color-muted: var(--surface-container);
+	--color-muted-foreground: var(--on-surface-variant);
+	--color-popover: var(--surface);
+	--color-popover-foreground: var(--on-surface);
+	--color-accent: var(--secondary-container);
+	--color-accent-foreground: var(--on-secondary-container);
+	--color-secondary: var(--secondary-container);
+	--color-secondary-foreground: var(--on-secondary-container);
+	--color-primary-foreground: var(--on-primary);
+	--color-destructive: var(--error);
+	--color-border: var(--outline-variant);
+	--color-input: var(--outline);
+	--color-ring: var(--primary);
 
 	--font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
 	--font-heading: 'Space Grotesk Variable', 'Inter Variable', ui-sans-serif, sans-serif;
@@ -135,9 +173,18 @@
 
 	--shadow-floating: var(--floating-shadow);
 	--shadow-dialog: var(--dialog-shadow);
+	--shadow-raised: var(--raised-shadow);
 }
 
 @layer base {
+	/* Tailwind 4 leaves buttons with the default arrow; a pointer helps show what's clickable. */
+	button:not(:disabled, [aria-disabled='true']),
+	[role='button']:not([aria-disabled='true']),
+	select:not(:disabled),
+	summary {
+		cursor: pointer;
+	}
+
 	html {
 		background-color: var(--background);
 		color: var(--on-surface);
@@ -168,10 +215,40 @@
 		--tw-ring-color: var(--primary);
 	}
 
-	input:not([type='checkbox'], [type='radio']):focus,
-	select:focus,
-	textarea:focus {
+	/*
+	 * The forms plugin draws its own blue focus ring with a transparent outline. `:root` outranks
+	 * its selectors, so fields get the role-colored border and the same ring as everything else.
+	 */
+	:root
+		:is(input:not([type='checkbox'], [type='radio']), select, textarea):focus:not(
+			[aria-invalid='true']
+		) {
 		border-color: var(--primary);
+		box-shadow: none;
+	}
+
+	:root :is(input, select, textarea):focus-visible {
+		outline: 2px solid var(--primary);
+		outline-offset: 2px;
+	}
+
+	/* Fields answer hover with a darker border, except while focused or invalid. */
+	:root
+		:is(input:not([type='checkbox'], [type='radio']), select, textarea):hover:not(
+			:disabled,
+			:focus,
+			[aria-invalid='true']
+		) {
+		border-color: var(--on-surface);
+	}
+
+	/*
+	 * Invalid fields get the handoff's 2px error border, also while focused, since a failed submit
+	 * moves focus there. Fields don't set a border color utility, so these base rules decide it.
+	 */
+	:root :is(input, select, textarea)[aria-invalid='true'] {
+		border-color: var(--error);
+		box-shadow: inset 0 0 0 1px var(--error);
 	}
 
 	input::placeholder,
@@ -187,11 +264,16 @@
 		--tw-ring-color: var(--primary);
 	}
 
-	/* Every border defaults to the divider role instead of Tailwind's gray. */
+	/*
+	 * Every border defaults to the divider role instead of Tailwind's gray. Outlines start out
+	 * primary, so focus only turns the ring on: `transition-colors` also animates outline-color, and
+	 * starting from currentColor left some focus rings near-white in dark.
+	 */
 	*,
 	::before,
 	::after {
 		border-color: var(--outline-variant);
+		outline-color: var(--primary);
 	}
 }
 
@@ -204,4 +286,83 @@
 		transition-duration: 0.01ms !important;
 		scroll-behavior: auto !important;
 	}
+}
+
+/* The blueprint grid drawn behind headers. */
+@utility bg-blueprint-grid {
+	background-color: var(--surface-container);
+	background-image:
+		linear-gradient(var(--grid-line) 1px, transparent 1px),
+		linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+	background-size: 24px 24px;
+}
+
+/* Section labels ("FALL 2026 · ALFRED STATE"). */
+@utility text-overline {
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+/*
+ * Hover and current-page states for navigation rows (channel lists, the switcher sheet). Shared so
+ * a new theme changes them in one place; callers add size and spacing.
+ */
+@utility navigation-item {
+	@apply state-layer transition-colors duration-150 focus-visible:-outline-offset-2 aria-[current=page]:bg-secondary-container aria-[current=page]:font-semibold aria-[current=page]:text-on-secondary-container aria-[current=page]:[--state-base:var(--secondary-container)] aria-[current=page]:[--state-color:var(--on-secondary-container)];
+}
+
+/*
+ * Hover and pressed states. A tint (--state-color, on-surface by default) is mixed over the control's
+ * background (--state-base, transparent by default). Containers tint with their own content color;
+ * filled and destructive buttons tint with on-surface instead, so pressing darkens them in light
+ * and lightens them in dark, and their text gains contrast rather than losing it.
+ */
+@utility state-layer {
+	&:hover:not(:disabled, [aria-disabled='true'], [data-disabled]) {
+		background-color: color-mix(
+			in oklab,
+			var(--state-base, transparent),
+			var(--state-color, var(--on-surface)) var(--state-hover)
+		);
+	}
+
+	&:active:not(:disabled, [aria-disabled='true'], [data-disabled]) {
+		background-color: color-mix(
+			in oklab,
+			var(--state-base, transparent),
+			var(--state-color, var(--on-surface)) var(--state-pressed)
+		);
+	}
+}
+
+/*
+ * Outlined and text controls tint with their own text color (--state-tint, primary by default), so
+ * they use the lighter tinted steps: at most 14% keeps that text at 4.5:1 even on surface-container.
+ */
+@utility state-layer-primary {
+	&:hover:not(:disabled, [aria-disabled='true'], [data-disabled]) {
+		background-color: color-mix(
+			in oklab,
+			var(--state-base, transparent),
+			var(--state-tint, var(--primary)) var(--state-hover-tinted)
+		);
+	}
+
+	&:active:not(:disabled, [aria-disabled='true'], [data-disabled]) {
+		background-color: color-mix(
+			in oklab,
+			var(--state-base, transparent),
+			var(--state-tint, var(--primary)) var(--state-pressed-tinted)
+		);
+	}
+}
+
+/*
+ * Full-width rows inside rounded, clipped lists draw their focus ring inside the row; an outside
+ * ring would be cut down to hairlines by the list's overflow clipping.
+ */
+@utility list-row {
+	@apply state-layer transition-colors duration-150 focus-visible:-outline-offset-2;
 }

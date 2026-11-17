@@ -1,13 +1,16 @@
 <script lang="ts">
+	import { cn } from '#lib/utils.ts';
+
 	interface Props {
 		username: string;
 		displayName: string;
 		/** A profile photo uploaded through Clerk; initials are shown without one. */
 		imageUrl?: string | null;
 		size?: number;
+		class?: string;
 	}
 
-	let { username, displayName, imageUrl = null, size = 40 }: Props = $props();
+	let { username, displayName, imageUrl = null, size = 40, class: className }: Props = $props();
 
 	const initials = $derived(
 		displayName
@@ -18,10 +21,24 @@
 			.join('')
 	);
 
-	/** The same username always gets the same hue, so a person keeps one color everywhere. */
-	const hue = $derived(
-		[...username].reduce((hash, character) => (hash * 31 + character.charCodeAt(0)) % 360, 7)
+	// Container roles rather than generated hues, so initials keep their contrast in every theme.
+	const COLOR_PAIRS = [
+		'bg-primary-container text-on-primary-container',
+		'bg-tertiary-container text-on-tertiary-container',
+		'bg-secondary-container text-on-secondary-container',
+		'bg-success-container text-on-success-container'
+	];
+
+	/** The same username always gets the same colors, so a person keeps one look everywhere. */
+	const colorPair = $derived(
+		COLOR_PAIRS[
+			[...username].reduce((hash, character) => (hash * 31 + character.charCodeAt(0)) % 997, 7) %
+				COLOR_PAIRS.length
+		]
 	);
+
+	// Blueprint's expressive avatar: round, with one squared-off top-left corner.
+	const SHAPE = 'rounded-full rounded-tl-[min(14px,30%)]';
 </script>
 
 {#if imageUrl}
@@ -30,14 +47,18 @@
 		alt=""
 		width={size}
 		height={size}
-		class="shrink-0 rounded-full object-cover"
+		class={cn('shrink-0 object-cover', SHAPE, className)}
 		style="width: {size}px; height: {size}px;"
 	/>
 {:else}
 	<span
-		class="inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white"
-		style="width: {size}px; height: {size}px; font-size: {size *
-			0.4}px; background-color: hsl({hue} 55% 38%);"
+		class={cn(
+			'inline-flex shrink-0 items-center justify-center font-heading font-bold',
+			SHAPE,
+			colorPair,
+			className
+		)}
+		style="width: {size}px; height: {size}px; font-size: {size * 0.4}px;"
 		aria-hidden="true">{initials}</span
 	>
 {/if}

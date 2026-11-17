@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery, createQuery } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
@@ -53,14 +53,16 @@
 			{/each}
 		</div>
 		<a
-			class="font-semibold text-primary"
+			class="font-semibold text-primary underline-offset-2 hover:underline"
 			href={resolve('/(app)/explore')}
-			data-sveltekit-preload-data="off">{m.onboarding_skip()}</a
+			data-sveltekit-preload-data={false}>{m.onboarding_skip()}</a
 		>
 	</div>
 
-	<p class="mt-8 font-mono text-sm text-primary">{m.onboarding_step({ step: 3, total: 3 })}</p>
-	<h1 class="mt-2 text-3xl font-semibold">{m.onboarding_courses_heading()}</h1>
+	<p class="mt-8 font-mono text-sm font-semibold text-primary">
+		{m.onboarding_step({ step: 3, total: 3 })}
+	</p>
+	<h1 class="mt-2 text-headline font-bold">{m.onboarding_courses_heading()}</h1>
 	<p class="mt-2 text-on-surface-variant">
 		{m.onboarding_courses_detail({ term: formatTerm(currentTerm()) })}
 	</p>
@@ -83,11 +85,12 @@
 			{/each}
 		</ul>
 		{#if coursesQuery.hasNextPage}
-			<button
-				type="button"
-				class={[buttonClass('outlined', 'compact'), 'mt-3 self-start']}
+			<Button
+				variant="outlined"
+				size="compact"
+				class="mt-3 self-start"
 				disabled={coursesQuery.isFetchingNextPage}
-				onclick={() => coursesQuery.fetchNextPage()}>{m.common_load_more()}</button
+				onclick={() => coursesQuery.fetchNextPage()}>{m.common_load_more()}</Button
 			>
 		{/if}
 	{/if}
@@ -96,10 +99,11 @@
 		<p class="mb-3 text-sm text-on-surface-variant">
 			{m.onboarding_courses_private_notice()}
 		</p>
-		<a
-			class={[buttonClass('filled'), 'flex w-full']}
+		<Button
+			variant="filled"
+			class="flex w-full"
 			href={resolve('/(app)/explore')}
-			data-sveltekit-preload-data="off">{m.common_continue()}</a
+			data-sveltekit-preload-data={false}>{m.common_continue()}</Button
 		>
 	</div>
 </main>

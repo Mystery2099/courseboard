@@ -1,10 +1,12 @@
 <script lang="ts">
-	import { buttonClass, filterChipClass } from '#lib/components/ui/ControlStyles.ts';
+	import { toggleVariants } from '#lib/components/ui/toggle/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import Check from 'lucide-svelte/icons/check';
+	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import HistoryEntryEditorDialog from '#lib/components/history/HistoryEntryEditorDialog.svelte';
 	import {
 		COURSE_CHANNELS,
@@ -27,6 +29,7 @@
 	});
 
 	const currentChannel = $derived(findCourseChannel(page.route.id));
+	const isReadingThread = $derived(page.params.postId !== undefined);
 
 	// Recorded from the browser after the space renders, so hover preloads don't count as visits.
 	$effect(() => {
@@ -49,17 +52,15 @@
 		class="sticky top-0 hidden h-dvh w-64 shrink-0 border-r bg-surface-sidebar px-3 py-6 desktop:block"
 	>
 		<p class="px-3 font-mono text-sm font-semibold text-primary">{data.course.code}</p>
-		<p class="px-3 font-semibold">{data.course.title}</p>
+		<p class="mt-0.5 px-3 font-heading text-lg leading-snug font-bold">{data.course.title}</p>
 		<ul class="mt-6 flex flex-col gap-1">
 			{#each COURSE_CHANNELS as channel (channel)}
 				<li>
 					<a
 						href={resolve(COURSE_CHANNEL_ROUTE_IDS[channel], { courseId: data.course.id })}
 						aria-current={channel === currentChannel ? 'page' : undefined}
-						class={[
-							'block rounded-xl px-3 py-2',
-							channel === currentChannel && 'bg-secondary-container font-semibold'
-						]}>{COURSE_CHANNEL_LABELS[channel]()}</a
+						class="flex min-h-11 items-center rounded-xl navigation-item px-3"
+						>{COURSE_CHANNEL_LABELS[channel]()}</a
 					>
 				</li>
 			{/each}
@@ -67,50 +68,72 @@
 	</nav>
 
 	<div class="min-w-0 flex-1">
-		<header class="mx-auto max-w-3xl px-4 pt-8">
-			<p class="font-mono text-sm font-semibold text-primary">
-				{data.course.code} · {data.course.institution.name}
-			</p>
-			<h1 class="mt-1 text-3xl font-semibold">{data.course.title}</h1>
-			<p class="mt-2 text-on-surface-variant">{data.course.description}</p>
-			<div class="mt-4 flex flex-wrap gap-2">
-				<form method="POST" action={followActionUrl} use:enhance>
-					<button type="submit" class={buttonClass(data.course.isFollowed ? 'tonal' : 'filled')}>
-						{#if data.course.isFollowed}<Check size={18} />
-							{m.course_space_following()}{:else}{m.course_space_follow()}{/if}
-					</button>
-				</form>
-				<button
-					type="button"
-					class={buttonClass('outlined')}
-					onclick={() => {
-						wasAddedToHistory = false;
-						isHistoryEditorOpen = true;
-					}}>{m.course_space_add_to_history()}</button
-				>
-			</div>
-			{#if page.form?.followingError}
-				<p class="mt-2 text-sm" role="alert">{describeErrorCode(page.form.followingError)}</p>
-			{/if}
-			{#if wasAddedToHistory}
-				<p class="mt-2 text-sm text-on-surface-variant" role="status">
-					{m.course_space_added_to_history()}
-				</p>
-			{/if}
-			<nav
-				aria-label={m.course_space_channels_short()}
-				class="mt-2.5 flex gap-2 overflow-x-auto py-1.5 desktop:hidden"
-			>
-				{#each COURSE_CHANNELS as channel (channel)}
-					<a
-						href={resolve(COURSE_CHANNEL_ROUTE_IDS[channel], { courseId: data.course.id })}
-						aria-current={channel === currentChannel ? 'page' : undefined}
-						class={filterChipClass(channel === currentChannel)}
-						>{COURSE_CHANNEL_LABELS[channel]()}</a
+		{#if isReadingThread && currentChannel}
+			<!-- Threads keep the course header small so the post comes first, as in the thread designs. -->
+			<header class="border-b bg-blueprint-grid">
+				<div class="mx-auto flex max-w-3xl items-center gap-2 px-2 py-2 desktop:px-4">
+					<Button
+						variant="ghost"
+						size="icon"
+						href={resolve(COURSE_CHANNEL_ROUTE_IDS[currentChannel], { courseId: data.course.id })}
+						aria-label={m.course_space_back_to_channel({
+							channel: COURSE_CHANNEL_LABELS[currentChannel]()
+						})}><ChevronLeft size={24} /></Button
 					>
-				{/each}
-			</nav>
-		</header>
+					<p class="min-w-0 truncate">
+						<span class="font-mono text-sm font-semibold text-primary">{data.course.code}</span>
+						<span class="text-on-surface-variant">
+							· {COURSE_CHANNEL_LABELS[currentChannel]()}</span
+						>
+					</p>
+				</div>
+			</header>
+		{:else}
+			<header class="border-b bg-blueprint-grid">
+				<div class="mx-auto max-w-3xl px-4 pt-8 pb-4 desktop:pb-6">
+					<p class="font-mono text-sm font-semibold text-primary">
+						{data.course.code} · {data.course.institution.name}
+					</p>
+					<h1 class="mt-1 text-headline font-bold">{data.course.title}</h1>
+					<p class="mt-2 text-on-surface-variant">{data.course.description}</p>
+					<div class="mt-4 flex flex-wrap gap-2">
+						<form method="POST" action={followActionUrl} use:enhance>
+							<Button variant={data.course.isFollowed ? 'tonal' : 'filled'} type="submit">
+								{#if data.course.isFollowed}<Check size={18} />
+									{m.course_space_following()}{:else}{m.course_space_follow()}{/if}
+							</Button>
+						</form>
+						<Button
+							variant="outlined"
+							onclick={() => {
+								wasAddedToHistory = false;
+								isHistoryEditorOpen = true;
+							}}>{m.course_space_add_to_history()}</Button
+						>
+					</div>
+					{#if page.form?.followingError}
+						<p class="mt-2 text-sm" role="alert">{describeErrorCode(page.form.followingError)}</p>
+					{/if}
+					{#if wasAddedToHistory}
+						<p class="mt-2 text-sm text-on-surface-variant" role="status">
+							{m.course_space_added_to_history()}
+						</p>
+					{/if}
+					<nav
+						aria-label={m.course_space_channels_short()}
+						class="mt-2.5 flex gap-2 overflow-x-auto py-1.5 desktop:hidden"
+					>
+						{#each COURSE_CHANNELS as channel (channel)}
+							<a
+								href={resolve(COURSE_CHANNEL_ROUTE_IDS[channel], { courseId: data.course.id })}
+								aria-current={channel === currentChannel ? 'page' : undefined}
+								class={toggleVariants({ variant: 'chip' })}>{COURSE_CHANNEL_LABELS[channel]()}</a
+							>
+						{/each}
+					</nav>
+				</div>
+			</header>
+		{/if}
 		<main class="mx-auto max-w-3xl px-4 py-6">
 			{@render children()}
 		</main>

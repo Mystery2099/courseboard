@@ -1,11 +1,13 @@
 <script lang="ts">
-	import { buttonClass, statusChipClass } from '#lib/components/ui/ControlStyles.ts';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery, createMutation, createQuery } from '@tanstack/svelte-query';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { untrack } from 'svelte';
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import Check from 'lucide-svelte/icons/check';
+	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import Lock from 'lucide-svelte/icons/lock';
 	import { describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 	import { PostApiClient, postQueryKeys } from '#lib/client/content/PostApiClient.ts';
@@ -108,27 +110,23 @@
 		<div class="flex flex-wrap items-center justify-between gap-2">
 			<ContentByline author={reply.author} createdAt={reply.createdAt} />
 			{#if isAccepted}
-				<span class={statusChipClass('success')}
-					><Check size={14} /> {m.thread_accepted_answer()}</span
-				>
+				<Badge variant="success"><Check size={14} /> {m.thread_accepted_answer()}</Badge>
 			{/if}
 		</div>
 		<p class="mt-2 wrap-break-word whitespace-pre-wrap">{reply.bodyMarkdown}</p>
 		<div class="mt-2 flex flex-wrap gap-2 text-sm">
 			{#if reply.parentReplyId === null && !post.isLocked}
-				<button
-					type="button"
-					class={buttonClass('outlined', 'compact')}
-					onclick={() => (replyTargetId = reply.id)}>{m.common_reply()}</button
+				<Button variant="outlined" size="compact" onclick={() => (replyTargetId = reply.id)}
+					>{m.common_reply()}</Button
 				>
 			{/if}
 			{#if post.viewerPermissions.canChooseAcceptedReply}
-				<button
-					type="button"
-					class={buttonClass('outlined', 'compact')}
+				<Button
+					variant="outlined"
+					size="compact"
 					disabled={acceptedReplyMutation.isPending}
 					onclick={() => acceptedReplyMutation.mutate(isAccepted ? null : reply.id)}
-					>{isAccepted ? m.thread_clear_accepted_answer() : m.thread_accept_answer()}</button
+					>{isAccepted ? m.thread_clear_accepted_answer() : m.thread_accept_answer()}</Button
 				>
 			{/if}
 		</div>
@@ -139,10 +137,13 @@
 	<div class="flex flex-wrap items-center gap-2">
 		<ThreadKindBadge kind={post.kind} />
 		{#if post.isLocked}
-			<span class={statusChipClass('neutral')}><Lock size={14} /> {m.post_badge_locked()}</span>
+			<Badge variant="neutral"><Lock size={14} /> {m.post_badge_locked()}</Badge>
 		{/if}
 	</div>
-	<h2 class="mt-2 text-2xl font-semibold wrap-break-word">{post.title}</h2>
+	<!-- The thread is the page's subject, so its title is the page heading. -->
+	<h1 class="mt-2 text-2xl leading-tight font-bold wrap-break-word desktop:text-headline">
+		{post.title}
+	</h1>
 	<div class="mt-2"><ContentByline author={post.author} createdAt={post.createdAt} /></div>
 	{#if post.editedAt}
 		<p class="mt-1 text-sm text-on-surface-variant">
@@ -162,9 +163,15 @@
 		{post.bodyMarkdown}
 	</p>
 	{#if post.viewerPermissions.canEditReview}
-		<details bind:open={isReviewEditorOpen} class="mt-4 rounded-card border p-4">
-			<summary class="min-h-11 cursor-pointer py-2 font-semibold text-primary"
-				>{m.thread_edit_review()}</summary
+		<details bind:open={isReviewEditorOpen} class="group/disclosure mt-4 rounded-card border p-4">
+			<summary
+				class="-mx-3 flex min-h-11 items-center rounded-full state-layer-primary px-3 font-semibold text-primary transition-colors duration-150"
+				>{m.thread_edit_review()}
+				<ChevronDown
+					size={20}
+					class="ml-auto shrink-0 transition-transform duration-150 group-open/disclosure:rotate-180"
+					aria-hidden="true"
+				/></summary
 			>
 			{#if isReviewEditorOpen}
 				<div class="mt-4">
@@ -182,12 +189,13 @@
 		</details>
 	{/if}
 	{#if post.viewerPermissions.canLock}
-		<button
-			type="button"
-			class={[buttonClass('outlined', 'compact'), 'mt-4']}
+		<Button
+			variant="outlined"
+			size="compact"
+			class="mt-4"
 			disabled={lockMutation.isPending}
 			onclick={() => lockMutation.mutate(!post.isLocked)}
-			>{post.isLocked ? m.thread_unlock() : m.thread_lock()}</button
+			>{post.isLocked ? m.thread_unlock() : m.thread_lock()}</Button
 		>
 	{/if}
 	{#if actionError}
@@ -198,7 +206,7 @@
 </article>
 
 <section class="mt-8" aria-labelledby="replies-heading">
-	<h3 id="replies-heading" class="text-lg font-semibold">{formatReplyCount(post.replyCount)}</h3>
+	<h2 id="replies-heading" class="text-lg font-semibold">{formatReplyCount(post.replyCount)}</h2>
 
 	<ul class="mt-3 flex flex-col gap-3">
 		{#each replyBranches as branch (branch.reply.id)}
@@ -231,12 +239,13 @@
 	</ul>
 
 	{#if repliesQuery.hasNextPage}
-		<button
-			type="button"
-			class={[buttonClass('outlined', 'compact'), 'mt-3']}
+		<Button
+			variant="outlined"
+			size="compact"
+			class="mt-3"
 			disabled={repliesQuery.isFetchingNextPage}
 			onclick={() => repliesQuery.fetchNextPage()}
-			>{repliesQuery.isFetchingNextPage ? m.common_loading() : m.thread_load_more_replies()}</button
+			>{repliesQuery.isFetchingNextPage ? m.common_loading() : m.thread_load_more_replies()}</Button
 		>
 	{/if}
 

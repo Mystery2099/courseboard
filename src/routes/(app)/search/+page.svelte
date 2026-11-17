@@ -1,9 +1,12 @@
 <script lang="ts">
+	import { toggleVariants } from '#lib/components/ui/toggle/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import SearchIcon from 'lucide-svelte/icons/search';
-	import CourseCodeTile from '#lib/components/CourseCodeTile.svelte';
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
-	import { buttonClass, filterChipClass } from '#lib/components/ui/ControlStyles.ts';
 	import { formatRelativeTime, THREAD_KIND_LABELS } from '#lib/client/content/PostPresentation.ts';
 	import {
 		formatTerm,
@@ -47,6 +50,19 @@
 		).toString();
 	}
 
+	/** Filters apply as soon as they change, keeping focus on the field that changed. */
+	function applyFilters(event: Event & { currentTarget: HTMLSelectElement }) {
+		const form = event.currentTarget.form;
+		if (!form) return;
+		const formData = new FormData(form);
+		const parameters = new URLSearchParams(
+			[...formData.entries()].map(([key, value]) => [key, String(value)])
+		);
+		// The path comes from resolve(); only the query string is added.
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		void goto(`${resolve('/(app)/search')}?${parameters}`, { reset: false });
+	}
+
 	const sections = $derived([search.courses, search.posts, search.people]);
 	const hasSearched = $derived(sections.some((section) => section !== null));
 	const hasResults = $derived(sections.some((section) => section && section.results.length > 0));
@@ -62,15 +78,15 @@
 
 <svelte:head><title>{m.search_title()}</title></svelte:head>
 
-<main class="mx-auto max-w-3xl px-4 py-8">
+<main class="mx-auto max-w-3xl px-4 py-8 desktop:max-w-5xl desktop:px-8">
 	<h1 class="sr-only">{m.search_title()}</h1>
-	<form method="GET" role="search" class="flex flex-col gap-3">
+	<form id="search-form" method="GET" role="search" class="relative desktop:max-w-3xl">
 		<input type="hidden" name="scope" value={query.scope} />
 		<label class="relative block">
 			<span class="sr-only">{m.search_label()}</span>
 			<SearchIcon
 				size={20}
-				class="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-on-surface-variant"
+				class="pointer-events-none absolute top-1/2 left-5 -translate-y-1/2 text-on-surface-variant"
 			/>
 			<input
 				type="search"
@@ -78,65 +94,90 @@
 				value={query.q}
 				maxlength="100"
 				placeholder={m.search_placeholder()}
-				class="w-full rounded-full py-3 pr-4 pl-12 text-base"
+				class="min-h-13 w-full rounded-full py-3 pr-15 pl-13 text-base"
 			/>
 		</label>
-		<div class="flex flex-wrap items-end gap-3">
-			<label class="flex flex-col gap-1 text-sm">
-				<span class="font-semibold">{m.search_school()}</span>
-				<select name="institutionId" class="rounded-field py-2 pr-8 pl-3 text-base">
-					<option value="" selected={!search.institution}>{m.search_all_schools()}</option>
-					{#each data.institutions as institution (institution.id)}
-						<option value={institution.id} selected={institution.id === search.institution?.id}
-							>{institution.name}</option
-						>
-					{/each}
-				</select>
-			</label>
-			{#if query.scope === 'people'}
-				{#if search.courseOptions.length > 0}
-					<label class="flex flex-col gap-1 text-sm">
-						<span class="font-semibold">{m.search_course()}</span>
-						<select name="courseId" class="rounded-field py-2 pr-8 pl-3 text-base">
-							<option value="">{m.search_any_course()}</option>
-							{#each search.courseOptions as course (course.id)}
-								<option value={course.id} selected={course.id === query.courseId}
-									>{course.code} · {course.title}</option
-								>
-							{/each}
-						</select>
-					</label>
-				{/if}
-				<label class="flex flex-col gap-1 text-sm">
-					<span class="font-semibold">{m.search_status()}</span>
-					<select name="status" class="rounded-field py-2 pr-8 pl-3 text-base">
-						<option value="">{m.search_any_status()}</option>
-						{#each HISTORY_STATUSES as status (status)}
-							<option value={status} selected={status === query.status}
-								>{HISTORY_STATUS_LABELS[status]()}</option
-							>
-						{/each}
-					</select>
-				</label>
-			{/if}
-			<button type="submit" class={buttonClass('filled', 'compact')}>{m.search_submit()}</button>
-		</div>
+		<Button
+			type="submit"
+			variant="filled"
+			size="icon"
+			class="absolute top-1/2 right-1 -translate-y-1/2"
+			aria-label={m.search_submit()}><ArrowRight /></Button
+		>
 	</form>
 
-	<nav aria-label={m.search_scopes()} class="mt-4 flex flex-wrap gap-x-2 gap-y-3 py-1.5">
-		{#each SEARCH_SCOPES as scope (scope)}
-			<a
-				href="{resolve('/(app)/search')}?{searchQueryString({
-					scope,
-					page: undefined,
-					courseId: undefined,
-					status: undefined
-				})}"
-				aria-current={scope === query.scope ? 'page' : undefined}
-				class={filterChipClass(scope === query.scope)}>{SCOPE_LABELS[scope]()}</a
+	<div class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-3">
+		<nav aria-label={m.search_scopes()} class="contents">
+			{#each SEARCH_SCOPES as scope (scope)}
+				<a
+					href="{resolve('/(app)/search')}?{searchQueryString({
+						scope,
+						page: undefined,
+						courseId: undefined,
+						status: undefined
+					})}"
+					aria-current={scope === query.scope ? 'page' : undefined}
+					class={toggleVariants({ variant: 'chip' })}>{SCOPE_LABELS[scope]()}</a
+				>
+			{/each}
+		</nav>
+		<span class="mx-1 hidden h-7 w-px bg-outline-variant tablet:block" aria-hidden="true"></span>
+		{@render filterChip(m.search_school(), 'institutionId', [
+			{ value: '', label: m.search_all_schools(), isSelected: !search.institution },
+			...data.institutions.map((institution) => ({
+				value: institution.id,
+				label: institution.name,
+				isSelected: institution.id === search.institution?.id
+			}))
+		])}
+		{#if query.scope === 'people'}
+			{#if search.courseOptions.length > 0}
+				{@render filterChip(m.search_course(), 'courseId', [
+					{ value: '', label: m.search_any_course(), isSelected: !query.courseId },
+					...search.courseOptions.map((course) => ({
+						value: course.id,
+						label: `${course.code} · ${course.title}`,
+						isSelected: course.id === query.courseId
+					}))
+				])}
+			{/if}
+			{@render filterChip(m.search_status(), 'status', [
+				{ value: '', label: m.search_any_status(), isSelected: !query.status },
+				...HISTORY_STATUSES.map((status) => ({
+					value: status,
+					label: HISTORY_STATUS_LABELS[status](),
+					isSelected: status === query.status
+				}))
+			])}
+		{/if}
+	</div>
+
+	{#snippet filterChip(
+		label: string,
+		name: string,
+		options: { value: string; label: string; isSelected: boolean }[]
+	)}
+		<!-- A native select styled as a chip, so the filter works without JavaScript. -->
+		<label
+			class="{toggleVariants({
+				variant: 'chip'
+			})} items-stretch gap-0 pr-2 outline-primary after:hidden focus-within:outline-2 focus-within:outline-offset-2"
+		>
+			<span class="self-center whitespace-nowrap">{label}:</span>
+			<!-- Taller than the chip it sits in, so the select itself is a 44px target. -->
+			<select
+				{name}
+				form="search-form"
+				onchange={applyFilters}
+				class="-my-1.5 field-sizing-content min-h-11 max-w-48 appearance-none border-0 bg-transparent bg-none py-0 pr-6 pl-1 text-base font-semibold focus:ring-0 focus:outline-none desktop:text-sm"
 			>
-		{/each}
-	</nav>
+				{#each options as option (option.value)}
+					<option value={option.value} selected={option.isSelected}>{option.label}</option>
+				{/each}
+			</select>
+			<ChevronDown size={16} class="pointer-events-none -ml-5 self-center" aria-hidden="true" />
+		</label>
+	{/snippet}
 
 	{#if query.scope === 'people'}
 		<p class="mt-3 text-sm text-on-surface-variant">{m.search_people_explanation()}</p>
@@ -156,13 +197,14 @@
 				{/if}
 			</p>
 			{#if search.institution}
-				<a
+				<Button
+					variant="outlined"
+					class="mt-4"
 					href="{resolve('/(app)/search')}?{searchQueryString({
 						institutionId: '',
 						page: undefined,
 						courseId: undefined
-					})}"
-					class={[buttonClass('outlined'), 'mt-4']}>{m.search_try_all_schools()}</a
+					})}">{m.search_try_all_schools()}</Button
 				>
 			{/if}
 		</div>
@@ -172,9 +214,11 @@
 		<div class="mt-8 flex items-center justify-between gap-3">
 			<h2 class="text-xl font-bold">{title}</h2>
 			{#if !isPaged && hasMore}
-				<a
+				<Button
+					variant="text"
+					size="compact"
 					href="{resolve('/(app)/search')}?{searchQueryString({ scope, page: undefined })}"
-					class={buttonClass('text', 'compact')}>{m.search_see_all()}</a
+					>{m.search_see_all()}</Button
 				>
 			{/if}
 		</div>
@@ -182,20 +226,19 @@
 
 	{#if search.courses && search.courses.results.length > 0}
 		{@render sectionHeading(m.search_scope_courses(), 'courses', search.courses.hasMore)}
-		<ul class="mt-3 divide-y overflow-hidden rounded-card border bg-surface">
+		<ul class="mt-3 grid gap-3 tablet:grid-cols-2 desktop:grid-cols-3">
 			{#each search.courses.results as course (course.id)}
 				<li>
 					<a
 						href={resolve('/(app)/courses/[courseId]', { courseId: course.id })}
-						class="flex items-center gap-4 px-4 py-3 hover:bg-surface-container"
+						class="flex h-full flex-col rounded-card border state-layer bg-surface px-5 py-4 transition-colors duration-150 [--state-base:var(--surface)]"
 					>
-						<CourseCodeTile code={course.code} />
-						<span class="min-w-0">
-							<span class="block font-mono text-sm font-semibold text-primary"
-								>{course.code} · {course.institutionName}</span
-							>
-							<span class="block truncate font-heading font-bold">{course.title}</span>
-						</span>
+						<span class="font-mono text-sm font-semibold text-primary"
+							>{course.code} · {course.institutionName}</span
+						>
+						<span class="mt-1.5 font-heading text-lg leading-snug font-bold wrap-break-word"
+							>{course.title}</span
+						>
 					</a>
 				</li>
 			{/each}
@@ -204,7 +247,7 @@
 
 	{#if search.posts && search.posts.results.length > 0}
 		{@render sectionHeading(m.search_scope_posts(), 'posts', search.posts.hasMore)}
-		<ul class="mt-3 divide-y overflow-hidden rounded-card border bg-surface">
+		<ul class="mt-2 divide-y border-y">
 			{#each search.posts.results as post (post.id)}
 				<li>
 					<a
@@ -212,7 +255,7 @@
 							courseId: post.courseId,
 							postId: post.id
 						})}
-						class="block px-4 py-3 hover:bg-surface-container"
+						class="-mx-2 block rounded-xl state-layer px-2 py-4 transition-colors duration-150 [--state-base:var(--background)]"
 					>
 						<span class="block text-sm text-on-surface-variant">
 							{m.search_post_meta({
@@ -237,7 +280,7 @@
 				<li>
 					<a
 						href={resolve('/(app)/users/[username]', { username: person.username })}
-						class="flex items-start gap-3 px-4 py-3 hover:bg-surface-container"
+						class="flex items-start gap-3 list-row px-4 py-3 [--state-base:var(--surface)]"
 					>
 						<UserAvatar username={person.username} displayName={person.displayName} />
 						<span class="min-w-0">
@@ -271,15 +314,19 @@
 	{#if isPaged && activeSection && (query.page > 1 || activeSection.hasMore)}
 		<div class="mt-4 flex gap-2">
 			{#if query.page > 1}
-				<a
+				<Button
+					variant="outlined"
+					size="compact"
 					href="{resolve('/(app)/search')}?{searchQueryString({ page: query.page - 1 })}"
-					class={buttonClass('outlined', 'compact')}>{m.search_previous_page()}</a
+					>{m.search_previous_page()}</Button
 				>
 			{/if}
 			{#if activeSection.hasMore && query.page < SEARCH_MAX_PAGE}
-				<a
+				<Button
+					variant="outlined"
+					size="compact"
 					href="{resolve('/(app)/search')}?{searchQueryString({ page: query.page + 1 })}"
-					class={buttonClass('outlined', 'compact')}>{m.search_next_page()}</a
+					>{m.search_next_page()}</Button
 				>
 			{/if}
 		</div>

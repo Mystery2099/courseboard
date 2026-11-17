@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import Check from 'lucide-svelte/icons/check';
@@ -77,9 +77,9 @@
 	<p class="font-mono text-sm font-semibold text-primary">{course.code}</p>
 	<p class="font-semibold">{course.title}</p>
 	<div class="mt-3 flex flex-wrap gap-2">
-		<button
-			type="button"
-			class={buttonClass(isTakingThisTerm ? 'tonal' : 'outlined', 'compact')}
+		<Button
+			variant={isTakingThisTerm ? 'tonal' : 'outlined'}
+			size="compact"
 			aria-pressed={isTakingThisTerm}
 			disabled={historyMutation.isPending || (isTakingThisTerm && !createdEntryId)}
 			onclick={() => historyMutation.mutate()}
@@ -88,17 +88,17 @@
 					size={16}
 				/>
 				{m.onboarding_course_add_to_history()}{/if}
-		</button>
-		<button
-			type="button"
-			class={buttonClass(course.isFollowed ? 'tonal' : 'outlined', 'compact')}
+		</Button>
+		<Button
+			variant={course.isFollowed ? 'tonal' : 'outlined'}
+			size="compact"
 			aria-pressed={course.isFollowed}
 			disabled={followingMutation.isPending}
 			onclick={() => followingMutation.mutate()}
 		>
 			{#if course.isFollowed}<Check size={16} />
 				{m.course_space_following()}{:else}{m.course_space_follow()}{/if}
-		</button>
+		</Button>
 	</div>
 	{#if historyMutation.isError || followingMutation.isError}
 		<p class="mt-2 text-sm text-error" role="alert">{m.onboarding_course_change_failed()}</p>

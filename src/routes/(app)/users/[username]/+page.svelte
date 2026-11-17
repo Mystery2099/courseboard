@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { statusChipClass } from '#lib/components/ui/ControlStyles.ts';
+	import { badgeVariants } from '#lib/components/ui/badge/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { resolve } from '$app/paths';
 	import { createQuery } from '@tanstack/svelte-query';
-	import UserAvatar from '#lib/components/UserAvatar.svelte';
+	import ProfileHeader from '#lib/components/profile/ProfileHeader.svelte';
 	import VisibleHistoryList from '#lib/components/history/VisibleHistoryList.svelte';
 	import {
 		AcademicHistoryApiClient,
@@ -41,43 +41,37 @@
 	></svelte:head
 >
 
-<main class="mx-auto max-w-3xl px-4 py-8">
+<main class="mx-auto max-w-3xl pb-8">
+	<ProfileHeader
+		username={data.person.username}
+		displayName={data.person.displayName}
+		imageUrl={data.person.imageUrl}
+	>
+		{#if data.person.primaryInstitution || otherInstitutionNames.length > 0}
+			<ul class="mt-4 flex flex-wrap gap-2" aria-label={m.person_schools()}>
+				{#if data.person.primaryInstitution}
+					<li class={badgeVariants({ variant: 'secondary' })}>
+						{data.person.primaryInstitution.name}
+					</li>
+				{/if}
+				{#each otherInstitutionNames as institutionName (institutionName)}
+					<li class={badgeVariants({ variant: 'neutral' })}>{institutionName}</li>
+				{/each}
+			</ul>
+		{/if}
+	</ProfileHeader>
+
 	{#if data.person.isOwnProfile}
-		<p class="mb-6 rounded-card bg-secondary-container p-4 text-sm" role="status">
+		<p class="mx-4 mt-6 rounded-card bg-secondary-container p-4 text-sm desktop:mx-8" role="status">
 			{m.person_own_profile_notice()}
-			<a class="font-semibold text-primary" href={resolve('/(app)/profile')}
-				>{m.person_edit_profile()}</a
+			<a
+				class="font-semibold text-primary underline-offset-2 hover:underline"
+				href={resolve('/(app)/profile')}>{m.person_edit_profile()}</a
 			>
 		</p>
 	{/if}
 
-	<div class="flex items-center gap-4">
-		<UserAvatar
-			username={data.person.username}
-			displayName={data.person.displayName}
-			imageUrl={data.person.imageUrl}
-			size={72}
-		/>
-		<div class="min-w-0">
-			<h1 class="truncate text-3xl font-semibold">{data.person.displayName}</h1>
-			<p class="text-on-surface-variant">@{data.person.username}</p>
-		</div>
-	</div>
-
-	{#if data.person.primaryInstitution || otherInstitutionNames.length > 0}
-		<ul class="mt-4 flex flex-wrap gap-2" aria-label={m.person_schools()}>
-			{#if data.person.primaryInstitution}
-				<li class={statusChipClass('secondary')}>
-					{data.person.primaryInstitution.name}
-				</li>
-			{/if}
-			{#each otherInstitutionNames as institutionName (institutionName)}
-				<li class={statusChipClass('neutral')}>{institutionName}</li>
-			{/each}
-		</ul>
-	{/if}
-
-	<section class="mt-8" aria-labelledby="history-heading">
+	<section class="mt-8 px-4 desktop:px-8" aria-labelledby="history-heading">
 		<h2 id="history-heading" class="text-xl font-semibold">{m.history_heading()}</h2>
 		<p class="mt-2 text-sm text-on-surface-variant">
 			{m.person_history_attribution({ displayName: data.person.displayName })}

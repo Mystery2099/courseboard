@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { describeValidationIssue } from '#lib/client/ErrorPresentation.ts';
 	import { REPLY_BODY_MAX_LENGTH, createReplySchema } from '#lib/contracts/PostContract.ts';
@@ -14,14 +14,17 @@
 		onCancel?: () => void;
 	} = $props();
 
+	const errorId = $props.id();
 	let bodyMarkdown = $state('');
 	let errorMessage = $state<string | null>(null);
+	let bodyField = $state<HTMLTextAreaElement | null>(null);
 
 	function submit(event?: SubmitEvent) {
 		event?.preventDefault();
 		const parsed = createReplySchema.shape.bodyMarkdown.safeParse(bodyMarkdown);
 		if (!parsed.success) {
 			errorMessage = describeValidationIssue(parsed.error.issues[0]);
+			bodyField?.focus();
 			return;
 		}
 		errorMessage = null;
@@ -34,23 +37,23 @@
 	<label class="flex flex-col gap-1">
 		<span class="text-sm font-semibold">{label}</span>
 		<textarea
-			class="min-h-24 rounded-field border-outline px-4 py-2"
+			bind:this={bodyField}
+			class="min-h-24 rounded-field px-4 py-3 text-base"
 			bind:value={bodyMarkdown}
 			maxlength={REPLY_BODY_MAX_LENGTH}
 			aria-invalid={errorMessage ? 'true' : undefined}
+			aria-describedby={errorMessage ? errorId : undefined}
 			onkeydown={(event) => {
 				if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) submit();
 			}}></textarea>
 	</label>
 	{#if errorMessage}
-		<p class="text-sm text-error" role="alert">{errorMessage}</p>
+		<p id={errorId} class="text-sm text-error" role="alert">{errorMessage}</p>
 	{/if}
 	<div class="flex gap-2">
-		<button type="submit" class={buttonClass('filled')}>{m.common_reply()}</button>
+		<Button variant="filled" type="submit">{m.common_reply()}</Button>
 		{#if onCancel}
-			<button type="button" class={buttonClass('outlined')} onclick={onCancel}
-				>{m.common_cancel()}</button
-			>
+			<Button variant="outlined" onclick={onCancel}>{m.common_cancel()}</Button>
 		{/if}
 	</div>
 </form>

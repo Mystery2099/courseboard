@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -29,14 +29,11 @@
 	<h2 class="text-xl font-semibold">
 		{isQuestionChannel ? m.course_channel_questions() : m.course_channel_discussion()}
 	</h2>
-	<button
-		type="button"
-		class={buttonClass('filled', 'compact')}
-		onclick={() => (isComposerOpen = true)}
+	<Button variant="filled" size="compact" onclick={() => (isComposerOpen = true)}
 		><Plus size={18} />
 		{isQuestionChannel
 			? m.post_composer_ask_question()
-			: m.post_composer_start_discussion()}</button
+			: m.post_composer_start_discussion()}</Button
 	>
 </div>
 

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { buttonClass, iconButtonClass } from '#lib/components/ui/ControlStyles.ts';
+	import { tick } from 'svelte';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import EditorDialog from '#lib/components/EditorDialog.svelte';
 	import { m } from '#lib/paraglide/messages.js';
-	import { Dialog } from 'bits-ui';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
-	import X from 'lucide-svelte/icons/x';
 	import { describeFieldIssues, describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 	import { PostApiClient, postQueryKeys } from '#lib/client/content/PostApiClient.ts';
 	import {
@@ -27,6 +27,7 @@
 		onCreated: (post: PostDetailResponse) => void;
 	} = $props();
 
+	const formId = $props.id();
 	const queryClient = useQueryClient();
 	let title = $state('');
 	let bodyMarkdown = $state('');
@@ -43,11 +44,17 @@
 		}
 	}));
 
+	const submitLabel = $derived(
+		publishMutation.isPending ? m.post_composer_posting() : m.post_composer_post()
+	);
+
 	function submit(event: SubmitEvent) {
 		event.preventDefault();
 		const parsed = createPostSchema.safeParse({ kind, title, bodyMarkdown });
 		if (!parsed.success) {
 			fieldErrors = describeFieldIssues(parsed.error);
+			const form = event.currentTarget as HTMLFormElement;
+			void tick().then(() => form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
 			return;
 		}
 		fieldErrors = {};
@@ -55,68 +62,58 @@
 	}
 </script>
 
-<Dialog.Root bind:open>
-	<Dialog.Portal>
-		<Dialog.Overlay class="fixed inset-0 z-40 bg-scrim" />
-		<Dialog.Content
-			class="fixed inset-0 z-50 overflow-y-auto bg-surface p-4 tablet:inset-auto tablet:top-1/2 tablet:left-1/2 tablet:max-h-[90dvh] tablet:w-[40rem] tablet:-translate-x-1/2 tablet:-translate-y-1/2 tablet:rounded-sheet tablet:p-6 tablet:shadow-xl"
-		>
-			<div class="mb-4 flex items-center gap-3">
-				<Dialog.Close class={[iconButtonClass(), '-ml-2']} aria-label={m.common_close()}
-					><X size={22} /></Dialog.Close
+<EditorDialog
+	bind:open
+	title={kind === 'question' ? m.post_composer_ask_question() : m.post_composer_start_discussion()}
+	description={m.post_composer_description()}
+	{formId}
+	{submitLabel}
+	isSubmitting={publishMutation.isPending}
+>
+	<form id={formId} class="flex flex-col gap-5" onsubmit={submit} novalidate>
+		<label class="flex flex-col gap-1">
+			<span class="text-sm font-semibold">{m.common_title()}</span>
+			<input
+				type="text"
+				class="min-h-12 rounded-field px-4 py-2 text-base"
+				bind:value={title}
+				maxlength={POST_TITLE_MAX_LENGTH}
+				aria-invalid={fieldErrors.title ? 'true' : undefined}
+				aria-describedby={fieldErrors.title ? `${formId}-title-error` : undefined}
+			/>
+			{#if fieldErrors.title}
+				<span id="{formId}-title-error" class="text-sm text-error" role="alert"
+					>{fieldErrors.title}</span
 				>
-				<Dialog.Title class="text-xl font-semibold">
-					{kind === 'question'
-						? m.post_composer_ask_question()
-						: m.post_composer_start_discussion()}
-				</Dialog.Title>
-			</div>
-			<Dialog.Description class="sr-only">
-				{m.post_composer_description()}
-			</Dialog.Description>
-			<form class="flex flex-col gap-5" onsubmit={submit} novalidate>
-				<label class="flex flex-col gap-1">
-					<span class="text-sm font-semibold">{m.common_title()}</span>
-					<input
-						type="text"
-						class="rounded-field border-outline px-4 py-2"
-						bind:value={title}
-						maxlength={POST_TITLE_MAX_LENGTH}
-						aria-invalid={fieldErrors.title ? 'true' : undefined}
-					/>
-					{#if fieldErrors.title}
-						<span class="text-sm text-error" role="alert">{fieldErrors.title}</span>
-					{/if}
-				</label>
-				<label class="flex flex-col gap-1">
-					<span class="text-sm font-semibold">
-						{kind === 'question'
-							? m.post_composer_question_body()
-							: m.post_composer_discussion_body()}
-					</span>
-					<textarea
-						class="min-h-48 rounded-field border-outline px-4 py-2"
-						bind:value={bodyMarkdown}
-						maxlength={POST_BODY_MAX_LENGTH}
-						aria-invalid={fieldErrors.bodyMarkdown ? 'true' : undefined}></textarea>
-					{#if fieldErrors.bodyMarkdown}
-						<span class="text-sm text-error" role="alert">{fieldErrors.bodyMarkdown}</span>
-					{/if}
-				</label>
-				{#if publishMutation.error}
-					<p class="text-sm text-error" role="alert">
-						{describeRequestFailure(publishMutation.error, m.post_composer_publish_failed)}
-					</p>
-				{/if}
-				<div class="flex gap-2">
-					<button type="submit" class={buttonClass('filled')} disabled={publishMutation.isPending}
-						>{publishMutation.isPending
-							? m.post_composer_posting()
-							: m.post_composer_post()}</button
-					>
-					<Dialog.Close class={buttonClass('outlined')}>{m.common_cancel()}</Dialog.Close>
-				</div>
-			</form>
-		</Dialog.Content>
-	</Dialog.Portal>
-</Dialog.Root>
+			{/if}
+		</label>
+		<label class="flex flex-col gap-1">
+			<span class="text-sm font-semibold">
+				{kind === 'question' ? m.post_composer_question_body() : m.post_composer_discussion_body()}
+			</span>
+			<textarea
+				class="min-h-48 rounded-field px-4 py-3 text-base"
+				bind:value={bodyMarkdown}
+				maxlength={POST_BODY_MAX_LENGTH}
+				aria-invalid={fieldErrors.bodyMarkdown ? 'true' : undefined}
+				aria-describedby={fieldErrors.bodyMarkdown ? `${formId}-body-error` : undefined}></textarea>
+			{#if fieldErrors.bodyMarkdown}
+				<span id="{formId}-body-error" class="text-sm text-error" role="alert"
+					>{fieldErrors.bodyMarkdown}</span
+				>
+			{/if}
+		</label>
+		{#if publishMutation.error}
+			<p class="text-sm text-error" role="alert">
+				{describeRequestFailure(publishMutation.error, m.post_composer_publish_failed)}
+			</p>
+		{/if}
+		<!-- On phones the header carries Post, and the close button cancels. -->
+		<div class="flex gap-2 max-tablet:hidden">
+			<Button variant="filled" type="submit" disabled={publishMutation.isPending}
+				>{submitLabel}</Button
+			>
+			<Button variant="outlined" onclick={() => (open = false)}>{m.common_cancel()}</Button>
+		</div>
+	</form>
+</EditorDialog>

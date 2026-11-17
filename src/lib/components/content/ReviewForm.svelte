@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { tick, untrack } from 'svelte';
@@ -156,7 +156,7 @@
 			<label class="flex min-w-0 flex-col gap-1">
 				<span class="text-sm font-semibold">{m.review_form_attempt()}</span>
 				<select
-					class="w-full min-w-0 rounded-field border-outline px-4 py-2 text-base"
+					class="min-h-12 w-full min-w-0 rounded-field px-4 py-2 text-base"
 					bind:value={historyEntryId}
 					aria-invalid={fieldErrors.historyEntryId ? 'true' : undefined}
 					aria-describedby={fieldErrors.historyEntryId ? 'review-attempt-error' : undefined}
@@ -179,7 +179,7 @@
 			<label class="flex min-w-0 flex-col gap-1">
 				<span class="text-sm font-semibold">{m.review_facts_workload()}</span>
 				<select
-					class="w-full rounded-field border-outline px-4 py-2 text-base"
+					class="min-h-12 w-full rounded-field px-4 py-2 text-base"
 					bind:value={workload}
 					aria-invalid={fieldErrors.workload ? 'true' : undefined}
 					aria-describedby={fieldErrors.workload ? 'review-workload-error' : undefined}
@@ -200,7 +200,7 @@
 			<label class="flex min-w-0 flex-col gap-1">
 				<span class="text-sm font-semibold">{m.review_form_take_again()}</span>
 				<select
-					class="w-full rounded-field border-outline px-4 py-2 text-base"
+					class="min-h-12 w-full rounded-field px-4 py-2 text-base"
 					bind:value={wouldTakeAgain}
 					aria-invalid={fieldErrors.wouldTakeAgain ? 'true' : undefined}
 					aria-describedby={fieldErrors.wouldTakeAgain ? 'review-take-again-error' : undefined}
@@ -220,7 +220,7 @@
 			<span class="text-sm font-semibold">{m.common_title()}</span>
 			<input
 				type="text"
-				class="rounded-field border-outline px-4 py-2 text-base"
+				class="min-h-12 rounded-field px-4 py-2 text-base"
 				bind:value={title}
 				maxlength={POST_TITLE_MAX_LENGTH}
 				aria-invalid={fieldErrors.title ? 'true' : undefined}
@@ -235,7 +235,7 @@
 		<label class="flex flex-col gap-1">
 			<span class="text-sm font-semibold">{m.review_form_body()}</span>
 			<textarea
-				class="min-h-40 rounded-field border-outline px-4 py-2 text-base"
+				class="min-h-40 rounded-field px-4 py-2 text-base"
 				bind:value={bodyMarkdown}
 				maxlength={POST_BODY_MAX_LENGTH}
 				aria-invalid={fieldErrors.bodyMarkdown ? 'true' : undefined}
@@ -279,18 +279,15 @@
 			</p>
 		{/if}
 		<div class="flex flex-wrap gap-2">
-			<button type="submit" class={buttonClass('filled')} disabled={saveMutation.isPending}
+			<Button variant="filled" type="submit" disabled={saveMutation.isPending}
 				>{saveMutation.isPending
 					? m.common_saving()
 					: editedReview
 						? m.common_save_changes()
-						: m.review_form_publish()}</button
+						: m.review_form_publish()}</Button
 			>
-			<button
-				type="button"
-				class={buttonClass('outlined')}
-				disabled={saveMutation.isPending}
-				onclick={onCancel}>{m.common_cancel()}</button
+			<Button variant="outlined" disabled={saveMutation.isPending} onclick={onCancel}
+				>{m.common_cancel()}</Button
 			>
 		</div>
 	</fieldset>

@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { buttonClass } from '#lib/components/ui/ControlStyles.ts';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
+	import Ellipsis from 'lucide-svelte/icons/ellipsis';
 	import Plus from 'lucide-svelte/icons/plus';
 	import {
 		AcademicHistoryApiClient,
@@ -58,22 +59,20 @@
 	const ownGroups = $derived(groupHistoryEntries(ownHistoryQuery.data.entries));
 </script>
 
-<section class="mt-8" aria-labelledby="history-heading">
+<section aria-labelledby="history-heading">
 	<div class="flex flex-wrap items-center justify-between gap-3">
 		<h2 id="history-heading" class="text-xl font-semibold">{m.history_heading()}</h2>
-		<div class="flex gap-2">
-			<button
-				type="button"
-				class={buttonClass(isPreviewingAsOthers ? 'tonal' : 'outlined', 'compact')}
+		<div class="flex flex-wrap gap-2">
+			<Button
+				variant={isPreviewingAsOthers ? 'tonal' : 'outlined'}
+				size="compact"
 				aria-pressed={isPreviewingAsOthers}
 				onclick={() => (isPreviewingAsOthers = !isPreviewingAsOthers)}
-				>{m.history_preview_as_others()}</button
+				>{m.history_preview_as_others()}</Button
 			>
 			{#if !isPreviewingAsOthers}
-				<button
-					type="button"
-					class={buttonClass('filled', 'compact')}
-					onclick={() => openEditor(null)}><Plus size={18} /> {m.history_add_course()}</button
+				<Button variant="filled" size="compact" onclick={() => openEditor(null)}
+					><Plus size={18} /> {m.history_add_course()}</Button
 				>
 			{/if}
 		</div>
@@ -82,8 +81,9 @@
 	{#if isPreviewingAsOthers}
 		<p class="mt-2 text-sm text-on-surface-variant">
 			{m.history_preview_explanation()}
-			<a class="font-semibold text-primary" href={resolve('/(app)/users/[username]', { username })}
-				>{m.history_open_profile_page()}</a
+			<a
+				class="font-semibold text-primary underline-offset-2 hover:underline"
+				href={resolve('/(app)/users/[username]', { username })}>{m.history_open_profile_page()}</a
 			>
 		</p>
 		{#if visibleHistoryQuery.isPending}
@@ -112,7 +112,7 @@
 		{:else}
 			{#each ownGroups as group (group.key)}
 				<div class="mt-4 overflow-hidden rounded-card border bg-surface">
-					<h3 class="border-b px-4 py-2 text-sm font-semibold tracking-wide uppercase">
+					<h3 class="border-b px-4 py-3 text-overline text-on-surface-variant">
 						{group.heading}
 					</h3>
 					<ul class="divide-y">
@@ -120,7 +120,7 @@
 							<li>
 								<button
 									type="button"
-									class="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-surface-container"
+									class="flex min-h-16 w-full items-center gap-3 list-row px-4 py-3 text-left [--state-base:var(--surface)]"
 									aria-label={m.history_edit_entry_label({
 										courseCode: entry.course.code,
 										courseTitle: entry.course.title
@@ -128,9 +128,11 @@
 									onclick={() => openEditor(entry)}
 								>
 									<HistoryCourseLabel course={entry.course} />
-									<span class="flex flex-col items-end gap-1">
+									<span
+										class="flex flex-col items-end gap-1 desktop:w-64 desktop:flex-row desktop:items-center desktop:gap-4"
+									>
 										<HistoryStatusBadge status={entry.status} />
-										<span class="text-sm text-on-surface-variant">
+										<span class="text-sm text-on-surface-variant desktop:flex-1">
 											{entry.visibility === 'visible'
 												? m.history_visibility_visible()
 												: m.history_visibility_private()}{entry.privateNote
@@ -138,6 +140,10 @@
 												: ''}
 										</span>
 									</span>
+									<Ellipsis
+										size={20}
+										class="hidden shrink-0 text-on-surface-variant desktop:block"
+									/>
 								</button>
 							</li>
 						{/each}

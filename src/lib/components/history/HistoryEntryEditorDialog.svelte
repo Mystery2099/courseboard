@@ -1,8 +1,6 @@
 <script lang="ts">
-	import { iconButtonClass } from '#lib/components/ui/ControlStyles.ts';
+	import EditorDialog from '#lib/components/EditorDialog.svelte';
 	import { m } from '#lib/paraglide/messages.js';
-	import { Dialog } from 'bits-ui';
-	import X from 'lucide-svelte/icons/x';
 	import type {
 		HistoryCourseResponse,
 		OwnHistoryEntryResponse
@@ -22,34 +20,28 @@
 		defaultInstitutionId?: string | null;
 		onSaved?: () => void;
 	} = $props();
+
+	const formId = $props.id();
+	let isSaving = $state(false);
 </script>
 
-<Dialog.Root bind:open>
-	<Dialog.Portal>
-		<Dialog.Overlay class="fixed inset-0 z-40 bg-scrim" />
-		<Dialog.Content
-			class="fixed inset-0 z-50 overflow-y-auto bg-surface p-4 tablet:inset-auto tablet:top-1/2 tablet:left-1/2 tablet:max-h-[90dvh] tablet:w-[34rem] tablet:-translate-x-1/2 tablet:-translate-y-1/2 tablet:rounded-sheet tablet:p-6 tablet:shadow-xl"
-		>
-			<div class="mb-4 flex items-center gap-3">
-				<Dialog.Close class={[iconButtonClass(), '-ml-2']} aria-label={m.common_close()}
-					><X size={22} /></Dialog.Close
-				>
-				<Dialog.Title class="text-xl font-semibold">
-					{editedEntry ? m.history_editor_edit_title() : m.common_add_to_history()}
-				</Dialog.Title>
-			</div>
-			<Dialog.Description class="sr-only">
-				{m.history_editor_description()}
-			</Dialog.Description>
-			<HistoryEntryForm
-				{editedEntry}
-				{presetCourse}
-				{defaultInstitutionId}
-				onDone={(outcome) => {
-					open = false;
-					if (outcome === 'saved') onSaved?.();
-				}}
-			/>
-		</Dialog.Content>
-	</Dialog.Portal>
-</Dialog.Root>
+<EditorDialog
+	bind:open
+	title={editedEntry ? m.history_editor_edit_title() : m.common_add_to_history()}
+	description={m.history_editor_description()}
+	{formId}
+	submitLabel={isSaving ? m.common_saving() : m.common_save()}
+	isSubmitting={isSaving}
+>
+	<HistoryEntryForm
+		{editedEntry}
+		{presetCourse}
+		{defaultInstitutionId}
+		{formId}
+		bind:isBusy={isSaving}
+		onDone={(outcome) => {
+			open = false;
+			if (outcome === 'saved') onSaved?.();
+		}}
+	/>
+</EditorDialog>

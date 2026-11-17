@@ -2,7 +2,9 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { afterNavigate } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { Dialog } from 'bits-ui';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import * as Drawer from '#lib/components/ui/drawer/index.js';
+	import Check from 'lucide-svelte/icons/check';
 	import ChevronUp from 'lucide-svelte/icons/chevron-up';
 	import Compass from 'lucide-svelte/icons/compass';
 	import Search from 'lucide-svelte/icons/search';
@@ -37,52 +39,60 @@
 	afterNavigate(() => (isSwitcherOpen = false));
 </script>
 
+<!--
+	One-row dock (design handoff): 60px tall, floating 24px above the bottom on tall phones. Icons only
+	on phones; tablets show labels, which the accessible names contain.
+-->
 <nav
 	aria-label={m.navigation_main()}
-	class="fixed inset-x-3 bottom-3 mx-auto flex h-[60px] max-w-[560px] items-center gap-2 rounded-full border bg-surface px-2 shadow-lg"
+	class="fixed inset-x-3 bottom-[calc(10px+env(safe-area-inset-bottom))] z-40 mx-auto flex h-[60px] max-w-[560px] items-center gap-1 rounded-full border bg-surface px-1.5 shadow-floating [@media(min-height:700px)]:bottom-[calc(24px+env(safe-area-inset-bottom))]"
 >
 	<a
 		href={resolve('/(app)/explore')}
 		aria-label={m.navigation_explore()}
-		class="flex size-11 items-center justify-center rounded-full"
+		class="flex size-12 shrink-0 items-center justify-center gap-2 rounded-full state-layer text-on-surface transition-colors duration-150 tablet:w-auto tablet:px-3"
 	>
-		<Compass size={22} />
+		<Compass size={24} />
+		<span class="hidden text-sm font-semibold tablet:inline">{m.navigation_explore()}</span>
 	</a>
-	<Dialog.Root bind:open={isSwitcherOpen}>
-		<Dialog.Trigger
-			class="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-primary-container px-4 text-left"
+	<Drawer.Root bind:open={isSwitcherOpen}>
+		<Drawer.Trigger
+			class="flex h-12 min-w-0 flex-1 items-center gap-2 rounded-full state-layer bg-primary-container px-4 text-left text-on-primary-container transition-colors duration-150 [--state-base:var(--primary-container)] [--state-color:var(--on-primary-container)]"
 			aria-current={currentCourse ? 'page' : undefined}
 		>
 			{#if currentCourse}
-				<span class="font-mono text-sm font-semibold">{currentCourse.code}</span>
-				<span class="truncate">{currentChannel ? COURSE_CHANNEL_LABELS[currentChannel]() : ''}</span
+				<span class="shrink-0 font-mono text-sm font-semibold whitespace-nowrap"
+					>{currentCourse.code}</span
 				>
+				{#if currentChannel}
+					<!-- Code only on the narrowest phones; the channel stays in the accessible name. -->
+					<span class="truncate text-sm max-[399px]:sr-only"
+						>{COURSE_CHANNEL_LABELS[currentChannel]()}</span
+					>
+				{/if}
 			{:else}
-				<span>{m.navigation_spaces()}</span>
+				<span class="font-semibold">{m.navigation_spaces()}</span>
 			{/if}
-			<ChevronUp size={18} class="ml-auto shrink-0" />
-		</Dialog.Trigger>
-		<Dialog.Portal>
-			<Dialog.Overlay class="fixed inset-0 z-40 bg-scrim" />
-			<Dialog.Content
-				class="fixed inset-x-0 bottom-0 z-50 max-h-[90dvh] overflow-y-auto rounded-t-sheet bg-surface p-4 pb-8"
-			>
-				<Dialog.Title class="text-xs font-semibold tracking-wider text-on-surface-variant uppercase"
-					>{m.navigation_your_courses()}</Dialog.Title
+			<ChevronUp size={20} class="ml-auto shrink-0" />
+		</Drawer.Trigger>
+		<Drawer.Content>
+			<div class="overflow-y-auto px-4 pt-4">
+				<Drawer.Title class="text-overline font-bold text-on-surface-variant"
+					>{m.navigation_your_courses()}</Drawer.Title
 				>
 				{#if followedCourses.length === 0}
 					<p class="mt-2 text-sm text-on-surface-variant">
 						{m.navigation_followed_courses_empty()}
 					</p>
 				{:else}
-					<ul class="mt-2 flex gap-3 overflow-x-auto pb-2">
+					<ul class="-mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-2">
 						{#each followedCourses as course (course.id)}
 							<li>
 								<a
 									href={resolve('/(app)/courses/[courseId]', { courseId: course.id })}
 									aria-label="{course.code} {course.title}"
 									aria-current={course.id === currentCourse?.id ? 'page' : undefined}
-									class="flex w-16 flex-col items-center gap-1 text-xs"
+									class="group/tile block rounded-tile p-1"
 								>
 									<CourseCodeTile code={course.code} isCurrent={course.id === currentCourse?.id} />
 								</a>
@@ -92,48 +102,51 @@
 				{/if}
 
 				{#if currentCourse}
-					<h2 class="mt-4 text-xs font-semibold tracking-wider text-on-surface-variant uppercase">
+					<h2 class="mt-5 text-overline text-on-surface-variant">
 						{m.navigation_in_course({ courseCode: currentCourse.code })}
 					</h2>
-					<ul class="mt-1">
+					<ul class="mt-2">
 						{#each COURSE_CHANNELS as channel (channel)}
 							<li>
 								<a
 									href={resolve(COURSE_CHANNEL_ROUTE_IDS[channel], { courseId: currentCourse.id })}
 									aria-current={channel === currentChannel ? 'page' : undefined}
-									class={[
-										'block rounded-xl px-4 py-3',
-										channel === currentChannel && 'bg-secondary-container font-semibold'
-									]}>{COURSE_CHANNEL_LABELS[channel]()}</a
+									class="flex min-h-12 items-center gap-2 rounded-2xl navigation-item px-4 text-lg"
 								>
+									{COURSE_CHANNEL_LABELS[channel]()}
+									{#if channel === currentChannel}<Check size={18} aria-hidden="true" />{/if}
+								</a>
 							</li>
 						{/each}
 					</ul>
 				{/if}
 
-				<div class="mt-4 flex flex-col items-center gap-2">
-					<a href={resolve('/(app)/explore')} class="font-semibold text-primary"
-						>{m.navigation_explore_all_courses()}</a
+				<div class="mt-5 flex flex-col items-center gap-1">
+					<Button href={resolve('/(app)/explore')} variant="text"
+						>{m.navigation_explore_all_courses()}</Button
 					>
 					{#if isAdministrator}
-						<a href={resolve('/(app)/admin/invitations')} class="text-sm">{m.navigation_admin()}</a>
+						<Button href={resolve('/(app)/admin/invitations')} variant="text" size="compact"
+							>{m.navigation_admin()}</Button
+						>
 					{/if}
 				</div>
-			</Dialog.Content>
-		</Dialog.Portal>
-	</Dialog.Root>
+			</div>
+		</Drawer.Content>
+	</Drawer.Root>
 	<a
 		href={resolve('/(app)/search')}
 		aria-label={m.navigation_search()}
-		class="flex size-11 items-center justify-center rounded-full"
+		class="flex size-12 shrink-0 items-center justify-center gap-2 rounded-full state-layer text-on-surface transition-colors duration-150 tablet:w-auto tablet:px-3"
 	>
-		<Search size={22} />
+		<Search size={24} />
+		<span class="hidden text-sm font-semibold tablet:inline">{m.navigation_search()}</span>
 	</a>
 	<a
 		href={resolve('/(app)/profile')}
 		aria-label={m.navigation_your_profile()}
 		aria-current={isProfileCurrent ? 'page' : undefined}
-		class="flex size-11 items-center justify-center"
+		class="flex size-12 shrink-0 items-center justify-center gap-2 rounded-full state-layer text-on-surface transition-colors duration-150 tablet:w-auto tablet:pr-3 tablet:pl-1.5"
 	>
 		<UserAvatar
 			username={profile.username}
@@ -141,5 +154,6 @@
 			imageUrl={profile.imageUrl}
 			size={32}
 		/>
+		<span class="hidden text-sm font-semibold tablet:inline">{m.navigation_profile()}</span>
 	</a>
 </nav>

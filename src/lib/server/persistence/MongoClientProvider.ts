@@ -30,7 +30,7 @@ class MongoClientProvider {
 	private getOrCreateClient(): MongoClient {
 		if (this.client) return this.client;
 		const client = new MongoClient(MONGODB_URI, {
-			appName: 'academic-discussion-platform',
+			appName: 'courseboard',
 			// Fail fast so unreachable-cluster errors surface quickly instead of hanging requests.
 			serverSelectionTimeoutMS: 5000
 		});

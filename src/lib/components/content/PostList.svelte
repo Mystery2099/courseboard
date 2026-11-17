@@ -1,9 +1,7 @@
 <script lang="ts">
-	import {
-		buttonClass,
-		filterChipClass,
-		statusChipClass
-	} from '#lib/components/ui/ControlStyles.ts';
+	import * as ToggleGroup from '#lib/components/ui/toggle-group/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
@@ -67,16 +65,16 @@
 </script>
 
 {#if filters.length > 0}
-	<div class="mt-3 flex flex-wrap gap-x-2 gap-y-3" role="group" aria-label={m.post_list_order()}>
+	<ToggleGroup.Root
+		type="single"
+		class="mt-3"
+		aria-label={m.post_list_order()}
+		bind:value={() => filter, (option) => option && (filter = option as PostListFilter)}
+	>
 		{#each filters as option (option)}
-			<button
-				type="button"
-				class={filterChipClass(option === filter)}
-				aria-pressed={option === filter}
-				onclick={() => (filter = option)}>{POST_LIST_FILTER_LABELS[option]()}</button
-			>
+			<ToggleGroup.Item value={option}>{POST_LIST_FILTER_LABELS[option]()}</ToggleGroup.Item>
 		{/each}
-	</div>
+	</ToggleGroup.Root>
 {/if}
 
 {#if postsQuery.isPending}
@@ -93,22 +91,20 @@
 			<li>
 				<a
 					href={resolve(THREAD_ROUTE_IDS[post.kind], { courseId, postId: post.id })}
-					class="block px-4 py-3 hover:bg-surface-container"
+					class="block list-row px-4 py-3 [--state-base:var(--surface)]"
 				>
 					<span class="flex flex-wrap items-center gap-2">
 						{#if kind === null}<ThreadKindBadge kind={post.kind} />{/if}
 						{#if post.hasAcceptedReply}
-							<span class={statusChipClass('success')}
-								><Check size={14} /> {m.post_badge_answered()}</span
-							>
+							<Badge variant="success"><Check size={14} /> {m.post_badge_answered()}</Badge>
 						{/if}
 						{#if post.isLocked}
-							<span class={statusChipClass('neutral')}
-								><Lock size={14} /> {m.post_badge_locked()}</span
-							>
+							<Badge variant="neutral"><Lock size={14} /> {m.post_badge_locked()}</Badge>
 						{/if}
 					</span>
-					<span class="mt-1 block font-semibold wrap-break-word">{post.title}</span>
+					<span class="mt-1 block font-heading text-lg leading-snug font-bold wrap-break-word"
+						>{post.title}</span
+					>
 					<span class="mt-1 block text-sm text-on-surface-variant">
 						{post.author.displayName} · {formatReplyCount(post.replyCount)} ·
 						<time datetime={post.lastActivityAt}>{formatRelativeTime(post.lastActivityAt)}</time>
@@ -122,12 +118,13 @@
 	</ul>
 	{#if postsQuery.hasNextPage}
 		<div {@attach loadWhenVisible}>
-			<button
-				type="button"
-				class={[buttonClass('outlined', 'compact'), 'mt-3']}
+			<Button
+				variant="outlined"
+				size="compact"
+				class="mt-3"
 				disabled={postsQuery.isFetchingNextPage}
 				onclick={() => postsQuery.fetchNextPage()}
-				>{postsQuery.isFetchingNextPage ? m.common_loading() : m.common_load_more()}</button
+				>{postsQuery.isFetchingNextPage ? m.common_loading() : m.common_load_more()}</Button
 			>
 		</div>
 	{/if}
