@@ -44,7 +44,7 @@ General communities, Experience posts, presence, a notification inbox, Focus mod
 | Languages | Paraglide JS (inlang) | English and Spanish UI text as typed messages; more languages are message files |
 | Client data | TanStack Query | Cache interactive server data from the start |
 | Realtime | Socket.IO with WebSocket transport | Authenticated course/thread subscriptions and reconnect handling |
-| Markdown | TanStack Markdown | Try this first; switch to markdown-it if integration becomes cumbersome |
+| Markdown | markdown-it | Render posts and replies safely, the same way on the server and in the browser |
 | Images | Sharp, binary storage in a separate MongoDB collection | Process small attachments without adding another storage provider |
 | UI | Tailwind CSS, Bits UI, selected shadcn-svelte components, Lucide | Build the Blueprint interface with accessible behavior |
 | Hosting | Render Free | Run the application separately from Atlas and my personal server |
