@@ -19,7 +19,7 @@
 	};
 </script>
 
-<h1 class="text-2xl font-semibold">{m.admin_section_invitations()}</h1>
+<h1 class="text-headline font-bold">{m.admin_section_invitations()}</h1>
 <p class="mt-2 text-sm text-on-surface-variant">
 	{m.admin_invitations_explanation()}
 </p>
@@ -32,7 +32,7 @@
 			type="email"
 			required
 			autocomplete="off"
-			class="mt-1 rounded border px-2 py-1"
+			class="mt-1 min-h-11 rounded-field px-3 text-base"
 		/>
 	</label>
 	<Button type="submit" variant="filled" size="compact">{m.admin_invitations_create()}</Button>
@@ -41,7 +41,7 @@
 		{describeErrorCode(form.createError)}
 	</p>{/if}
 {#if form?.createdInvitation}
-	<div class="mt-4 rounded border p-4 text-sm">
+	<div class="mt-4 rounded-card border p-4 text-sm">
 		<p>
 			{m.admin_invitations_created({
 				email: form.createdInvitation.email,
@@ -51,7 +51,7 @@
 		<input
 			readonly
 			value={form.createdInvitation.link}
-			class="mt-2 w-full rounded border px-2 py-1 font-mono text-xs"
+			class="mt-2 min-h-11 w-full rounded-field px-3 font-mono text-sm"
 			onfocus={(event) => event.currentTarget.select()}
 		/>
 		<Button
@@ -77,10 +77,10 @@
 <table class="mt-2 w-full text-left text-sm">
 	<thead>
 		<tr>
-			<th class="py-2">{m.admin_invitations_email()}</th>
-			<th>{m.admin_invitations_created_at()}</th>
-			<th>{m.admin_invitations_expires_at()}</th>
-			<th></th>
+			<th scope="col" class="py-2">{m.admin_invitations_email()}</th>
+			<th scope="col">{m.admin_invitations_created_at()}</th>
+			<th scope="col">{m.admin_invitations_expires_at()}</th>
+			<th scope="col"></th>
 		</tr>
 	</thead>
 	<tbody>
@@ -92,7 +92,7 @@
 				<td>
 					<form method="POST" action="?/revoke" use:enhance>
 						<input type="hidden" name="invitationId" value={invitation.id} />
-						<Button type="submit" variant="text" size="compact"
+						<Button type="submit" variant="destructive-text" size="compact"
 							>{m.admin_invitations_revoke()}</Button
 						>
 					</form>
@@ -113,10 +113,10 @@
 <table class="mt-2 w-full text-left text-sm">
 	<thead>
 		<tr>
-			<th class="py-2">{m.admin_invitations_email()}</th>
-			<th>{m.admin_invitations_status()}</th>
-			<th>{m.admin_invitations_created_at()}</th>
-			<th>{m.admin_invitations_expires_at()}</th>
+			<th scope="col" class="py-2">{m.admin_invitations_email()}</th>
+			<th scope="col">{m.admin_invitations_status()}</th>
+			<th scope="col">{m.admin_invitations_created_at()}</th>
+			<th scope="col">{m.admin_invitations_expires_at()}</th>
 		</tr>
 	</thead>
 	<tbody>

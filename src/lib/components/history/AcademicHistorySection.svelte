@@ -81,8 +81,9 @@
 	{#if isPreviewingAsOthers}
 		<p class="mt-2 text-sm text-on-surface-variant">
 			{m.history_preview_explanation()}
-			<a class="font-semibold text-primary" href={resolve('/(app)/users/[username]', { username })}
-				>{m.history_open_profile_page()}</a
+			<a
+				class="font-semibold text-primary underline-offset-2 hover:underline"
+				href={resolve('/(app)/users/[username]', { username })}>{m.history_open_profile_page()}</a
 			>
 		</p>
 		{#if visibleHistoryQuery.isPending}
@@ -119,7 +120,7 @@
 							<li>
 								<button
 									type="button"
-									class="flex min-h-16 w-full items-center gap-3 state-layer px-4 py-3 text-left transition-colors duration-150 [--state-base:var(--surface)]"
+									class="flex min-h-16 w-full items-center gap-3 list-row px-4 py-3 text-left [--state-base:var(--surface)]"
 									aria-label={m.history_edit_entry_label({
 										courseCode: entry.course.code,
 										courseTitle: entry.course.title

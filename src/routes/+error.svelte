@@ -14,7 +14,11 @@
 	);
 	// Unexpected errors carry no code; their English message is for logs only.
 	const description = $derived(
-		page.error?.code ? describeErrorCode(page.error.code) : m.error_internal_error()
+		page.error?.code
+			? describeErrorCode(page.error.code)
+			: page.status === 404
+				? m.error_page_not_found_detail()
+				: m.error_internal_error()
 	);
 </script>
 

@@ -15,6 +15,8 @@
 					'state-layer bg-secondary-container text-on-secondary-container [--state-base:var(--secondary-container)] [--state-color:var(--on-secondary-container)] hover:shadow-raised active:shadow-none',
 				outlined: 'state-layer-primary border border-outline text-primary hover:border-primary',
 				text: 'state-layer-primary text-primary',
+				// For actions that remove something: tints red instead of primary.
+				'destructive-text': 'state-layer-primary text-error [--state-tint:var(--error)]',
 				destructive:
 					'state-layer bg-error text-on-error [--state-base:var(--error)] [--state-color:var(--on-surface)] hover:shadow-raised active:shadow-none',
 				ghost: 'state-layer text-on-surface-variant hover:text-on-surface'

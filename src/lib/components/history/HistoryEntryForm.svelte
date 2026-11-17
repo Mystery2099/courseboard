@@ -285,9 +285,7 @@
 		{#if editedEntry}
 			<span class="flex-1"></span>
 			<AlertDialog.Root bind:open={isConfirmingDelete}>
-				<AlertDialog.Trigger
-					type="button"
-					class={buttonVariants({ variant: 'text', class: 'text-error' })}
+				<AlertDialog.Trigger type="button" class={buttonVariants({ variant: 'destructive-text' })}
 					>{m.history_form_delete_entry()}</AlertDialog.Trigger
 				>
 				<AlertDialog.Content

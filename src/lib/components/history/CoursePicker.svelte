@@ -75,7 +75,7 @@
 				<li>
 					<button
 						type="button"
-						class="flex w-full items-center gap-3 state-layer px-4 py-2 text-left transition-colors duration-150 [--state-base:var(--surface)] focus-visible:-outline-offset-2"
+						class="flex w-full items-center gap-3 list-row px-4 py-2 text-left [--state-base:var(--surface)]"
 						onclick={() =>
 							institution &&
 							onSelect({ id: course.id, code: course.code, title: course.title, institution })}

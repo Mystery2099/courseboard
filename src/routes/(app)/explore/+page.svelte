@@ -30,8 +30,11 @@
 					<DropdownMenu.Trigger
 						class={buttonVariants({
 							variant: 'outlined',
+							// Bits UI opens the menu on pointerdown, so :active never shows; the open
+							// state stands in for the pressed look.
 							size: 'compact',
-							class: 'text-on-surface'
+							class:
+								'text-on-surface data-[state=open]:border-primary data-[state=open]:bg-[color-mix(in_oklab,transparent,var(--primary)_var(--state-pressed-tinted))]'
 						})}>{m.explore_change_institution()} <ChevronDown /></DropdownMenu.Trigger
 					>
 					<DropdownMenu.Content align="end" sideOffset={8} class="w-72">
@@ -64,7 +67,7 @@
 				<li>
 					<a
 						href={resolve('/(app)/courses/[courseId]', { courseId: course.id })}
-						class="flex min-h-18 items-center gap-4 state-layer px-4 py-3 transition-colors duration-150 [--state-base:var(--surface)]"
+						class="flex min-h-18 items-center gap-4 list-row px-4 py-3 [--state-base:var(--surface)]"
 					>
 						<CourseCodeTile code={course.code} />
 						<span class="min-w-0 flex-1">

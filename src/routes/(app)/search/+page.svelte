@@ -280,7 +280,7 @@
 				<li>
 					<a
 						href={resolve('/(app)/users/[username]', { username: person.username })}
-						class="flex items-start gap-3 state-layer px-4 py-3 transition-colors duration-150 [--state-base:var(--surface)]"
+						class="flex items-start gap-3 list-row px-4 py-3 [--state-base:var(--surface)]"
 					>
 						<UserAvatar username={person.username} displayName={person.displayName} />
 						<span class="min-w-0">

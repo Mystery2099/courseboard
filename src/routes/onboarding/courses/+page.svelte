@@ -53,7 +53,7 @@
 			{/each}
 		</div>
 		<a
-			class="font-semibold text-primary"
+			class="font-semibold text-primary underline-offset-2 hover:underline"
 			href={resolve('/(app)/explore')}
 			data-sveltekit-preload-data={false}>{m.onboarding_skip()}</a
 		>

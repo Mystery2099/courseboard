@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Button } from '#lib/components/ui/button/index.js';
+	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createQuery, useQueryClient } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
@@ -89,7 +90,7 @@
 	<p class="mt-4 text-sm" role="status">
 		{m.reviews_published()}
 		<a
-			class="font-semibold text-primary"
+			class="font-semibold text-primary underline-offset-2 hover:underline"
 			href={resolve('/(app)/courses/[courseId]/reviews/[postId]', {
 				courseId: course.id,
 				postId: savedReviewId
@@ -118,11 +119,19 @@
 		>
 	</div>
 {:else}
-	<details bind:open={isComposerOpen} class="mt-4 rounded-card border bg-surface p-4">
+	<details
+		bind:open={isComposerOpen}
+		class="group/disclosure mt-4 rounded-card border bg-surface p-4"
+	>
 		<summary
 			class="-mx-3 flex min-h-11 items-center rounded-full state-layer-primary px-3 font-semibold text-primary transition-colors duration-150"
 		>
 			{m.reviews_write()}
+			<ChevronDown
+				size={20}
+				class="ml-auto shrink-0 transition-transform duration-150 group-open/disclosure:rotate-180"
+				aria-hidden="true"
+			/>
 		</summary>
 		<div class="mt-4">
 			<ReviewForm

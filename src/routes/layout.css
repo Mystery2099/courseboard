@@ -232,6 +232,16 @@
 		outline-offset: 2px;
 	}
 
+	/* Fields answer hover with a darker border, except while focused or invalid. */
+	:root
+		:is(input:not([type='checkbox'], [type='radio']), select, textarea):hover:not(
+			:disabled,
+			:focus,
+			[aria-invalid='true']
+		) {
+		border-color: var(--on-surface);
+	}
+
 	/*
 	 * Invalid fields get the handoff's 2px error border, also while focused, since a failed submit
 	 * moves focus there. Fields don't set a border color utility, so these base rules decide it.
@@ -300,7 +310,7 @@
  * a new theme changes them in one place; callers add size and spacing.
  */
 @utility navigation-item {
-	@apply state-layer transition-colors duration-150 aria-[current=page]:bg-secondary-container aria-[current=page]:font-semibold aria-[current=page]:text-on-secondary-container aria-[current=page]:[--state-base:var(--secondary-container)] aria-[current=page]:[--state-color:var(--on-secondary-container)];
+	@apply state-layer transition-colors duration-150 focus-visible:-outline-offset-2 aria-[current=page]:bg-secondary-container aria-[current=page]:font-semibold aria-[current=page]:text-on-secondary-container aria-[current=page]:[--state-base:var(--secondary-container)] aria-[current=page]:[--state-color:var(--on-secondary-container)];
 }
 
 /*
@@ -328,15 +338,15 @@
 }
 
 /*
- * Outlined and text controls tint with primary, the same color as their text, so they use the
- * lighter tinted steps: at most 14% keeps primary text at 4.5:1 even on surface-container.
+ * Outlined and text controls tint with their own text color (--state-tint, primary by default), so
+ * they use the lighter tinted steps: at most 14% keeps that text at 4.5:1 even on surface-container.
  */
 @utility state-layer-primary {
 	&:hover:not(:disabled, [aria-disabled='true'], [data-disabled]) {
 		background-color: color-mix(
 			in oklab,
 			var(--state-base, transparent),
-			var(--primary) var(--state-hover-tinted)
+			var(--state-tint, var(--primary)) var(--state-hover-tinted)
 		);
 	}
 
@@ -344,7 +354,15 @@
 		background-color: color-mix(
 			in oklab,
 			var(--state-base, transparent),
-			var(--primary) var(--state-pressed-tinted)
+			var(--state-tint, var(--primary)) var(--state-pressed-tinted)
 		);
 	}
+}
+
+/*
+ * Full-width rows inside rounded, clipped lists draw their focus ring inside the row; an outside
+ * ring would be cut down to hairlines by the list's overflow clipping.
+ */
+@utility list-row {
+	@apply state-layer transition-colors duration-150 focus-visible:-outline-offset-2;
 }

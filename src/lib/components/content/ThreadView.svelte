@@ -7,6 +7,7 @@
 	import { untrack } from 'svelte';
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import Check from 'lucide-svelte/icons/check';
+	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import Lock from 'lucide-svelte/icons/lock';
 	import { describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 	import { PostApiClient, postQueryKeys } from '#lib/client/content/PostApiClient.ts';
@@ -162,10 +163,15 @@
 		{post.bodyMarkdown}
 	</p>
 	{#if post.viewerPermissions.canEditReview}
-		<details bind:open={isReviewEditorOpen} class="mt-4 rounded-card border p-4">
+		<details bind:open={isReviewEditorOpen} class="group/disclosure mt-4 rounded-card border p-4">
 			<summary
 				class="-mx-3 flex min-h-11 items-center rounded-full state-layer-primary px-3 font-semibold text-primary transition-colors duration-150"
-				>{m.thread_edit_review()}</summary
+				>{m.thread_edit_review()}
+				<ChevronDown
+					size={20}
+					class="ml-auto shrink-0 transition-transform duration-150 group-open/disclosure:rotate-180"
+					aria-hidden="true"
+				/></summary
 			>
 			{#if isReviewEditorOpen}
 				<div class="mt-4">

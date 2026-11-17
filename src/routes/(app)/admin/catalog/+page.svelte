@@ -10,7 +10,7 @@
 <svelte:head><title>{m.admin_section_catalog()}</title></svelte:head>
 
 <div class="flex flex-wrap items-center justify-between gap-4">
-	<h1 class="text-2xl font-semibold">{m.admin_section_catalog()}</h1>
+	<h1 class="text-headline font-bold">{m.admin_section_catalog()}</h1>
 	<form method="POST" action="?/loadDemoCatalog" use:enhance>
 		<Button variant="filled" type="submit">
 			{m.onboarding_load_demo_catalog()}
@@ -38,9 +38,9 @@
 	<table class="w-full text-left text-sm">
 		<thead class="text-xs tracking-wider text-on-surface-variant uppercase">
 			<tr>
-				<th class="px-4 py-3">{m.admin_catalog_code()}</th>
-				<th class="px-4">{m.admin_catalog_name()}</th>
-				<th class="px-4">{m.admin_catalog_school()}</th>
+				<th scope="col" class="px-4 py-3">{m.admin_catalog_code()}</th>
+				<th scope="col" class="px-4">{m.admin_catalog_name()}</th>
+				<th scope="col" class="px-4">{m.admin_catalog_school()}</th>
 			</tr>
 		</thead>
 		<tbody>

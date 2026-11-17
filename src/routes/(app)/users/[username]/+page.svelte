@@ -64,8 +64,9 @@
 	{#if data.person.isOwnProfile}
 		<p class="mx-4 mt-6 rounded-card bg-secondary-container p-4 text-sm desktop:mx-8" role="status">
 			{m.person_own_profile_notice()}
-			<a class="font-semibold text-primary" href={resolve('/(app)/profile')}
-				>{m.person_edit_profile()}</a
+			<a
+				class="font-semibold text-primary underline-offset-2 hover:underline"
+				href={resolve('/(app)/profile')}>{m.person_edit_profile()}</a
 			>
 		</p>
 	{/if}

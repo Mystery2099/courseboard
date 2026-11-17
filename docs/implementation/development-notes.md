@@ -30,6 +30,8 @@ Neither the reviews nor my own checks looked at hover. Hovers were 8% tints, a s
 
 A seventh round, now with Gemini (Antigravity), DeepSeek, and Beam beside GLM, found that the state layer lowered contrast where it mattered: mixing white into a blue button under white text dropped pressed states to 3.84:1. Filled and destructive buttons now tint with `on-surface`, which darkens them in light and lightens them in dark, so pressing raises contrast. Controls tinted with their own text color use a lighter 10% / 14% step. For the high-contrast theme, raising these percentages isn't enough on its own; hover and press there should lean on borders or full inversion.
 
+Round 8 caught a focus problem older than this pass: full-width rows inside rounded `overflow-hidden` cards had their 2px offset ring clipped to hairlines. Those rows now use a `list-row` utility that draws the ring inside. The shadcn Switch, Select, Tabs, Radio Group, Skeleton, and Separator components were removed because nothing rendered them; they can be added again with `shadcn-svelte add` when a screen needs them.
+
 Clerk's own account dialog has 24 to 40px controls and no accessible name on its `role="dialog"`. That's Clerk's interface, reachable before this branch through its account menu, so it's recorded here rather than patched element by element.
 
 ### Left as designed differences

@@ -320,6 +320,7 @@
 	"validation_unanswered_requires_question": "Only questions can be filtered by unanswered.",
 	"validation_profile_change_required": "Change the display name or the school visibility.",
 	"error_page_not_found": "Page not found",
+	"error_page_not_found_detail": "Check the address, or go to the home page.",
 	"error_page_forbidden": "You can't open this page",
 	"error_page_failed": "Something went wrong",
 	"error_page_home": "Go to the home page",
