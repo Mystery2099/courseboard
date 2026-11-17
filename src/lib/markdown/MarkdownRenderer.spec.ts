@@ -4,7 +4,8 @@ import { MarkdownRenderer } from './MarkdownRenderer.ts';
 describe('Markdown renderer', () => {
 	it('renders common formatting', () => {
 		const html = MarkdownRenderer.toHtml(
-			'**bold** *italic* ~~old~~ `code`\n\n- one\n- two\n\n> quoted\n\n| A | B |\n| - | - |\n| 1 | 2 |'
+			'**bold** *italic* ~~old~~ `code`\n\n- one\n- two\n\n> quoted\n\n| A | B |\n| - | - |\n| 1 | 2 |',
+			2
 		);
 
 		expect(html).toContain('<strong>bold</strong>');
@@ -17,14 +18,14 @@ describe('Markdown renderer', () => {
 	});
 
 	it('keeps single line breaks and code whitespace', () => {
-		expect(MarkdownRenderer.toHtml('first\nsecond')).toBe('<p>first<br>\nsecond</p>\n');
-		expect(MarkdownRenderer.toHtml('```\nif (x) {\n    y();\n}\n```')).toContain(
-			'<pre><code>if (x) {\n    y();\n}\n</code></pre>'
+		expect(MarkdownRenderer.toHtml('first\nsecond', 2)).toBe('<p>first<br>\nsecond</p>\n');
+		expect(MarkdownRenderer.toHtml('```\nif (x) {\n    y();\n}\n```', 2)).toContain(
+			'<pre tabindex="0"><code>if (x) {\n    y();\n}\n</code></pre>'
 		);
 	});
 
 	it('starts body headings below the heading they sit under', () => {
-		expect(MarkdownRenderer.toHtml('# Title\n\n###### Deepest')).toBe(
+		expect(MarkdownRenderer.toHtml('# Title\n\n###### Deepest', 2)).toBe(
 			'<h2>Title</h2>\n<h6>Deepest</h6>\n'
 		);
 		expect(MarkdownRenderer.toHtml('# Reply heading\n\n## Next', 3)).toBe(
@@ -39,7 +40,7 @@ describe('Markdown renderer', () => {
 		'<iframe src="/x"></iframe>',
 		'<div style="position:fixed">x</div>'
 	])('shows raw HTML as text: %s', (markdown) => {
-		const html = MarkdownRenderer.toHtml(markdown);
+		const html = MarkdownRenderer.toHtml(markdown, 2);
 
 		expect(html).not.toMatch(/<(?:script|img|a|iframe|div)\b/i);
 		expect(html).toContain('&lt;');
@@ -54,22 +55,27 @@ describe('Markdown renderer', () => {
 		'[x](data:image/png;base64,AAAA)',
 		'[x](file:///etc/passwd)',
 		'[x](//evil.example)',
+		'[x](#section)',
+		'[x][ref]\n\n[ref]: javascript:alert(1)',
 		'<javascript:alert(1)>'
 	])('refuses unsafe link addresses: %s', (markdown) => {
-		expect(MarkdownRenderer.toHtml(markdown)).not.toContain('href');
+		const html = MarkdownRenderer.toHtml(markdown, 2);
+
+		expect(html).not.toContain('href');
+		expect(html).not.toContain('](');
 	});
 
 	it('allows web, email, and same-site links and marks them as user content', () => {
-		expect(MarkdownRenderer.toHtml('[docs](https://example.com/a)')).toContain(
+		expect(MarkdownRenderer.toHtml('[docs](https://example.com/a)', 2)).toContain(
 			'<a href="https://example.com/a" rel="nofollow ugc noopener noreferrer">docs</a>'
 		);
-		expect(MarkdownRenderer.toHtml('[mail](mailto:prof@example.edu)')).toContain(
+		expect(MarkdownRenderer.toHtml('[mail](mailto:prof@example.edu)', 2)).toContain(
 			'href="mailto:prof@example.edu"'
 		);
-		expect(MarkdownRenderer.toHtml('[course](/courses/abc)')).toContain('href="/courses/abc"');
+		expect(MarkdownRenderer.toHtml('[course](/courses/abc)', 2)).toContain('href="/courses/abc"');
 		// Browsers read `/\` as `//`; the encoded backslash keeps it a path on this site.
-		expect(MarkdownRenderer.toHtml('[x](/\\evil.example)')).toContain('href="/%5Cevil.example"');
-		expect(MarkdownRenderer.toHtml('see https://example.com')).toContain(
+		expect(MarkdownRenderer.toHtml('[x](/\\evil.example)', 2)).toContain('href="/%5Cevil.example"');
+		expect(MarkdownRenderer.toHtml('see https://example.com', 2)).toContain(
 			'href="https://example.com"'
 		);
 	});
@@ -77,19 +83,25 @@ describe('Markdown renderer', () => {
 	it.each([
 		'![a "chart"](https://evil.example/track.png)',
 		'![a "chart"](//evil.example/track.png)',
-		'![a "chart"](data:image/png;base64,AAAA)'
+		'![a "chart"](data:image/png;base64,AAAA)',
+		'![a "chart"](chart.png)'
 	])('shows only the description of an image: %s', (markdown) => {
-		const html = MarkdownRenderer.toHtml(markdown);
+		expect(MarkdownRenderer.toHtml(markdown, 2)).toBe('<p>a &quot;chart&quot;</p>\n');
+	});
 
-		expect(html).not.toContain('<img');
-		expect(html).toContain('a &quot;chart&quot;');
+	it('lets keyboard users focus code blocks and tables, which scroll sideways', () => {
+		expect(MarkdownRenderer.toHtml('```\ncode\n```', 2)).toContain('<pre tabindex="0">');
+		expect(MarkdownRenderer.toHtml('    indented', 2)).toContain('<pre tabindex="0">');
+		expect(MarkdownRenderer.toHtml('| A |\n| - |\n| 1 |', 2)).toMatch(
+			/^<div class="markdown-table" tabindex="0"><table>[\s\S]*<\/table>\n<\/div>\n$/
+		);
 	});
 
 	it('handles deeply nested input without failing', () => {
 		const nested = '> '.repeat(5000) + 'deep';
 
-		expect(() => MarkdownRenderer.toHtml(nested)).not.toThrow();
-		expect(() => MarkdownRenderer.toHtml('*'.repeat(20000))).not.toThrow();
+		expect(() => MarkdownRenderer.toHtml(nested, 2)).not.toThrow();
+		expect(() => MarkdownRenderer.toHtml('*'.repeat(20000), 2)).not.toThrow();
 	});
 
 	it('reads plain text without formatting, link addresses, or code blocks', () => {

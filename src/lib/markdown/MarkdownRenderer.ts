@@ -14,7 +14,7 @@ export class MarkdownRenderer {
 	 * `topHeadingLevel` is the level a body's `#` becomes, one below the heading the body sits under,
 	 * so user headings never compete with the page's own.
 	 */
-	static toHtml(markdown: string, topHeadingLevel = 2): string {
+	static toHtml(markdown: string, topHeadingLevel: 2 | 3): string {
 		return MarkdownRenderer.parser.render(markdown, { topHeadingLevel });
 	}
 
@@ -31,10 +31,40 @@ export class MarkdownRenderer {
 
 	private static createParser(): MarkdownIt {
 		const parser = createMarkdownParser('default', { html: false, linkify: true, breaks: true });
-		parser.validateLink = (url) => MarkdownRenderer.ALLOWED_LINK_PATTERN.test(url.trim());
+		// Every address parses, so an image always shows just its description; links are checked
+		// after parsing instead.
+		parser.validateLink = () => true;
+		parser.core.ruler.push('remove_disallowed_links', (state) => {
+			for (const blockToken of state.tokens) {
+				if (!blockToken.children) continue;
+				let isInsideRemovedLink = false;
+				blockToken.children = blockToken.children.filter((token) => {
+					if (token.type === 'link_open') {
+						isInsideRemovedLink = !MarkdownRenderer.ALLOWED_LINK_PATTERN.test(
+							String(token.attrGet('href') ?? '')
+						);
+						return !isInsideRemovedLink;
+					}
+					if (token.type === 'link_close' && isInsideRemovedLink) {
+						isInsideRemovedLink = false;
+						return false;
+					}
+					return true;
+				});
+			}
+		});
 
 		parser.renderer.rules.image = (tokens, index) =>
 			parser.utils.escapeHtml(MarkdownRenderer.inlineText(tokens[index].children ?? []));
+
+		// Wide code and tables scroll sideways, so keyboard users need to be able to focus them.
+		for (const rule of ['fence', 'code_block'] as const) {
+			const renderCode = parser.renderer.rules[rule]!;
+			parser.renderer.rules[rule] = (tokens, index, options, env, renderer) =>
+				renderCode(tokens, index, options, env, renderer).replace('<pre', '<pre tabindex="0"');
+		}
+		parser.renderer.rules.table_open = () => '<div class="markdown-table" tabindex="0"><table>\n';
+		parser.renderer.rules.table_close = () => '</table>\n</div>\n';
 
 		const renderLinkOpen =
 			parser.renderer.rules.link_open ??

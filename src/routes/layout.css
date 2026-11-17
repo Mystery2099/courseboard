@@ -375,7 +375,8 @@
 	.markdown-body {
 		overflow-wrap: anywhere;
 
-		& > * + * {
+		& > * + *,
+		& :is(li, blockquote) > p + p {
 			margin-top: 0.75em;
 		}
 
@@ -428,8 +429,11 @@
 			padding: 0.1em 0.3em;
 		}
 
-		& pre {
+		& :is(pre, .markdown-table) {
 			overflow-x: auto;
+		}
+
+		& pre {
 			overflow-wrap: normal;
 			background-color: var(--surface-container);
 			border-radius: var(--radius-chip);
@@ -443,9 +447,6 @@
 		}
 
 		& table {
-			display: block;
-			max-width: 100%;
-			overflow-x: auto;
 			border-collapse: collapse;
 			overflow-wrap: normal;
 		}
