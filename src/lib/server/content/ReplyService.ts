@@ -1,4 +1,4 @@
-import { MongoServerError, ObjectId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import {
 	createReplySchema,
 	postIdSchema,
@@ -10,12 +10,11 @@ import {
 import { AccessPolicy } from '#lib/server/access/AccessPolicy.ts';
 import { DatabaseIndexInitializer } from '#lib/server/persistence/DatabaseIndexInitializer.ts';
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
+import { MongoErrorClassifier } from '#lib/server/persistence/MongoErrorClassifier.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
 import { postRepository, type PostRepository } from './PostRepository.ts';
 import type { ReplyDocument, ReplyWithAuthor } from './Reply.ts';
 import { replyRepository, type ReplyRepository } from './ReplyRepository.ts';
-
-const DUPLICATE_KEY_ERROR_CODE = 11000;
 
 /** Replies to questions and discussions, nested one level at most. */
 export class ReplyService {
@@ -106,7 +105,7 @@ export class ReplyService {
 			// The post was locked or removed after the check above.
 			if (!wasStored) return this.refuseLockedUnlessStored(authorId, request.submissionId);
 		} catch (cause) {
-			if (!(cause instanceof MongoServerError) || cause.code !== DUPLICATE_KEY_ERROR_CODE) {
+			if (!MongoErrorClassifier.isDuplicateKeyError(cause)) {
 				throw cause;
 			}
 			// The same submission arrived twice at once; the other request stored it.

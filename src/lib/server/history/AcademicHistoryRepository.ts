@@ -1,13 +1,8 @@
-import {
-	MongoServerError,
-	type Collection,
-	type Document,
-	type Filter,
-	type ObjectId
-} from 'mongodb';
+import type { Collection, Document, Filter, ObjectId } from 'mongodb';
 import { COURSES_COLLECTION_NAME } from '#lib/server/catalog/Course.ts';
 import { INSTITUTIONS_COLLECTION_NAME } from '#lib/server/catalog/Institution.ts';
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
+import { MongoErrorClassifier } from '#lib/server/persistence/MongoErrorClassifier.ts';
 import {
 	ACADEMIC_HISTORIES_COLLECTION_NAME,
 	type AcademicHistoryEntryDocument,
@@ -16,8 +11,6 @@ import {
 	type ReviewAttempt,
 	type VisibleHistoryEntry
 } from './AcademicHistoryEntry.ts';
-
-const DUPLICATE_KEY_ERROR_CODE = 11000;
 
 export type HistoryEntryUpdateOutcome = 'updated' | 'not-found' | 'duplicate';
 
@@ -53,7 +46,7 @@ export class AcademicHistoryRepository {
 			await this.collection().insertOne(entry);
 			return true;
 		} catch (cause) {
-			if (AcademicHistoryRepository.isDuplicateKeyError(cause)) return false;
+			if (MongoErrorClassifier.isDuplicateKeyError(cause)) return false;
 			throw cause;
 		}
 	}
@@ -76,7 +69,7 @@ export class AcademicHistoryRepository {
 			);
 			return result.matchedCount === 1 ? 'updated' : 'not-found';
 		} catch (cause) {
-			if (AcademicHistoryRepository.isDuplicateKeyError(cause)) return 'duplicate';
+			if (MongoErrorClassifier.isDuplicateKeyError(cause)) return 'duplicate';
 			throw cause;
 		}
 	}
@@ -131,10 +124,6 @@ export class AcademicHistoryRepository {
 			{ _id: entryId, userId, courseId, status: { $in: ['taking', 'took'] }, term: { $ne: null } },
 			{ projection: { status: 1, term: 1 } }
 		);
-	}
-
-	private static isDuplicateKeyError(cause: unknown): boolean {
-		return cause instanceof MongoServerError && cause.code === DUPLICATE_KEY_ERROR_CODE;
 	}
 
 	/** Joins each entry with its course and school. Entries whose course is gone are dropped. */

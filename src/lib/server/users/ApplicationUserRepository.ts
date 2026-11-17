@@ -1,5 +1,6 @@
 import { MongoServerError, type ClientSession, type Collection, type ObjectId } from 'mongodb';
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
+import { MongoErrorClassifier } from '#lib/server/persistence/MongoErrorClassifier.ts';
 import {
 	USERS_COLLECTION_NAME,
 	type ApplicationUser,
@@ -30,8 +31,6 @@ export interface ProfileChanges {
 }
 
 export type ProfileCreationOutcome = 'created' | 'already-onboarded' | 'username-unavailable';
-
-const DUPLICATE_KEY_ERROR_CODE = 11000;
 
 export class ApplicationUserRepository {
 	private static readonly CURRENT_USER_PROJECTION = {
@@ -120,7 +119,7 @@ export class ApplicationUserRepository {
 			);
 			return result.matchedCount === 1 ? 'created' : 'already-onboarded';
 		} catch (cause) {
-			if (cause instanceof MongoServerError && cause.code === DUPLICATE_KEY_ERROR_CODE) {
+			if (MongoErrorClassifier.isDuplicateKeyError(cause)) {
 				return 'username-unavailable';
 			}
 			throw cause;
