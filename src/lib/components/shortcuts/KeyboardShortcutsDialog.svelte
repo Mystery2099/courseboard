@@ -33,7 +33,7 @@
 	const toggleHotkey = $derived(appHotkeys.current['shortcuts.toggle'].hotkey);
 
 	// One registration both ways, so holding the keys doesn't reopen or close it again. It never
-	// opens over another dialog, which owns the keyboard while it's open.
+	// opens over the app's own dialogs, which own the keyboard while they're open.
 	createHotkey(
 		KEYBOARD_SHORTCUTS['shortcuts.toggle'],
 		() => (open = !open),
