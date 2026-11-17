@@ -1,13 +1,18 @@
 <script lang="ts">
-	import { createHotkey, getAppHotkeyList, getFormatForDisplay } from '@tanstack/svelte-hotkeys';
+	import {
+		createHotkey,
+		getAppHotkeyList,
+		getAppHotkeys,
+		getFormatForDisplay,
+		getHotkeyScopesState
+	} from '@tanstack/svelte-hotkeys';
 	import type { Hotkey } from '@tanstack/svelte-hotkeys';
 	import { m } from '#lib/paraglide/messages.js';
 	import * as Dialog from '#lib/components/ui/dialog/index.js';
 	import {
 		KEYBOARD_SHORTCUTS,
 		KEYBOARD_SHORTCUT_SECTIONS,
-		KEYBOARD_SHORTCUT_SECTION_LABELS,
-		PAGE_SHORTCUT_SCOPE
+		KEYBOARD_SHORTCUT_SECTION_LABELS
 	} from '#lib/client/hotkeys/KeyboardShortcuts.ts';
 
 	let { open = $bindable(false) }: { open?: boolean } = $props();
@@ -23,17 +28,16 @@
 		})).filter(({ shortcuts }) => shortcuts.length > 0)
 	);
 
-	// It opens only over the page, never over another dialog, and its own dialog keeps global
-	// shortcuts on, so the same keys close it.
+	const appHotkeys = getAppHotkeys();
+	const hotkeyScopes = getHotkeyScopesState();
+	const toggleHotkey = $derived(appHotkeys.current['shortcuts.toggle'].hotkey);
+
+	// One registration both ways, so holding the keys doesn't reopen or close it again. It never
+	// opens over another dialog, which owns the keyboard while it's open.
 	createHotkey(
 		KEYBOARD_SHORTCUTS['shortcuts.toggle'],
-		() => (open = true),
-		() => ({ scope: PAGE_SHORTCUT_SCOPE, enabled: !open })
-	);
-	createHotkey(
-		KEYBOARD_SHORTCUTS['shortcuts.toggle'],
-		() => (open = false),
-		() => ({ enabled: open })
+		() => (open = !open),
+		() => ({ enabled: open || hotkeyScopes.state.exclusive === null })
 	);
 
 	// Opened from the keyboard, there is no trigger for Bits UI to return focus to.
@@ -62,11 +66,11 @@
 	>
 		<Dialog.Header class="pr-10">
 			<Dialog.Title>{m.keyboard_shortcuts_title()}</Dialog.Title>
-			<Dialog.Description class="text-sm text-on-surface-variant">
-				{m.keyboard_shortcuts_description({
-					keys: describeKeys(KEYBOARD_SHORTCUTS['shortcuts.toggle'].hotkey ?? 'Mod+/')
-				})}
-			</Dialog.Description>
+			{#if toggleHotkey}
+				<Dialog.Description class="text-sm text-on-surface-variant">
+					{m.keyboard_shortcuts_description({ keys: describeKeys(toggleHotkey) })}
+				</Dialog.Description>
+			{/if}
 		</Dialog.Header>
 		{#each sections as { section, shortcuts } (section)}
 			<section aria-labelledby="keyboard-shortcuts-{section}">
