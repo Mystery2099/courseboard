@@ -5,9 +5,13 @@ import { KEYBOARD_SHORTCUTS, KEYBOARD_SHORTCUT_SECTIONS } from './KeyboardShortc
 const shortcuts = Object.values(KEYBOARD_SHORTCUTS);
 
 describe('KeyboardShortcuts', () => {
-	it('gives every shortcut a modifier, a translated label, and a section', () => {
+	it('gives every shortcut a modifier besides Shift, a translated label, and a section', () => {
 		for (const shortcut of shortcuts) {
-			expect(parseHotkey(shortcut.hotkey as HotkeyChord).modifiers, shortcut.id).not.toEqual([]);
+			const { modifiers } = parseHotkey(shortcut.hotkey as HotkeyChord);
+			expect(
+				modifiers.some((modifier) => modifier !== 'Shift'),
+				shortcut.id
+			).toBe(true);
 			expect(shortcut.meta?.label?.(), shortcut.id).toBeTruthy();
 			expect(KEYBOARD_SHORTCUT_SECTIONS, shortcut.id).toContain(shortcut.meta?.section);
 		}
