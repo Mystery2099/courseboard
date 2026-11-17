@@ -1,4 +1,4 @@
-import { MongoServerError, type ClientSession, type Collection, type ObjectId } from 'mongodb';
+import type { ClientSession, Collection, ObjectId } from 'mongodb';
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
 import { MongoErrorClassifier } from '#lib/server/persistence/MongoErrorClassifier.ts';
 import {
