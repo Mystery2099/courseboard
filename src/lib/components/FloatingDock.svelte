@@ -14,7 +14,7 @@
 		COURSE_CHANNEL_LABELS,
 		COURSE_CHANNEL_ROUTE_IDS,
 		type CourseChannel
-	} from '#lib/navigation/CourseChannel.ts';
+	} from '#lib/client/navigation/CourseChannel.ts';
 	import CourseCodeTile from './CourseCodeTile.svelte';
 	import UserAvatar from './UserAvatar.svelte';
 

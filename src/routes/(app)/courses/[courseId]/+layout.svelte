@@ -13,7 +13,8 @@
 		COURSE_CHANNEL_LABELS,
 		COURSE_CHANNEL_ROUTE_IDS,
 		findCourseChannel
-	} from '#lib/navigation/CourseChannel.ts';
+	} from '#lib/client/navigation/CourseChannel.ts';
+	import { CourseNavigationApiClient } from '#lib/client/catalog/CourseNavigationApiClient.ts';
 	import { describeErrorCode } from '#lib/client/ErrorPresentation.ts';
 	import type { LayoutProps } from './$types';
 
@@ -33,11 +34,7 @@
 
 	// Recorded from the browser after the space renders, so hover preloads don't count as visits.
 	$effect(() => {
-		void fetch(`/api/courses/${data.course.id}/visit`, {
-			method: 'PUT',
-			headers: { 'content-type': 'application/json' },
-			body: '{}'
-		}).catch(() => undefined);
+		void CourseNavigationApiClient.recordVisit(data.course.id).catch(() => undefined);
 	});
 	const followActionUrl = $derived(
 		`${resolve('/(app)/courses/[courseId]', { courseId: data.course.id })}?/${data.course.isFollowed ? 'unfollow' : 'follow'}`

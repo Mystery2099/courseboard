@@ -14,7 +14,7 @@
 		formatReplyCount
 	} from '#lib/client/content/PostPresentation.ts';
 	import type { PostListFilter, PostListResponse, PostKind } from '#lib/contracts/PostContract.ts';
-	import { THREAD_ROUTE_IDS } from '#lib/navigation/CourseChannel.ts';
+	import { THREAD_ROUTE_IDS } from '#lib/client/navigation/CourseChannel.ts';
 	import ThreadKindBadge from './ThreadKindBadge.svelte';
 	import ReviewFacts from './ReviewFacts.svelte';
 
@@ -127,5 +127,8 @@
 				>{postsQuery.isFetchingNextPage ? m.common_loading() : m.common_load_more()}</Button
 			>
 		</div>
+	{/if}
+	{#if postsQuery.isFetchNextPageError}
+		<p class="mt-2 text-sm text-error" role="alert">{m.post_list_load_failed()}</p>
 	{/if}
 {/if}

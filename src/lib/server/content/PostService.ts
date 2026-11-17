@@ -41,14 +41,14 @@ export class PostService {
 	): Promise<PostListResponse | null> {
 		AccessPolicy.requireAdmittedUser(actor);
 		const { kind, filter, after } = postListQuerySchema.parse(query);
-		const spaceId = await this.findSpaceId(courseId);
-		if (!spaceId) return null;
+		const course = await this.findCourseSpace(courseId);
+		if (!course) return null;
 
 		const orderedBy: PostOrderField = filter === 'active' ? 'lastActivityAt' : 'createdAt';
 		const pageSize = PostService.PAGE_SIZE;
 		const posts = await this.posts.findPage(
 			{
-				spaceId,
+				spaceId: course.spaceId,
 				kinds: kind ? [kind] : POST_KINDS,
 				orderedBy,
 				onlyWithoutReplies: filter === 'unanswered',
@@ -74,15 +74,14 @@ export class PostService {
 	): Promise<PostCreationResult> {
 		const author = AccessPolicy.requireOnboardedUser(actor);
 		const request = createPostSchema.parse(input);
-		const parsedCourseId = courseIdSchema.safeParse(courseId);
-		const spaceId = await this.findSpaceId(courseId);
-		if (!parsedCourseId.success || !spaceId) return { kind: 'course-not-found' };
+		const course = await this.findCourseSpace(courseId);
+		if (!course) return { kind: 'course-not-found' };
 
 		const now = new Date();
 		const post: PostDocument = {
 			_id: new ObjectId(),
-			spaceId,
-			courseId: new ObjectId(parsedCourseId.data),
+			spaceId: course.spaceId,
+			courseId: course.courseId,
 			kind: request.kind,
 			authorId: new ObjectId(author.id),
 			title: request.title,
@@ -176,10 +175,14 @@ export class PostService {
 		return parsedPostId.success ? this.posts.findById(new ObjectId(parsedPostId.data)) : null;
 	}
 
-	private async findSpaceId(courseId: string): Promise<ObjectId | null> {
+	private async findCourseSpace(
+		courseId: string
+	): Promise<{ courseId: ObjectId; spaceId: ObjectId } | null> {
 		const parsedCourseId = courseIdSchema.safeParse(courseId);
 		if (!parsedCourseId.success) return null;
-		return this.courses.findSpaceId(new ObjectId(parsedCourseId.data));
+		const courseObjectId = new ObjectId(parsedCourseId.data);
+		const spaceId = await this.courses.findSpaceId(courseObjectId);
+		return spaceId ? { courseId: courseObjectId, spaceId } : null;
 	}
 
 	private static parseCursor(cursor: string): PostPagePosition {

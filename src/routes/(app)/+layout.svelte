@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { useClerkContext } from 'svelte-clerk';
-	import { RealtimeConnection } from '#lib/realtime/RealtimeConnection.svelte.ts';
+	import { RealtimeConnection } from '#lib/client/realtime/RealtimeConnection.svelte.ts';
 	import FloatingDock from '#lib/components/FloatingDock.svelte';
 	import SpaceRail from '#lib/components/SpaceRail.svelte';
-	import { findCourseChannel } from '#lib/navigation/CourseChannel.ts';
+	import { findCourseChannel } from '#lib/client/navigation/CourseChannel.ts';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();

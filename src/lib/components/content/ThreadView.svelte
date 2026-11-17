@@ -37,6 +37,7 @@
 
 	const queryClient = useQueryClient();
 	const postId = untrack(() => initialPost.id);
+	const courseId = untrack(() => initialPost.courseId);
 
 	const postQuery = createQuery(() => ({
 		queryKey: postQueryKeys.detail(postId),
@@ -55,7 +56,12 @@
 		initialDataUpdatedAt: initialLoadedAt
 	}));
 
-	const refreshThread = () => queryClient.invalidateQueries({ queryKey: postQueryKeys.all });
+	const refreshThread = () =>
+		Promise.all([
+			queryClient.invalidateQueries({ queryKey: postQueryKeys.detail(postId) }),
+			queryClient.invalidateQueries({ queryKey: postQueryKeys.replies(postId) }),
+			queryClient.invalidateQueries({ queryKey: postQueryKeys.lists(courseId) })
+		]);
 	const submissionQueue = new ReplySubmissionQueue(postId, refreshThread, refreshThread);
 
 	// Replies sent from this page stay visible even when their page of the thread isn't loaded yet.
@@ -247,6 +253,9 @@
 			onclick={() => repliesQuery.fetchNextPage()}
 			>{repliesQuery.isFetchingNextPage ? m.common_loading() : m.thread_load_more_replies()}</Button
 		>
+	{/if}
+	{#if repliesQuery.isFetchNextPageError}
+		<p class="mt-2 text-sm text-error" role="alert">{m.thread_replies_load_failed()}</p>
 	{/if}
 
 	<div class="mt-3 flex flex-col gap-3 empty:hidden">

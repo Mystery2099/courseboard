@@ -1,4 +1,4 @@
-import { MongoServerError, ObjectId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 import { courseIdSchema } from '#lib/contracts/CourseCatalogContract.ts';
 import { postIdSchema, type PostDetailResponse } from '#lib/contracts/PostContract.ts';
 import {
@@ -14,13 +14,12 @@ import {
 	type AcademicHistoryRepository
 } from '#lib/server/history/AcademicHistoryRepository.ts';
 import { DatabaseIndexInitializer } from '#lib/server/persistence/DatabaseIndexInitializer.ts';
+import { MongoErrorClassifier } from '#lib/server/persistence/MongoErrorClassifier.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
 import type { PostDocument } from './Post.ts';
 import { postRepository, type PostRepository } from './PostRepository.ts';
 import { PostResponseMapper } from './PostResponseMapper.ts';
 import { reviewRepository, type ReviewRepository } from './ReviewRepository.ts';
-
-const DUPLICATE_KEY_ERROR_CODE = 11000;
 
 /**
  * Reviews deliberately disclose a participation snapshot copied from history when publishing.
@@ -114,7 +113,7 @@ export class ReviewService {
 		try {
 			await this.posts.insert(post);
 		} catch (cause) {
-			if (!(cause instanceof MongoServerError) || cause.code !== DUPLICATE_KEY_ERROR_CODE) {
+			if (!MongoErrorClassifier.isDuplicateKeyError(cause)) {
 				throw cause;
 			}
 			if (!(await this.reviews.findIdByAuthor(id, authorId))) throw cause;
