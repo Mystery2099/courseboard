@@ -65,7 +65,7 @@ describe('academic history HTTP API', () => {
 	});
 
 	it("answers someone else's entry exactly like a missing one", async () => {
-		vi.spyOn(academicHistoryService, 'updateEntry').mockResolvedValue(null);
+		vi.spyOn(academicHistoryService, 'updateEntry').mockResolvedValue({ kind: 'entry-not-found' });
 		vi.spyOn(academicHistoryService, 'deleteEntry').mockResolvedValue(false);
 		const changes = { status: 'took', term: { season: 'fall', year: 2026 }, visibility: 'visible' };
 

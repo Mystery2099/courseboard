@@ -19,12 +19,23 @@ export const PUT: RequestHandler = ({ locals, params, request }) =>
 	apiResponse(async () => {
 		requireApiIdentity(locals);
 		const actor = AccessPolicy.requireAdmittedUser(locals.currentUser);
-		const entry = await academicHistoryService.updateEntry(
+		const result = await academicHistoryService.updateEntry(
 			params.entryId,
 			await readApiJson(request),
 			actor
 		);
-		return entry ? json(entry) : entryNotFound();
+		switch (result.kind) {
+			case 'updated':
+				return json(result.entry);
+			case 'entry-not-found':
+				return entryNotFound();
+			case 'entry-exists':
+				return apiError(
+					409,
+					'entry-exists',
+					'This course is already in your history for that term.'
+				);
+		}
 	});
 
 /** Bodyless; HTML forms can't send DELETE, and cross-origin fetches need a CORS preflight. */

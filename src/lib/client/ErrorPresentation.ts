@@ -27,6 +27,7 @@ const ERROR_MESSAGES: Record<ErrorCode, () => string> = {
 	'history-required': m.error_history_required,
 	'review-exists': m.error_review_exists,
 	'entry-limit-reached': m.error_entry_limit_reached,
+	'entry-exists': m.error_entry_exists,
 	'username-unavailable': m.error_username_unavailable,
 	'email-mismatch': m.error_email_mismatch,
 	'invitation-unavailable': m.error_invitation_unavailable,

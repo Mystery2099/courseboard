@@ -97,9 +97,9 @@ it.skipIf(!testMongoDbUri)(
 				}
 			];
 			for (const entry of historyEntries) {
-				await academicHistoryRepository.insert({
+				await academicHistoryRepository.insertUnlessDuplicate({
 					...entry,
-					term: { season: 'fall', year: 2026 },
+					term: entry.status === 'planning' ? null : { season: 'fall', year: 2026 },
 					visibility: 'private',
 					privateNote: 'Never disclose this note',
 					createdAt: new Date(),

@@ -29,5 +29,11 @@ export const POST: RequestHandler = ({ locals, request }) =>
 				return apiError(404, 'course-not-found', 'This course does not exist.');
 			case 'entry-limit-reached':
 				return apiError(409, 'entry-limit-reached', 'Your history has reached its entry limit.');
+			case 'entry-exists':
+				return apiError(
+					409,
+					'entry-exists',
+					'This course is already in your history for that term.'
+				);
 		}
 	});

@@ -96,4 +96,10 @@ export interface VisibleHistoryResponse {
 export type HistoryEntryCreationResult =
 	| { kind: 'created'; entry: OwnHistoryEntryResponse }
 	| { kind: 'course-not-found' }
-	| { kind: 'entry-limit-reached' };
+	| { kind: 'entry-limit-reached' }
+	| { kind: 'entry-exists' };
+
+export type HistoryEntryUpdateResult =
+	| { kind: 'updated'; entry: OwnHistoryEntryResponse }
+	| { kind: 'entry-not-found' }
+	| { kind: 'entry-exists' };

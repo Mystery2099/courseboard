@@ -1,4 +1,10 @@
-import type { Collection, Document, Filter, ObjectId } from 'mongodb';
+import {
+	MongoServerError,
+	type Collection,
+	type Document,
+	type Filter,
+	type ObjectId
+} from 'mongodb';
 import { COURSES_COLLECTION_NAME } from '#lib/server/catalog/Course.ts';
 import { INSTITUTIONS_COLLECTION_NAME } from '#lib/server/catalog/Institution.ts';
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
@@ -10,6 +16,10 @@ import {
 	type ReviewAttempt,
 	type VisibleHistoryEntry
 } from './AcademicHistoryEntry.ts';
+
+const DUPLICATE_KEY_ERROR_CODE = 11000;
+
+export type HistoryEntryUpdateOutcome = 'updated' | 'not-found' | 'duplicate';
 
 /**
  * Every query that returns entries names its fields explicitly. The visible-entry projection leaves
@@ -32,12 +42,20 @@ export class AcademicHistoryRepository {
 	}
 
 	async ensureIndexes(): Promise<void> {
-		// Not unique: repeated attempts give one user several entries for the same course.
-		await this.collection().createIndex({ userId: 1, courseId: 1 });
+		// Repeated attempts give one user several entries for a course, but only one per term. A null
+		// term is a value too, so a course can also be planned without a term only once.
+		await this.collection().createIndex({ userId: 1, courseId: 1, term: 1 }, { unique: true });
 	}
 
-	async insert(entry: AcademicHistoryEntryDocument): Promise<void> {
-		await this.collection().insertOne(entry);
+	/** Returns false when the user already has an entry for that course and term. */
+	async insertUnlessDuplicate(entry: AcademicHistoryEntryDocument): Promise<boolean> {
+		try {
+			await this.collection().insertOne(entry);
+			return true;
+		} catch (cause) {
+			if (AcademicHistoryRepository.isDuplicateKeyError(cause)) return false;
+			throw cause;
+		}
 	}
 
 	async countByUser(userId: ObjectId): Promise<number> {
@@ -50,12 +68,17 @@ export class AcademicHistoryRepository {
 		userId: ObjectId,
 		changes: HistoryEntryChanges,
 		updatedAt: Date
-	): Promise<boolean> {
-		const result = await this.collection().updateOne(
-			{ _id: entryId, userId },
-			{ $set: { ...changes, updatedAt } }
-		);
-		return result.matchedCount === 1;
+	): Promise<HistoryEntryUpdateOutcome> {
+		try {
+			const result = await this.collection().updateOne(
+				{ _id: entryId, userId },
+				{ $set: { ...changes, updatedAt } }
+			);
+			return result.matchedCount === 1 ? 'updated' : 'not-found';
+		} catch (cause) {
+			if (AcademicHistoryRepository.isDuplicateKeyError(cause)) return 'duplicate';
+			throw cause;
+		}
 	}
 
 	async deleteOwned(entryId: ObjectId, userId: ObjectId): Promise<boolean> {
@@ -108,6 +131,10 @@ export class AcademicHistoryRepository {
 			{ _id: entryId, userId, courseId, status: { $in: ['taking', 'took'] }, term: { $ne: null } },
 			{ projection: { status: 1, term: 1 } }
 		);
+	}
+
+	private static isDuplicateKeyError(cause: unknown): boolean {
+		return cause instanceof MongoServerError && cause.code === DUPLICATE_KEY_ERROR_CODE;
 	}
 
 	/** Joins each entry with its course and school. Entries whose course is gone are dropped. */

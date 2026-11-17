@@ -5,6 +5,7 @@ import {
 	updateHistoryEntrySchema,
 	type HistoryCourseResponse,
 	type HistoryEntryCreationResult,
+	type HistoryEntryUpdateResult,
 	type OwnHistoryEntryResponse,
 	type OwnHistoryResponse,
 	type VisibleHistoryResponse
@@ -12,6 +13,7 @@ import {
 import { usernameSchema } from '#lib/contracts/UserProfileContract.ts';
 import { AccessPolicy } from '#lib/server/access/AccessPolicy.ts';
 import { courseRepository, type CourseRepository } from '#lib/server/catalog/CourseRepository.ts';
+import { DatabaseIndexInitializer } from '#lib/server/persistence/DatabaseIndexInitializer.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
 import {
 	applicationUserRepository,
@@ -89,7 +91,8 @@ export class AcademicHistoryService {
 
 		const entryId = new ObjectId();
 		const now = new Date();
-		await this.entries.insert({
+		await DatabaseIndexInitializer.ensureIndexes();
+		const isInserted = await this.entries.insertUnlessDuplicate({
 			_id: entryId,
 			userId,
 			courseId,
@@ -100,6 +103,7 @@ export class AcademicHistoryService {
 			createdAt: now,
 			updatedAt: now
 		});
+		if (!isInserted) return { kind: 'entry-exists' };
 		// Concurrent requests can all pass the count above, so recount after writing and withdraw this
 		// entry if it went over. The history then never stays above the limit the owner's list reads.
 		if ((await this.entries.countByUser(userId)) > AcademicHistoryService.ENTRY_LIMIT) {
@@ -115,21 +119,29 @@ export class AcademicHistoryService {
 		return { kind: 'created', entry: AcademicHistoryService.toOwnEntryResponse(entry) };
 	}
 
-	/** Returns null when the entry doesn't exist or belongs to someone else. */
+	/** An entry that doesn't exist and one that belongs to someone else both answer not found. */
 	async updateEntry(
 		entryId: string,
 		input: unknown,
 		actor: ApplicationUser | null
-	): Promise<OwnHistoryEntryResponse | null> {
+	): Promise<HistoryEntryUpdateResult> {
 		const user = AccessPolicy.requireAdmittedUser(actor);
 		const parsedEntryId = historyEntryIdSchema.safeParse(entryId);
-		if (!parsedEntryId.success) return null;
+		if (!parsedEntryId.success) return { kind: 'entry-not-found' };
 		const changes = updateHistoryEntrySchema.parse(input);
 		const id = new ObjectId(parsedEntryId.data);
 		const userId = new ObjectId(user.id);
-		if (!(await this.entries.updateOwned(id, userId, changes, new Date()))) return null;
+		await DatabaseIndexInitializer.ensureIndexes();
+		switch (await this.entries.updateOwned(id, userId, changes, new Date())) {
+			case 'not-found':
+				return { kind: 'entry-not-found' };
+			case 'duplicate':
+				return { kind: 'entry-exists' };
+		}
 		const entry = await this.entries.findOwnEntry(id, userId);
-		return entry ? AcademicHistoryService.toOwnEntryResponse(entry) : null;
+		return entry
+			? { kind: 'updated', entry: AcademicHistoryService.toOwnEntryResponse(entry) }
+			: { kind: 'entry-not-found' };
 	}
 
 	/** Returns false when the entry doesn't exist or belongs to someone else. */
