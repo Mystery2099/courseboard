@@ -21,10 +21,10 @@ Embedding can be useful when the data is small, bounded, and really owned by one
 | `posts` | `_id`, spaceId, courseId, kind (`question`/`discussion`/`review`), authorId, title, bodyMarkdown, replyCount, acceptedReplyId, lockedAt, createdAt, lastActivityAt, state, reviewData, editedAt; later imageIds | Questions, discussions, and reviews are built. `replyCount` and `acceptedReplyId` live on the post so lists never read replies. Reviews embed status, term, workload, and would-take-again. New posts have state `published`; older posts without a state remain readable. Removal and deletion actions are still planned |
 | `replies` | `_id`, postId, parentReplyId, authorId, bodyMarkdown, submissionId, createdAt | Their own collection, because a thread's replies are unbounded and paged. `parentReplyId` is null or a top-level reply of the same post, so nesting stops at one level |
 | `reports` | `_id`, reporterId, target, spaceId, reason, state, actions | Must support space-scoped moderation |
-| `moderatorAssignments` | `_id`, spaceId, userId, assignedBy | Separate global admins from space moderators |
+| `moderatorAssignments` | `_id`, userId, courseId, spaceId, assignedBy, assignedAt | Built. Its own collection, because the role in `users` is platform-wide while an assignment covers one course. `courseId` is copied from the space so permission checks on a post skip a lookup |
 | `images` | `_id`, uploaderId, postId, binary data, MIME type, byte size, dimensions, alt text, state | Binaries stay in their own collection so post queries never load them |
 
-These are starting points; I don't plan on creating all eleven right away. We still need to decide whether moderator assignments deserve a separate collection. Invitations, profanity terms, and moderation audit records will also need small collections.
+These are starting points; I don't plan on creating all eleven right away. Invitations, profanity terms, and moderation audit records will also need small collections.
 
 ## Indexes worth considering
 
@@ -36,6 +36,7 @@ These are starting points; I don't plan on creating all eleven right away. We st
 - **Histories (built):** unique `(userId, courseId, term)` for an owner's history, another user's visible entries, and review-eligibility checks. Repeated attempts give one user several entries for a course, but only one per term; a null term counts too, so a course is planned without a term only once. Before November 16, 2026 this was a non-unique `(userId, courseId)` index, which let the same course and term be added twice. `(courseId, visibility, status)` and `(visibility, status)` for people filtering; see [search and people filtering](#search-and-people-filtering-built-november-16-2026).
 - **Posts (built):** `(spaceId, kind, lastActivityAt, _id)` for a course view ordered by activity; Overview asks for every kind with `$in`, and MongoDB merges the sorted runs. `(spaceId, kind, createdAt, _id)` for Newest and Unanswered, added after `explain()` showed them sorting in memory. The unique partial `(courseId, authorId)` index where `kind = review` enforces one review per user per course, including concurrent submissions. Its course prefix also serves the published-review match for statistics; the local verification used `IXSCAN`.
 - **Replies (built):** `(postId, _id)` for a thread's replies in the order they were written. ObjectIds sort by creation time to the second, and within a second only when one server process wrote them, which holds while the app runs as a single instance; the thread page doesn't depend on a nested reply following its parent. Unique `(authorId, submissionId)` so a retried submission is stored once.
+- **Moderator assignments (built):** unique `(courseId, userId)`, so a user is assigned to a course once, and the permission check behind locking and `canLock` reads only that index; the local verification used `IXSCAN`. The admin list sorts the whole small collection by `assignedAt` and joins courses, schools, and usernames with `$lookup`.
 - **Reports:** `(spaceId, state, createdAt)` for moderation queues.
 - **Search:** text indexes on courses (`title`, `code`, `description`) and posts (`title`, `bodyMarkdown`), a `normalizedCode` index for code lookup across schools, and the history indexes above for people filtering. Atlas Search stays deferred.
 
@@ -98,7 +99,7 @@ The demonstration still shows embedding where it fits: review details embedded i
 
 ## Edge cases we shouldn't ignore
 
-A student might take the same course twice or change a status from Planning to Taking to Took. Two institutions can have identically named courses; there may also be cross-listed classes. The [product spec](../product/product-spec.md) now settles deleted accounts, removed posts, and review snapshots when a history entry changes. We still need to decide how abandoned uploads get cleaned up and what happens if someone loses moderator permission while they still have a page or socket open.
+A student might take the same course twice or change a status from Planning to Taking to Took. Two institutions can have identically named courses; there may also be cross-listed classes. The [product spec](../product/product-spec.md) now settles deleted accounts, removed posts, and review snapshots when a history entry changes. We still need to decide how abandoned uploads get cleaned up. Losing moderator permission takes effect on the next request, since every lock checks the assignment; an open page keeps showing the button until it reloads.
 
 ## What I want to show Professor Enke
 

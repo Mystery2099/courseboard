@@ -1,6 +1,6 @@
 # Decisions and open questions
 
-**Last reviewed:** November 17, 2026
+**Last reviewed:** November 18, 2026
 
 I want one place to check whether something is actually decided, because otherwise a suggestion from an old design conversation can quietly turn into a requirement. The [product spec](../product/product-spec.md) describes how the app behaves; this file records what I chose, why, and what I turned down. Nothing is confirmed until I've actually chosen it, and an example screen doesn't decide anything on its own.
 
@@ -23,6 +23,7 @@ When we settle something, add it here with what we chose, what we rejected, and 
 | Authentication | Clerk through community-maintained `svelte-clerk`, email/password with required verification | Prebuilt authentication and account-management UI |
 | Profile data | Username, display name, and primary school live in MongoDB; Clerk's name fields are off. Profile photos stay in Clerk, with initials as the fallback (November 8, 2026) | Bylines, member lists, and people search query names in MongoDB, which Clerk can't do without per-author API calls or webhook syncing. Photos only need a URL, so Clerk's upload UI saves building one. A single profile page reads another person's photo URL from Clerk on each view; bylines and lists will need the URL copied into MongoDB, since one Clerk call per author doesn't scale |
 | Permissions | Regular users, per-course moderators, platform admins | Community owners can wait. Admins can't read anyone's private history or notes through the app |
+| Moderator assignments | Their own `moderatorAssignments` collection, one document per user and course, managed by administrators under **Admin → Moderators**. A moderator's role stays `member` (November 18, 2026) | A course-scoped permission doesn't fit the platform-wide role in `users`, and a unique `(courseId, userId)` index answers "can this person moderate here?" in one lookup. Moderators lock threads for now; reports and removal come next |
 | Hosting | Render Free for the app, Atlas Free for the database, Cloudflare for DNS. Served at `courseboard.mathewtech.us`, a domain I already own (November 8, 2026) | Strictly free: no payment method or overage billing. Cold starts are acceptable. My personal server stays out of it. The custom domain also makes a Clerk production instance possible |
 | Client/server architecture | One repository and deployable application, explicit HTTP API, server-owned services (November 7, 2026) | Future clients could reuse the API without adding native clients or backend infrastructure to assignment scope. See [architecture](../technical/architecture.md) |
 | Realtime | Socket.IO with WebSocket transport; writes go through HTTP first, MongoDB is the source of truth | An event never replaces a persisted record; reconnecting refetches |

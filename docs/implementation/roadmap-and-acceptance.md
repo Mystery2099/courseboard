@@ -23,7 +23,7 @@
 - [ ] Seed fictional institutions, courses, histories, roles, and content repeatably. Course creation automatically creates its canonical space. *Done for institutions and courses: an administrator loads the demo catalog from the admin page, and each course's space is created in the same transaction.*
 - [x] Implement primary-institution onboarding, unique usernames, editable display names, course discovery, following, and last-course navigation. *Onboarding asks for the school, then the username and display name, then offers the school's courses to add to history or follow.*
 - [x] Implement private-by-default history entries, repeated attempts, season/year terms, private notes, and profile visibility. *Built on the profile page, course pages, other students' profile pages, and the last onboarding step, with Preview as others and a setting that hides the primary institution.*
-- [x] Implement questions, discussions, one-level replies, accepted answers, and locked discussions. *Built on the Overview, Questions, and Discussion views with thread pages. Bodies render as Markdown since Stage 3, and only administrators can lock until course moderators exist.*
+- [x] Implement questions, discussions, one-level replies, accepted answers, and locked discussions. *Built on the Overview, Questions, and Discussion views with thread pages. Bodies render as Markdown since Stage 3. Administrators and each course's moderators can lock.*
 - [ ] Verify that membership, history, and content remain independent and unauthorized reads/writes fail on the server.
 - [ ] Expose core workflow reads/writes through the HTTP API without requiring web-page form submissions. Test service rules and direct authorized/unauthorized API requests independently of the UI. Web adapters reuse those services; native mobile/desktop clients are not required. *Done for the catalog, following, history, profiles, posts, and replies.*
 
@@ -39,7 +39,7 @@
 
 - [ ] Implement safe Markdown rendering, formatting help, and account-isolated local drafts without a toolbar or preview. *Rendering and formatting help are built with markdown-it; drafts aren't.*
 - [ ] Implement two-image post attachments, server validation/processing, metadata stripping, authorized delivery, and atomic quota enforcement.
-- [ ] Implement reports, scoped moderation, locking, removal/restoration, audit records, and suspension with active socket disconnection.
+- [ ] Implement reports, scoped moderation, locking, removal/restoration, audit records, and suspension with active socket disconnection. *Administrators assign course moderators, who can lock and unlock threads only in their courses. Reports, removal, audit records, and suspension aren't built.*
 - [ ] Rate-limit invitation redemption, image uploads, and creating posts, replies, and reports.
 - [ ] Implement administrator-managed profanity terms/exceptions and code exemptions.
 - [ ] Publish persisted changes through Socket.IO WebSockets, buffer new-item notices, and refetch on reconnect. *Built for new posts, reviews, and replies with course subscriptions; checked locally with two accounts. Not yet checked on the deployed site.*

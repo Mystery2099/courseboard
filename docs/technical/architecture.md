@@ -24,6 +24,16 @@ Confirmed November 7, 2026: one repository and one deployable application with c
 | `POST /api/invitations/{invitationId}/revoke` | Active administrator | JSON `{}`; returns `{ revoked: true }`, or 409 when unavailable |
 | `POST /api/invitations/redeem` | Signed-in identity; admission not required | JSON `{ token }`; returns `{ kind: 'admitted' }` or `{ kind: 'already-admitted' }` |
 
+### Moderator assignment HTTP API
+
+| Method and path | Access | Result |
+| --- | --- | --- |
+| `GET /api/moderators` | Active administrator | The newest 200 assignments, each with its course, school, the moderator's username and display name, and `assignedAt`, plus `hasMoreAssignments` |
+| `POST /api/moderators` | Active administrator | JSON `{ courseId, username }`, with or without the `@`; returns the assignment with status 201. Assigning someone again returns the existing assignment. 404 `course-not-found`, or `user-not-found` for a username no onboarded account has |
+| `DELETE /api/moderators/{assignmentId}` | Active administrator | No body; returns 204, or 404 `moderator-assignment-not-found` |
+
+A moderator can lock and unlock threads in their assigned courses and nowhere else; administrators can everywhere. `CourseModerationAccess` decides both the lock endpoint and the thread's `canLock`, and the check runs on every request, so a page left open after an assignment is removed still shows the button but the server refuses. Moderators have the `member` role, since the role is platform-wide and an assignment is per course. Reports, removal, and the moderation log aren't built.
+
 Authentication uses the existing Clerk request middleware; actor identity and roles are never taken from request bodies. Writes reject a supplied Origin that differs from the request origin, and writes with a body require `application/json`; bodyless `DELETE` is safe because HTML forms can't send it and cross-origin fetches need a preflight. No cross-origin browser API access is enabled.
 
 ### Profile HTTP API
@@ -78,15 +88,15 @@ Profile pages for other students live at `/users/{username}`. They show the pers
 | `POST /api/posts/{postId}/replies` | Admitted user with a profile | JSON `{ bodyMarkdown, parentReplyId?, submissionId }`; returns the reply with status 201. 409 `post-locked` or `parent-reply-unavailable` |
 | `PUT /api/posts/{postId}/accepted-reply` | The question's author | JSON `{ replyId }`; chooses or replaces the accepted reply and returns the post. 409 on a discussion |
 | `DELETE /api/posts/{postId}/accepted-reply` | The question's author | No body; clears it and returns the post |
-| `PUT /api/posts/{postId}/lock` | Active administrator | JSON `{}`; locks the thread and returns the post |
-| `DELETE /api/posts/{postId}/lock` | Active administrator | No body; unlocks it |
+| `PUT /api/posts/{postId}/lock` | The course's moderators and active administrators | JSON `{}`; locks the thread and returns the post. 403 `forbidden` for anyone else |
+| `DELETE /api/posts/{postId}/lock` | The course's moderators and active administrators | No body; unlocks it |
 | `GET /api/courses/{courseId}/reviews` | Admitted user | Published-review statistics, the caller's `ownReviewId` or null, and their qualifying history attempts with only id, status, and term |
 | `POST /api/courses/{courseId}/reviews` | Admitted user with a profile and qualifying history | JSON `{ historyEntryId, acknowledgedStatus, acknowledgedTerm, disclosureAcknowledged: true, title, bodyMarkdown, workload, wouldTakeAgain }`; returns the review post with status 201. 409 `history-required` when the entry no longer qualifies or its status or term no longer match what was acknowledged, or `review-exists` |
 | `PUT /api/posts/{postId}/review` | Review author | JSON `{ title, bodyMarkdown, workload, wouldTakeAgain }`; returns the updated post. A missing, removed, or another author's review answers 404 |
 
 Reading, asking, discussing, and replying need neither following nor a history entry. Publishing a review requires the caller's Taking/Took entry for that exact course. `active` orders by `lastActivityAt`, which advances on creation and new replies only; `newest` orders by creation; `unanswered` lists questions without replies, newest first, and is refused for discussions and reviews. Titles hold up to 150 characters, post bodies 10,000, and replies 5,000. Titles and bodies are trimmed at both ends, bodies are otherwise stored as written and rendered as Markdown by `MarkdownRenderer`.
 
-A reply names its parent with `parentReplyId`, which must be a top-level reply of the same post, so nesting stops at one level. `submissionId` is a UUID the client picks once per reply and sends again on Retry. It's unique per author, so a repeated request returns the reply stored the first time. The reply and the post's `replyCount` and `lastActivityAt` are written in one transaction, and the post update matches only an unlocked post, so a reply can't land while the thread is being locked. Any reply of the question can be accepted, including a nested one or the author's own. Locking and accepting don't count as activity. Course moderators will be able to lock once assignments exist; until then only administrators can. An account without a profile gets 409 `onboarding-required` when it tries to post.
+A reply names its parent with `parentReplyId`, which must be a top-level reply of the same post, so nesting stops at one level. `submissionId` is a UUID the client picks once per reply and sends again on Retry. It's unique per author, so a repeated request returns the reply stored the first time. The reply and the post's `replyCount` and `lastActivityAt` are written in one transaction, and the post update matches only an unlocked post, so a reply can't land while the thread is being locked. Any reply of the question can be accepted, including a nested one or the author's own. Locking and accepting don't count as activity. The course's moderators and administrators can lock. An account without a profile gets 409 `onboarding-required` when it tries to post.
 
 Review publishing reads only the selected history entry's status and term, checking both owner and course. A partial unique index on `(courseId, authorId)` for reviews enforces one review even under concurrent requests. The embedded snapshot isn't linked back to history. Editing changes only title, body, ratings, and `editedAt`, without rechecking history or advancing activity. No review operation writes history or following. Statistics aggregate published reviews only.
 
