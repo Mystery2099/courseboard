@@ -374,5 +374,25 @@
 	"keyboard_shortcut_italic": "Cursiva",
 	"keyboard_shortcut_code": "Código en línea",
 	"settings_keyboard_shortcuts": "Atajos de teclado",
-	"settings_keyboard_shortcuts_hint": "Muestra los atajos para moverte y escribir."
+	"settings_keyboard_shortcuts_hint": "Muestra los atajos para moverte y escribir.",
+	"realtime_show_new_posts": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Mostrar {count} publicación nueva",
+				"countPlural=*": "Mostrar {count} publicaciones nuevas"
+			}
+		}
+	],
+	"realtime_show_new_replies": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Mostrar {count} respuesta nueva",
+				"countPlural=*": "Mostrar {count} respuestas nuevas"
+			}
+		}
+	]
 }

@@ -41,6 +41,10 @@ const request = {
 	wouldTakeAgain: false
 };
 
+function createEventPublisher() {
+	return { publishPostCreated: vi.fn(), publishReplyCreated: vi.fn() };
+}
+
 function createService() {
 	const reviews = new ReviewRepository();
 	const posts = new PostRepository();
@@ -51,8 +55,10 @@ function createService() {
 	vi.spyOn(reviews, 'findIdByAuthor').mockResolvedValue(null);
 	vi.spyOn(histories, 'findReviewAttempt').mockResolvedValue(attempt);
 	vi.spyOn(posts, 'insert').mockResolvedValue();
+	const events = createEventPublisher();
 	return {
-		service: new ReviewService(reviews, posts, histories, courses),
+		events,
+		service: new ReviewService(reviews, posts, histories, courses, events),
 		reviews,
 		posts,
 		histories,
@@ -64,7 +70,7 @@ afterEach(() => vi.restoreAllMocks());
 
 describe('review service', () => {
 	it('publishes only the caller’s selected participation snapshot, ignoring forged fields', async () => {
-		const { service, posts, histories } = createService();
+		const { service, posts, histories, events } = createService();
 		const result = await service.createReview(
 			courseId.toHexString(),
 			{
@@ -105,6 +111,14 @@ describe('review service', () => {
 		});
 		expect(JSON.stringify(result)).not.toContain('privateNote');
 		expect(JSON.stringify(result)).not.toContain('visibility');
+		expect(events.publishPostCreated).toHaveBeenCalledExactlyOnceWith(
+			{
+				courseId: courseId.toHexString(),
+				postId: result.kind === 'created' ? result.post.id : null,
+				kind: 'review'
+			},
+			author.id
+		);
 	});
 
 	it('requires disclosure acknowledgement and valid ratings before any write', async () => {
@@ -148,7 +162,7 @@ describe('review service', () => {
 	});
 
 	it('reports both an existing review and a concurrent duplicate as conflicts', async () => {
-		const { service, reviews, posts } = createService();
+		const { service, reviews, posts, events } = createService();
 		const findExisting = vi.spyOn(reviews, 'findIdByAuthor').mockResolvedValue(postId);
 		expect(await service.createReview(courseId.toHexString(), request, author)).toEqual({
 			kind: 'review-exists'
@@ -162,6 +176,7 @@ describe('review service', () => {
 		expect(await service.createReview(courseId.toHexString(), request, author)).toEqual({
 			kind: 'review-exists'
 		});
+		expect(events.publishPostCreated).not.toHaveBeenCalled();
 	});
 
 	it('edits only feedback and ratings without rechecking history or changing activity', async () => {

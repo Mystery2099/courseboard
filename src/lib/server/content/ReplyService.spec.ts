@@ -39,6 +39,10 @@ const post: PostDetail = {
 	lastActivityAt: new Date('2026-11-01T10:00:00Z')
 };
 
+function createEventPublisher() {
+	return { publishPostCreated: vi.fn(), publishReplyCreated: vi.fn() };
+}
+
 function createService(storedPost: PostDetail | null = post) {
 	const replies = new ReplyRepository();
 	const posts = new PostRepository();
@@ -52,14 +56,22 @@ function createService(storedPost: PostDetail | null = post) {
 	vi.spyOn(replies, 'findBySubmission').mockResolvedValue(null);
 	const recordReply = vi.spyOn(posts, 'recordReply').mockResolvedValue(true);
 	const insert = vi.spyOn(replies, 'insert').mockResolvedValue();
-	return { service: new ReplyService(replies, posts), replies, recordReply, insert, session };
+	const events = createEventPublisher();
+	return {
+		service: new ReplyService(replies, posts, events),
+		replies,
+		recordReply,
+		insert,
+		session,
+		events
+	};
 }
 
 afterEach(() => vi.restoreAllMocks());
 
 describe('reply service', () => {
 	it('stores a reply as the acting user and counts it in the same transaction', async () => {
-		const { service, recordReply, insert, session } = createService();
+		const { service, recordReply, insert, session, events } = createService();
 
 		const result = await service.createReply(
 			postId.toHexString(),
@@ -76,6 +88,14 @@ describe('reply service', () => {
 			expect.objectContaining({ postId, authorId: new ObjectId(student.id), submissionId }),
 			session
 		);
+		expect(events.publishReplyCreated).toHaveBeenCalledExactlyOnceWith(
+			{
+				courseId: post.courseId.toHexString(),
+				postId: postId.toHexString(),
+				replyId: result.kind === 'created' ? result.reply.id : null
+			},
+			student.id
+		);
 	});
 
 	it('refuses replies to a locked thread, also when it is locked mid-request', async () => {
@@ -86,6 +106,7 @@ describe('reply service', () => {
 			kind: 'post-locked'
 		});
 		expect(locked.recordReply).not.toHaveBeenCalled();
+		expect(locked.events.publishReplyCreated).not.toHaveBeenCalled();
 
 		const lockedMeanwhile = createService();
 		lockedMeanwhile.recordReply.mockResolvedValue(false);
@@ -93,6 +114,7 @@ describe('reply service', () => {
 			await lockedMeanwhile.service.createReply(postId.toHexString(), request, student)
 		).toEqual({ kind: 'post-locked' });
 		expect(lockedMeanwhile.insert).not.toHaveBeenCalled();
+		expect(lockedMeanwhile.events.publishReplyCreated).not.toHaveBeenCalled();
 	});
 
 	it.each([
@@ -114,8 +136,8 @@ describe('reply service', () => {
 		expect(insert).toHaveBeenCalledTimes(scenario.isAllowed ? 1 : 0);
 	});
 
-	it('returns the stored reply when a submission is retried', async () => {
-		const { service, replies, recordReply, insert } = createService();
+	it('returns the stored reply without announcing it again when a submission is retried', async () => {
+		const { service, replies, recordReply, insert, events } = createService();
 		const stored: ReplyWithAuthor = {
 			_id: new ObjectId('000000000000000000000007'),
 			postId,
@@ -135,6 +157,7 @@ describe('reply service', () => {
 		expect(result).toMatchObject({ kind: 'created', reply: { id: stored._id.toHexString() } });
 		expect(recordReply).not.toHaveBeenCalled();
 		expect(insert).not.toHaveBeenCalled();
+		expect(events.publishReplyCreated).not.toHaveBeenCalled();
 	});
 
 	it.each(['before the lock check', 'inside the transaction'])(

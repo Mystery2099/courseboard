@@ -42,20 +42,25 @@ const question: PostDetail = {
 	lastActivityAt: new Date('2026-11-02T10:00:00Z')
 };
 
+function createEventPublisher() {
+	return { publishPostCreated: vi.fn(), publishReplyCreated: vi.fn() };
+}
+
 function createService(storedPost: PostDetail | null = question) {
 	const posts = new PostRepository();
 	const replies = new ReplyRepository();
 	const courses = new CourseRepository();
 	vi.spyOn(courses, 'findSpaceId').mockResolvedValue(spaceId);
 	vi.spyOn(posts, 'findById').mockResolvedValue(storedPost);
-	return { service: new PostService(posts, replies, courses), posts, replies };
+	const events = createEventPublisher();
+	return { service: new PostService(posts, replies, courses, events), posts, replies, events };
 }
 
 afterEach(() => vi.restoreAllMocks());
 
 describe('post service', () => {
 	it('publishes a post as the acting user, ignoring a supplied author', async () => {
-		const { service, posts } = createService();
+		const { service, posts, events } = createService();
 		const insert = vi.spyOn(posts, 'insert').mockResolvedValue();
 
 		const result = await service.createPost(
@@ -81,6 +86,15 @@ describe('post service', () => {
 				acceptedReplyId: null,
 				lockedAt: null
 			})
+		);
+		const storedPostId = (insert.mock.calls[0][0] as { _id: ObjectId })._id.toHexString();
+		expect(events.publishPostCreated).toHaveBeenCalledExactlyOnceWith(
+			{
+				courseId: courseId.toHexString(),
+				postId: storedPostId,
+				kind: 'question'
+			},
+			asker.id
 		);
 	});
 

@@ -15,6 +15,10 @@ import {
 } from '#lib/server/history/AcademicHistoryRepository.ts';
 import { DatabaseIndexInitializer } from '#lib/server/persistence/DatabaseIndexInitializer.ts';
 import { MongoErrorClassifier } from '#lib/server/persistence/MongoErrorClassifier.ts';
+import {
+	contentEventPublisher,
+	type ContentEventPublisher
+} from '#lib/server/realtime/ContentEventPublisher.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
 import type { PostDocument } from './Post.ts';
 import { postRepository, type PostRepository } from './PostRepository.ts';
@@ -30,7 +34,8 @@ export class ReviewService {
 		private readonly reviews: ReviewRepository,
 		private readonly posts: PostRepository,
 		private readonly histories: AcademicHistoryRepository,
-		private readonly courses: CourseRepository
+		private readonly courses: CourseRepository,
+		private readonly events: ContentEventPublisher
 	) {}
 
 	async getCourseContext(
@@ -119,6 +124,14 @@ export class ReviewService {
 			if (!(await this.reviews.findIdByAuthor(id, authorId))) throw cause;
 			return { kind: 'review-exists' };
 		}
+		this.events.publishPostCreated(
+			{
+				courseId: id.toHexString(),
+				postId: post._id.toHexString(),
+				kind: post.kind
+			},
+			author.id
+		);
 		const { username, displayName } = author.profile;
 		return {
 			kind: 'created',
@@ -152,5 +165,6 @@ export const reviewService = new ReviewService(
 	reviewRepository,
 	postRepository,
 	academicHistoryRepository,
-	courseRepository
+	courseRepository,
+	contentEventPublisher
 );

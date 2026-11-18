@@ -90,7 +90,7 @@ A reply names its parent with `parentReplyId`, which must be a top-level reply o
 
 Review publishing reads only the selected history entry's status and term, checking both owner and course. A partial unique index on `(courseId, authorId)` for reviews enforces one review even under concurrent requests. The embedded snapshot isn't linked back to history. Editing changes only title, body, ratings, and `editedAt`, without rechecking history or advancing activity. No review operation writes history or following. Statistics aggregate published reviews only.
 
-Thread pages live at `/courses/{courseId}/questions/{postId}`, `/courses/{courseId}/discussion/{postId}`, and `/courses/{courseId}/reviews/{postId}`; a post opened under the wrong course or channel answers 404. Reviews support editing; editing other post kinds, deleting, reporting, drafts, and realtime notices aren't built yet.
+Thread pages live at `/courses/{courseId}/questions/{postId}`, `/courses/{courseId}/discussion/{postId}`, and `/courses/{courseId}/reviews/{postId}`; a post opened under the wrong course or channel answers 404. Reviews support editing; editing other post kinds, deleting, reporting, and drafts aren't built yet. New posts and replies from other people are announced as described under [Realtime](#realtime).
 
 Following never reads or writes academic history. After a course page renders, the browser records it as the user's last visited course; it isn't recorded during the server load, so hover preloading doesn't count as a visit. `/` resumes that course after sign-in when it still exists.
 
@@ -134,7 +134,13 @@ After a post or reply is stored, the server sends a small event such as `post.cr
 
 The browser shouldn't be able to pick someone else's identity or permissions through an event payload. Incoming items show up through a notice instead of rearranging the feed while someone is reading, and reconnecting refetches missed changes.
 
-**Current implementation:** signed-in pages open one Socket.IO connection that sends a fresh Clerk session token on every connection attempt, since tokens expire within about a minute. The server rejects missing, invalid, or unadmitted sessions. A browser retries after a short delay when the server is still starting or the token request failed; an invalid or unadmitted session isn't retried. Subscriptions and events come with the first realtime feature.
+**Current implementation:** signed-in pages open one Socket.IO connection that sends a fresh Clerk session token on every connection attempt, since tokens expire within about a minute. The server rejects missing, invalid, or unadmitted sessions. A browser retries after a short delay when the server is still starting or the token request failed; an invalid or unadmitted session isn't retried.
+
+A course page asks to hear that course with `course.subscribe { courseId }` and gets an acknowledgement. `CourseSubscriptionService` reads the account again, so a suspension after the handshake stops new subscriptions, and checks that the course exists; every admitted account can read every course, so there are no thread rooms. A socket is in at most one course room, and a slower check for a course the tab has already left is answered `superseded` and joins nothing. Each socket also joins a room for its account.
+
+After a post, review, or reply is stored, its service calls `ContentEventPublisher`, which sends `post.created { courseId, postId, kind }` or `reply.created { courseId, postId, replyId }` to the course room, leaving out the author's own sockets, whose pages already show it. Events carry IDs only. Only a new insert is announced, not a retried reply submission, and a failed send is logged without failing the request. Render runs one instance, so the in-memory adapter reaches every listener; more instances would need a shared adapter such as `@socket.io/mongo-adapter`. Change streams aren't used.
+
+`CourseActivityNotices` holds the announced IDs for the open course. Post lists show "Show N new posts" and threads "Show N new replies" in a floating button that takes no space, leaving out items already on the page; clicking refetches, and focus moves to the first new item. A thread with unloaded older pages doesn't show the notice, since new replies come with Load more replies. The browser subscribes again on every reconnect, retries a request the server couldn't check, and refetches the queries on screen after every confirmed subscription, including the first, since events sent before the room was joined never arrive. Lock, edit, and removal events, disconnecting suspended accounts, presence, and unread badges aren't built.
 
 ## Client data and caching
 

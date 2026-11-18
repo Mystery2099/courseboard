@@ -3,11 +3,13 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { m } from '#lib/paraglide/messages.js';
-	import { createInfiniteQuery } from '@tanstack/svelte-query';
+	import { createInfiniteQuery, useQueryClient } from '@tanstack/svelte-query';
+	import { tick } from 'svelte';
 	import { resolve } from '$app/paths';
 	import Check from 'lucide-svelte/icons/check';
 	import Lock from 'lucide-svelte/icons/lock';
 	import { PostApiClient, postQueryKeys } from '#lib/client/content/PostApiClient.ts';
+	import { reviewQueryKeys } from '#lib/client/content/ReviewApiClient.ts';
 	import {
 		POST_LIST_FILTER_LABELS,
 		formatRelativeTime,
@@ -17,6 +19,8 @@
 	import { THREAD_ROUTE_IDS } from '#lib/client/navigation/CourseChannel.ts';
 	import ThreadKindBadge from './ThreadKindBadge.svelte';
 	import ReviewFacts from './ReviewFacts.svelte';
+	import NewActivityNotice from './NewActivityNotice.svelte';
+	import { getCourseActivityNotices } from '#lib/client/realtime/CourseActivityNotices.svelte.ts';
 
 	let {
 		courseId,
@@ -52,6 +56,35 @@
 
 	const posts = $derived(postsQuery.data?.pages.flatMap((page) => page.posts) ?? []);
 
+	const queryClient = useQueryClient();
+	const courseActivityNotices = getCourseActivityNotices();
+	const newPostIds = $derived(
+		courseActivityNotices.findNewPostIds(kind, new Set(posts.map((post) => post.id)))
+	);
+	let isShowingNewPosts = $state(false);
+
+	/** Refetches the list, then moves focus to the newest post shown, since the notice disappears. */
+	async function showNewPosts() {
+		const announcedPostIds = new Set(newPostIds);
+		isShowingNewPosts = true;
+		try {
+			await Promise.all([
+				queryClient.invalidateQueries({ queryKey: postQueryKeys.lists(courseId) }),
+				// Review statistics include the new reviews.
+				kind === 'review' &&
+					queryClient.invalidateQueries({ queryKey: reviewQueryKeys.context(courseId) })
+			]);
+		} finally {
+			isShowingNewPosts = false;
+		}
+		// A post that left this filter meanwhile, such as a question answered before the click,
+		// can't be shown here, so stop offering it.
+		if (!postsQuery.isError) courseActivityNotices.forgetPosts(announcedPostIds);
+		await tick();
+		const firstNewPost = posts.find((post) => announcedPostIds.has(post.id));
+		if (firstNewPost) document.getElementById(`post-${firstNewPost.id}`)?.focus();
+	}
+
 	/** Loads the next page when the end of the list scrolls into view; Load more stays as fallback. */
 	function loadWhenVisible(sentinel: HTMLElement) {
 		const observer = new IntersectionObserver(([entry]) => {
@@ -77,6 +110,12 @@
 	</ToggleGroup.Root>
 {/if}
 
+<NewActivityNotice
+	label={newPostIds.length > 0 ? m.realtime_show_new_posts({ count: newPostIds.length }) : ''}
+	isShowing={isShowingNewPosts}
+	onShow={showNewPosts}
+/>
+
 {#if postsQuery.isPending}
 	<p class="mt-4 text-sm text-on-surface-variant">{m.common_loading()}</p>
 {:else if postsQuery.isError && posts.length === 0}
@@ -90,6 +129,7 @@
 		{#each posts as post (post.id)}
 			<li>
 				<a
+					id="post-{post.id}"
 					href={resolve(THREAD_ROUTE_IDS[post.kind], { courseId, postId: post.id })}
 					class="block list-row px-4 py-3 [--state-base:var(--surface)]"
 				>
