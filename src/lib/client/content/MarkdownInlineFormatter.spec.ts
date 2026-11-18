@@ -34,6 +34,8 @@ describe('MarkdownInlineFormatter', () => {
 		expect(toggle('**[word]**', 'italic')).toBe('***[word]***');
 		expect(toggle('***[word]***', 'italic')).toBe('**[word]**');
 		expect(toggle('***[word]***', 'bold')).toBe('*[word]*');
+		expect(toggle('[*see **this** now*]', 'italic')).toBe('[see **this** now]');
+		expect(toggle('**[bold *it* more]**', 'bold')).toBe('[bold *it* more]');
 		expect(toggle('*[word]*', 'bold')).toBe('***[word]***');
 	});
 

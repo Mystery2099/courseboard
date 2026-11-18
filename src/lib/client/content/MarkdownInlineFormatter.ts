@@ -43,7 +43,7 @@ export class MarkdownInlineFormatter {
 		const runAfter = MarkdownInlineFormatter.countRunForward(text, end, markerCharacter);
 		// `**a** and **b**` has markers at both ends that belong to two spans, not one.
 		if (MarkdownInlineFormatter.hasStyle(style, Math.min(runBefore, runAfter))) {
-			if (selected.includes(markerCharacter)) return null;
+			if (MarkdownInlineFormatter.containsStyledRun(selected, style)) return null;
 			return {
 				replaceStart: start - length,
 				replaceEnd: end + length,
@@ -62,7 +62,7 @@ export class MarkdownInlineFormatter {
 			);
 			if (MarkdownInlineFormatter.hasStyle(style, Math.min(leadingRun, trailingRun))) {
 				const innerText = selected.slice(leadingRun, selected.length - trailingRun);
-				if (innerText.includes(markerCharacter)) return null;
+				if (MarkdownInlineFormatter.containsStyledRun(innerText, style)) return null;
 				return {
 					replaceStart: start,
 					replaceEnd: end,
@@ -82,6 +82,18 @@ export class MarkdownInlineFormatter {
 			selectionStart: start + length,
 			selectionEnd: end + length
 		};
+	}
+
+	/** Whether `text` holds a marker run of this style, as in a second span or a nested pair. */
+	private static containsStyledRun(text: string, style: MarkdownInlineStyle): boolean {
+		const markerCharacter = MARKDOWN_INLINE_MARKERS[style][0];
+		let index = 0;
+		while (index < text.length) {
+			const run = MarkdownInlineFormatter.countRunForward(text, index, markerCharacter);
+			if (run > 0 && MarkdownInlineFormatter.hasStyle(style, run)) return true;
+			index += Math.max(run, 1);
+		}
+		return false;
 	}
 
 	private static hasStyle(style: MarkdownInlineStyle, markerRun: number): boolean {
