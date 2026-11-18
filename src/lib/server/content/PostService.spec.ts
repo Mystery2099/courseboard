@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ObjectId } from 'mongodb';
 import { AccessDeniedError } from '#lib/server/access/AccessPolicy.ts';
 import { CourseRepository } from '#lib/server/catalog/CourseRepository.ts';
+import { CourseModerationAccess } from '#lib/server/moderation/CourseModerationAccess.ts';
+import { ModeratorAssignmentRepository } from '#lib/server/moderation/ModeratorAssignmentRepository.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
 import type { PostDetail } from './Post.ts';
 import { PostRepository } from './PostRepository.ts';
@@ -23,6 +25,7 @@ const asker: ApplicationUser = {
 };
 const otherStudent: ApplicationUser = { ...asker, id: '000000000000000000000002' };
 const administrator: ApplicationUser = { ...otherStudent, role: 'administrator' };
+const moderator: ApplicationUser = { ...asker, id: '000000000000000000000007' };
 const courseId = new ObjectId('000000000000000000000003');
 const spaceId = new ObjectId('000000000000000000000004');
 const postId = new ObjectId('000000000000000000000005');
@@ -52,8 +55,17 @@ function createService(storedPost: PostDetail | null = question) {
 	const courses = new CourseRepository();
 	vi.spyOn(courses, 'findSpaceId').mockResolvedValue(spaceId);
 	vi.spyOn(posts, 'findById').mockResolvedValue(storedPost);
+	const assignments = new ModeratorAssignmentRepository();
+	const isAssigned = vi.spyOn(assignments, 'isAssigned').mockResolvedValue(false);
 	const events = createEventPublisher();
-	return { service: new PostService(posts, replies, courses, events), posts, replies, events };
+	const moderation = new CourseModerationAccess(assignments);
+	return {
+		service: new PostService(posts, replies, courses, events, moderation),
+		posts,
+		replies,
+		events,
+		isAssigned
+	};
 }
 
 afterEach(() => vi.restoreAllMocks());
@@ -186,7 +198,7 @@ describe('post service', () => {
 		});
 	});
 
-	it('lets only administrators lock a thread, without changing its activity', async () => {
+	it('lets administrators lock a thread, without changing its activity', async () => {
 		const { service, posts } = createService();
 		const setLockedAt = vi.spyOn(posts, 'setLockedAt').mockResolvedValue(true);
 
@@ -200,5 +212,42 @@ describe('post service', () => {
 			isLocked: true,
 			lastActivityAt: question.lastActivityAt.toISOString()
 		});
+	});
+
+	it("lets a course's moderators lock only that course's threads", async () => {
+		const { service, posts, isAssigned } = createService();
+		vi.spyOn(posts, 'setLockedAt').mockResolvedValue(true);
+		isAssigned.mockImplementation(
+			async (userId, assignedCourseId) =>
+				userId.equals(moderator.id) && assignedCourseId.equals(courseId)
+		);
+
+		const locked = await service.setLocked(postId.toHexString(), true, moderator);
+		expect(locked).toMatchObject({ isLocked: true, viewerPermissions: { canLock: true } });
+		expect(isAssigned).toHaveBeenCalledWith(new ObjectId(moderator.id), courseId);
+
+		const thread = await service.getPost(postId.toHexString(), moderator);
+		expect(thread?.viewerPermissions.canLock).toBe(true);
+	});
+
+	it('refuses moderators of another course, and moderators once removed', async () => {
+		const otherCourseQuestion = { ...question, courseId: new ObjectId('000000000000000000000008') };
+		const { service, posts, isAssigned } = createService(otherCourseQuestion);
+		const setLockedAt = vi.spyOn(posts, 'setLockedAt').mockResolvedValue(true);
+		isAssigned.mockImplementation(async (_userId, assignedCourseId) =>
+			assignedCourseId.equals(courseId)
+		);
+
+		await expect(service.setLocked(postId.toHexString(), true, moderator)).rejects.toBeInstanceOf(
+			AccessDeniedError
+		);
+		const thread = await service.getPost(postId.toHexString(), moderator);
+		expect(thread?.viewerPermissions.canLock).toBe(false);
+
+		isAssigned.mockResolvedValue(false);
+		await expect(service.setLocked(postId.toHexString(), false, moderator)).rejects.toBeInstanceOf(
+			AccessDeniedError
+		);
+		expect(setLockedAt).not.toHaveBeenCalled();
 	});
 });

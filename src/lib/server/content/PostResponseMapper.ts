@@ -21,7 +21,12 @@ export class PostResponseMapper {
 		};
 	}
 
-	static toDetailResponse(post: PostDetail, viewer: ApplicationUser): PostDetailResponse {
+	/** `viewerCanModerate` comes from `CourseModerationAccess` for the post's course. */
+	static toDetailResponse(
+		post: PostDetail,
+		viewer: ApplicationUser,
+		viewerCanModerate: boolean
+	): PostDetailResponse {
 		const isAuthor = post.authorId.toHexString() === viewer.id;
 		return {
 			...PostResponseMapper.toSummaryResponse(post),
@@ -29,7 +34,7 @@ export class PostResponseMapper {
 			acceptedReplyId: post.acceptedReplyId?.toHexString() ?? null,
 			viewerPermissions: {
 				canChooseAcceptedReply: post.kind === 'question' && isAuthor,
-				canLock: viewer.role === 'administrator',
+				canLock: viewerCanModerate,
 				canEditReview: post.kind === 'review' && isAuthor
 			}
 		};

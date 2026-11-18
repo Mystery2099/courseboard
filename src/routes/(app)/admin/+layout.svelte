@@ -16,6 +16,11 @@
 			label: m.admin_section_catalog,
 			routeId: '/(app)/admin/catalog',
 			href: resolve('/(app)/admin/catalog')
+		},
+		{
+			label: m.admin_section_moderators,
+			routeId: '/(app)/admin/moderators',
+			href: resolve('/(app)/admin/moderators')
 		}
 	];
 </script>

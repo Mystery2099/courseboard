@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ObjectId } from 'mongodb';
+import { postRepository } from '#lib/server/content/PostRepository.ts';
 import { postService } from '#lib/server/content/PostService.ts';
 import { replyService } from '#lib/server/content/ReplyService.ts';
 import { reviewService } from '#lib/server/content/ReviewService.ts';
+import { moderatorAssignmentRepository } from '#lib/server/moderation/ModeratorAssignmentRepository.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
 import { GET as listPosts, POST as createPost } from '../courses/[courseId]/posts/+server.ts';
 import { GET as getPost } from './[postId]/+server.ts';
@@ -83,8 +86,25 @@ describe('post HTTP API', () => {
 		for (const serviceCall of serviceCalls) expect(serviceCall).not.toHaveBeenCalled();
 	});
 
-	it('refuses a lock from a member and a reply from another origin', async () => {
-		const setLocked = vi.spyOn(postService, 'setLocked');
+	it('refuses a lock from a non-moderator and a reply from another origin', async () => {
+		vi.spyOn(postRepository, 'findById').mockResolvedValue({
+			_id: new ObjectId(postId),
+			courseId: new ObjectId(courseId),
+			kind: 'discussion',
+			authorId: new ObjectId(student.id),
+			author: { username: 'student', displayName: 'Student' },
+			title: 'Study group',
+			bodyMarkdown: 'Who is in?',
+			replyCount: 0,
+			acceptedReplyId: null,
+			lockedAt: null,
+			createdAt: new Date('2026-11-01T10:00:00Z'),
+			lastActivityAt: new Date('2026-11-01T10:00:00Z')
+		});
+		const isAssigned = vi
+			.spyOn(moderatorAssignmentRepository, 'isAssigned')
+			.mockResolvedValue(false);
+		const setLockedAt = vi.spyOn(postRepository, 'setLockedAt');
 		const createStoredReply = vi.spyOn(replyService, 'createReply');
 
 		const lock = await lockPost(
@@ -99,7 +119,8 @@ describe('post HTTP API', () => {
 
 		expect(lock.status).toBe(403);
 		expect(crossOriginReply.status).toBe(403);
-		expect(setLocked).not.toHaveBeenCalled();
+		expect(isAssigned).toHaveBeenCalledWith(new ObjectId(student.id), new ObjectId(courseId));
+		expect(setLockedAt).not.toHaveBeenCalled();
 		expect(createStoredReply).not.toHaveBeenCalled();
 	});
 
