@@ -87,25 +87,24 @@ export const KEYBOARD_SHORTCUTS = defineAppHotkeys({
 		scope: 'global',
 		options: { requireReset: true }
 	},
-	// The formatting shortcuts listen only on Markdown fields, which can sit inside dialogs.
+	// The formatting shortcuts listen only on Markdown fields, which can sit inside dialogs. The keys
+	// match Discord's.
 	'writing.bold': {
 		hotkey: 'Mod+B',
 		meta: { name: 'Bold', section: 'writing', label: m.keyboard_shortcut_bold },
-		scope: 'global'
+		scope: 'global',
+		options: { requireReset: true }
 	},
 	'writing.italic': {
 		hotkey: 'Mod+I',
 		meta: { name: 'Italic', section: 'writing', label: m.keyboard_shortcut_italic },
-		scope: 'global'
-	},
-	'writing.strikethrough': {
-		hotkey: 'Mod+Shift+X',
-		meta: { name: 'Strikethrough', section: 'writing', label: m.keyboard_shortcut_strikethrough },
-		scope: 'global'
+		scope: 'global',
+		options: { requireReset: true }
 	},
 	'writing.code': {
-		hotkey: 'Mod+E',
+		hotkey: 'Mod+Shift+M',
 		meta: { name: 'Inline code', section: 'writing', label: m.keyboard_shortcut_code },
-		scope: 'global'
+		scope: 'global',
+		options: { requireReset: true }
 	}
 });

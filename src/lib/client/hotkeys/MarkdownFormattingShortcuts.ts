@@ -1,4 +1,4 @@
-import { createHotkeyAttachment } from '@tanstack/svelte-hotkeys';
+import { createHotkeysAttachment } from '@tanstack/svelte-hotkeys';
 import type { Attachment } from 'svelte/attachments';
 import {
 	MarkdownInlineFormatter,
@@ -7,26 +7,22 @@ import {
 } from '#lib/client/content/MarkdownInlineFormatter.ts';
 import { KEYBOARD_SHORTCUTS } from './KeyboardShortcuts.ts';
 
-const SHORTCUT_STYLES = [
-	['writing.bold', 'bold'],
-	['writing.italic', 'italic'],
-	['writing.strikethrough', 'strikethrough'],
-	['writing.code', 'code']
-] as const satisfies ReadonlyArray<readonly [keyof typeof KEYBOARD_SHORTCUTS, MarkdownInlineStyle]>;
-
-/** Toggles bold, italic, strikethrough, and code on the selection in a Markdown field. */
-export const formatMarkdownOnShortcut: Attachment<HTMLTextAreaElement> = (field) => {
-	const cleanups = SHORTCUT_STYLES.map(([shortcutId, style]) =>
-		createHotkeyAttachment(KEYBOARD_SHORTCUTS[shortcutId], () => toggleStyle(field, style))(field)
-	);
-	return () => cleanups.forEach((cleanup) => cleanup?.());
-};
+/** Toggles bold, italic, and inline code on the selection in a Markdown field. */
+export const formatMarkdownOnShortcut: Attachment<HTMLTextAreaElement> = (field) =>
+	createHotkeysAttachment([
+		{ hotkey: KEYBOARD_SHORTCUTS['writing.bold'], callback: () => toggleStyle(field, 'bold') },
+		{ hotkey: KEYBOARD_SHORTCUTS['writing.italic'], callback: () => toggleStyle(field, 'italic') },
+		{ hotkey: KEYBOARD_SHORTCUTS['writing.code'], callback: () => toggleStyle(field, 'code') }
+	])(field);
 
 function toggleStyle(field: HTMLTextAreaElement, style: MarkdownInlineStyle) {
-	applyEdit(
-		field,
-		MarkdownInlineFormatter.toggle(field.value, field.selectionStart, field.selectionEnd, style)
+	const edit = MarkdownInlineFormatter.toggle(
+		field.value,
+		field.selectionStart,
+		field.selectionEnd,
+		style
 	);
+	if (edit) applyEdit(field, edit);
 }
 
 function applyEdit(field: HTMLTextAreaElement, edit: MarkdownTextEdit) {
@@ -37,10 +33,10 @@ function applyEdit(field: HTMLTextAreaElement, edit: MarkdownTextEdit) {
 
 	field.setSelectionRange(edit.replaceStart, edit.replaceEnd);
 	// The editing command keeps the change on the field's undo stack; setRangeText would clear it.
-	const isInserted = edit.insertedText
+	const isEdited = edit.insertedText
 		? document.execCommand('insertText', false, edit.insertedText)
 		: document.execCommand('delete');
-	if (!isInserted) {
+	if (!isEdited) {
 		field.setRangeText(edit.insertedText);
 		field.dispatchEvent(new InputEvent('input', { bubbles: true }));
 	}

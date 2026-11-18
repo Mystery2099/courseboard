@@ -7,6 +7,7 @@ function toggle(markedText: string, style: MarkdownInlineStyle): string {
 	const end = markedText.indexOf(']') - 1;
 	const text = markedText.replace('[', '').replace(']', '');
 	const edit = MarkdownInlineFormatter.toggle(text, start, end, style);
+	if (!edit) return markedText;
 	const result = text.slice(0, edit.replaceStart) + edit.insertedText + text.slice(edit.replaceEnd);
 	return (
 		result.slice(0, edit.selectionStart) +
@@ -21,7 +22,6 @@ describe('MarkdownInlineFormatter', () => {
 	it('wraps the selection, or places the caret between new markers', () => {
 		expect(toggle('a [word] b', 'bold')).toBe('a **[word]** b');
 		expect(toggle('a [] b', 'code')).toBe('a `[]` b');
-		expect(toggle('[gone]', 'strikethrough')).toBe('~~[gone]~~');
 	});
 
 	it('unwraps markers around or inside the selection', () => {
@@ -39,5 +39,11 @@ describe('MarkdownInlineFormatter', () => {
 
 	it('leaves surrounding spaces outside the markers', () => {
 		expect(toggle('[word ]next', 'italic')).toBe('*[word]* next');
+		expect(toggle('[**word** ]next', 'bold')).toBe('[word] next');
+	});
+
+	it("leaves text alone where Markdown wouldn't render the style", () => {
+		expect(toggle('[one\n\ntwo]', 'bold')).toBe('[one\n\ntwo]');
+		expect(toggle('[a`b]', 'code')).toBe('[a`b]');
 	});
 });

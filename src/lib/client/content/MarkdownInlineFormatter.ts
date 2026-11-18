@@ -2,7 +2,6 @@
 export const MARKDOWN_INLINE_MARKERS = {
 	bold: '**',
 	italic: '*',
-	strikethrough: '~~',
 	code: '`'
 } as const;
 
@@ -22,33 +21,36 @@ export interface MarkdownTextEdit {
  * chat apps do. Bold and italic share `*`, so a run of three asterisks counts as both.
  */
 export class MarkdownInlineFormatter {
+	private static readonly BLANK_LINE_PATTERN = /\n\s*\n/;
+
+	/** Returns null when the style can't apply, because Markdown would show the markers as text. */
 	static toggle(
 		text: string,
 		selectionStart: number,
 		selectionEnd: number,
 		style: MarkdownInlineStyle
-	): MarkdownTextEdit {
+	): MarkdownTextEdit | null {
+		// A double-click also selects the space after a word, and `**word **` isn't bold.
+		const untrimmed = text.slice(selectionStart, selectionEnd);
+		const start = selectionStart + (untrimmed.length - untrimmed.trimStart().length);
+		const end = Math.max(start, selectionEnd - (untrimmed.length - untrimmed.trimEnd().length));
+		const selected = text.slice(start, end);
+
 		const marker = MARKDOWN_INLINE_MARKERS[style];
 		const length = marker.length;
 		const markerCharacter = marker[0];
-		const runBefore = MarkdownInlineFormatter.countRunBackward(
-			text,
-			selectionStart,
-			markerCharacter
-		);
-		const runAfter = MarkdownInlineFormatter.countRunForward(text, selectionEnd, markerCharacter);
-
+		const runBefore = MarkdownInlineFormatter.countRunBackward(text, start, markerCharacter);
+		const runAfter = MarkdownInlineFormatter.countRunForward(text, end, markerCharacter);
 		if (MarkdownInlineFormatter.hasStyle(style, Math.min(runBefore, runAfter))) {
 			return {
-				replaceStart: selectionStart - length,
-				replaceEnd: selectionEnd + length,
-				insertedText: text.slice(selectionStart, selectionEnd),
-				selectionStart: selectionStart - length,
-				selectionEnd: selectionEnd - length
+				replaceStart: start - length,
+				replaceEnd: end + length,
+				insertedText: selected,
+				selectionStart: start - length,
+				selectionEnd: end - length
 			};
 		}
 
-		const selected = text.slice(selectionStart, selectionEnd);
 		if (selected.length >= 2 * length) {
 			const leadingRun = MarkdownInlineFormatter.countRunForward(selected, 0, markerCharacter);
 			const trailingRun = MarkdownInlineFormatter.countRunBackward(
@@ -58,27 +60,23 @@ export class MarkdownInlineFormatter {
 			);
 			if (MarkdownInlineFormatter.hasStyle(style, Math.min(leadingRun, trailingRun))) {
 				return {
-					replaceStart: selectionStart,
-					replaceEnd: selectionEnd,
+					replaceStart: start,
+					replaceEnd: end,
 					insertedText: selected.slice(length, -length),
-					selectionStart,
-					selectionEnd: selectionEnd - 2 * length
+					selectionStart: start,
+					selectionEnd: end - 2 * length
 				};
 			}
 		}
 
-		// A double-click also selects the space after a word, and `**word **` isn't bold.
-		const wrapStart = selectionStart + (selected.length - selected.trimStart().length);
-		const wrapEnd = Math.max(
-			wrapStart,
-			selectionEnd - (selected.length - selected.trimEnd().length)
-		);
+		if (MarkdownInlineFormatter.BLANK_LINE_PATTERN.test(selected)) return null;
+		if (style === 'code' && selected.includes(marker)) return null;
 		return {
-			replaceStart: wrapStart,
-			replaceEnd: wrapEnd,
-			insertedText: marker + text.slice(wrapStart, wrapEnd) + marker,
-			selectionStart: wrapStart + length,
-			selectionEnd: wrapEnd + length
+			replaceStart: start,
+			replaceEnd: end,
+			insertedText: marker + selected + marker,
+			selectionStart: start + length,
+			selectionEnd: end + length
 		};
 	}
 
@@ -87,7 +85,6 @@ export class MarkdownInlineFormatter {
 			case 'italic':
 				return markerRun % 2 === 1;
 			case 'bold':
-			case 'strikethrough':
 				return markerRun >= 2;
 			case 'code':
 				return markerRun >= 1;
