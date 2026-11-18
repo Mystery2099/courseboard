@@ -4,6 +4,7 @@
 	import { describeValidationIssue } from '#lib/client/ErrorPresentation.ts';
 	import { REPLY_BODY_MAX_LENGTH, createReplySchema } from '#lib/contracts/PostContract.ts';
 	import { submitFormOnShortcut } from '#lib/client/hotkeys/FormSubmitShortcut.ts';
+	import { formatMarkdownOnShortcut } from '#lib/client/hotkeys/MarkdownFormattingShortcuts.ts';
 	import MarkdownFormattingHelp from './MarkdownFormattingHelp.svelte';
 
 	let {
@@ -41,6 +42,7 @@
 	<label class="flex flex-col gap-1">
 		<span class="text-sm font-semibold">{label}</span>
 		<textarea
+			{@attach formatMarkdownOnShortcut}
 			bind:this={bodyField}
 			class="min-h-24 rounded-field px-4 py-3 text-base"
 			bind:value={bodyMarkdown}

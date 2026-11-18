@@ -370,6 +370,9 @@
 	"keyboard_shortcut_previous_channel": "Previous channel in a course",
 	"keyboard_shortcut_next_channel": "Next channel in a course",
 	"keyboard_shortcut_submit": "Post, reply, or save a review",
+	"keyboard_shortcut_bold": "Bold",
+	"keyboard_shortcut_italic": "Italic",
+	"keyboard_shortcut_code": "Inline code",
 	"settings_keyboard_shortcuts": "Keyboard shortcuts",
 	"settings_keyboard_shortcuts_hint": "Shows the shortcuts for moving around and writing."
 }
