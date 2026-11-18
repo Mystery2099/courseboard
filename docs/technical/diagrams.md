@@ -203,7 +203,7 @@ sequenceDiagram
     App->>DB: Insert reply (unique submissionId) and bump thread lastActivityAt
     DB-->>App: Stored
     App-->>Writer: 201 with the stored reply
-    App->>IO: Emit reply.created { postId, replyId } to the course room
+    App->>IO: Emit reply.created { courseId, postId, replyId } to the course room, except the writer
     IO-->>Reader: Small notice, no content body
     Reader->>Reader: Show "1 new reply" without moving the page
     Reader->>App: Load new replies when the reader asks

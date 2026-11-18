@@ -42,7 +42,7 @@
 - [ ] Implement reports, scoped moderation, locking, removal/restoration, audit records, and suspension with active socket disconnection.
 - [ ] Rate-limit invitation redemption, image uploads, and creating posts, replies, and reports.
 - [ ] Implement administrator-managed profanity terms/exceptions and code exemptions.
-- [ ] Publish persisted changes through Socket.IO WebSockets, buffer new-item notices, and refetch on reconnect.
+- [ ] Publish persisted changes through Socket.IO WebSockets, buffer new-item notices, and refetch on reconnect. *Built for new posts, reviews, and replies with course subscriptions; checked locally with two accounts. Not yet checked on the deployed site.*
 - [ ] Implement author deletion and coordinated account deletion, including private data cleanup and documented retained content.
 
 ## Stage 4: polish and demonstrate
