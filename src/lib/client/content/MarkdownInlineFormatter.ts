@@ -59,6 +59,9 @@ export class MarkdownInlineFormatter {
 				markerCharacter
 			);
 			if (MarkdownInlineFormatter.hasStyle(style, Math.min(leadingRun, trailingRun))) {
+				// `**a** and **b**` ends in markers that belong to two spans, not one.
+				const innerText = selected.slice(leadingRun, selected.length - trailingRun);
+				if (innerText.includes(markerCharacter)) return null;
 				return {
 					replaceStart: start,
 					replaceEnd: end,
