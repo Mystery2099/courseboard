@@ -4,6 +4,7 @@
 	import EditorDialog from '#lib/components/EditorDialog.svelte';
 	import MarkdownFormattingHelp from './MarkdownFormattingHelp.svelte';
 	import { submitFormOnShortcut } from '#lib/client/hotkeys/FormSubmitShortcut.ts';
+	import { formatMarkdownOnShortcut } from '#lib/client/hotkeys/MarkdownFormattingShortcuts.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { describeFieldIssues, describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
@@ -101,6 +102,7 @@
 				{kind === 'question' ? m.post_composer_question_body() : m.post_composer_discussion_body()}
 			</span>
 			<textarea
+				{@attach formatMarkdownOnShortcut}
 				class="min-h-48 rounded-field px-4 py-3 text-base"
 				bind:value={bodyMarkdown}
 				maxlength={POST_BODY_MAX_LENGTH}

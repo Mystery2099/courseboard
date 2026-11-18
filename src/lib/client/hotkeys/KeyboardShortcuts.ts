@@ -86,5 +86,26 @@ export const KEYBOARD_SHORTCUTS = defineAppHotkeys({
 		// Forms register it from outside their dialog's scope; it only listens on the form anyway.
 		scope: 'global',
 		options: { requireReset: true }
+	},
+	// The formatting shortcuts listen only on Markdown fields, which can sit inside dialogs.
+	'writing.bold': {
+		hotkey: 'Mod+B',
+		meta: { name: 'Bold', section: 'writing', label: m.keyboard_shortcut_bold },
+		scope: 'global'
+	},
+	'writing.italic': {
+		hotkey: 'Mod+I',
+		meta: { name: 'Italic', section: 'writing', label: m.keyboard_shortcut_italic },
+		scope: 'global'
+	},
+	'writing.strikethrough': {
+		hotkey: 'Mod+Shift+X',
+		meta: { name: 'Strikethrough', section: 'writing', label: m.keyboard_shortcut_strikethrough },
+		scope: 'global'
+	},
+	'writing.code': {
+		hotkey: 'Mod+E',
+		meta: { name: 'Inline code', section: 'writing', label: m.keyboard_shortcut_code },
+		scope: 'global'
 	}
 });

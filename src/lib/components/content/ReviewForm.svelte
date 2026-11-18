@@ -25,6 +25,7 @@
 	} from '#lib/contracts/ReviewContract.ts';
 	import MarkdownFormattingHelp from './MarkdownFormattingHelp.svelte';
 	import { submitFormOnShortcut } from '#lib/client/hotkeys/FormSubmitShortcut.ts';
+	import { formatMarkdownOnShortcut } from '#lib/client/hotkeys/MarkdownFormattingShortcuts.ts';
 
 	let {
 		courseId,
@@ -237,6 +238,7 @@
 		<label class="flex flex-col gap-1">
 			<span class="text-sm font-semibold">{m.review_form_body()}</span>
 			<textarea
+				{@attach formatMarkdownOnShortcut}
 				class="min-h-40 rounded-field px-4 py-2 text-base"
 				bind:value={bodyMarkdown}
 				maxlength={POST_BODY_MAX_LENGTH}
