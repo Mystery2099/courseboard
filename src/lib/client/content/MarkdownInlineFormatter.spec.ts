@@ -48,6 +48,7 @@ describe('MarkdownInlineFormatter', () => {
 	it("leaves text alone where Markdown wouldn't render the style", () => {
 		expect(toggle('[one\n\ntwo]', 'bold')).toBe('[one\n\ntwo]');
 		expect(toggle('[a`b]', 'code')).toBe('[a`b]');
+		expect(toggle('[one **two** three]', 'bold')).toBe('[one **two** three]');
 		expect(toggle('[`a` and `b`]', 'code')).toBe('[`a` and `b`]');
 		expect(toggle('**[a** and **b]**', 'bold')).toBe('**[a** and **b]**');
 		expect(toggle('[***word***]', 'italic')).toBe('[**word**]');

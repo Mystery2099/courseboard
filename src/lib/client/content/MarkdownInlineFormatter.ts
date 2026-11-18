@@ -74,7 +74,7 @@ export class MarkdownInlineFormatter {
 		}
 
 		if (MarkdownInlineFormatter.BLANK_LINE_PATTERN.test(selected)) return null;
-		if (style === 'code' && selected.includes(marker)) return null;
+		if (MarkdownInlineFormatter.containsStyledRun(selected, style)) return null;
 		return {
 			replaceStart: start,
 			replaceEnd: end,
