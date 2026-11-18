@@ -13,6 +13,10 @@ import {
 import { courseIdSchema } from '#lib/contracts/CourseCatalogContract.ts';
 import { AccessDeniedError, AccessPolicy } from '#lib/server/access/AccessPolicy.ts';
 import { courseRepository, type CourseRepository } from '#lib/server/catalog/CourseRepository.ts';
+import {
+	contentEventPublisher,
+	type ContentEventPublisher
+} from '#lib/server/realtime/ContentEventPublisher.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
 import type { PostDetail, PostDocument, PostOrderField, PostPagePosition } from './Post.ts';
 import { postRepository, type PostRepository } from './PostRepository.ts';
@@ -30,7 +34,8 @@ export class PostService {
 	constructor(
 		private readonly posts: PostRepository,
 		private readonly replies: ReplyRepository,
-		private readonly courses: CourseRepository
+		private readonly courses: CourseRepository,
+		private readonly events: ContentEventPublisher
 	) {}
 
 	/** Returns null when the course doesn't exist or the id is malformed. */
@@ -94,6 +99,14 @@ export class PostService {
 			state: 'published'
 		};
 		await this.posts.insert(post);
+		this.events.publishPostCreated(
+			{
+				courseId: post.courseId.toHexString(),
+				postId: post._id.toHexString(),
+				kind: post.kind
+			},
+			author.id
+		);
 		const { username, displayName } = author.profile;
 		return {
 			kind: 'created',
@@ -191,4 +204,9 @@ export class PostService {
 	}
 }
 
-export const postService = new PostService(postRepository, replyRepository, courseRepository);
+export const postService = new PostService(
+	postRepository,
+	replyRepository,
+	courseRepository,
+	contentEventPublisher
+);

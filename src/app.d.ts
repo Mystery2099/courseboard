@@ -27,6 +27,9 @@ declare global {
 	/** Set by RealtimeGateway once SvelteKit has initialized; sockets are rejected until then. */
 	var academicPlatformSocketAuthenticator:
 		((socket: Socket, next: (error?: Error) => void) => void) | undefined;
+
+	/** Set by RealtimeGateway alongside the authenticator; receives every authenticated socket. */
+	var academicPlatformSocketConnectionHandler: ((socket: Socket) => void) | undefined;
 }
 
 export {};

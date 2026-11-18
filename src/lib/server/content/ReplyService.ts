@@ -11,6 +11,10 @@ import { AccessPolicy } from '#lib/server/access/AccessPolicy.ts';
 import { DatabaseIndexInitializer } from '#lib/server/persistence/DatabaseIndexInitializer.ts';
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
 import { MongoErrorClassifier } from '#lib/server/persistence/MongoErrorClassifier.ts';
+import {
+	contentEventPublisher,
+	type ContentEventPublisher
+} from '#lib/server/realtime/ContentEventPublisher.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
 import { postRepository, type PostRepository } from './PostRepository.ts';
 import type { ReplyDocument, ReplyWithAuthor } from './Reply.ts';
@@ -22,7 +26,8 @@ export class ReplyService {
 
 	constructor(
 		private readonly replies: ReplyRepository,
-		private readonly posts: PostRepository
+		private readonly posts: PostRepository,
+		private readonly events: ContentEventPublisher
 	) {}
 
 	/** Returns null when the post doesn't exist or the id is malformed. */
@@ -118,6 +123,15 @@ export class ReplyService {
 		} finally {
 			await session.endSession();
 		}
+		// Only a new insert is announced; the paths above that return a stored reply already were.
+		this.events.publishReplyCreated(
+			{
+				courseId: post.courseId.toHexString(),
+				postId: post._id.toHexString(),
+				replyId: reply._id.toHexString()
+			},
+			author.id
+		);
 		const { username, displayName } = author.profile;
 		return {
 			kind: 'created',
@@ -151,4 +165,8 @@ export class ReplyService {
 	}
 }
 
-export const replyService = new ReplyService(replyRepository, postRepository);
+export const replyService = new ReplyService(
+	replyRepository,
+	postRepository,
+	contentEventPublisher
+);

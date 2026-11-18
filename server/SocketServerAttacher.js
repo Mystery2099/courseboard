@@ -9,7 +9,8 @@ export const SOCKET_SERVER_PATH = '/socket.io/';
  *
  * Connections fail closed: every handshake is delegated to the authenticator that
  * `RealtimeGateway` publishes, and is rejected while none has been registered yet (before
- * SvelteKit's `init` hook runs, or while it is still connecting to MongoDB).
+ * SvelteKit's `init` hook runs, or while it is still connecting to MongoDB). Accepted sockets are
+ * handed to the connection handler that `RealtimeGateway` publishes next to it.
  *
  * @param {import('node:http').Server} httpServer
  */
@@ -23,6 +24,9 @@ export function attachSocketServer(httpServer) {
 			return;
 		}
 		authenticator(socket, next);
+	});
+	socketServer.on('connection', (socket) => {
+		globalThis.academicPlatformSocketConnectionHandler?.(socket);
 	});
 	globalThis.academicPlatformSocketServer = socketServer;
 	return socketServer;
