@@ -55,8 +55,9 @@
 		return connection.subscribeToCourse(courseId, {
 			onPostCreated: (event) => courseActivityNotices.recordPost(event),
 			onReplyCreated: (event) => courseActivityNotices.recordReply(event),
-			// Only queries on screen refetch; the notices then clear themselves.
-			onResubscribed: () => {
+			// Catches up on anything sent before the room was joined. Only queries on screen refetch,
+			// and the notices then clear themselves.
+			onSubscribed: () => {
 				void queryClient.invalidateQueries({ queryKey: postQueryKeys.all });
 				void queryClient.invalidateQueries({ queryKey: reviewQueryKeys.all });
 			}
