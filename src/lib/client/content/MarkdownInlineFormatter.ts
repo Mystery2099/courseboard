@@ -41,7 +41,9 @@ export class MarkdownInlineFormatter {
 		const markerCharacter = marker[0];
 		const runBefore = MarkdownInlineFormatter.countRunBackward(text, start, markerCharacter);
 		const runAfter = MarkdownInlineFormatter.countRunForward(text, end, markerCharacter);
+		// `**a** and **b**` has markers at both ends that belong to two spans, not one.
 		if (MarkdownInlineFormatter.hasStyle(style, Math.min(runBefore, runAfter))) {
+			if (selected.includes(markerCharacter)) return null;
 			return {
 				replaceStart: start - length,
 				replaceEnd: end + length,
@@ -59,7 +61,6 @@ export class MarkdownInlineFormatter {
 				markerCharacter
 			);
 			if (MarkdownInlineFormatter.hasStyle(style, Math.min(leadingRun, trailingRun))) {
-				// `**a** and **b**` ends in markers that belong to two spans, not one.
 				const innerText = selected.slice(leadingRun, selected.length - trailingRun);
 				if (innerText.includes(markerCharacter)) return null;
 				return {
