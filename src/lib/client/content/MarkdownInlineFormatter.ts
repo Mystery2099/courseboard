@@ -84,13 +84,18 @@ export class MarkdownInlineFormatter {
 		};
 	}
 
-	/** Whether `text` holds a marker run of this style, as in a second span or a nested pair. */
+	/**
+	 * Whether `text` holds a marker run of this style, as in a second span or a nested pair. An
+	 * asterisk run with spaces on both sides, as in `2 * 3`, can't open or close emphasis.
+	 */
 	private static containsStyledRun(text: string, style: MarkdownInlineStyle): boolean {
 		const markerCharacter = MARKDOWN_INLINE_MARKERS[style][0];
 		let index = 0;
 		while (index < text.length) {
 			const run = MarkdownInlineFormatter.countRunForward(text, index, markerCharacter);
-			if (run > 0 && MarkdownInlineFormatter.hasStyle(style, run)) return true;
+			const isLiteral =
+				style !== 'code' && /\s/.test(text[index - 1] ?? '') && /\s/.test(text[index + run] ?? '');
+			if (run > 0 && !isLiteral && MarkdownInlineFormatter.hasStyle(style, run)) return true;
 			index += Math.max(run, 1);
 		}
 		return false;
