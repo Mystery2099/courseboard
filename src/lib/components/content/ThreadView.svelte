@@ -99,6 +99,11 @@
 				queryClient.invalidateQueries({ queryKey: postQueryKeys.detail(postId) }),
 				queryClient.invalidateQueries({ queryKey: postQueryKeys.replies(postId) })
 			]);
+			// A full last page leaves new replies on the next one.
+			const isShown = (replyId: string) => shownReplies.some((reply) => reply.id === replyId);
+			while (repliesQuery.hasNextPage && ![...announcedReplyIds].every(isShown)) {
+				if ((await repliesQuery.fetchNextPage()).isError) break;
+			}
 		} finally {
 			isShowingNewReplies = false;
 		}

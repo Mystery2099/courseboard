@@ -46,9 +46,10 @@
 	const courseActivityNotices = new CourseActivityNotices();
 	setCourseActivityNotices(courseActivityNotices);
 
+	// Derived, so reloading this course's data (after following it, say) keeps the subscription.
+	const courseId = $derived(data.course.id);
 	$effect(() => {
 		const connection = getRealtimeConnection();
-		const courseId = data.course.id;
 		untrack(() => courseActivityNotices.clear());
 		if (!connection) return;
 		return connection.subscribeToCourse(courseId, {

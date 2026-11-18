@@ -9,6 +9,7 @@
 	import Check from 'lucide-svelte/icons/check';
 	import Lock from 'lucide-svelte/icons/lock';
 	import { PostApiClient, postQueryKeys } from '#lib/client/content/PostApiClient.ts';
+	import { reviewQueryKeys } from '#lib/client/content/ReviewApiClient.ts';
 	import {
 		POST_LIST_FILTER_LABELS,
 		formatRelativeTime,
@@ -67,10 +68,18 @@
 		const announcedPostIds = new Set(newPostIds);
 		isShowingNewPosts = true;
 		try {
-			await queryClient.invalidateQueries({ queryKey: postQueryKeys.lists(courseId) });
+			await Promise.all([
+				queryClient.invalidateQueries({ queryKey: postQueryKeys.lists(courseId) }),
+				// Review statistics include the new reviews.
+				kind === 'review' &&
+					queryClient.invalidateQueries({ queryKey: reviewQueryKeys.context(courseId) })
+			]);
 		} finally {
 			isShowingNewPosts = false;
 		}
+		// A post that left this filter meanwhile, such as a question answered before the click,
+		// can't be shown here, so stop offering it.
+		if (!postsQuery.isError) courseActivityNotices.forgetPosts(announcedPostIds);
 		await tick();
 		const firstNewPost = posts.find((post) => announcedPostIds.has(post.id));
 		if (firstNewPost) document.getElementById(`post-${firstNewPost.id}`)?.focus();

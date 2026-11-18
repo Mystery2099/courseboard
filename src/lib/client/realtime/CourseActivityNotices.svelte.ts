@@ -36,6 +36,10 @@ export class CourseActivityNotices {
 			.map(([replyId]) => replyId);
 	}
 
+	forgetPosts(postIds: Iterable<string>): void {
+		for (const postId of postIds) this.newPostKinds.delete(postId);
+	}
+
 	clear(): void {
 		this.newPostKinds.clear();
 		this.newReplyPostIds.clear();

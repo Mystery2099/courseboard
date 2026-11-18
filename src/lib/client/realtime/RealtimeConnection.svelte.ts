@@ -16,14 +16,15 @@ const RETRY_DELAY_MILLISECONDS = 5_000;
 export interface CourseActivityListener {
 	onPostCreated(event: PostCreatedEvent): void;
 	onReplyCreated(event: ReplyCreatedEvent): void;
-	/** Called when listening resumes after a reconnect, since events may have been missed meanwhile. */
+	/** Called when listening resumes on a later connection, since events may have been missed. */
 	onResubscribed(): void;
 }
 
 interface CourseSubscription {
 	courseId: string;
 	listener: CourseActivityListener;
-	hasBeenAcknowledged: boolean;
+	/** The connection whose events the page already reflects; a later one may have missed some. */
+	caughtUpThroughConnection: number;
 }
 
 /**
@@ -41,6 +42,7 @@ export class RealtimeConnection {
 	private retryTimer: ReturnType<typeof setTimeout> | undefined;
 	private lastTokenRequestFailed = false;
 	private courseSubscription: CourseSubscription | null = null;
+	private connectionCount = 0;
 
 	constructor(sessionTokenProvider: () => Promise<string | null>) {
 		this.socket = io({
@@ -60,6 +62,7 @@ export class RealtimeConnection {
 		});
 		this.socket.on('connect', () => {
 			this.status = 'connected';
+			this.connectionCount++;
 			if (this.courseSubscription) this.requestCourseSubscription(this.courseSubscription);
 		});
 		this.socket.on(REALTIME_MESSAGES.postCreated, (event: PostCreatedEvent) => {
@@ -78,7 +81,12 @@ export class RealtimeConnection {
 
 	/** Replaces any earlier course subscription. Returns a function that stops listening. */
 	subscribeToCourse(courseId: string, listener: CourseActivityListener): () => void {
-		const subscription: CourseSubscription = { courseId, listener, hasBeenAcknowledged: false };
+		// A page rendered before the first connection is current, so the first one needs no catch-up.
+		const subscription: CourseSubscription = {
+			courseId,
+			listener,
+			caughtUpThroughConnection: Math.max(this.connectionCount, 1)
+		};
 		this.courseSubscription = subscription;
 		// While disconnected, the `connect` handler sends it; Socket.IO would otherwise send it twice.
 		if (this.socket.connected) this.requestCourseSubscription(subscription);
@@ -95,13 +103,16 @@ export class RealtimeConnection {
 	}
 
 	private requestCourseSubscription(subscription: CourseSubscription): void {
+		const connection = this.connectionCount;
 		this.socket.emit(
 			REALTIME_MESSAGES.subscribeToCourse,
 			{ courseId: subscription.courseId },
 			(result: CourseSubscriptionResult) => {
 				if (this.courseSubscription !== subscription || result.kind !== 'subscribed') return;
-				if (subscription.hasBeenAcknowledged) subscription.listener.onResubscribed();
-				subscription.hasBeenAcknowledged = true;
+				if (connection > subscription.caughtUpThroughConnection) {
+					subscription.caughtUpThroughConnection = connection;
+					subscription.listener.onResubscribed();
+				}
 			}
 		);
 	}

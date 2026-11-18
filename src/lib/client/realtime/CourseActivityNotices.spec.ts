@@ -13,6 +13,9 @@ describe('course activity notices', () => {
 		expect(notices.findNewPostIds(null, new Set())).toEqual(['question-1', 'discussion-1']);
 		expect(notices.findNewPostIds('question', new Set())).toEqual(['question-1']);
 		expect(notices.findNewPostIds(null, new Set(['question-1']))).toEqual(['discussion-1']);
+
+		notices.forgetPosts(['question-1']);
+		expect(notices.findNewPostIds('question', new Set())).toEqual([]);
 	});
 
 	it('counts announced replies for their own thread only, until cleared', () => {

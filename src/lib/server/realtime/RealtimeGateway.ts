@@ -54,13 +54,12 @@ export class RealtimeGateway {
 		request: unknown
 	): Promise<CourseSubscriptionResult> {
 		const requestNumber = ++socket.data.subscriptionRequestNumber;
-		let decision;
-		try {
-			decision = await courseSubscriptionService.authorize(socket.data.clerkUserId, request);
-		} catch (error) {
-			console.error(`Couldn't check course subscription for socket ${socket.id}:`, error);
-			return { kind: 'refused', reason: 'unavailable' };
-		}
+		const decision = await courseSubscriptionService
+			.authorize(socket.data.clerkUserId, request)
+			.catch((error: unknown) => {
+				console.error(`Couldn't check course subscription for socket ${socket.id}:`, error);
+				return { kind: 'refused', reason: 'unavailable' } as const;
+			});
 		// A later subscription or an unsubscribe arrived while this one was being checked.
 		if (socket.data.subscriptionRequestNumber !== requestNumber) {
 			return { kind: 'refused', reason: 'superseded' };
