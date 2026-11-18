@@ -216,7 +216,7 @@ describe('post service', () => {
 
 	it("lets a course's moderators lock only that course's threads", async () => {
 		const { service, posts, isAssigned } = createService();
-		vi.spyOn(posts, 'setLockedAt').mockResolvedValue(true);
+		const setLockedAt = vi.spyOn(posts, 'setLockedAt').mockResolvedValue(true);
 		isAssigned.mockImplementation(
 			async (userId, assignedCourseId) =>
 				userId.equals(moderator.id) && assignedCourseId.equals(courseId)
@@ -233,6 +233,7 @@ describe('post service', () => {
 		await expect(service.setLocked(postId.toHexString(), false, moderator)).rejects.toBeInstanceOf(
 			AccessDeniedError
 		);
+		expect(setLockedAt).toHaveBeenCalledTimes(1);
 		const afterRemoval = await service.getPost(postId.toHexString(), moderator);
 		expect(afterRemoval?.viewerPermissions.canLock).toBe(false);
 	});
