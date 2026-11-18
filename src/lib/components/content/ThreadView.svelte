@@ -4,7 +4,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery, createMutation, createQuery } from '@tanstack/svelte-query';
 	import { useQueryClient } from '@tanstack/svelte-query';
-	import { untrack } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import Check from 'lucide-svelte/icons/check';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
@@ -25,6 +25,8 @@
 	import ThreadKindBadge from './ThreadKindBadge.svelte';
 	import ReviewFacts from './ReviewFacts.svelte';
 	import ReviewForm from './ReviewForm.svelte';
+	import NewActivityNotice from './NewActivityNotice.svelte';
+	import { getCourseActivityNotices } from '#lib/client/realtime/CourseActivityNotices.svelte.ts';
 
 	let {
 		initialPost,
@@ -65,15 +67,45 @@
 		]);
 	const submissionQueue = new ReplySubmissionQueue(postId, refreshThread, refreshThread);
 
+	const loadedReplies = $derived(repliesQuery.data.pages.flatMap((page) => page.replies));
 	// Replies sent from this page stay visible even when their page of the thread isn't loaded yet.
-	const replyBranches = $derived.by(() => {
-		const loadedReplies = repliesQuery.data.pages.flatMap((page) => page.replies);
+	const shownReplies = $derived.by(() => {
 		const loadedReplyIds = new Set(loadedReplies.map((reply) => reply.id));
-		return groupReplies([
+		return [
 			...loadedReplies,
 			...submissionQueue.storedReplies.filter((reply) => !loadedReplyIds.has(reply.id))
-		]);
+		];
 	});
+	const replyBranches = $derived(groupReplies(shownReplies));
+
+	const courseActivityNotices = getCourseActivityNotices();
+	// While older pages are still unloaded, new replies arrive through Load more replies instead.
+	const newReplyIds = $derived(
+		repliesQuery.hasNextPage
+			? []
+			: courseActivityNotices.findNewReplyIds(
+					postId,
+					new Set(shownReplies.map((reply) => reply.id))
+				)
+	);
+	let isShowingNewReplies = $state(false);
+
+	/** Refetches the thread, then moves focus to the first reply shown, since the notice disappears. */
+	async function showNewReplies() {
+		const announcedReplyIds = new Set(newReplyIds);
+		isShowingNewReplies = true;
+		try {
+			await Promise.all([
+				queryClient.invalidateQueries({ queryKey: postQueryKeys.detail(postId) }),
+				queryClient.invalidateQueries({ queryKey: postQueryKeys.replies(postId) })
+			]);
+		} finally {
+			isShowingNewReplies = false;
+		}
+		await tick();
+		const firstNewReply = shownReplies.find((reply) => announcedReplyIds.has(reply.id));
+		if (firstNewReply) document.getElementById(`reply-${firstNewReply.id}`)?.focus();
+	}
 
 	function pendingRepliesUnder(parentReplyId: string | null) {
 		return submissionQueue.pendingReplies.filter(
@@ -112,6 +144,8 @@
 {#snippet replyCard(reply: ReplyResponse)}
 	{@const isAccepted = reply.id === post.acceptedReplyId}
 	<article
+		id="reply-{reply.id}"
+		tabindex="-1"
 		class={['rounded-2xl p-3', isAccepted ? 'bg-success-container' : 'bg-surface-container']}
 	>
 		<div class="flex flex-wrap items-center justify-between gap-2">
@@ -214,6 +248,11 @@
 
 <section class="mt-8" aria-labelledby="replies-heading">
 	<h2 id="replies-heading" class="text-lg font-semibold">{formatReplyCount(post.replyCount)}</h2>
+	<NewActivityNotice
+		label={newReplyIds.length > 0 ? m.realtime_show_new_replies({ count: newReplyIds.length }) : ''}
+		isShowing={isShowingNewReplies}
+		onShow={showNewReplies}
+	/>
 
 	<ul class="mt-3 flex flex-col gap-3">
 		{#each replyBranches as branch (branch.reply.id)}

@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { useClerkContext } from 'svelte-clerk';
 	import { RealtimeConnection } from '#lib/client/realtime/RealtimeConnection.svelte.ts';
+	import { setRealtimeConnectionAccessor } from '#lib/client/realtime/RealtimeConnectionContext.ts';
 	import FloatingDock from '#lib/components/FloatingDock.svelte';
 	import SpaceRail from '#lib/components/SpaceRail.svelte';
 	import { findCourseChannel } from '#lib/client/navigation/CourseChannel.ts';
@@ -34,12 +35,18 @@
 	let isKeyboardShortcutsDialogOpen = $state(false);
 	setKeyboardShortcutsDialogOpener({ open: () => (isKeyboardShortcutsDialogOpen = true) });
 
+	let realtimeConnection = $state<RealtimeConnection | null>(null);
+	setRealtimeConnectionAccessor(() => realtimeConnection);
 	$effect(() => {
 		if (!isSignedIn) return;
-		const realtimeConnection = new RealtimeConnection(
+		const connection = new RealtimeConnection(
 			async () => (await clerkContext.session?.getToken()) ?? null
 		);
-		return () => realtimeConnection.close();
+		realtimeConnection = connection;
+		return () => {
+			realtimeConnection = null;
+			connection.close();
+		};
 	});
 </script>
 

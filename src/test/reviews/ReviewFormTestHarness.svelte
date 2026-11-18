@@ -4,6 +4,10 @@
 	import ReviewChannelView from '#lib/components/content/ReviewChannelView.svelte';
 	import type { PostDetailResponse } from '#lib/contracts/PostContract.ts';
 	import type { ReviewAttemptResponse } from '#lib/contracts/ReviewContract.ts';
+	import {
+		CourseActivityNotices,
+		setCourseActivityNotices
+	} from '#lib/client/realtime/CourseActivityNotices.svelte.ts';
 
 	let {
 		editedReview = null,
@@ -19,6 +23,7 @@
 		onSaved: (post: PostDetailResponse) => void;
 	} = $props();
 
+	setCourseActivityNotices(new CourseActivityNotices());
 	const queryClient = new QueryClient({
 		defaultOptions: { queries: { retry: false, staleTime: 60_000 }, mutations: { retry: false } }
 	});

@@ -374,5 +374,25 @@
 	"keyboard_shortcut_italic": "Italic",
 	"keyboard_shortcut_code": "Inline code",
 	"settings_keyboard_shortcuts": "Keyboard shortcuts",
-	"settings_keyboard_shortcuts_hint": "Shows the shortcuts for moving around and writing."
+	"settings_keyboard_shortcuts_hint": "Shows the shortcuts for moving around and writing.",
+	"realtime_show_new_posts": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Show {count} new post",
+				"countPlural=*": "Show {count} new posts"
+			}
+		}
+	],
+	"realtime_show_new_replies": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "Show {count} new reply",
+				"countPlural=*": "Show {count} new replies"
+			}
+		}
+	]
 }

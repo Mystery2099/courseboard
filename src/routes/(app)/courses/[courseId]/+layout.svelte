@@ -16,6 +16,15 @@
 	} from '#lib/client/navigation/CourseChannel.ts';
 	import { CourseNavigationApiClient } from '#lib/client/catalog/CourseNavigationApiClient.ts';
 	import { describeErrorCode } from '#lib/client/ErrorPresentation.ts';
+	import { untrack } from 'svelte';
+	import { useQueryClient } from '@tanstack/svelte-query';
+	import { postQueryKeys } from '#lib/client/content/PostApiClient.ts';
+	import { reviewQueryKeys } from '#lib/client/content/ReviewApiClient.ts';
+	import { getRealtimeConnectionAccessor } from '#lib/client/realtime/RealtimeConnectionContext.ts';
+	import {
+		CourseActivityNotices,
+		setCourseActivityNotices
+	} from '#lib/client/realtime/CourseActivityNotices.svelte.ts';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
@@ -31,6 +40,27 @@
 
 	const currentChannel = $derived(findCourseChannel(page.route.id));
 	const isReadingThread = $derived(page.params.postId !== undefined);
+
+	const queryClient = useQueryClient();
+	const getRealtimeConnection = getRealtimeConnectionAccessor();
+	const courseActivityNotices = new CourseActivityNotices();
+	setCourseActivityNotices(courseActivityNotices);
+
+	$effect(() => {
+		const connection = getRealtimeConnection();
+		const courseId = data.course.id;
+		untrack(() => courseActivityNotices.clear());
+		if (!connection) return;
+		return connection.subscribeToCourse(courseId, {
+			onPostCreated: (event) => courseActivityNotices.recordPost(event),
+			onReplyCreated: (event) => courseActivityNotices.recordReply(event),
+			// Only queries on screen refetch; the notices then clear themselves.
+			onResubscribed: () => {
+				void queryClient.invalidateQueries({ queryKey: postQueryKeys.all });
+				void queryClient.invalidateQueries({ queryKey: reviewQueryKeys.all });
+			}
+		});
+	});
 
 	// Recorded from the browser after the space renders, so hover preloads don't count as visits.
 	$effect(() => {
