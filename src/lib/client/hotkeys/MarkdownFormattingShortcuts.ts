@@ -30,6 +30,11 @@ function toggleStyle(field: HTMLTextAreaElement, style: MarkdownInlineStyle) {
 }
 
 function applyEdit(field: HTMLTextAreaElement, edit: MarkdownTextEdit) {
+	// Chrome cuts inserted text at maxlength instead of refusing it, which would lose selected text.
+	const resultLength =
+		field.value.length - (edit.replaceEnd - edit.replaceStart) + edit.insertedText.length;
+	if (field.maxLength >= 0 && resultLength > field.maxLength) return;
+
 	field.setSelectionRange(edit.replaceStart, edit.replaceEnd);
 	// The editing command keeps the change on the field's undo stack; setRangeText would clear it.
 	const isInserted = edit.insertedText
