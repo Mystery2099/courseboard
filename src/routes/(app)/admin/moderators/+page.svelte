@@ -71,7 +71,7 @@
 
 <h2 class="mt-8 text-lg font-semibold">{m.admin_moderators_assignments()}</h2>
 {#if data.hasMoreAssignments}
-	<p class="mt-2 text-sm" role="alert">
+	<p class="mt-2 text-sm" role="status">
 		{m.admin_moderators_truncated({ count: data.assignments.length })}
 	</p>
 {/if}

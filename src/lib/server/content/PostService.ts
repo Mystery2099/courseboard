@@ -86,6 +86,8 @@ export class PostService {
 		const request = createPostSchema.parse(input);
 		const course = await this.findCourseSpace(courseId);
 		if (!course) return { kind: 'course-not-found' };
+		// Read before the insert, so a failed lookup can't fail a saved post and invite a duplicate retry.
+		const authorCanModerate = await this.moderation.canModerate(author, course.courseId);
 
 		const now = new Date();
 		const post: PostDocument = {
@@ -118,7 +120,7 @@ export class PostService {
 			post: PostResponseMapper.toDetailResponse(
 				{ ...post, author: { username, displayName } },
 				author,
-				await this.moderation.canModerate(author, post.courseId)
+				authorCanModerate
 			)
 		};
 	}

@@ -96,6 +96,8 @@ export class ReviewService {
 		) {
 			return { kind: 'history-required' };
 		}
+		// Read before the insert, so a failed lookup can't fail a saved review.
+		const authorCanModerate = await this.moderation.canModerate(author, id);
 
 		const now = new Date();
 		const post: PostDocument = {
@@ -143,7 +145,7 @@ export class ReviewService {
 			post: PostResponseMapper.toDetailResponse(
 				{ ...post, author: { username, displayName } },
 				author,
-				await this.moderation.canModerate(author, id)
+				authorCanModerate
 			)
 		};
 	}

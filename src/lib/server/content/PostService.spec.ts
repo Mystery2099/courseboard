@@ -228,9 +228,16 @@ describe('post service', () => {
 
 		const thread = await service.getPost(postId.toHexString(), moderator);
 		expect(thread?.viewerPermissions.canLock).toBe(true);
+
+		isAssigned.mockResolvedValue(false);
+		await expect(service.setLocked(postId.toHexString(), false, moderator)).rejects.toBeInstanceOf(
+			AccessDeniedError
+		);
+		const afterRemoval = await service.getPost(postId.toHexString(), moderator);
+		expect(afterRemoval?.viewerPermissions.canLock).toBe(false);
 	});
 
-	it('refuses moderators of another course, and moderators once removed', async () => {
+	it('refuses moderators of another course', async () => {
 		const otherCourseQuestion = { ...question, courseId: new ObjectId('000000000000000000000008') };
 		const { service, posts, isAssigned } = createService(otherCourseQuestion);
 		const setLockedAt = vi.spyOn(posts, 'setLockedAt').mockResolvedValue(true);
@@ -243,11 +250,6 @@ describe('post service', () => {
 		);
 		const thread = await service.getPost(postId.toHexString(), moderator);
 		expect(thread?.viewerPermissions.canLock).toBe(false);
-
-		isAssigned.mockResolvedValue(false);
-		await expect(service.setLocked(postId.toHexString(), false, moderator)).rejects.toBeInstanceOf(
-			AccessDeniedError
-		);
 		expect(setLockedAt).not.toHaveBeenCalled();
 	});
 });

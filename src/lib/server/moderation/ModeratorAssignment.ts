@@ -9,8 +9,9 @@ export const MODERATOR_ASSIGNMENTS_COLLECTION_NAME = 'moderatorAssignments';
 export interface ModeratorAssignmentDocument {
 	_id: ObjectId;
 	userId: ObjectId;
-	/** Copied from the space, which never changes course, so permission checks skip a lookup. */
+	/** Permission checks start from a post, which carries its course id. */
 	courseId: ObjectId;
+	/** For the planned reports queue, which is indexed by space. */
 	spaceId: ObjectId;
 	assignedBy: ObjectId;
 	assignedAt: Date;
