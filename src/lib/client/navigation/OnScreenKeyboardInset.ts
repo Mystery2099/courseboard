@@ -11,11 +11,12 @@ export const stayAboveOnScreenKeyboard: Attachment<HTMLElement> = (element) => {
 	if (!viewport) return;
 	const root = document.documentElement;
 	const update = () => {
-		// Pinch zoom shrinks the visual viewport too; only an unzoomed page can mean a keyboard.
-		const keyboardInset =
-			viewport.scale > 1.01
-				? 0
-				: Math.max(0, Math.round(window.innerHeight - viewport.height - viewport.offsetTop));
+		// The gap between the visible area and the page's bottom edge: the keyboard, or while
+		// pinch-zoomed the part of the page below the view, so the bar stays where the reader looks.
+		const keyboardInset = Math.max(
+			0,
+			Math.round(window.innerHeight - viewport.height - viewport.offsetTop)
+		);
 		root.style.setProperty('--keyboard-inset', `${keyboardInset}px`);
 		element.toggleAttribute('data-keyboard-open', keyboardInset > 0);
 	};

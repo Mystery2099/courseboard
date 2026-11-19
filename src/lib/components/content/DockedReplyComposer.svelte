@@ -13,6 +13,8 @@
 	import { getPhoneDock } from '#lib/client/navigation/PhoneDock.svelte.ts';
 
 	const MAXIMUM_FIELD_HEIGHT_PX = 128;
+	/** Share of the visible height the field may take, so the bar fits above a landscape keyboard. */
+	const MAXIMUM_FIELD_HEIGHT_SHARE = 0.25;
 
 	let {
 		replyTargetName,
@@ -33,6 +35,7 @@
 	let isFormattingHelpOpen = $state(false);
 	let bodyField = $state<HTMLTextAreaElement | null>(null);
 	let barHeight = $state(64);
+	let wasSendTapped = false;
 	const fieldLabel = $derived(
 		replyTargetName ? m.thread_reply_to({ name: replyTargetName }) : m.thread_your_reply()
 	);
@@ -49,10 +52,14 @@
 	$effect(() => {
 		void bodyMarkdown;
 		if (!bodyField) return;
+		const visibleHeight = window.visualViewport?.height ?? window.innerHeight;
+		const maximumHeight = Math.min(
+			MAXIMUM_FIELD_HEIGHT_PX,
+			visibleHeight * MAXIMUM_FIELD_HEIGHT_SHARE
+		);
 		bodyField.style.height = 'auto';
-		bodyField.style.height = `${Math.min(bodyField.scrollHeight, MAXIMUM_FIELD_HEIGHT_PX)}px`;
-		bodyField.style.overflowY =
-			bodyField.scrollHeight > MAXIMUM_FIELD_HEIGHT_PX ? 'auto' : 'hidden';
+		bodyField.style.height = `${Math.min(bodyField.scrollHeight, maximumHeight)}px`;
+		bodyField.style.overflowY = bodyField.scrollHeight > maximumHeight ? 'auto' : 'hidden';
 	});
 
 	// Scrolling stops short of the bar, whatever its height, instead of the dock's.
@@ -73,9 +80,12 @@
 		errorMessage = null;
 		bodyMarkdown = '';
 		onSubmit(parsed.data);
-		// Sent from the keyboard, Send keeps focus; return it to the field, as a tap would leave it.
-		if (document.activeElement !== bodyField && bodyField?.form?.contains(document.activeElement)) {
-			bodyField.focus();
+		// Send pressed from a keyboard keeps focus; return it to the field. A tap leaves focus where
+		// it was, so a phone keyboard the reader closed stays closed.
+		const isKeyboardSend = !wasSendTapped;
+		wasSendTapped = false;
+		if (isKeyboardSend && document.activeElement !== bodyField) {
+			if (bodyField?.form?.contains(document.activeElement)) bodyField.focus();
 		}
 	}
 
@@ -110,25 +120,25 @@
 		{@attach stayAboveOnScreenKeyboard}
 	>
 		<div class="mx-auto max-w-3xl">
-			<div
-				class={[
-					'mb-1 flex items-center gap-2 ps-2 text-sm text-on-surface-variant',
-					!replyTargetName && 'hidden'
-				]}
-			>
-				<CornerUpLeft size={16} aria-hidden="true" class="shrink-0" />
-				<span class="min-w-0 truncate" aria-live="polite"
-					>{replyTargetName ? m.thread_replying_to({ name: replyTargetName }) : ''}</span
-				>
-				<Button
-					variant="ghost"
-					size="icon"
-					class="ms-auto"
-					aria-label={replyTargetName ? m.thread_stop_replying_to({ name: replyTargetName }) : ''}
-					onmousedown={keepFieldFocused}
-					onclick={clearReplyTarget}><X size={18} /></Button
-				>
-			</div>
+			<p class="sr-only" aria-live="polite">
+				{replyTargetName ? m.thread_replying_to({ name: replyTargetName }) : ''}
+			</p>
+			{#if replyTargetName}
+				<div class="mb-1 flex items-center gap-2 ps-2 text-sm text-on-surface-variant">
+					<CornerUpLeft size={16} aria-hidden="true" class="shrink-0" />
+					<span class="min-w-0 truncate" aria-hidden="true"
+						>{m.thread_replying_to({ name: replyTargetName })}</span
+					>
+					<Button
+						variant="ghost"
+						size="icon"
+						class="ms-auto"
+						aria-label={m.thread_stop_replying_to({ name: replyTargetName })}
+						onmousedown={keepFieldFocused}
+						onclick={clearReplyTarget}><X size={18} /></Button
+					>
+				</div>
+			{/if}
 			<p
 				id={helpId}
 				hidden={!isFormattingHelpOpen}
@@ -169,7 +179,10 @@
 					size="icon"
 					type="submit"
 					aria-label={m.thread_send_reply()}
-					onmousedown={keepFieldFocused}><ArrowUp size={22} /></Button
+					onmousedown={(event) => {
+						wasSendTapped = true;
+						keepFieldFocused(event);
+					}}><ArrowUp size={22} /></Button
 				>
 			</div>
 		</div>
