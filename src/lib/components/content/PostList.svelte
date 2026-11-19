@@ -119,7 +119,14 @@
 {#if postsQuery.isPending}
 	<p class="mt-4 text-sm text-on-surface-variant">{m.common_loading()}</p>
 {:else if postsQuery.isError && posts.length === 0}
-	<p class="mt-4 text-sm text-error" role="alert">{m.post_list_load_failed()}</p>
+	<p class="mt-4 text-sm text-error" role="alert">
+		{m.post_list_load_failed()}
+		<button
+			type="button"
+			class="font-semibold underline underline-offset-2 hover:decoration-2"
+			onclick={() => postsQuery.refetch()}>{m.common_try_again()}</button
+		>
+	</p>
 {:else if posts.length === 0}
 	<p class="mt-4 text-sm text-on-surface-variant">
 		{filter === 'unanswered' ? m.post_list_all_answered() : emptyMessage}

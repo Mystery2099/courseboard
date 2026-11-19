@@ -82,7 +82,7 @@
 					>
 						<CourseCodeTile code={course.code} />
 						<span class="min-w-0">
-							<span class="block truncate font-semibold">{course.title}</span>
+							<span class="block leading-snug font-semibold wrap-break-word">{course.title}</span>
 							<span class="block font-mono text-sm text-on-surface-variant">{course.code}</span>
 						</span>
 					</button>

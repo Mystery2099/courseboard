@@ -45,7 +45,7 @@
 <svelte:head><title>{m.onboarding_courses_title()}</title></svelte:head>
 
 <!-- Explore is loaded on the click, not on hover, so it shows the courses followed on this step. -->
-<main class="mx-auto flex min-h-dvh max-w-lg flex-col px-4 py-8">
+<main class="mx-auto flex min-h-dvh max-w-lg flex-col px-4 pt-8">
 	<div class="flex items-center gap-3">
 		<div class="flex flex-1 gap-2" aria-hidden="true">
 			{#each [1, 2, 3] as segment (segment)}
@@ -95,7 +95,10 @@
 		{/if}
 	{/if}
 
-	<div class="mt-auto pt-8">
+	<!-- Choices save as they're made, so Continue stays in reach however long the list is. -->
+	<div
+		class="sticky bottom-0 mt-auto bg-background pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+	>
 		<p class="mb-3 text-sm text-on-surface-variant">
 			{m.onboarding_courses_private_notice()}
 		</p>

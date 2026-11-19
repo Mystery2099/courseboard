@@ -158,8 +158,9 @@
 <HistoryEntryEditorDialog
 	bind:open={isHistoryEditorOpen}
 	presetCourse={course}
-	onSaved={() => {
-		void queryClient.invalidateQueries({ queryKey: reviewQueryKeys.context(course.id) });
-		isComposerOpen = true;
+	onSaved={async () => {
+		await queryClient.invalidateQueries({ queryKey: reviewQueryKeys.context(course.id) });
+		// A Planning entry doesn't make the course reviewable, so the gate stays until one that does.
+		isComposerOpen = !contextQuery.isError && contextQuery.data.attempts.length > 0;
 	}}
 />
