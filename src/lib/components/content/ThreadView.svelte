@@ -142,9 +142,13 @@
 		// A thread-level reply leaves any open reply to someone, and its draft, in place.
 		if (parentReplyId !== null) replyTarget = null;
 		await tick();
-		// After the next frame, so the reply bar has shrunk back to one line first.
+		// Two frames on, once the reply bar has shrunk back to one line and the scroll padding with it.
 		requestAnimationFrame(() =>
-			document.getElementById(`pending-reply-${submissionId}`)?.scrollIntoView({ block: 'nearest' })
+			requestAnimationFrame(() =>
+				document
+					.getElementById(`pending-reply-${submissionId}`)
+					?.scrollIntoView({ block: 'nearest' })
+			)
 		);
 	}
 	let isReviewEditorOpen = $state(false);

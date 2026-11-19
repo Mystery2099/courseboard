@@ -35,7 +35,8 @@
 	let isFormattingHelpOpen = $state(false);
 	let bodyField = $state<HTMLTextAreaElement | null>(null);
 	let barHeight = $state(64);
-	let wasSendTapped = false;
+	/** Whether the last Send click came from a pointer; keyboard clicks have no click count. */
+	let wasSendClickedByPointer = false;
 	const fieldLabel = $derived(
 		replyTargetName ? m.thread_reply_to({ name: replyTargetName }) : m.thread_your_reply()
 	);
@@ -48,9 +49,8 @@
 		bodyField?.focus();
 	}
 
-	// Grows with each line typed, like a messaging app, until it scrolls inside its own frame.
-	$effect(() => {
-		void bodyMarkdown;
+	/** Grows with each line typed, like a messaging app, until it scrolls inside its own frame. */
+	function fitFieldHeight() {
 		if (!bodyField) return;
 		const visibleHeight = window.visualViewport?.height ?? window.innerHeight;
 		const maximumHeight = Math.min(
@@ -60,6 +60,19 @@
 		bodyField.style.height = 'auto';
 		bodyField.style.height = `${Math.min(bodyField.scrollHeight, maximumHeight)}px`;
 		bodyField.style.overflowY = bodyField.scrollHeight > maximumHeight ? 'auto' : 'hidden';
+	}
+
+	$effect(() => {
+		void bodyMarkdown;
+		fitFieldHeight();
+	});
+
+	// A keyboard opening or the phone turning changes the visible height, and with it the cap.
+	$effect(() => {
+		const viewport = window.visualViewport;
+		if (!viewport) return;
+		viewport.addEventListener('resize', fitFieldHeight, { passive: true });
+		return () => viewport.removeEventListener('resize', fitFieldHeight);
 	});
 
 	// Scrolling stops short of the bar, whatever its height, instead of the dock's.
@@ -71,6 +84,8 @@
 
 	function submit(event: SubmitEvent) {
 		event.preventDefault();
+		const isKeyboardSend = !wasSendClickedByPointer;
+		wasSendClickedByPointer = false;
 		const parsed = createReplySchema.shape.bodyMarkdown.safeParse(bodyMarkdown);
 		if (!parsed.success) {
 			errorMessage = describeValidationIssue(parsed.error.issues[0]);
@@ -82,21 +97,21 @@
 		onSubmit(parsed.data);
 		// Send pressed from a keyboard keeps focus; return it to the field. A tap leaves focus where
 		// it was, so a phone keyboard the reader closed stays closed.
-		const isKeyboardSend = !wasSendTapped;
-		wasSendTapped = false;
 		if (isKeyboardSend && document.activeElement !== bodyField) {
 			if (bodyField?.form?.contains(document.activeElement)) bodyField.focus();
 		}
 	}
 
-	function clearReplyTarget() {
+	function clearReplyTarget(event: MouseEvent) {
 		onClearReplyTarget();
-		bodyField?.focus();
+		// The button leaves with the chip, so a keyboard press hands focus to the field. A tap keeps
+		// the field's focus already, and leaves a closed phone keyboard closed.
+		if (event.detail === 0) bodyField?.focus();
 	}
 
 	/** Keeps focus, and so the keyboard, on the field when a bar button is tapped. */
 	function keepFieldFocused(event: MouseEvent) {
-		if (document.activeElement === bodyField) event.preventDefault();
+		if (event.button === 0 && document.activeElement === bodyField) event.preventDefault();
 	}
 </script>
 
@@ -179,10 +194,9 @@
 					size="icon"
 					type="submit"
 					aria-label={m.thread_send_reply()}
-					onmousedown={(event) => {
-						wasSendTapped = true;
-						keepFieldFocused(event);
-					}}><ArrowUp size={22} /></Button
+					onmousedown={keepFieldFocused}
+					onclick={(event) => (wasSendClickedByPointer = event.detail > 0)}
+					><ArrowUp size={22} /></Button
 				>
 			</div>
 		</div>
