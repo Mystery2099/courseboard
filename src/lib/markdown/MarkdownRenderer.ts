@@ -1,5 +1,7 @@
 import createMarkdownParser, { type MarkdownIt, type Token } from 'markdown-it';
 
+export type MarkdownLink = { address: string; text: string | null };
+
 /**
  * Turns user-written Markdown into safe HTML, the same way during server rendering and in the
  * browser. Raw HTML is shown as text, links are limited to web, email, and same-site addresses,
@@ -29,13 +31,30 @@ export class MarkdownRenderer {
 			.trim();
 	}
 
-	/** The addresses of the links `toHtml` keeps, in reading order. */
-	static toLinkAddresses(markdown: string): string[] {
-		return MarkdownRenderer.parser
-			.parse(markdown, {})
-			.flatMap((token) => token.children ?? [])
-			.filter((token) => token.type === 'link_open')
-			.map((token) => String(token.attrGet('href') ?? ''));
+	/**
+	 * The links `toHtml` keeps, in reading order. `text` is null for a bare address, whose text is
+	 * the address itself.
+	 */
+	static toLinks(markdown: string): MarkdownLink[] {
+		const links: MarkdownLink[] = [];
+		for (const blockToken of MarkdownRenderer.parser.parse(markdown, {})) {
+			const inlineTokens = blockToken.children ?? [];
+			inlineTokens.forEach((token, index) => {
+				if (token.type !== 'link_open') return;
+				const isBareAddress = token.markup === 'linkify' || token.markup === 'autolink';
+				const closingIndex = inlineTokens.findIndex(
+					(candidate, candidateIndex) => candidateIndex > index && candidate.type === 'link_close'
+				);
+				const text = MarkdownRenderer.inlineText(
+					inlineTokens.slice(index + 1, closingIndex)
+				).trim();
+				links.push({
+					address: String(token.attrGet('href') ?? ''),
+					text: isBareAddress || !text ? null : text
+				});
+			});
+		}
+		return links;
 	}
 
 	private static createParser(): MarkdownIt {

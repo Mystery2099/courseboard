@@ -1,8 +1,13 @@
-export type LinkPreview =
-	| { kind: 'image'; sourceUrl: string; imageUrl: string }
-	| { kind: 'video'; sourceUrl: string; videoUrl: string }
-	| { kind: 'youtube'; sourceUrl: string; thumbnailUrl: string; playerUrl: string }
-	| { kind: 'spotify'; sourceUrl: string; playerUrl: string; isCompact: boolean };
+import type { MarkdownLink } from './MarkdownRenderer.ts';
+
+type LinkPreviewMedia =
+	| { kind: 'image'; imageUrl: string }
+	| { kind: 'video'; videoUrl: string }
+	| { kind: 'youtube'; thumbnailUrl: string; playerUrl: string }
+	| { kind: 'spotify'; playerUrl: string; isCompact: boolean };
+
+/** `linkText` is what the author wrote for the link, or null for a bare address. */
+export type LinkPreview = LinkPreviewMedia & { sourceUrl: string; linkText: string | null };
 
 /**
  * Recognizes links that can be previewed from the address alone, with no request to the linked
@@ -28,20 +33,41 @@ export class LinkPreviewResolver {
 		/^\/(?:intl-[a-z-]+\/)?(track|album|playlist|episode|show|artist)\/([A-Za-z0-9]{22})\/?$/i;
 	private static readonly COMPACT_SPOTIFY_TYPES = new Set(['track', 'episode']);
 
-	/** The previews for `linkAddresses`, in order, without repeats, and at most a few per body. */
-	static resolveAll(linkAddresses: readonly string[]): LinkPreview[] {
-		const previewsBySourceUrl = new Map<string, LinkPreview>();
-		for (const linkAddress of linkAddresses) {
-			if (previewsBySourceUrl.size === LinkPreviewResolver.MAXIMUM_PREVIEWS_PER_BODY) break;
-			const preview = LinkPreviewResolver.resolve(linkAddress);
-			if (preview && !previewsBySourceUrl.has(preview.sourceUrl)) {
-				previewsBySourceUrl.set(preview.sourceUrl, preview);
+	/**
+	 * The previews for `links`, in order and at most a few per body. Links that load the same media,
+	 * such as a youtu.be and a youtube.com address for one video, share a preview.
+	 */
+	static resolveAll(links: readonly MarkdownLink[]): LinkPreview[] {
+		const previewsByMediaUrl = new Map<string, LinkPreview>();
+		for (const link of links) {
+			if (previewsByMediaUrl.size === LinkPreviewResolver.MAXIMUM_PREVIEWS_PER_BODY) break;
+			const preview = LinkPreviewResolver.resolve(link.address);
+			if (!preview) continue;
+			const mediaUrl = LinkPreviewResolver.findMediaUrl(preview);
+			if (!previewsByMediaUrl.has(mediaUrl)) {
+				previewsByMediaUrl.set(mediaUrl, { ...preview, linkText: link.text });
 			}
 		}
-		return [...previewsBySourceUrl.values()];
+		return [...previewsByMediaUrl.values()];
 	}
 
 	static resolve(linkAddress: string): LinkPreview | null {
+		const media = LinkPreviewResolver.resolveMedia(linkAddress);
+		return media ? { ...media, sourceUrl: new URL(linkAddress).href, linkText: null } : null;
+	}
+
+	private static findMediaUrl(preview: LinkPreview): string {
+		switch (preview.kind) {
+			case 'image':
+				return preview.imageUrl;
+			case 'video':
+				return preview.videoUrl;
+			default:
+				return preview.playerUrl;
+		}
+	}
+
+	private static resolveMedia(linkAddress: string): LinkPreviewMedia | null {
 		let url: URL;
 		try {
 			url = new URL(linkAddress);
@@ -49,7 +75,6 @@ export class LinkPreviewResolver {
 			return null;
 		}
 		if (url.protocol !== 'https:' || url.username || url.password) return null;
-		const sourceUrl = url.href;
 		const host = url.hostname.toLowerCase();
 
 		const youtubeVideoId = LinkPreviewResolver.findYoutubeVideoId(url, host);
@@ -62,7 +87,6 @@ export class LinkPreviewResolver {
 			if (startSeconds) player.searchParams.set('start', String(startSeconds));
 			return {
 				kind: 'youtube',
-				sourceUrl,
 				thumbnailUrl: `https://i.ytimg.com/vi/${youtubeVideoId}/hqdefault.jpg`,
 				playerUrl: player.href
 			};
@@ -74,7 +98,6 @@ export class LinkPreviewResolver {
 			const itemType = match[1].toLowerCase();
 			return {
 				kind: 'spotify',
-				sourceUrl,
 				playerUrl: `https://open.spotify.com/embed/${itemType}/${match[2]}`,
 				isCompact: LinkPreviewResolver.COMPACT_SPOTIFY_TYPES.has(itemType)
 			};
@@ -85,7 +108,6 @@ export class LinkPreviewResolver {
 			return match
 				? {
 						kind: 'image',
-						sourceUrl,
 						imageUrl: `https://media.giphy.com/media/${match[1]}/giphy.gif`
 					}
 				: null;
@@ -95,15 +117,14 @@ export class LinkPreviewResolver {
 		if (host === 'i.imgur.com' && url.pathname.toLowerCase().endsWith('.gifv')) {
 			return {
 				kind: 'video',
-				sourceUrl,
 				videoUrl: `https://i.imgur.com${url.pathname.slice(0, -'.gifv'.length)}.mp4`
 			};
 		}
 		if (LinkPreviewResolver.IMAGE_PATH_PATTERN.test(url.pathname)) {
-			return { kind: 'image', sourceUrl, imageUrl: sourceUrl };
+			return { kind: 'image', imageUrl: url.href };
 		}
 		if (LinkPreviewResolver.VIDEO_PATH_PATTERN.test(url.pathname)) {
-			return { kind: 'video', sourceUrl, videoUrl: sourceUrl };
+			return { kind: 'video', videoUrl: url.href };
 		}
 		return null;
 	}

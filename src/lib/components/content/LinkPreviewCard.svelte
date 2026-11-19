@@ -8,6 +8,10 @@
 	const sourceHost = $derived(new URL(preview.sourceUrl).hostname);
 	let hasFailedToLoad = $state(false);
 	let isYoutubePlayerOpen = $state(false);
+
+	function focusOnMount(element: HTMLElement) {
+		element.focus();
+	}
 </script>
 
 {#if !hasFailedToLoad}
@@ -19,7 +23,8 @@
 				href={preview.sourceUrl}
 				target="_blank"
 				rel="nofollow ugc noopener noreferrer"
-				aria-label={m.link_preview_open_image({ host: sourceHost })}
+				class="block focus-visible:-outline-offset-4"
+				aria-label={preview.linkText ?? m.link_preview_open_image({ host: sourceHost })}
 			>
 				<img
 					class="block max-h-80 max-w-full object-contain"
@@ -43,9 +48,11 @@
 				onerror={() => (hasFailedToLoad = true)}
 			></video>
 		{:else if preview.kind === 'youtube'}
-			<div class="aspect-video w-120 max-w-full">
+			<!-- YouTube's player needs at least 200px of height. -->
+			<div class="aspect-video min-h-50 w-120 max-w-full">
 				{#if isYoutubePlayerOpen}
 					<iframe
+						{@attach focusOnMount}
 						class="size-full"
 						src={preview.playerUrl}
 						title={m.link_preview_youtube_player()}
@@ -55,7 +62,7 @@
 				{:else}
 					<button
 						type="button"
-						class="group relative block size-full cursor-pointer"
+						class="group relative block size-full cursor-pointer focus-visible:-outline-offset-4"
 						aria-label={m.link_preview_play_youtube()}
 						onclick={() => (isYoutubePlayerOpen = true)}
 					>

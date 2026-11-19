@@ -66,12 +66,24 @@ describe('Link preview resolver', () => {
 		expect(LinkPreviewResolver.resolve(address)).toBeNull();
 	});
 
-	it('drops repeats and stops after a few previews', () => {
-		const addresses = Array.from({ length: 6 }, (_, index) => `https://example.com/${index}.png`);
+	it('stops after a few previews', () => {
+		const links = Array.from({ length: 6 }, (_, index) => ({
+			address: `https://example.com/${index}.png`,
+			text: null
+		}));
 
-		expect(LinkPreviewResolver.resolveAll([addresses[0], ...addresses])).toHaveLength(
+		expect(LinkPreviewResolver.resolveAll(links)).toHaveLength(
 			LinkPreviewResolver.MAXIMUM_PREVIEWS_PER_BODY
 		);
-		expect(LinkPreviewResolver.resolveAll([addresses[0], addresses[0]])).toHaveLength(1);
+	});
+
+	it('shares one preview between addresses for the same video, keeping the first link text', () => {
+		const previews = LinkPreviewResolver.resolveAll([
+			{ address: 'https://youtu.be/dQw4w9WgXcQ', text: 'Lecture 3' },
+			{ address: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&si=share', text: null },
+			{ address: 'https://youtu.be/dQw4w9WgXcQ?t=90', text: null }
+		]);
+
+		expect(previews.map((preview) => preview.linkText)).toEqual(['Lecture 3', null]);
 	});
 });

@@ -11,9 +11,7 @@
 	}: { markdown: string; topHeadingLevel: 2 | 3; class?: ClassValue } = $props();
 
 	const html = $derived(MarkdownRenderer.toHtml(markdown, topHeadingLevel));
-	const linkPreviews = $derived(
-		LinkPreviewResolver.resolveAll(MarkdownRenderer.toLinkAddresses(markdown))
-	);
+	const linkPreviews = $derived(LinkPreviewResolver.resolveAll(MarkdownRenderer.toLinks(markdown)));
 </script>
 
 <!-- MarkdownRenderer escapes raw HTML and refuses unsafe links and images. -->
