@@ -12,6 +12,14 @@ export interface PendingReply {
 	errorMessage: string | null;
 }
 
+/** Hears how each queued reply ends up. */
+export interface ReplySubmissionListener {
+	onStored(pendingReply: PendingReply): void;
+	/** A refusal, such as a locked thread, means the page is out of date. */
+	onFailed(pendingReply: PendingReply, wasRefused: boolean): void;
+	onDiscarded(pendingReply: PendingReply): void;
+}
+
 /**
  * Replies on their way to the server. Each keeps one submission id for its whole life, so Retry
  * after a lost response gets the stored reply back instead of writing a second one. A failed reply
@@ -24,8 +32,7 @@ export class ReplySubmissionQueue {
 
 	constructor(
 		private readonly postId: string,
-		private readonly onStored: () => void,
-		private readonly onRefused: () => void
+		private readonly listener: ReplySubmissionListener
 	) {}
 
 	/** Queues a reply and returns its submission id. */
@@ -51,9 +58,10 @@ export class ReplySubmissionQueue {
 	}
 
 	discard(submissionId: string): void {
-		this.pendingReplies = this.pendingReplies.filter(
-			(pendingReply) => pendingReply.submissionId !== submissionId
-		);
+		const pendingReply = this.find(submissionId);
+		if (!pendingReply || pendingReply.status === 'sending') return;
+		this.remove(submissionId);
+		this.listener.onDiscarded(pendingReply);
 	}
 
 	private async send(submissionId: string): Promise<void> {
@@ -66,14 +74,22 @@ export class ReplySubmissionQueue {
 				submissionId
 			});
 			this.storedReplies.push(reply);
-			this.discard(submissionId);
-			this.onStored();
+			this.remove(submissionId);
+			this.listener.onStored(pendingReply);
 		} catch (cause) {
 			pendingReply.status = 'failed';
 			pendingReply.errorMessage = describeRequestFailure(cause, m.error_unavailable);
-			// A refusal such as a locked thread means the page is out of date.
-			if (cause instanceof ApiRequestError && cause.status === 409) this.onRefused();
+			this.listener.onFailed(
+				pendingReply,
+				cause instanceof ApiRequestError && cause.status === 409
+			);
 		}
+	}
+
+	private remove(submissionId: string): void {
+		this.pendingReplies = this.pendingReplies.filter(
+			(pendingReply) => pendingReply.submissionId !== submissionId
+		);
 	}
 
 	private find(submissionId: string): PendingReply | undefined {

@@ -12,7 +12,12 @@
 	import { describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 	import { PostApiClient, postQueryKeys } from '#lib/client/content/PostApiClient.ts';
 	import { formatReplyCount, groupReplies } from '#lib/client/content/PostPresentation.ts';
-	import { ReplySubmissionQueue } from '#lib/client/content/ReplySubmissionQueue.svelte.ts';
+	import {
+		ReplySubmissionQueue,
+		type PendingReply
+	} from '#lib/client/content/ReplySubmissionQueue.svelte.ts';
+	import { ComposerDraftTarget } from '#lib/client/content/ComposerDraftStorage.ts';
+	import { getComposerDrafts } from '#lib/client/content/ComposerDrafts.svelte.ts';
 	import type {
 		PostDetailResponse,
 		ReplyListResponse,
@@ -66,7 +71,38 @@
 			queryClient.invalidateQueries({ queryKey: postQueryKeys.replies(postId) }),
 			queryClient.invalidateQueries({ queryKey: postQueryKeys.lists(courseId) })
 		]);
-	const submissionQueue = new ReplySubmissionQueue(postId, refreshThread, refreshThread);
+	const composerDrafts = getComposerDrafts();
+	const replyDraftTarget = (parentReplyId: string | null) =>
+		parentReplyId === null
+			? ComposerDraftTarget.threadReply(postId)
+			: ComposerDraftTarget.branchReply(postId, parentReplyId);
+	const unsentDraft = (pendingReply: PendingReply) => ({
+		title: '',
+		bodyMarkdown: pendingReply.bodyMarkdown
+	});
+
+	// A failed reply is also kept as its target's draft, so leaving the page doesn't lose it.
+	const submissionQueue = new ReplySubmissionQueue(postId, {
+		onStored: (pendingReply) => {
+			composerDrafts.forgetUnsent(
+				replyDraftTarget(pendingReply.parentReplyId),
+				unsentDraft(pendingReply)
+			);
+			void refreshThread();
+		},
+		onFailed: (pendingReply, wasRefused) => {
+			composerDrafts.keepUnsent(
+				replyDraftTarget(pendingReply.parentReplyId),
+				unsentDraft(pendingReply)
+			);
+			if (wasRefused) void refreshThread();
+		},
+		onDiscarded: (pendingReply) =>
+			composerDrafts.forgetUnsent(
+				replyDraftTarget(pendingReply.parentReplyId),
+				unsentDraft(pendingReply)
+			)
+	});
 
 	const loadedReplies = $derived(repliesQuery.data.pages.flatMap((page) => page.replies));
 	// Replies sent from this page stay visible even when their page of the thread isn't loaded yet.
@@ -125,6 +161,11 @@
 		authorName: string;
 	}
 	let replyTarget = $state<ReplyTarget | null>(null);
+	// Shared by the phone bar and the desktop composer for the same target, so they show the same text.
+	const threadReplyDraft = $derived(composerDrafts.open(replyDraftTarget(null)));
+	const branchReplyDraft = $derived(
+		replyTarget ? composerDrafts.open(replyDraftTarget(replyTarget.parentReplyId)) : null
+	);
 	let dockedReplyComposer = $state<ReturnType<typeof DockedReplyComposer> | null>(null);
 
 	function startReplyingTo(reply: ReplyResponse) {
@@ -306,10 +347,11 @@
 							onDiscard={() => submissionQueue.discard(pendingReply.submissionId)}
 						/>
 					{/each}
-					{#if replyTarget?.parentReplyId === branch.reply.id && !post.isLocked}
+					{#if replyTarget?.parentReplyId === branch.reply.id && branchReplyDraft && !post.isLocked}
 						<div class="hidden desktop:block">
 							<ReplyComposer
 								label={m.thread_reply_to({ name: replyTarget.authorName })}
+								draft={branchReplyDraft}
 								onSubmit={(bodyMarkdown) => sendReply(bodyMarkdown, branch.reply.id)}
 								onCancel={() => (replyTarget = null)}
 							/>
@@ -352,6 +394,7 @@
 		<div class="mt-6 hidden desktop:block">
 			<ReplyComposer
 				label={m.thread_your_reply()}
+				draft={threadReplyDraft}
 				onSubmit={(bodyMarkdown) => sendReply(bodyMarkdown, null)}
 			/>
 		</div>
@@ -362,6 +405,7 @@
 	<DockedReplyComposer
 		bind:this={dockedReplyComposer}
 		replyTargetName={replyTarget?.authorName ?? null}
+		draft={branchReplyDraft ?? threadReplyDraft}
 		onSubmit={(bodyMarkdown) => sendReply(bodyMarkdown, replyTarget?.parentReplyId ?? null)}
 		onClearReplyTarget={() => (replyTarget = null)}
 	/>
