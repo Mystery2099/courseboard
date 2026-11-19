@@ -1,5 +1,6 @@
 const CLOUDFLARE_TURNSTILE_ORIGIN = 'https://challenges.cloudflare.com';
-const CLERK_IMAGE_ORIGIN = 'https://img.clerk.com';
+const YOUTUBE_PLAYER_ORIGIN = 'https://www.youtube-nocookie.com';
+const SPOTIFY_PLAYER_ORIGIN = 'https://open.spotify.com';
 const CLERK_BOT_PROTECTION_SCRIPT_ORIGIN = 'https://cdn.protect.clerk.com';
 // Its bootstrap script then loads a loader from a generated per-client subdomain.
 const CLERK_BOT_PROTECTION_LOADER_SOURCE = 'https://*.client.protect.clerk.com';
@@ -49,10 +50,17 @@ export function buildContentSecurityPolicyDirectives(clerkPublishableKey) {
 		],
 		// Same-origin WebSocket connections are covered by 'self'.
 		'connect-src': ['self', ...clerkOrigins, CLERK_BOT_PROTECTION_PROBE_SOURCE],
-		'img-src': ['self', 'data:', CLERK_IMAGE_ORIGIN],
+		// Link previews show images and videos from any HTTPS address a post links to.
+		'img-src': ['self', 'data:', 'https:'],
+		'media-src': ['self', 'https:'],
 		'style-src': ['self', 'unsafe-inline'],
 		'font-src': ['self'],
-		'frame-src': [CLERK_BOT_PROTECTION_PROBE_SOURCE, CLOUDFLARE_TURNSTILE_ORIGIN],
+		'frame-src': [
+			CLERK_BOT_PROTECTION_PROBE_SOURCE,
+			CLOUDFLARE_TURNSTILE_ORIGIN,
+			YOUTUBE_PLAYER_ORIGIN,
+			SPOTIFY_PLAYER_ORIGIN
+		],
 		'worker-src': ['self', 'blob:'],
 		'object-src': ['none'],
 		'base-uri': ['self'],

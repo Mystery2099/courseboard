@@ -116,6 +116,16 @@ describe('Markdown renderer', () => {
 		expect(() => MarkdownRenderer.toHtml('*'.repeat(20000), 2)).not.toThrow();
 	});
 
+	it('lists only the link addresses it keeps, skipping code and refused links', () => {
+		const markdown =
+			'See https://a.example/1.png and [b](https://b.example)\n\n`https://c.example/x.png`\n\n[x](javascript:alert(1)) ![img](https://d.example/y.png)';
+
+		expect(MarkdownRenderer.toLinkAddresses(markdown)).toEqual([
+			'https://a.example/1.png',
+			'https://b.example'
+		]);
+	});
+
 	it('reads plain text without formatting, link addresses, or code blocks', () => {
 		const markdown =
 			'## Tips\n\n- Read the **[manual](https://example.com/manual)** first!\n\n```js\nsecret()\n```\n\nRun `npm test`\nnow ![diagram](https://example.com/x.png)';

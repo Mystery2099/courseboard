@@ -29,6 +29,15 @@ export class MarkdownRenderer {
 			.trim();
 	}
 
+	/** The addresses of the links `toHtml` keeps, in reading order. */
+	static toLinkAddresses(markdown: string): string[] {
+		return MarkdownRenderer.parser
+			.parse(markdown, {})
+			.flatMap((token) => token.children ?? [])
+			.filter((token) => token.type === 'link_open')
+			.map((token) => String(token.attrGet('href') ?? ''));
+	}
+
 	private static createParser(): MarkdownIt {
 		const parser = createMarkdownParser('default', { html: false, linkify: true, breaks: true });
 		// Every address parses, so an image always shows just its description; links are checked

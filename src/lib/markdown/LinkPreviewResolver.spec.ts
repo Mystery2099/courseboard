@@ -1,0 +1,77 @@
+import { describe, expect, it } from 'vitest';
+import { LinkPreviewResolver } from './LinkPreviewResolver.ts';
+
+describe('Link preview resolver', () => {
+	it.each([
+		'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=1m30s',
+		'https://youtu.be/dQw4w9WgXcQ?t=90',
+		'https://m.youtube.com/shorts/dQw4w9WgXcQ'
+	])('plays YouTube videos from youtube-nocookie.com: %s', (address) => {
+		const preview = LinkPreviewResolver.resolve(address);
+
+		expect(preview).toMatchObject({
+			kind: 'youtube',
+			thumbnailUrl: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg'
+		});
+		expect(preview?.kind === 'youtube' && preview.playerUrl).toMatch(
+			/^https:\/\/www\.youtube-nocookie\.com\/embed\/dQw4w9WgXcQ\?autoplay=1/
+		);
+	});
+
+	it('starts a YouTube video at its timestamp', () => {
+		const preview = LinkPreviewResolver.resolve('https://youtu.be/dQw4w9WgXcQ?t=1m30s');
+
+		expect(preview?.kind === 'youtube' && preview.playerUrl).toContain('start=90');
+	});
+
+	it('embeds Spotify tracks compactly and collections at full height', () => {
+		expect(
+			LinkPreviewResolver.resolve(
+				'https://open.spotify.com/intl-es/track/4uLU6hMCjMI75M1A2tKUQC?si=x'
+			)
+		).toMatchObject({
+			kind: 'spotify',
+			playerUrl: 'https://open.spotify.com/embed/track/4uLU6hMCjMI75M1A2tKUQC',
+			isCompact: true
+		});
+		expect(
+			LinkPreviewResolver.resolve('https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M')
+		).toMatchObject({ isCompact: false });
+	});
+
+	it('shows images, GIFs, and videos linked directly', () => {
+		expect(LinkPreviewResolver.resolve('https://example.com/diagram.PNG?size=2')).toMatchObject({
+			kind: 'image',
+			imageUrl: 'https://example.com/diagram.PNG?size=2'
+		});
+		expect(LinkPreviewResolver.resolve('https://giphy.com/gifs/cat-typing-JIX9t2j0ZTN9S')).toEqual(
+			expect.objectContaining({ imageUrl: 'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif' })
+		);
+		expect(LinkPreviewResolver.resolve('https://i.imgur.com/abc123.gifv')).toMatchObject({
+			kind: 'video',
+			videoUrl: 'https://i.imgur.com/abc123.mp4'
+		});
+	});
+
+	it.each([
+		'http://example.com/photo.png',
+		'https://user:secret@example.com/photo.png',
+		'https://example.com/page',
+		'https://www.youtube.com/watch?v=short',
+		'https://evil.example/watch?v=dQw4w9WgXcQ',
+		'https://open.spotify.com/user/someone',
+		'/courses/abc',
+		'mailto:prof@example.edu'
+	])('previews nothing for %s', (address) => {
+		expect(LinkPreviewResolver.resolve(address)).toBeNull();
+	});
+
+	it('drops repeats and stops after a few previews', () => {
+		const addresses = Array.from({ length: 6 }, (_, index) => `https://example.com/${index}.png`);
+
+		expect(LinkPreviewResolver.resolveAll([addresses[0], ...addresses])).toHaveLength(
+			LinkPreviewResolver.MAXIMUM_PREVIEWS_PER_BODY
+		);
+		expect(LinkPreviewResolver.resolveAll([addresses[0], addresses[0]])).toHaveLength(1);
+	});
+});
