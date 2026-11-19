@@ -68,6 +68,7 @@
 	$effect(() => {
 		void CourseNavigationApiClient.recordVisit(data.course.id).catch(() => undefined);
 	});
+	let isFollowPending = $state(false);
 	const followActionUrl = $derived(
 		`${resolve('/(app)/courses/[courseId]', { courseId: data.course.id })}?/${data.course.isFollowed ? 'unfollow' : 'follow'}`
 	);
@@ -126,8 +127,26 @@
 					<h1 class="mt-1 text-headline font-bold">{data.course.title}</h1>
 					<p class="mt-2 text-on-surface-variant">{data.course.description}</p>
 					<div class="mt-4 flex flex-wrap gap-2">
-						<form method="POST" action={followActionUrl} use:enhance>
-							<Button variant={data.course.isFollowed ? 'tonal' : 'filled'} type="submit">
+						<form
+							method="POST"
+							action={followActionUrl}
+							use:enhance={() => {
+								isFollowPending = true;
+								return async ({ update }) => {
+									try {
+										await update();
+									} finally {
+										isFollowPending = false;
+									}
+								};
+							}}
+						>
+							<Button
+								variant={data.course.isFollowed ? 'tonal' : 'filled'}
+								type="submit"
+								disabled={isFollowPending}
+								aria-busy={isFollowPending}
+							>
 								{#if data.course.isFollowed}<Check size={18} />
 									{m.course_space_following()}{:else}{m.course_space_follow()}{/if}
 							</Button>
@@ -150,7 +169,7 @@
 					{/if}
 					<nav
 						aria-label={m.course_space_channels_short()}
-						class="mt-2.5 flex gap-2 overflow-x-auto py-1.5 desktop:hidden"
+						class="mt-2.5 flex flex-wrap gap-2 py-1.5 desktop:hidden"
 					>
 						{#each COURSE_CHANNELS as channel (channel)}
 							<a

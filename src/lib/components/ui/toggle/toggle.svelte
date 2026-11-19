@@ -10,7 +10,7 @@
 			variant: {
 				chip: 'min-h-9 rounded-chip border border-outline px-4 text-on-surface after:absolute after:inset-x-0 after:-inset-y-1.5 state-layer data-[state=on]:border-transparent data-[state=on]:[--state-base:var(--secondary-container)] data-[state=on]:[--state-color:var(--on-secondary-container)] aria-[current=page]:[--state-base:var(--secondary-container)] aria-[current=page]:[--state-color:var(--on-secondary-container)] data-[state=on]:bg-secondary-container data-[state=on]:font-semibold data-[state=on]:text-on-secondary-container aria-[current=page]:border-transparent aria-[current=page]:bg-secondary-container aria-[current=page]:font-semibold aria-[current=page]:text-on-secondary-container',
 				segment:
-					'min-h-11 flex-1 border border-outline px-4 font-semibold text-on-surface not-first:-ml-px first:rounded-l-full last:rounded-r-full state-layer data-[state=on]:z-1 data-[state=on]:[--state-base:var(--secondary-container)] data-[state=on]:[--state-color:var(--on-secondary-container)] data-[state=on]:bg-secondary-container data-[state=on]:text-on-secondary-container'
+					'min-h-11 flex-1 border border-outline px-4 font-semibold text-on-surface not-first:-ml-px first:rounded-l-full last:rounded-r-full state-layer data-[state=on]:z-1 data-[state=on]:border-primary data-[state=on]:[--state-base:var(--secondary-container)] data-[state=on]:[--state-color:var(--on-secondary-container)] data-[state=on]:bg-secondary-container data-[state=on]:text-on-secondary-container'
 			}
 		},
 		defaultVariants: {

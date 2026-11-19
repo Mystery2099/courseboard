@@ -73,7 +73,9 @@
 						<span class="min-w-0 flex-1">
 							<!-- The tile shows the code visually; screen readers get it here. -->
 							<span class="sr-only">{course.code}</span>
-							<span class="block truncate text-lg font-medium">{course.title}</span>
+							<span class="block text-lg leading-snug font-medium wrap-break-word"
+								>{course.title}</span
+							>
 							{#if course.isFollowed}
 								<span class="block text-sm text-on-surface-variant">{m.explore_following()}</span>
 							{/if}

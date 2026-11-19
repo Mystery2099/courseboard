@@ -2,7 +2,7 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import { m } from '#lib/paraglide/messages.js';
-	import { createQuery, useQueryClient } from '@tanstack/svelte-query';
+	import { createQuery } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import { ReviewApiClient, reviewQueryKeys } from '#lib/client/content/ReviewApiClient.ts';
@@ -25,7 +25,6 @@
 		initialLoadedAt: number;
 	} = $props();
 
-	const queryClient = useQueryClient();
 	const contextQuery = createQuery(() => ({
 		queryKey: reviewQueryKeys.context(course.id),
 		queryFn: () => ReviewApiClient.getCourseContext(course.id),
@@ -159,7 +158,8 @@
 	bind:open={isHistoryEditorOpen}
 	presetCourse={course}
 	onSaved={() => {
-		void queryClient.invalidateQueries({ queryKey: reviewQueryKeys.context(course.id) });
-		isComposerOpen = true;
+		// The form has already refreshed this context. A Planning entry doesn't make the course
+		// reviewable, so the gate stays until an entry that does.
+		isComposerOpen = !contextQuery.isError && contextQuery.data.attempts.length > 0;
 	}}
 />

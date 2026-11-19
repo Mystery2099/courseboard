@@ -27,6 +27,8 @@
 
 	const search = $derived(data.search);
 	const query = $derived(search.query);
+	// What's in the field now, so changing the scope searches for it rather than the last query.
+	let queryText = $derived(query.q ?? '');
 	const SCOPE_LABELS: Record<SearchScope, () => string> = {
 		everything: m.search_scope_everything,
 		courses: m.search_scope_courses,
@@ -93,7 +95,7 @@
 				id={SEARCH_QUERY_FIELD_ID}
 				type="search"
 				name="q"
-				value={query.q}
+				bind:value={queryText}
 				maxlength="100"
 				placeholder={m.search_placeholder()}
 				class="min-h-13 w-full rounded-full py-3 pr-15 pl-13 text-base"
@@ -113,6 +115,7 @@
 			{#each SEARCH_SCOPES as scope (scope)}
 				<a
 					href="{resolve('/(app)/search')}?{searchQueryString({
+						q: queryText.trim() || undefined,
 						scope,
 						page: undefined,
 						courseId: undefined,

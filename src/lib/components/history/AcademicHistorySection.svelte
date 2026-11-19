@@ -98,8 +98,13 @@
 			{m.history_explanation()}
 		</p>
 		{#if ownHistoryQuery.isError}
-			<p class="mt-2 text-sm text-on-surface-variant" role="status">
+			<p class="mt-2 text-sm text-error" role="alert">
 				{m.history_refresh_failed()}
+				<button
+					type="button"
+					class="font-semibold underline underline-offset-2 hover:decoration-2"
+					onclick={() => ownHistoryQuery.refetch()}>{m.common_try_again()}</button
+				>
 			</p>
 		{/if}
 		{#if ownGroups.length === 0}

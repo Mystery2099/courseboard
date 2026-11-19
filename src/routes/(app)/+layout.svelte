@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { m } from '#lib/paraglide/messages.js';
 	import { useClerkContext } from 'svelte-clerk';
 	import { RealtimeConnection } from '#lib/client/realtime/RealtimeConnection.svelte.ts';
 	import { setRealtimeConnectionAccessor } from '#lib/client/realtime/RealtimeConnectionContext.ts';
@@ -20,6 +21,8 @@
 
 	const currentCourse = $derived(page.data.course ?? null);
 	const currentChannel = $derived(findCourseChannel(page.route.id));
+	const isExploreCurrent = $derived(page.route.id === '/(app)/explore');
+	const isSearchCurrent = $derived(page.route.id === '/(app)/search');
 	const isProfileCurrent = $derived(
 		page.route.id === '/(app)/profile' || page.route.id === '/(app)/settings'
 	);
@@ -58,19 +61,28 @@
 			currentCourseId={currentCourse?.id ?? null}
 			{currentChannel}
 		/>
+		<a
+			href="#main-content"
+			class="sr-only rounded-full bg-primary px-4 py-2 font-semibold text-on-primary focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50"
+			>{m.navigation_skip_to_content()}</a
+		>
 		<div class="min-h-dvh desktop:flex">
 			<div class="hidden desktop:block">
 				<SpaceRail
 					followedCourses={data.followedCourses}
 					currentCourseId={currentCourse?.id ?? null}
-					isExploreCurrent={page.route.id === '/(app)/explore'}
-					isSearchCurrent={page.route.id === '/(app)/search'}
+					{isExploreCurrent}
+					{isSearchCurrent}
 					{isProfileCurrent}
 					{isAdministrator}
 					{profile}
 				/>
 			</div>
-			<div class="min-w-0 flex-1 pb-[calc(7rem+env(safe-area-inset-bottom))] desktop:pb-0">
+			<div
+				id="main-content"
+				tabindex="-1"
+				class="min-w-0 flex-1 pb-[calc(7rem+env(safe-area-inset-bottom))] outline-none desktop:pb-0"
+			>
 				{@render children()}
 			</div>
 			<div class="desktop:hidden">
@@ -78,6 +90,8 @@
 					followedCourses={data.followedCourses}
 					{currentCourse}
 					{currentChannel}
+					{isExploreCurrent}
+					{isSearchCurrent}
 					{isProfileCurrent}
 					{isAdministrator}
 					{profile}
