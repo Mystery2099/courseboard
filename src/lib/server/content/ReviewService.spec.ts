@@ -4,6 +4,8 @@ import { CourseRepository } from '#lib/server/catalog/CourseRepository.ts';
 import { AcademicHistoryRepository } from '#lib/server/history/AcademicHistoryRepository.ts';
 import { DatabaseIndexInitializer } from '#lib/server/persistence/DatabaseIndexInitializer.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
+import { CourseModerationAccess } from '#lib/server/moderation/CourseModerationAccess.ts';
+import { ModeratorAssignmentRepository } from '#lib/server/moderation/ModeratorAssignmentRepository.ts';
 import type { PostDetail } from './Post.ts';
 import { PostRepository } from './PostRepository.ts';
 import { ReviewRepository } from './ReviewRepository.ts';
@@ -50,6 +52,8 @@ function createService() {
 	const posts = new PostRepository();
 	const histories = new AcademicHistoryRepository();
 	const courses = new CourseRepository();
+	const assignments = new ModeratorAssignmentRepository();
+	vi.spyOn(assignments, 'isAssigned').mockResolvedValue(false);
 	vi.spyOn(DatabaseIndexInitializer, 'ensureIndexes').mockResolvedValue();
 	vi.spyOn(courses, 'findSpaceId').mockResolvedValue(spaceId);
 	vi.spyOn(reviews, 'findIdByAuthor').mockResolvedValue(null);
@@ -58,7 +62,14 @@ function createService() {
 	const events = createEventPublisher();
 	return {
 		events,
-		service: new ReviewService(reviews, posts, histories, courses, events),
+		service: new ReviewService(
+			reviews,
+			posts,
+			histories,
+			courses,
+			events,
+			new CourseModerationAccess(assignments)
+		),
 		reviews,
 		posts,
 		histories,

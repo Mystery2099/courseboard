@@ -32,6 +32,7 @@ const ERROR_MESSAGES: Record<ErrorCode, () => string> = {
 	'email-mismatch': m.error_email_mismatch,
 	'invitation-unavailable': m.error_invitation_unavailable,
 	'invitation-link-invalid': m.error_invitation_link_invalid,
+	'moderator-assignment-not-found': m.error_moderator_assignment_not_found,
 	'title-required': m.validation_title_required,
 	'body-required': m.validation_body_required,
 	'text-too-long': m.validation_text_too_long,

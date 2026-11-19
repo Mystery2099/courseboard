@@ -28,7 +28,8 @@ export const REQUEST_ERROR_CODES = [
 	'username-unavailable',
 	'email-mismatch',
 	'invitation-unavailable',
-	'invitation-link-invalid'
+	'invitation-link-invalid',
+	'moderator-assignment-not-found'
 ] as const;
 
 export type RequestErrorCode = (typeof REQUEST_ERROR_CODES)[number];

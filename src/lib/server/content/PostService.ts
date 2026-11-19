@@ -17,6 +17,10 @@ import {
 	contentEventPublisher,
 	type ContentEventPublisher
 } from '#lib/server/realtime/ContentEventPublisher.ts';
+import {
+	courseModerationAccess,
+	type CourseModerationAccess
+} from '#lib/server/moderation/CourseModerationAccess.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
 import type { PostDetail, PostDocument, PostOrderField, PostPagePosition } from './Post.ts';
 import { postRepository, type PostRepository } from './PostRepository.ts';
@@ -26,7 +30,7 @@ import { replyRepository, type ReplyRepository } from './ReplyRepository.ts';
 /**
  * Reads every post kind and publishes questions and discussions without requiring course history
  * or following. Reviews publish through ReviewService. Only a question's author chooses its accepted
- * reply, and only administrators lock threads until course moderators exist.
+ * reply. The course's moderators and administrators lock threads.
  */
 export class PostService {
 	private static readonly PAGE_SIZE = 20;
@@ -35,7 +39,8 @@ export class PostService {
 		private readonly posts: PostRepository,
 		private readonly replies: ReplyRepository,
 		private readonly courses: CourseRepository,
-		private readonly events: ContentEventPublisher
+		private readonly events: ContentEventPublisher,
+		private readonly moderation: CourseModerationAccess
 	) {}
 
 	/** Returns null when the course doesn't exist or the id is malformed. */
@@ -81,6 +86,8 @@ export class PostService {
 		const request = createPostSchema.parse(input);
 		const course = await this.findCourseSpace(courseId);
 		if (!course) return { kind: 'course-not-found' };
+		// Read before the insert, so a failed lookup can't fail a saved post and invite a duplicate retry.
+		const authorCanModerate = await this.moderation.canModerate(author, course.courseId);
 
 		const now = new Date();
 		const post: PostDocument = {
@@ -112,7 +119,8 @@ export class PostService {
 			kind: 'created',
 			post: PostResponseMapper.toDetailResponse(
 				{ ...post, author: { username, displayName } },
-				author
+				author,
+				authorCanModerate
 			)
 		};
 	}
@@ -121,7 +129,12 @@ export class PostService {
 	async getPost(postId: string, actor: ApplicationUser | null): Promise<PostDetailResponse | null> {
 		const viewer = AccessPolicy.requireAdmittedUser(actor);
 		const post = await this.findPost(postId);
-		return post ? PostResponseMapper.toDetailResponse(post, viewer) : null;
+		if (!post) return null;
+		return PostResponseMapper.toDetailResponse(
+			post,
+			viewer,
+			await this.moderation.canModerate(viewer, post.courseId)
+		);
 	}
 
 	async chooseAcceptedReply(
@@ -146,13 +159,14 @@ export class PostService {
 		isLocked: boolean,
 		actor: ApplicationUser | null
 	): Promise<PostDetailResponse | null> {
-		const administrator = AccessPolicy.requireAdministrator(actor);
+		const moderator = AccessPolicy.requireAdmittedUser(actor);
 		const post = await this.findPost(postId);
 		if (!post) return null;
+		await this.moderation.requireModerator(moderator, post.courseId);
 		// Locking again keeps the original time.
 		const lockedAt = isLocked ? (post.lockedAt ?? new Date()) : null;
 		if (!(await this.posts.setLockedAt(post._id, lockedAt))) return null;
-		return PostResponseMapper.toDetailResponse({ ...post, lockedAt }, administrator);
+		return PostResponseMapper.toDetailResponse({ ...post, lockedAt }, moderator, true);
 	}
 
 	private async changeAcceptedReply(
@@ -179,7 +193,11 @@ export class PostService {
 		}
 		return {
 			kind: 'changed',
-			post: PostResponseMapper.toDetailResponse({ ...post, acceptedReplyId: replyId }, user)
+			post: PostResponseMapper.toDetailResponse(
+				{ ...post, acceptedReplyId: replyId },
+				user,
+				await this.moderation.canModerate(user, post.courseId)
+			)
 		};
 	}
 
@@ -208,5 +226,6 @@ export const postService = new PostService(
 	postRepository,
 	replyRepository,
 	courseRepository,
-	contentEventPublisher
+	contentEventPublisher,
+	courseModerationAccess
 );

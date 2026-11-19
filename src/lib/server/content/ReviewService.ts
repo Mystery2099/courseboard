@@ -19,6 +19,10 @@ import {
 	contentEventPublisher,
 	type ContentEventPublisher
 } from '#lib/server/realtime/ContentEventPublisher.ts';
+import {
+	courseModerationAccess,
+	type CourseModerationAccess
+} from '#lib/server/moderation/CourseModerationAccess.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
 import type { PostDocument } from './Post.ts';
 import { postRepository, type PostRepository } from './PostRepository.ts';
@@ -35,7 +39,8 @@ export class ReviewService {
 		private readonly posts: PostRepository,
 		private readonly histories: AcademicHistoryRepository,
 		private readonly courses: CourseRepository,
-		private readonly events: ContentEventPublisher
+		private readonly events: ContentEventPublisher,
+		private readonly moderation: CourseModerationAccess
 	) {}
 
 	async getCourseContext(
@@ -91,6 +96,8 @@ export class ReviewService {
 		) {
 			return { kind: 'history-required' };
 		}
+		// Read before the insert, so a failed lookup can't fail a saved review.
+		const authorCanModerate = await this.moderation.canModerate(author, id);
 
 		const now = new Date();
 		const post: PostDocument = {
@@ -137,7 +144,8 @@ export class ReviewService {
 			kind: 'created',
 			post: PostResponseMapper.toDetailResponse(
 				{ ...post, author: { username, displayName } },
-				author
+				author,
+				authorCanModerate
 			)
 		};
 	}
@@ -157,7 +165,12 @@ export class ReviewService {
 			return null;
 		}
 		const post = await this.posts.findById(id);
-		return post ? PostResponseMapper.toDetailResponse(post, author) : null;
+		if (!post) return null;
+		return PostResponseMapper.toDetailResponse(
+			post,
+			author,
+			await this.moderation.canModerate(author, post.courseId)
+		);
 	}
 }
 
@@ -166,5 +179,6 @@ export const reviewService = new ReviewService(
 	postRepository,
 	academicHistoryRepository,
 	courseRepository,
-	contentEventPublisher
+	contentEventPublisher,
+	courseModerationAccess
 );
