@@ -28,7 +28,8 @@ export class ReplySubmissionQueue {
 		private readonly onRefused: () => void
 	) {}
 
-	submit(bodyMarkdown: string, parentReplyId: string | null): void {
+	/** Queues a reply and returns its submission id. */
+	submit(bodyMarkdown: string, parentReplyId: string | null): string {
 		const submissionId = crypto.randomUUID();
 		this.pendingReplies.push({
 			submissionId,
@@ -38,6 +39,7 @@ export class ReplySubmissionQueue {
 			errorMessage: null
 		});
 		void this.send(submissionId);
+		return submissionId;
 	}
 
 	retry(submissionId: string): void {

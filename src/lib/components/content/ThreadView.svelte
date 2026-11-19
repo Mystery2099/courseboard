@@ -22,6 +22,7 @@
 	import MarkdownBody from './MarkdownBody.svelte';
 	import PendingReplyCard from './PendingReplyCard.svelte';
 	import ReplyComposer from './ReplyComposer.svelte';
+	import DockedReplyComposer from './DockedReplyComposer.svelte';
 	import ThreadKindBadge from './ThreadKindBadge.svelte';
 	import ReviewFacts from './ReviewFacts.svelte';
 	import ReviewForm from './ReviewForm.svelte';
@@ -118,7 +119,33 @@
 		);
 	}
 
-	let replyTargetId = $state<string | null>(null);
+	/** A reply being answered. Nested replies are answered in their branch, under the top-level reply. */
+	interface ReplyTarget {
+		parentReplyId: string;
+		authorName: string;
+	}
+	let replyTarget = $state<ReplyTarget | null>(null);
+	let dockedReplyComposer = $state<ReturnType<typeof DockedReplyComposer> | null>(null);
+
+	function startReplyingTo(reply: ReplyResponse) {
+		replyTarget = {
+			parentReplyId: reply.parentReplyId ?? reply.id,
+			authorName: reply.author.displayName
+		};
+		// Phones answer in the docked composer; on desktop it is hidden and the branch shows its own.
+		dockedReplyComposer?.focus();
+	}
+
+	/** Queues the reply, then brings its pending card into view without moving focus. */
+	async function sendReply(bodyMarkdown: string, parentReplyId: string | null) {
+		const submissionId = submissionQueue.submit(bodyMarkdown, parentReplyId);
+		replyTarget = null;
+		await tick();
+		// After the next frame, so the reply bar has shrunk back to one line first.
+		requestAnimationFrame(() =>
+			document.getElementById(`pending-reply-${submissionId}`)?.scrollIntoView({ block: 'nearest' })
+		);
+	}
 	let isReviewEditorOpen = $state(false);
 
 	function showUpdatedPost(updatedPost: PostDetailResponse) {
@@ -161,8 +188,8 @@
 		</div>
 		<MarkdownBody class="mt-2" markdown={reply.bodyMarkdown} topHeadingLevel={3} />
 		<div class="mt-2 flex flex-wrap gap-2 text-sm">
-			{#if reply.parentReplyId === null && !post.isLocked}
-				<Button variant="outlined" size="compact" onclick={() => (replyTargetId = reply.id)}
+			{#if !post.isLocked}
+				<Button variant="outlined" size="compact" onclick={() => startReplyingTo(reply)}
 					>{m.common_reply()}</Button
 				>
 			{/if}
@@ -274,15 +301,14 @@
 							onDiscard={() => submissionQueue.discard(pendingReply.submissionId)}
 						/>
 					{/each}
-					{#if replyTargetId === branch.reply.id && !post.isLocked}
-						<ReplyComposer
-							label={m.thread_reply_to({ name: branch.reply.author.displayName })}
-							onSubmit={(bodyMarkdown) => {
-								submissionQueue.submit(bodyMarkdown, branch.reply.id);
-								replyTargetId = null;
-							}}
-							onCancel={() => (replyTargetId = null)}
-						/>
+					{#if replyTarget?.parentReplyId === branch.reply.id && !post.isLocked}
+						<div class="hidden desktop:block">
+							<ReplyComposer
+								label={m.thread_reply_to({ name: replyTarget.authorName })}
+								onSubmit={(bodyMarkdown) => sendReply(bodyMarkdown, branch.reply.id)}
+								onCancel={() => (replyTarget = null)}
+							/>
+						</div>
 					{/if}
 				</div>
 			</li>
@@ -313,16 +339,25 @@
 		{/each}
 	</div>
 
-	<div class="mt-6">
-		{#if post.isLocked}
-			<p class="rounded-2xl bg-surface-container p-4 text-sm" role="status">
-				{m.thread_locked_notice()}
-			</p>
-		{:else}
+	{#if post.isLocked}
+		<p class="mt-6 rounded-2xl bg-surface-container p-4 text-sm" role="status">
+			{m.thread_locked_notice()}
+		</p>
+	{:else}
+		<div class="mt-6 hidden desktop:block">
 			<ReplyComposer
 				label={m.thread_your_reply()}
-				onSubmit={(bodyMarkdown) => submissionQueue.submit(bodyMarkdown, null)}
+				onSubmit={(bodyMarkdown) => sendReply(bodyMarkdown, null)}
 			/>
-		{/if}
-	</div>
+		</div>
+	{/if}
 </section>
+
+{#if !post.isLocked}
+	<DockedReplyComposer
+		bind:this={dockedReplyComposer}
+		replyTargetName={replyTarget?.authorName ?? null}
+		onSubmit={(bodyMarkdown) => sendReply(bodyMarkdown, replyTarget?.parentReplyId ?? null)}
+		onClearReplyTarget={() => (replyTarget = null)}
+	/>
+{/if}

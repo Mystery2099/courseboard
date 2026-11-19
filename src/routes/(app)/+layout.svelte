@@ -26,6 +26,8 @@
 	const isProfileCurrent = $derived(
 		page.route.id === '/(app)/profile' || page.route.id === '/(app)/settings'
 	);
+	// Phones swap the dock for the thread's reply bar while a thread is open.
+	const isReadingThread = $derived(page.params.postId !== undefined);
 	const isAdministrator = $derived(data.currentUser?.role === 'administrator');
 
 	const clerkContext = useClerkContext();
@@ -81,11 +83,14 @@
 			<div
 				id="main-content"
 				tabindex="-1"
-				class="min-w-0 flex-1 pb-[calc(7rem+env(safe-area-inset-bottom))] outline-none desktop:pb-0"
+				class={[
+					'min-w-0 flex-1 outline-none desktop:pb-0',
+					!isReadingThread && 'pb-[calc(7rem+env(safe-area-inset-bottom))]'
+				]}
 			>
 				{@render children()}
 			</div>
-			<div class="desktop:hidden">
+			<div class={['desktop:hidden', isReadingThread && 'hidden']}>
 				<FloatingDock
 					followedCourses={data.followedCourses}
 					{currentCourse}
