@@ -82,4 +82,4 @@ These come from Nielsen Norman Group's research-based guidelines, which match wh
 
 The Blueprint handoff's swipe between channels on the space chip already keeps tapping as the main way, which fits the gesture guidance.
 
-**Out of scope for this lab.** Anonymous posting is the most-used student feature in the survey, but it conflicts with reviews disclosing participation and with moderation, and Professor Enke didn't ask for it. Notifications and direct messages stay deferred, and mentions are limited to the narrow version the [product spec](../product/product-spec.md) and [decision register](decision-register.md) describe.
+**Out of scope for this lab.** Anonymous posting is the most-used student feature in the survey, but it conflicts with reviews disclosing participation and with moderation, and Professor Enke didn't ask for it. A general notification inbox, notification emails, and direct messages stay deferred, and mentions are limited to the narrow version the [product spec](../product/product-spec.md) and [decision register](decision-register.md) describe.
