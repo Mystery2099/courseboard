@@ -81,7 +81,7 @@ Run local checks with `pnpm check`, `pnpm lint`, `pnpm exec vitest run`, and `pn
 | [Assignment requirements](docs/planning/assignment-and-scope.md) | The lab handout, how the app covers it, and Professor Enke's approval |
 | [Decision register](docs/planning/decision-register.md) | What we decided, why, what we turned down, and open questions |
 | [Needs assessment](docs/planning/needs-assessment.md) | The problem, users, requirements, and risks, with the [first version](docs/planning/needs-assessment-original.md) kept for comparison |
-| [Student feature research](docs/planning/student-feature-research.md) | What students use in course discussion tools and how it compares with Courseboard |
+| [Student feature research](docs/planning/student-feature-research.md) | What students use in course discussion tools, the interface conventions they expect, and how both compare with Courseboard |
 | [Product spec](docs/product/product-spec.md) | Current behavior, privacy and permissions, moderation, and first-release scope |
 | [Architecture](docs/technical/architecture.md) | Client/server structure, the HTTP API, caching, and realtime behavior |
 | [MongoDB model](docs/technical/mongodb-model.md) | Candidate documents, indexes, queries, and aggregation work |
