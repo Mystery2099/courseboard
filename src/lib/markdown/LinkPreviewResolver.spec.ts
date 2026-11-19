@@ -86,4 +86,14 @@ describe('Link preview resolver', () => {
 
 		expect(previews.map((preview) => preview.linkText)).toEqual(['Lecture 3', null]);
 	});
+
+	it('names a shared preview after a later link with text and ignores fragments', () => {
+		const previews = LinkPreviewResolver.resolveAll([
+			{ address: 'https://example.com/chart.png#v1', text: null },
+			{ address: 'https://example.com/chart.png#v2', text: 'Chart' }
+		]);
+
+		expect(previews).toHaveLength(1);
+		expect(previews[0].linkText).toBe('Chart');
+	});
 });

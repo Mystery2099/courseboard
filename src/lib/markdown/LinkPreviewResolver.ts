@@ -1,7 +1,7 @@
 import type { MarkdownLink } from './MarkdownRenderer.ts';
 
 type LinkPreviewMedia =
-	| { kind: 'image'; imageUrl: string }
+	| { kind: 'image'; imageUrl: string; isAnimated: boolean }
 	| { kind: 'video'; videoUrl: string }
 	| { kind: 'youtube'; thumbnailUrl: string; playerUrl: string }
 	| { kind: 'spotify'; playerUrl: string; isCompact: boolean };
@@ -35,7 +35,8 @@ export class LinkPreviewResolver {
 
 	/**
 	 * The previews for `links`, in order and at most a few per body. Links that load the same media,
-	 * such as a youtu.be and a youtube.com address for one video, share a preview.
+	 * such as a youtu.be and a youtube.com address for one video, share a preview, named by the first
+	 * of them with link text.
 	 */
 	static resolveAll(links: readonly MarkdownLink[]): LinkPreview[] {
 		const previewsByMediaUrl = new Map<string, LinkPreview>();
@@ -44,8 +45,11 @@ export class LinkPreviewResolver {
 			const preview = LinkPreviewResolver.resolve(link.address);
 			if (!preview) continue;
 			const mediaUrl = LinkPreviewResolver.findMediaUrl(preview);
-			if (!previewsByMediaUrl.has(mediaUrl)) {
+			const sharedPreview = previewsByMediaUrl.get(mediaUrl);
+			if (!sharedPreview) {
 				previewsByMediaUrl.set(mediaUrl, { ...preview, linkText: link.text });
+			} else if (sharedPreview.linkText === null) {
+				sharedPreview.linkText = link.text;
 			}
 		}
 		return [...previewsByMediaUrl.values()];
@@ -75,6 +79,7 @@ export class LinkPreviewResolver {
 			return null;
 		}
 		if (url.protocol !== 'https:' || url.username || url.password) return null;
+		url.hash = '';
 		const host = url.hostname.toLowerCase();
 
 		const youtubeVideoId = LinkPreviewResolver.findYoutubeVideoId(url, host);
@@ -108,7 +113,8 @@ export class LinkPreviewResolver {
 			return match
 				? {
 						kind: 'image',
-						imageUrl: `https://media.giphy.com/media/${match[1]}/giphy.gif`
+						imageUrl: `https://media.giphy.com/media/${match[1]}/giphy.gif`,
+						isAnimated: true
 					}
 				: null;
 		}
@@ -121,7 +127,11 @@ export class LinkPreviewResolver {
 			};
 		}
 		if (LinkPreviewResolver.IMAGE_PATH_PATTERN.test(url.pathname)) {
-			return { kind: 'image', imageUrl: url.href };
+			return {
+				kind: 'image',
+				imageUrl: url.href,
+				isAnimated: url.pathname.toLowerCase().endsWith('.gif')
+			};
 		}
 		if (LinkPreviewResolver.VIDEO_PATH_PATTERN.test(url.pathname)) {
 			return { kind: 'video', videoUrl: url.href };
