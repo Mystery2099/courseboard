@@ -15,7 +15,7 @@
 	} = $props();
 </script>
 
-<div class="rounded-2xl border border-dashed p-3">
+<div id="pending-reply-{pendingReply.submissionId}" class="rounded-2xl border border-dashed p-3">
 	<MarkdownBody
 		class="text-on-surface-variant"
 		markdown={pendingReply.bodyMarkdown}
