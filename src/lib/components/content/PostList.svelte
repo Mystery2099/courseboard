@@ -171,7 +171,11 @@
 				class="mt-3"
 				disabled={postsQuery.isFetchingNextPage}
 				onclick={() => postsQuery.fetchNextPage()}
-				>{postsQuery.isFetchingNextPage ? m.common_loading() : m.common_load_more()}</Button
+				>{postsQuery.isFetchingNextPage
+					? m.common_loading()
+					: postsQuery.isFetchNextPageError
+						? m.common_try_again()
+						: m.common_load_more()}</Button
 			>
 		</div>
 	{/if}
