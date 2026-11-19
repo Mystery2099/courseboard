@@ -9,11 +9,12 @@
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { describeFieldIssues, describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 	import { PostApiClient, postQueryKeys } from '#lib/client/content/PostApiClient.ts';
-	import { ComposerDraftTarget } from '#lib/client/content/ComposerDraftStorage.ts';
 	import {
+		ComposerDraftTarget,
 		type ComposerDraft,
-		getComposerDrafts
+		type ComposerDraftText
 	} from '#lib/client/content/ComposerDrafts.svelte.ts';
+	import { getAccountLocalData } from '#lib/client/AccountLocalData.ts';
 	import {
 		POST_BODY_MAX_LENGTH,
 		POST_TITLE_MAX_LENGTH,
@@ -37,17 +38,23 @@
 
 	const formId = $props.id();
 	const queryClient = useQueryClient();
-	const composerDrafts = getComposerDrafts();
+	const composerDrafts = getAccountLocalData().composerDrafts;
 	// Closing the dialog keeps the draft; each channel of each course has its own.
 	const draft = $derived(composerDrafts.open(ComposerDraftTarget.newPost(courseId, kind)));
 	let fieldErrors = $state<{ title?: string; bodyMarkdown?: string }>({});
 
+	interface PublishRequest {
+		request: CreatePostRequest;
+		submittedDraft: ComposerDraft;
+		submittedText: ComposerDraftText;
+	}
+
 	const publishMutation = createMutation(() => ({
-		mutationFn: ({ request }: { request: CreatePostRequest; submittedDraft: ComposerDraft }) =>
-			PostApiClient.createPost(courseId, request),
-		onSuccess: async (post, { submittedDraft }) => {
-			// The draft that was sent, even if the dialog has since moved to another channel.
-			submittedDraft.clear();
+		mutationFn: ({ request }: PublishRequest) => PostApiClient.createPost(courseId, request),
+		onSuccess: async (post, { submittedDraft, submittedText }) => {
+			// The draft that was sent, even if the dialog has since moved to another channel, keeping
+			// anything typed while it was publishing.
+			submittedDraft.clearIfUnchanged(submittedText);
 			await queryClient.invalidateQueries({ queryKey: postQueryKeys.lists(courseId) });
 			open = false;
 			onCreated(post);
@@ -73,7 +80,11 @@
 			return;
 		}
 		fieldErrors = {};
-		publishMutation.mutate({ request: parsed.data, submittedDraft: draft });
+		publishMutation.mutate({
+			request: parsed.data,
+			submittedDraft: draft,
+			submittedText: { title: draft.title, bodyMarkdown: draft.bodyMarkdown }
+		});
 	}
 </script>
 

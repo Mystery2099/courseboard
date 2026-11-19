@@ -3,6 +3,7 @@ import { describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 import { m } from '#lib/paraglide/messages.js';
 import type { ReplyResponse } from '#lib/contracts/PostContract.ts';
 import { PostApiClient } from './PostApiClient.ts';
+import type { UnconfirmedReplyStorage } from './UnconfirmedReplyStorage.ts';
 
 export interface PendingReply {
 	submissionId: string;
@@ -12,18 +13,11 @@ export interface PendingReply {
 	errorMessage: string | null;
 }
 
-/** Hears how each queued reply ends up. */
-export interface ReplySubmissionListener {
-	onStored(pendingReply: PendingReply): void;
-	/** A refusal, such as a locked thread, means the page is out of date. */
-	onFailed(pendingReply: PendingReply, wasRefused: boolean): void;
-	onDiscarded(pendingReply: PendingReply): void;
-}
-
 /**
  * Replies on their way to the server. Each keeps one submission id for its whole life, so Retry
  * after a lost response gets the stored reply back instead of writing a second one. A failed reply
- * keeps its text until it is retried or discarded.
+ * keeps its text until it is retried or discarded. Until the server confirms a reply it is also
+ * kept in local storage, and restored as failed when the thread is opened again.
  */
 export class ReplySubmissionQueue {
 	pendingReplies = $state<PendingReply[]>([]);
@@ -32,12 +26,27 @@ export class ReplySubmissionQueue {
 
 	constructor(
 		private readonly postId: string,
-		private readonly listener: ReplySubmissionListener
+		private readonly unconfirmedReplies: UnconfirmedReplyStorage,
+		private readonly onStored: () => void,
+		private readonly onRefused: () => void
 	) {}
+
+	/** Shows replies left unconfirmed by an earlier visit, ready to retry. */
+	restoreUnconfirmed(): void {
+		for (const reply of this.unconfirmedReplies.loadAll()) {
+			if (this.find(reply.submissionId)) continue;
+			this.pendingReplies.push({
+				...reply,
+				status: 'failed',
+				errorMessage: m.pending_reply_unconfirmed()
+			});
+		}
+	}
 
 	/** Queues a reply and returns its submission id. */
 	submit(bodyMarkdown: string, parentReplyId: string | null): string {
 		const submissionId = crypto.randomUUID();
+		this.unconfirmedReplies.save({ submissionId, parentReplyId, bodyMarkdown });
 		this.pendingReplies.push({
 			submissionId,
 			parentReplyId,
@@ -58,10 +67,10 @@ export class ReplySubmissionQueue {
 	}
 
 	discard(submissionId: string): void {
-		const pendingReply = this.find(submissionId);
-		if (!pendingReply || pendingReply.status === 'sending') return;
-		this.remove(submissionId);
-		this.listener.onDiscarded(pendingReply);
+		this.unconfirmedReplies.remove(submissionId);
+		this.pendingReplies = this.pendingReplies.filter(
+			(pendingReply) => pendingReply.submissionId !== submissionId
+		);
 	}
 
 	private async send(submissionId: string): Promise<void> {
@@ -74,22 +83,14 @@ export class ReplySubmissionQueue {
 				submissionId
 			});
 			this.storedReplies.push(reply);
-			this.remove(submissionId);
-			this.listener.onStored(pendingReply);
+			this.discard(submissionId);
+			this.onStored();
 		} catch (cause) {
 			pendingReply.status = 'failed';
 			pendingReply.errorMessage = describeRequestFailure(cause, m.error_unavailable);
-			this.listener.onFailed(
-				pendingReply,
-				cause instanceof ApiRequestError && cause.status === 409
-			);
+			// A refusal such as a locked thread means the page is out of date.
+			if (cause instanceof ApiRequestError && cause.status === 409) this.onRefused();
 		}
-	}
-
-	private remove(submissionId: string): void {
-		this.pendingReplies = this.pendingReplies.filter(
-			(pendingReply) => pendingReply.submissionId !== submissionId
-		);
 	}
 
 	private find(submissionId: string): PendingReply | undefined {

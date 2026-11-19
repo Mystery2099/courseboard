@@ -88,6 +88,7 @@
 	"common_save_changes": "Save changes",
 	"pending_reply_sending": "Sending…",
 	"pending_reply_not_sent": "Not sent. {reason}",
+	"pending_reply_unconfirmed": "You left the page before it was confirmed.",
 	"link_preview_open_image": "Open image from {host}",
 	"link_preview_video": "Video from {host}",
 	"link_preview_play_youtube": "Play YouTube video",

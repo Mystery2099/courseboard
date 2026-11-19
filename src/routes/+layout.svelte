@@ -5,7 +5,7 @@
 	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
 	import { browser } from '$app/env';
 	import AccountScopedQueryCache from '#lib/components/AccountScopedQueryCache.svelte';
-	import AccountScopedComposerDrafts from '#lib/components/AccountScopedComposerDrafts.svelte';
+	import AccountScopedLocalData from '#lib/components/AccountScopedLocalData.svelte';
 	import { CLERK_LOCALIZATIONS } from '#lib/client/ClerkLocalization.ts';
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import type { LayoutProps } from './$types';
@@ -26,9 +26,9 @@
 <ClerkProvider telemetry={{ disabled: true }} localization={CLERK_LOCALIZATIONS[getLocale()]}>
 	<QueryClientProvider client={queryClient}>
 		<AccountScopedQueryCache>
-			<AccountScopedComposerDrafts>
+			<AccountScopedLocalData>
 				{@render children()}
-			</AccountScopedComposerDrafts>
+			</AccountScopedLocalData>
 		</AccountScopedQueryCache>
 	</QueryClientProvider>
 </ClerkProvider>

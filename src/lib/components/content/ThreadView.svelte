@@ -4,7 +4,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery, createMutation, createQuery } from '@tanstack/svelte-query';
 	import { useQueryClient } from '@tanstack/svelte-query';
-	import { tick, untrack } from 'svelte';
+	import { onMount, tick, untrack } from 'svelte';
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import Check from 'lucide-svelte/icons/check';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
@@ -12,12 +12,9 @@
 	import { describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 	import { PostApiClient, postQueryKeys } from '#lib/client/content/PostApiClient.ts';
 	import { formatReplyCount, groupReplies } from '#lib/client/content/PostPresentation.ts';
-	import {
-		ReplySubmissionQueue,
-		type PendingReply
-	} from '#lib/client/content/ReplySubmissionQueue.svelte.ts';
-	import { ComposerDraftTarget } from '#lib/client/content/ComposerDraftStorage.ts';
-	import { getComposerDrafts } from '#lib/client/content/ComposerDrafts.svelte.ts';
+	import { ReplySubmissionQueue } from '#lib/client/content/ReplySubmissionQueue.svelte.ts';
+	import { ComposerDraftTarget } from '#lib/client/content/ComposerDrafts.svelte.ts';
+	import { getAccountLocalData } from '#lib/client/AccountLocalData.ts';
 	import type {
 		PostDetailResponse,
 		ReplyListResponse,
@@ -71,38 +68,19 @@
 			queryClient.invalidateQueries({ queryKey: postQueryKeys.replies(postId) }),
 			queryClient.invalidateQueries({ queryKey: postQueryKeys.lists(courseId) })
 		]);
-	const composerDrafts = getComposerDrafts();
+	const accountLocalData = getAccountLocalData();
+	const composerDrafts = accountLocalData.composerDrafts;
 	const replyDraftTarget = (parentReplyId: string | null) =>
 		parentReplyId === null
 			? ComposerDraftTarget.threadReply(postId)
 			: ComposerDraftTarget.branchReply(postId, parentReplyId);
-	const unsentDraft = (pendingReply: PendingReply) => ({
-		title: '',
-		bodyMarkdown: pendingReply.bodyMarkdown
-	});
-
-	// A failed reply is also kept as its target's draft, so leaving the page doesn't lose it.
-	const submissionQueue = new ReplySubmissionQueue(postId, {
-		onStored: (pendingReply) => {
-			composerDrafts.forgetUnsent(
-				replyDraftTarget(pendingReply.parentReplyId),
-				unsentDraft(pendingReply)
-			);
-			void refreshThread();
-		},
-		onFailed: (pendingReply, wasRefused) => {
-			composerDrafts.keepUnsent(
-				replyDraftTarget(pendingReply.parentReplyId),
-				unsentDraft(pendingReply)
-			);
-			if (wasRefused) void refreshThread();
-		},
-		onDiscarded: (pendingReply) =>
-			composerDrafts.forgetUnsent(
-				replyDraftTarget(pendingReply.parentReplyId),
-				unsentDraft(pendingReply)
-			)
-	});
+	const submissionQueue = new ReplySubmissionQueue(
+		postId,
+		accountLocalData.unconfirmedReplies(postId),
+		refreshThread,
+		refreshThread
+	);
+	onMount(() => submissionQueue.restoreUnconfirmed());
 
 	const loadedReplies = $derived(repliesQuery.data.pages.flatMap((page) => page.replies));
 	// Replies sent from this page stay visible even when their page of the thread isn't loaded yet.

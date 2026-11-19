@@ -1,26 +1,51 @@
-import { createContext } from 'svelte';
-import {
-	ComposerDraftStorage,
-	type ComposerDraftTarget,
-	type StoredComposerDraft
-} from './ComposerDraftStorage.ts';
+import type { AccountLocalStorage } from '#lib/client/AccountLocalStorage.ts';
+
+/** What a composer holds. Replies leave the title empty. */
+export interface ComposerDraftText {
+	title: string;
+	bodyMarkdown: string;
+}
+
+/** Something a draft is written for: a thread, one reply branch, or a new post in a channel. */
+export class ComposerDraftTarget {
+	private constructor(readonly key: string) {}
+
+	static threadReply(postId: string): ComposerDraftTarget {
+		return new ComposerDraftTarget(`draft:reply:${postId}`);
+	}
+
+	static branchReply(postId: string, parentReplyId: string): ComposerDraftTarget {
+		return new ComposerDraftTarget(`draft:reply:${postId}:${parentReplyId}`);
+	}
+
+	static newPost(courseId: string, threadKind: string): ComposerDraftTarget {
+		return new ComposerDraftTarget(`draft:post:${courseId}:${threadKind}`);
+	}
+}
+
+function parseDraftText(value: unknown): ComposerDraftText | null {
+	if (typeof value !== 'object' || value === null) return null;
+	const { title, bodyMarkdown } = value as Record<string, unknown>;
+	if (typeof title !== 'string' || typeof bodyMarkdown !== 'string') return null;
+	return { title, bodyMarkdown };
+}
 
 /**
  * A composer's text, saved on every change so it survives leaving the page or the browser closing
- * a background tab. Without an account it is kept in memory only.
+ * a background tab. Without an account, or when storage fails, it lasts as long as the tab.
  */
 export class ComposerDraft {
 	private titleText = $state('');
 	private bodyMarkdownText = $state('');
 
 	constructor(
-		private readonly storage: ComposerDraftStorage,
+		private readonly storage: AccountLocalStorage,
 		private readonly accountId: string | null,
 		private readonly target: ComposerDraftTarget
 	) {
-		const storedDraft = accountId ? storage.read(accountId, target) : null;
-		this.titleText = storedDraft?.title ?? '';
-		this.bodyMarkdownText = storedDraft?.bodyMarkdown ?? '';
+		const storedText = accountId ? parseDraftText(storage.read(accountId, target.key)) : null;
+		this.titleText = storedText?.title ?? '';
+		this.bodyMarkdownText = storedText?.bodyMarkdown ?? '';
 	}
 
 	get title(): string {
@@ -47,46 +72,47 @@ export class ComposerDraft {
 		this.save();
 	}
 
+	/** Clears the draft unless it was edited after the text was sent. */
+	clearIfUnchanged(sentText: ComposerDraftText): void {
+		if (this.titleText === sentText.title && this.bodyMarkdownText === sentText.bodyMarkdown) {
+			this.clear();
+		}
+	}
+
 	private save(): void {
 		if (this.accountId === null) return;
-		this.storage.write(this.accountId, this.target, {
-			title: this.titleText,
-			bodyMarkdown: this.bodyMarkdownText
-		});
+		if (this.titleText.trim() === '' && this.bodyMarkdownText.trim() === '') {
+			this.storage.remove(this.accountId, this.target.key);
+		} else {
+			this.storage.write(this.accountId, this.target.key, {
+				title: this.titleText,
+				bodyMarkdown: this.bodyMarkdownText
+			});
+		}
 	}
 }
 
-/** Opens drafts for the signed-in account. Pages share one per tab through context. */
+/**
+ * Opens the signed-in account's drafts. Opening the same target again returns the same draft, so
+ * every composer for it shows the same text and nothing typed is lost if storage fails.
+ */
 export class ComposerDrafts {
+	private openDrafts: Record<string, ComposerDraft> = {};
+	private openDraftsAccountId: string | null = null;
+
 	constructor(
-		private readonly resolveAccountId: () => string | null,
-		private readonly storage = new ComposerDraftStorage()
+		private readonly storage: AccountLocalStorage,
+		private readonly resolveAccountId: () => string | null
 	) {}
 
-	/** Reactive on the account, so a draft opened in a derived reopens when the account changes. */
+	/** Reads the account reactively, so a derived that opens a draft reopens it for a new account. */
 	open(target: ComposerDraftTarget): ComposerDraft {
-		return new ComposerDraft(this.storage, this.resolveAccountId(), target);
-	}
-
-	/**
-	 * Keeps text whose send failed, unless something newer is saved for the target, so it comes back
-	 * in the composer after the page is left.
-	 */
-	keepUnsent(target: ComposerDraftTarget, draft: StoredComposerDraft): void {
 		const accountId = this.resolveAccountId();
-		if (accountId !== null) this.storage.writeIfAbsent(accountId, target, draft);
-	}
-
-	/** Forgets text kept by keepUnsent once it is stored or discarded. */
-	forgetUnsent(target: ComposerDraftTarget, draft: StoredComposerDraft): void {
-		const accountId = this.resolveAccountId();
-		if (accountId !== null) this.storage.removeIfUnchanged(accountId, target, draft);
-	}
-
-	/** Forgets other accounts' drafts, and every draft once signed out. */
-	keepOnlyAccount(accountId: string | null): void {
-		this.storage.removeAllExcept(accountId);
+		if (accountId !== this.openDraftsAccountId) {
+			this.openDrafts = {};
+			this.openDraftsAccountId = accountId;
+		}
+		this.openDrafts[target.key] ??= new ComposerDraft(this.storage, accountId, target);
+		return this.openDrafts[target.key];
 	}
 }
-
-export const [getComposerDrafts, setComposerDrafts] = createContext<ComposerDrafts>();
