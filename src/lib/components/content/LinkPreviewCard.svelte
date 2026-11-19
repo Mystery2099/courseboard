@@ -18,6 +18,25 @@
 	function focusOnMount(element: HTMLElement) {
 		element.focus();
 	}
+
+	/**
+	 * Calls `onFailure` when the media fails, including before hydration: the server-rendered inline
+	 * error handler Svelte would rely on is blocked by the CSP.
+	 */
+	function reportLoadFailure(onFailure: () => void) {
+		return (element: HTMLImageElement | HTMLVideoElement) => {
+			const hasAlreadyFailed =
+				element instanceof HTMLImageElement
+					? element.complete && element.naturalWidth === 0
+					: element.error !== null;
+			if (hasAlreadyFailed) {
+				onFailure();
+				return;
+			}
+			element.addEventListener('error', onFailure);
+			return () => element.removeEventListener('error', onFailure);
+		};
+	}
 </script>
 
 {#if isHiddenByReader}
@@ -50,7 +69,7 @@
 					alt=""
 					loading="lazy"
 					referrerpolicy="no-referrer"
-					onerror={() => (hasFailedToLoad = true)}
+					{@attach reportLoadFailure(() => (hasFailedToLoad = true))}
 				/>
 			</a>
 			<!-- eslint-enable svelte/no-navigation-without-resolve -->
@@ -74,7 +93,7 @@
 				playsinline
 				preload="metadata"
 				aria-label={preview.linkText ?? m.link_preview_video({ host: sourceHost })}
-				onerror={() => (hasFailedToLoad = true)}
+				{@attach reportLoadFailure(() => (hasFailedToLoad = true))}
 			></video>
 		{:else if preview.kind === 'youtube'}
 			<!-- YouTube's player needs at least 200px of height. -->
@@ -104,7 +123,7 @@
 								alt=""
 								loading="lazy"
 								referrerpolicy="no-referrer"
-								onerror={() => (hasThumbnailFailedToLoad = true)}
+								{@attach reportLoadFailure(() => (hasThumbnailFailedToLoad = true))}
 							/>
 						{/if}
 						<span
