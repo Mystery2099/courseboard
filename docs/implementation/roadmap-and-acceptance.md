@@ -37,7 +37,7 @@
 
 ## Stage 3: content safety and realtime
 
-- [ ] Implement safe Markdown rendering, formatting help, and account-isolated local drafts without a toolbar or preview. *Rendering and formatting help are built with markdown-it; drafts aren't.*
+- [x] Implement safe Markdown rendering, formatting help, and account-isolated local drafts without a toolbar or preview. *Rendering and formatting help are built with markdown-it. Drafts are kept in local storage per account for the reply bar, inline replies, and new posts.*
 - [ ] Implement two-image post attachments, server validation/processing, metadata stripping, authorized delivery, and atomic quota enforcement.
 - [ ] Implement reports, scoped moderation, locking, removal/restoration, audit records, and suspension with active socket disconnection. *Administrators assign course moderators, who can lock and unlock threads only in their courses. Reports, removal, audit records, and suspension aren't built.*
 - [ ] Rate-limit invitation redemption, image uploads, and creating posts, replies, and reports.
