@@ -133,8 +133,11 @@
 							use:enhance={() => {
 								isFollowPending = true;
 								return async ({ update }) => {
-									await update();
-									isFollowPending = false;
+									try {
+										await update();
+									} finally {
+										isFollowPending = false;
+									}
 								};
 							}}
 						>
