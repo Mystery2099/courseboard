@@ -96,4 +96,22 @@ describe('Link preview resolver', () => {
 		expect(previews).toHaveLength(1);
 		expect(previews[0].linkText).toBe('Chart');
 	});
+
+	it('keeps video time ranges and names previews from links past the limit', () => {
+		const links = Array.from({ length: 4 }, (_, index) => ({
+			address: `https://example.com/lecture.mp4#t=${index * 60}`,
+			text: null
+		}));
+
+		const previews = LinkPreviewResolver.resolveAll([
+			...links,
+			{ address: 'https://example.com/lecture.mp4#t=0', text: 'Intro' }
+		]);
+
+		expect(previews).toHaveLength(4);
+		expect(previews[0]).toMatchObject({
+			videoUrl: 'https://example.com/lecture.mp4#t=0',
+			linkText: 'Intro'
+		});
+	});
 });

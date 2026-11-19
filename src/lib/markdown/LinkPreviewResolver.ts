@@ -1,7 +1,7 @@
 import type { MarkdownLink } from './MarkdownRenderer.ts';
 
 type LinkPreviewMedia =
-	| { kind: 'image'; imageUrl: string; isAnimated: boolean }
+	| { kind: 'image'; imageUrl: string }
 	| { kind: 'video'; videoUrl: string }
 	| { kind: 'youtube'; thumbnailUrl: string; playerUrl: string }
 	| { kind: 'spotify'; playerUrl: string; isCompact: boolean };
@@ -41,15 +41,14 @@ export class LinkPreviewResolver {
 	static resolveAll(links: readonly MarkdownLink[]): LinkPreview[] {
 		const previewsByMediaUrl = new Map<string, LinkPreview>();
 		for (const link of links) {
-			if (previewsByMediaUrl.size === LinkPreviewResolver.MAXIMUM_PREVIEWS_PER_BODY) break;
 			const preview = LinkPreviewResolver.resolve(link.address);
 			if (!preview) continue;
 			const mediaUrl = LinkPreviewResolver.findMediaUrl(preview);
 			const sharedPreview = previewsByMediaUrl.get(mediaUrl);
-			if (!sharedPreview) {
+			if (sharedPreview) {
+				sharedPreview.linkText ??= link.text;
+			} else if (previewsByMediaUrl.size < LinkPreviewResolver.MAXIMUM_PREVIEWS_PER_BODY) {
 				previewsByMediaUrl.set(mediaUrl, { ...preview, linkText: link.text });
-			} else if (sharedPreview.linkText === null) {
-				sharedPreview.linkText = link.text;
 			}
 		}
 		return [...previewsByMediaUrl.values()];
@@ -79,7 +78,6 @@ export class LinkPreviewResolver {
 			return null;
 		}
 		if (url.protocol !== 'https:' || url.username || url.password) return null;
-		url.hash = '';
 		const host = url.hostname.toLowerCase();
 
 		const youtubeVideoId = LinkPreviewResolver.findYoutubeVideoId(url, host);
@@ -113,8 +111,7 @@ export class LinkPreviewResolver {
 			return match
 				? {
 						kind: 'image',
-						imageUrl: `https://media.giphy.com/media/${match[1]}/giphy.gif`,
-						isAnimated: true
+						imageUrl: `https://media.giphy.com/media/${match[1]}/giphy.gif`
 					}
 				: null;
 		}
@@ -127,11 +124,9 @@ export class LinkPreviewResolver {
 			};
 		}
 		if (LinkPreviewResolver.IMAGE_PATH_PATTERN.test(url.pathname)) {
-			return {
-				kind: 'image',
-				imageUrl: url.href,
-				isAnimated: url.pathname.toLowerCase().endsWith('.gif')
-			};
+			// A fragment doesn't change an image, so links that differ only there share a preview.
+			url.hash = '';
+			return { kind: 'image', imageUrl: url.href };
 		}
 		if (LinkPreviewResolver.VIDEO_PATH_PATTERN.test(url.pathname)) {
 			return { kind: 'video', videoUrl: url.href };

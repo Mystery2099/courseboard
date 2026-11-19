@@ -9,8 +9,9 @@
 
 	const sourceHost = $derived(new URL(preview.sourceUrl).hostname);
 	let hasFailedToLoad = $state(false);
-	// A looping GIF must be possible to stop, and an <img> can't be paused.
+	// An animated image must be possible to stop, and an <img> can't be paused.
 	let isHiddenByReader = $state(false);
+	let hasBeenShownAgain = $state(false);
 	let hasThumbnailFailedToLoad = $state(false);
 	let isYoutubePlayerOpen = $state(false);
 
@@ -24,9 +25,12 @@
 		{@attach focusOnMount}
 		variant="text"
 		size="compact"
-		onclick={() => (isHiddenByReader = false)}
+		onclick={() => {
+			isHiddenByReader = false;
+			hasBeenShownAgain = true;
+		}}
 	>
-		{m.link_preview_show_gif()}
+		{m.link_preview_show_image()}
 	</Button>
 {:else if !hasFailedToLoad}
 	<div class="relative w-fit max-w-full overflow-hidden rounded-2xl border bg-surface-container">
@@ -41,7 +45,7 @@
 				aria-label={preview.linkText ?? m.link_preview_open_image({ host: sourceHost })}
 			>
 				<img
-					class="block max-h-80 max-w-full object-contain"
+					class="block max-h-80 min-h-13 max-w-full min-w-13 object-contain"
 					src={preview.imageUrl}
 					alt=""
 					loading="lazy"
@@ -50,16 +54,17 @@
 				/>
 			</a>
 			<!-- eslint-enable svelte/no-navigation-without-resolve -->
-			{#if preview.isAnimated}
-				<button
-					type="button"
-					class="absolute top-2 right-2 flex size-9 cursor-pointer items-center justify-center rounded-full bg-black/70 text-white"
-					aria-label={m.link_preview_hide_gif()}
-					onclick={() => (isHiddenByReader = true)}
-				>
-					<X class="size-5" aria-hidden="true" />
-				</button>
-			{/if}
+			<button
+				{@attach (element) => {
+					if (hasBeenShownAgain) element.focus();
+				}}
+				type="button"
+				class="absolute top-2 right-2 flex size-9 cursor-pointer items-center justify-center rounded-full bg-black/70 text-white"
+				aria-label={m.link_preview_hide_image()}
+				onclick={() => (isHiddenByReader = true)}
+			>
+				<X class="size-5" aria-hidden="true" />
+			</button>
 		{:else if preview.kind === 'video'}
 			<!-- svelte-ignore a11y_media_has_caption -->
 			<video
