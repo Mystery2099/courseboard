@@ -74,7 +74,7 @@ Check sessions, admission, suspension, and permissions on every page, API, image
 
 ## Content and reviews
 
-Initial post types are questions, discussions, and reviews. Defer Experience posts. Replies nest at most one level. The question author can select, replace, or clear one accepted reply. Removing that reply clears acceptance. Questions, discussions, and replies take reactions from a small fixed emoji set, one of each per person; reactions never rank, sort, or filter anything, and reviews don't take them. Defer votes and reputation.
+Initial post types are questions, discussions, and reviews. Defer Experience posts. Replies nest at most one level. The question author can select, replace, or clear one accepted reply. Removing that reply clears acceptance. Questions, discussions, and replies take reactions from a small fixed emoji set, one of each per person. Reactions never rank, sort, or filter anything, and reviews don't take them. Defer votes and reputation.
 
 Publishing a review requires a Taking/Took entry; Planning doesn't qualify. Permit one editable review per person per course, even with repeated attempts. Record workload from 1 to 5, would-take-again yes/no, term, participation status, and written feedback. Before publishing, warn that the review discloses self-reported participation even when the history entry is private. Publishing never changes history visibility, and nothing should claim a school verified it.
 
@@ -94,7 +94,7 @@ At the quota, existing content keeps working and new uploads fail clearly. Admin
 
 Search courses, posts, and people with institution context. People filters cover name/username, institution, course, and history status, using visible academic information only. Start with exact course-code lookup and ordinary text search. Defer fuzzy matching and search autocomplete.
 
-Persist writes through authenticated HTTP requests before publishing small Socket.IO notices. Authenticate sockets, authorize subscriptions, and refetch persisted content on reconnect. New activity queues behind a notice instead of shifting reading content. An `@username` mention in a post or reply, typed with username autocomplete, links to that person's profile, sends them a live notice if they're connected, and adds the post to their Mentions list, which only shows posts they can still read. Mentions have no badges, emails, or read state. Defer online presence, other notification inboxes, notification emails, and cross-course unread badges.
+Persist writes through authenticated HTTP requests before publishing small Socket.IO notices. Authenticate sockets, authorize subscriptions, and refetch persisted content on reconnect. New activity queues behind a notice instead of shifting reading content. An `@username` mention in a post or reply, typed with username autocomplete, links to that person's profile and sends them a live notice if they're connected. The post also goes to their Mentions list, which only shows posts they can still read. Mentions have no badges, emails, or read state. Defer presence indicators, a general notification inbox, notification emails, and cross-course unread badges.
 
 ## Moderation and deletion
 
