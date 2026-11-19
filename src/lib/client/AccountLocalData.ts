@@ -14,14 +14,20 @@ export class AccountLocalData {
 		this.composerDrafts = new ComposerDrafts(storage, resolveAccountId);
 	}
 
-	/** Bound to the account signed in now, so a late response can't write under another account. */
+	/** Bound to the account signed in now; it stops writing once that account signs out or switches. */
 	unconfirmedReplies(postId: string): UnconfirmedReplyStorage {
-		return new UnconfirmedReplyStorage(this.storage, this.resolveAccountId(), postId);
+		return new UnconfirmedReplyStorage(
+			this.storage,
+			this.resolveAccountId(),
+			postId,
+			this.resolveAccountId
+		);
 	}
 
-	/** Removes other accounts' data, and everything once signed out. */
+	/** Removes other accounts' data, and everything once signed out, from storage and memory. */
 	keepOnlyAccount(accountId: string | null): void {
 		this.storage.removeAllExcept(accountId);
+		this.composerDrafts.forgetOpenDraftsUnlessAccount(accountId);
 	}
 }
 

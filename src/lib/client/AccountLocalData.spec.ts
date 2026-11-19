@@ -70,8 +70,10 @@ describe('account local data', () => {
 		const accountId = { current: 'user_a' as string | null };
 		const localData = createLocalData(storage, accountId);
 		const sentByA = localData.unconfirmedReplies('post-1');
-		accountId.current = 'user_b';
 		sentByA.save({ submissionId: 'submission-1', parentReplyId: null, bodyMarkdown: 'from A' });
+		accountId.current = 'user_b';
+		sentByA.save({ submissionId: 'submission-2', parentReplyId: null, bodyMarkdown: 'late' });
+		sentByA.remove('submission-1');
 
 		expect(localData.unconfirmedReplies('post-1').loadAll()).toEqual([]);
 		accountId.current = 'user_a';
@@ -81,6 +83,31 @@ describe('account local data', () => {
 		expect(localData.unconfirmedReplies('post-2').loadAll()).toEqual([]);
 		sentByA.remove('submission-1');
 		expect(localData.unconfirmedReplies('post-1').loadAll()).toEqual([]);
+	});
+
+	it('forgets drafts held in memory once their account signs out', () => {
+		const storage = new InMemoryStorage();
+		const localData = createLocalData(storage, { current: 'user_a' });
+		localData.composerDrafts.open(threadTarget).bodyMarkdown = 'before sign-out';
+		localData.keepOnlyAccount(null);
+		expect(storage.length).toBe(0);
+		expect(localData.composerDrafts.open(threadTarget).bodyMarkdown).toBe('');
+	});
+
+	it("doesn't clear a newer draft another tab saved after this one was published", () => {
+		const storage = new InMemoryStorage();
+		const target = ComposerDraftTarget.newPost('course-1', 'question');
+		const publishingTab = createLocalData(storage, { current: 'user_a' }).composerDrafts.open(
+			target
+		);
+		publishingTab.bodyMarkdown = 'Published';
+		createLocalData(storage, { current: 'user_a' }).composerDrafts.open(target).bodyMarkdown =
+			'Newer, from another tab';
+		publishingTab.clearIfUnchanged({ title: '', bodyMarkdown: 'Published' });
+		expect(publishingTab.bodyMarkdown).toBe('');
+		expect(
+			createLocalData(storage, { current: 'user_a' }).composerDrafts.open(target).bodyMarkdown
+		).toBe('Newer, from another tab');
 	});
 
 	it("removes other accounts' data, all of it when signed out, and leaves other keys alone", () => {

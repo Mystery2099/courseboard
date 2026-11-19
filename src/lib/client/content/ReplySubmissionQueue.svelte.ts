@@ -17,7 +17,7 @@ export interface PendingReply {
  * Replies on their way to the server. Each keeps one submission id for its whole life, so Retry
  * after a lost response gets the stored reply back instead of writing a second one. A failed reply
  * keeps its text until it is retried or discarded. Until the server confirms a reply it is also
- * kept in local storage, and restored as failed when the thread is opened again.
+ * kept in local storage, and sent again when the thread is next opened.
  */
 export class ReplySubmissionQueue {
 	pendingReplies = $state<PendingReply[]>([]);
@@ -31,15 +31,15 @@ export class ReplySubmissionQueue {
 		private readonly onRefused: () => void
 	) {}
 
-	/** Shows replies left unconfirmed by an earlier visit, ready to retry. */
+	/**
+	 * Sends replies an earlier visit left unconfirmed again. Their submission ids are unchanged, so one
+	 * the server already stored comes back instead of being written twice.
+	 */
 	restoreUnconfirmed(): void {
 		for (const reply of this.unconfirmedReplies.loadAll()) {
 			if (this.find(reply.submissionId)) continue;
-			this.pendingReplies.push({
-				...reply,
-				status: 'failed',
-				errorMessage: m.pending_reply_unconfirmed()
-			});
+			this.pendingReplies.push({ ...reply, status: 'sending', errorMessage: null });
+			void this.send(reply.submissionId);
 		}
 	}
 

@@ -30,6 +30,10 @@ function parseDraftText(value: unknown): ComposerDraftText | null {
 	return { title, bodyMarkdown };
 }
 
+function isSameText(first: ComposerDraftText, second: ComposerDraftText): boolean {
+	return first.title === second.title && first.bodyMarkdown === second.bodyMarkdown;
+}
+
 /**
  * A composer's text, saved on every change so it survives leaving the page or the browser closing
  * a background tab. Without an account, or when storage fails, it lasts as long as the tab.
@@ -72,10 +76,19 @@ export class ComposerDraft {
 		this.save();
 	}
 
-	/** Clears the draft unless it was edited after the text was sent. */
+	/**
+	 * Clears the draft unless it was edited after the text was sent, here or in another tab whose
+	 * newer text is the one saved.
+	 */
 	clearIfUnchanged(sentText: ComposerDraftText): void {
-		if (this.titleText === sentText.title && this.bodyMarkdownText === sentText.bodyMarkdown) {
-			this.clear();
+		if (this.titleText !== sentText.title || this.bodyMarkdownText !== sentText.bodyMarkdown)
+			return;
+		this.titleText = '';
+		this.bodyMarkdownText = '';
+		if (this.accountId === null) return;
+		const storedText = parseDraftText(this.storage.read(this.accountId, this.target.key));
+		if (!storedText || isSameText(storedText, sentText)) {
+			this.storage.remove(this.accountId, this.target.key);
 		}
 	}
 
@@ -104,6 +117,13 @@ export class ComposerDrafts {
 		private readonly storage: AccountLocalStorage,
 		private readonly resolveAccountId: () => string | null
 	) {}
+
+	/** Drops drafts held in memory for any other account, as a sign-out or switch already did on disk. */
+	forgetOpenDraftsUnlessAccount(accountId: string | null): void {
+		if (accountId === this.openDraftsAccountId) return;
+		this.openDrafts = {};
+		this.openDraftsAccountId = accountId;
+	}
 
 	/** Reads the account reactively, so a derived that opens a draft reopens it for a new account. */
 	open(target: ComposerDraftTarget): ComposerDraft {

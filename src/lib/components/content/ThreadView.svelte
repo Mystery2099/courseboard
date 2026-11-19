@@ -4,7 +4,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery, createMutation, createQuery } from '@tanstack/svelte-query';
 	import { useQueryClient } from '@tanstack/svelte-query';
-	import { onMount, tick, untrack } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import Check from 'lucide-svelte/icons/check';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
@@ -74,13 +74,19 @@
 		parentReplyId === null
 			? ComposerDraftTarget.threadReply(postId)
 			: ComposerDraftTarget.branchReply(postId, parentReplyId);
-	const submissionQueue = new ReplySubmissionQueue(
-		postId,
-		accountLocalData.unconfirmedReplies(postId),
-		refreshThread,
-		refreshThread
+	// A new queue for each account, so nobody sees or retries replies another account wrote here.
+	const submissionQueue = $derived(
+		new ReplySubmissionQueue(
+			postId,
+			accountLocalData.unconfirmedReplies(postId),
+			refreshThread,
+			refreshThread
+		)
 	);
-	onMount(() => submissionQueue.restoreUnconfirmed());
+	$effect(() => {
+		const queue = submissionQueue;
+		untrack(() => queue.restoreUnconfirmed());
+	});
 
 	const loadedReplies = $derived(repliesQuery.data.pages.flatMap((page) => page.replies));
 	// Replies sent from this page stay visible even when their page of the thread isn't loaded yet.
@@ -127,11 +133,21 @@
 		if (firstNewReply) document.getElementById(`reply-${firstNewReply.id}`)?.focus();
 	}
 
-	function pendingRepliesUnder(parentReplyId: string | null) {
+	function pendingRepliesUnder(parentReplyId: string) {
 		return submissionQueue.pendingReplies.filter(
 			(pendingReply) => pendingReply.parentReplyId === parentReplyId
 		);
 	}
+
+	// Includes replies to a branch that isn't shown, such as one a reload restored before its page
+	// of the thread was loaded, so they can still be retried or discarded.
+	const threadLevelPendingReplies = $derived.by(() => {
+		const shownBranchIds = new Set(replyBranches.map((branch) => branch.reply.id));
+		return submissionQueue.pendingReplies.filter(
+			(pendingReply) =>
+				pendingReply.parentReplyId === null || !shownBranchIds.has(pendingReply.parentReplyId)
+		);
+	});
 
 	/** A reply being answered. Nested replies are answered in their branch, under the top-level reply. */
 	interface ReplyTarget {
@@ -355,7 +371,7 @@
 	{/if}
 
 	<div class="mt-3 flex flex-col gap-3 empty:hidden">
-		{#each pendingRepliesUnder(null) as pendingReply (pendingReply.submissionId)}
+		{#each threadLevelPendingReplies as pendingReply (pendingReply.submissionId)}
 			<PendingReplyCard
 				{pendingReply}
 				onRetry={() => submissionQueue.retry(pendingReply.submissionId)}

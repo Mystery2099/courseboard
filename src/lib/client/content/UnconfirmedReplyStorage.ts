@@ -23,7 +23,8 @@ export class UnconfirmedReplyStorage {
 	constructor(
 		private readonly storage: AccountLocalStorage,
 		private readonly accountId: string | null,
-		private readonly postId: string
+		private readonly postId: string,
+		private readonly resolveCurrentAccountId: () => string | null
 	) {}
 
 	loadAll(): UnconfirmedReply[] {
@@ -35,8 +36,9 @@ export class UnconfirmedReplyStorage {
 	}
 
 	save(reply: UnconfirmedReply): void {
-		if (this.accountId === null) return;
-		this.storage.write(this.accountId, this.keyPrefix() + reply.submissionId, {
+		const accountId = this.currentBoundAccountId();
+		if (accountId === null) return;
+		this.storage.write(accountId, this.keyPrefix() + reply.submissionId, {
 			submissionId: reply.submissionId,
 			parentReplyId: reply.parentReplyId,
 			bodyMarkdown: reply.bodyMarkdown
@@ -44,8 +46,14 @@ export class UnconfirmedReplyStorage {
 	}
 
 	remove(submissionId: string): void {
-		if (this.accountId === null) return;
-		this.storage.remove(this.accountId, this.keyPrefix() + submissionId);
+		const accountId = this.currentBoundAccountId();
+		if (accountId === null) return;
+		this.storage.remove(accountId, this.keyPrefix() + submissionId);
+	}
+
+	/** Null after a sign-out or switch, when writing would recreate data that was just removed. */
+	private currentBoundAccountId(): string | null {
+		return this.accountId === this.resolveCurrentAccountId() ? this.accountId : null;
 	}
 
 	private keyPrefix(): string {
