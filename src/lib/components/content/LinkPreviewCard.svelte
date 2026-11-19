@@ -103,7 +103,7 @@
 						{@attach focusOnMount}
 						class="size-full"
 						src={preview.playerUrl}
-						title={m.link_preview_youtube_player()}
+						title={preview.linkText ?? m.link_preview_youtube_player()}
 						allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
 						referrerpolicy="strict-origin-when-cross-origin"
 					></iframe>
@@ -138,7 +138,7 @@
 			<iframe
 				class={['block w-120 max-w-full', preview.isCompact ? 'h-38' : 'h-88']}
 				src={preview.playerUrl}
-				title={m.link_preview_spotify_player()}
+				title={preview.linkText ?? m.link_preview_spotify_player()}
 				loading="lazy"
 				allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
 			></iframe>
