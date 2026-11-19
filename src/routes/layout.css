@@ -190,9 +190,9 @@
 		color: var(--on-surface);
 		font-family: var(--font-sans);
 		/* Keeps focused and scrolled-to elements clear of the phone dock, or of a thread's reply bar. */
-		scroll-padding-bottom: var(
-			--docked-reply-composer-height,
-			calc(7rem + env(safe-area-inset-bottom))
+		scroll-padding-bottom: calc(
+			var(--keyboard-inset, 0px) +
+				var(--docked-reply-composer-height, calc(7rem + env(safe-area-inset-bottom)))
 		);
 
 		@variant desktop {

@@ -139,7 +139,8 @@
 	/** Queues the reply, then brings its pending card into view without moving focus. */
 	async function sendReply(bodyMarkdown: string, parentReplyId: string | null) {
 		const submissionId = submissionQueue.submit(bodyMarkdown, parentReplyId);
-		replyTarget = null;
+		// A thread-level reply leaves any open reply to someone, and its draft, in place.
+		if (parentReplyId !== null) replyTarget = null;
 		await tick();
 		// After the next frame, so the reply bar has shrunk back to one line first.
 		requestAnimationFrame(() =>

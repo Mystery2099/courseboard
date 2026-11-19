@@ -10,6 +10,7 @@
 	import { submitFormOnShortcut } from '#lib/client/hotkeys/FormSubmitShortcut.ts';
 	import { formatMarkdownOnShortcut } from '#lib/client/hotkeys/MarkdownFormattingShortcuts.ts';
 	import { stayAboveOnScreenKeyboard } from '#lib/client/navigation/OnScreenKeyboardInset.ts';
+	import { getPhoneDock } from '#lib/client/navigation/PhoneDock.svelte.ts';
 
 	const MAXIMUM_FIELD_HEIGHT_PX = 128;
 
@@ -32,6 +33,12 @@
 	let isFormattingHelpOpen = $state(false);
 	let bodyField = $state<HTMLTextAreaElement | null>(null);
 	let barHeight = $state(64);
+	const fieldLabel = $derived(
+		replyTargetName ? m.thread_reply_to({ name: replyTargetName }) : m.thread_your_reply()
+	);
+
+	const phoneDock = getPhoneDock();
+	$effect(() => phoneDock.replaceWithReplyBar());
 
 	/** Focuses the field. Called from a tap, so phones open the keyboard right away. */
 	export function focus() {
@@ -66,6 +73,10 @@
 		errorMessage = null;
 		bodyMarkdown = '';
 		onSubmit(parsed.data);
+		// Sent from the keyboard, Send keeps focus; return it to the field, as a tap would leave it.
+		if (document.activeElement !== bodyField && bodyField?.form?.contains(document.activeElement)) {
+			bodyField.focus();
+		}
 	}
 
 	function clearReplyTarget() {
@@ -74,7 +85,7 @@
 	}
 
 	/** Keeps focus, and so the keyboard, on the field when a bar button is tapped. */
-	function keepFieldFocused(event: PointerEvent) {
+	function keepFieldFocused(event: MouseEvent) {
 		if (document.activeElement === bodyField) event.preventDefault();
 	}
 </script>
@@ -84,32 +95,39 @@
 	end of the thread scrollable above the bar as the bar grows.
 -->
 <div class="desktop:hidden">
-	<div aria-hidden="true" class="mt-6" style:height="{barHeight}px"></div>
+	<div
+		aria-hidden="true"
+		class="mt-6"
+		style:height="calc({barHeight}px + var(--keyboard-inset, 0px))"
+	></div>
 	<form
 		bind:offsetHeight={barHeight}
 		class="fixed inset-x-0 bottom-[var(--keyboard-inset,0px)] z-30 border-t bg-surface px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] data-keyboard-open:pb-2"
-		aria-label={m.thread_your_reply()}
+		aria-label={fieldLabel}
 		onsubmit={submit}
 		novalidate
 		{@attach submitFormOnShortcut}
 		{@attach stayAboveOnScreenKeyboard}
 	>
 		<div class="mx-auto max-w-3xl">
-			<div aria-live="polite">
-				{#if replyTargetName}
-					<div class="mb-1 flex items-center gap-2 ps-2 text-sm text-on-surface-variant">
-						<CornerUpLeft size={16} aria-hidden="true" class="shrink-0" />
-						<span class="min-w-0 truncate">{m.thread_replying_to({ name: replyTargetName })}</span>
-						<Button
-							variant="ghost"
-							size="icon"
-							class="ms-auto"
-							aria-label={m.thread_stop_replying_to({ name: replyTargetName })}
-							onpointerdown={keepFieldFocused}
-							onclick={clearReplyTarget}><X size={18} /></Button
-						>
-					</div>
-				{/if}
+			<div
+				class={[
+					'mb-1 flex items-center gap-2 ps-2 text-sm text-on-surface-variant',
+					!replyTargetName && 'hidden'
+				]}
+			>
+				<CornerUpLeft size={16} aria-hidden="true" class="shrink-0" />
+				<span class="min-w-0 truncate" aria-live="polite"
+					>{replyTargetName ? m.thread_replying_to({ name: replyTargetName }) : ''}</span
+				>
+				<Button
+					variant="ghost"
+					size="icon"
+					class="ms-auto"
+					aria-label={replyTargetName ? m.thread_stop_replying_to({ name: replyTargetName }) : ''}
+					onmousedown={keepFieldFocused}
+					onclick={clearReplyTarget}><X size={18} /></Button
+				>
 			</div>
 			<p
 				id={helpId}
@@ -128,15 +146,11 @@
 					aria-label={m.markdown_formatting_help_toggle()}
 					aria-expanded={isFormattingHelpOpen}
 					aria-controls={helpId}
-					onpointerdown={keepFieldFocused}
+					onmousedown={keepFieldFocused}
 					onclick={() => (isFormattingHelpOpen = !isFormattingHelpOpen)}
 					><CaseSensitive size={22} /></Button
 				>
-				<label for={fieldId} class="sr-only"
-					>{replyTargetName
-						? m.thread_reply_to({ name: replyTargetName })
-						: m.thread_your_reply()}</label
-				>
+				<label for={fieldId} class="sr-only">{fieldLabel}</label>
 				<textarea
 					{@attach formatMarkdownOnShortcut}
 					id={fieldId}
@@ -147,13 +161,15 @@
 					class="min-h-11 flex-1 resize-none rounded-[22px] bg-surface-container px-4 py-2.5 text-base"
 					maxlength={REPLY_BODY_MAX_LENGTH}
 					aria-invalid={errorMessage ? 'true' : undefined}
-					aria-describedby={errorMessage ? `${helpId} ${errorId}` : helpId}></textarea>
+					aria-describedby={[isFormattingHelpOpen && helpId, errorMessage && errorId]
+						.filter(Boolean)
+						.join(' ') || undefined}></textarea>
 				<Button
 					variant="filled"
 					size="icon"
 					type="submit"
 					aria-label={m.thread_send_reply()}
-					onpointerdown={keepFieldFocused}><ArrowUp size={22} /></Button
+					onmousedown={keepFieldFocused}><ArrowUp size={22} /></Button
 				>
 			</div>
 		</div>
