@@ -97,7 +97,7 @@
 	"post_composer_posting": "Posting…",
 	"post_composer_post": "Post",
 	"post_list_order": "Order",
-	"post_list_load_failed": "Posts couldn't be loaded. Try again.",
+	"post_list_load_failed": "Posts couldn't be loaded.",
 	"post_list_all_answered": "Every question has a reply.",
 	"post_badge_answered": "Answered",
 	"post_badge_locked": "Locked",

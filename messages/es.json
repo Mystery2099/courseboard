@@ -97,7 +97,7 @@
 	"post_composer_posting": "Publicando…",
 	"post_composer_post": "Publicar",
 	"post_list_order": "Orden",
-	"post_list_load_failed": "No se pudieron cargar las publicaciones. Inténtalo de nuevo.",
+	"post_list_load_failed": "No se pudieron cargar las publicaciones.",
 	"post_list_all_answered": "Todas las preguntas tienen respuesta.",
 	"post_badge_answered": "Respondida",
 	"post_badge_locked": "Cerrado",

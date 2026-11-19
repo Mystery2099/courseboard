@@ -36,6 +36,14 @@
 		initialDataUpdatedAt: data.loadedAt
 	}));
 
+	// The sticky Continue footer covers the bottom of the page, so focus scrolls clear of it.
+	let continueFooterHeight = $state(0);
+	$effect(() => {
+		const root = document.documentElement;
+		root.style.scrollPaddingBottom = `${continueFooterHeight + 16}px`;
+		return () => root.style.removeProperty('scroll-padding-bottom');
+	});
+
 	const courses = $derived(coursesQuery.data.pages.flatMap((page) => page.courses));
 	const historyEntriesByCourseId = $derived(
 		Map.groupBy(historyQuery.data.entries, (entry) => entry.course.id)
@@ -97,6 +105,7 @@
 
 	<!-- Choices save as they're made, so Continue stays in reach however long the list is. -->
 	<div
+		bind:clientHeight={continueFooterHeight}
 		class="sticky bottom-0 mt-auto bg-background pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
 	>
 		<p class="mb-3 text-sm text-on-surface-variant">
