@@ -29,6 +29,8 @@
 	});
 
 	function choose(action: ReplyAction) {
+		// A second tap while the sheet slides away mustn't run another action.
+		if (isDismissed || !isOpen) return;
 		chosenAction.choose(action);
 		// Closing now releases the focus trap during the tap, so focus moved into the reply field
 		// opens the keyboard on iOS too.

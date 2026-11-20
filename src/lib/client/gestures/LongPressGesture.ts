@@ -23,19 +23,25 @@ export function longPress(onLongPress: (element: HTMLElement) => void): Attachme
 		function cancelPress() {
 			clearTimeout(pressTimer);
 			pressTimer = undefined;
+			document.removeEventListener('pointerdown', cancelOnSecondFinger, true);
+		}
+
+		// A second finger anywhere on the page means a pinch, not a press.
+		function cancelOnSecondFinger(event: PointerEvent) {
+			if (event.pointerId !== pressPointerId) cancelPress();
 		}
 
 		function startPress(event: PointerEvent) {
-			// A second finger means a pinch, not a press.
-			if (!event.isPrimary) return cancelPress();
+			if (!event.isPrimary) return;
 			hasFired = false;
 			if (event.pointerType !== 'touch') return;
 			if ((event.target as Element).closest(INTERACTIVE_ELEMENTS)) return;
 			pressPointerId = event.pointerId;
 			startX = event.clientX;
 			startY = event.clientY;
+			document.addEventListener('pointerdown', cancelOnSecondFinger, true);
 			pressTimer = setTimeout(() => {
-				pressTimer = undefined;
+				cancelPress();
 				hasFired = true;
 				onLongPress(element);
 			}, LONG_PRESS_DELAY_MILLISECONDS);
@@ -61,7 +67,9 @@ export function longPress(onLongPress: (element: HTMLElement) => void): Attachme
 
 		// Lifting the finger can still click whatever is under it once the sheet has opened.
 		function suppressTrailingClick(event: MouseEvent) {
-			if (!hasFired || event.timeStamp - firedPressEndedAt > TRAILING_CLICK_MILLISECONDS) return;
+			// Keyboard activation reports no clicks and always goes through.
+			if (!hasFired || event.detail === 0) return;
+			if (event.timeStamp - firedPressEndedAt > TRAILING_CLICK_MILLISECONDS) return;
 			hasFired = false;
 			event.preventDefault();
 			event.stopPropagation();

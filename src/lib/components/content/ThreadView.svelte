@@ -298,6 +298,8 @@
 	);
 
 	function openReplyActionSheet(reply: ReplyResponse, opener: HTMLElement) {
+		// The pending Back would pop the entry this open writes into.
+		if (isClosingActionSheet) return;
 		actionSheetReply = reply;
 		actionSheetOpener = opener;
 		// A shallow history entry for the same page, so Back closes the sheet instead of leaving.
