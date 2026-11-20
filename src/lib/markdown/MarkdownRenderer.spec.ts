@@ -134,4 +134,48 @@ describe('Markdown renderer', () => {
 			'Tips Read the manual first! Run npm test now diagram'
 		);
 	});
+
+	it('finds mentions only in ordinary text', () => {
+		const markdown =
+			'Thanks @Alex_M and @sam, again @alex_m.\n\n`@in_code` [@in_link](https://example.com) mail a@bob.example\n\n```\n@fenced\n```\n\nnot@word @no @this_name_is_far_too_long_for_a_username';
+
+		expect(MarkdownRenderer.toMentionedUsernames(markdown)).toEqual(['alex_m', 'sam']);
+		expect(
+			MarkdownRenderer.toMentionedUsernames(
+				'\\@escaped [@dropped_link](ftp://example.com) ![@in_image](https://example.com/x.png) team!@alice.example @samé 𐐀@lee'
+			)
+		).toEqual([]);
+	});
+
+	it('keeps underscores in a mention instead of reading them as italics', () => {
+		expect(MarkdownRenderer.toMentionedUsernames('cc @_sam_ and _@kim_')).toEqual(['_sam_', 'kim']);
+		expect(MarkdownRenderer.toMentionedUsernames('_ask @kim_ and @kim_')).toEqual(['kim', 'kim_']);
+		expect(MarkdownRenderer.toMentionedUsernames('_ask @ab__')).toEqual(['ab_']);
+		expect(
+			MarkdownRenderer.toMentionedUsernames("Tell '@ann' and ~~@bob~~, not @cafe\u0301")
+		).toEqual(['ann', 'bob']);
+		expect(MarkdownRenderer.toMentionedUsernames('_a _b_ @sam_ and *@kim* **@lee**')).toEqual([
+			'sam',
+			'kim',
+			'lee'
+		]);
+		expect(MarkdownRenderer.toHtml('_a _b_ @sam_', 3)).toBe('<p><em>a <em>b</em> @sam</em></p>\n');
+		expect(MarkdownRenderer.toHtml('_ask @ab__', 3)).toBe('<p><em>ask @ab_</em></p>\n');
+		expect(MarkdownRenderer.toHtml('_ask @kim_', 3, ['kim'])).toBe(
+			'<p><em>ask <a href="/users/kim" class="mention" rel="nofollow ugc noopener noreferrer">@kim</a></em></p>\n'
+		);
+		expect(MarkdownRenderer.toHtml('cc @_sam_', 3, ['_sam_'])).toBe(
+			'<p>cc <a href="/users/_sam_" class="mention" rel="nofollow ugc noopener noreferrer">@_sam_</a></p>\n'
+		);
+	});
+
+	it('links only the mentions the server confirmed', () => {
+		const html = MarkdownRenderer.toHtml('Ask @Alex_M or @unknown_person', 3, ['alex_m']);
+
+		expect(html).toContain(
+			'<a href="/users/alex_m" class="mention" rel="nofollow ugc noopener noreferrer">@Alex_M</a>'
+		);
+		expect(html).toContain(' or @unknown_person');
+		expect(MarkdownRenderer.toHtml('Ask @alex_m', 3)).toBe('<p>Ask @alex_m</p>\n');
+	});
 });

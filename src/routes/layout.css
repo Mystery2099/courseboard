@@ -424,6 +424,20 @@
 			text-underline-offset: 0.15em;
 		}
 
+		/* A tinted chip, not just a colour, sets a mention apart from the text around it. */
+		& a.mention {
+			border-radius: 0.375em;
+			background: var(--primary-container);
+			padding-inline: 0.2em;
+			color: var(--on-primary-container);
+			font-weight: 600;
+			text-decoration: none;
+
+			&:hover {
+				text-decoration: underline;
+			}
+		}
+
 		& blockquote {
 			border-left: 3px solid var(--outline-variant);
 			padding-left: 1em;

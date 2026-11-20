@@ -43,6 +43,7 @@
 - [ ] Rate-limit invitation redemption, image uploads, and creating posts, replies, and reports.
 - [ ] Implement administrator-managed profanity terms/exceptions and code exemptions.
 - [ ] Publish persisted changes through Socket.IO WebSockets, buffer new-item notices, and refetch on reconnect. *Built for new posts, reviews, and replies with course subscriptions; checked locally with two accounts. Not yet checked on the deployed site.*
+- [x] Add `@username` mentions with autocomplete, profile links, a live notice, and a Mentions list, without badges, emails, or read state. *Built and checked locally; mentions are rate-limited per author and per person.*
 - [ ] Implement author deletion and coordinated account deletion, including private data cleanup and documented retained content.
 
 ## Stage 4: polish and demonstrate

@@ -2,6 +2,7 @@ import { io, type Socket } from 'socket.io-client';
 import {
 	REALTIME_MESSAGES,
 	type CourseSubscriptionResult,
+	type MentionCreatedEvent,
 	type PostCreatedEvent,
 	type ReactionChangedEvent,
 	type ReplyCreatedEvent
@@ -45,6 +46,9 @@ export class RealtimeConnection {
 	private retryTimer: ReturnType<typeof setTimeout> | undefined;
 	private lastTokenRequestFailed = false;
 	private courseSubscription: CourseSubscription | null = null;
+	// Listeners are callbacks, not state anything renders.
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity
+	private readonly mentionListeners = new Set<(event: MentionCreatedEvent) => void>();
 
 	constructor(sessionTokenProvider: () => Promise<string | null>) {
 		this.socket = io({
@@ -81,6 +85,10 @@ export class RealtimeConnection {
 				this.courseSubscription.listener.onReactionChanged(event);
 			}
 		});
+		// Mentions reach this account wherever it is, not just in the course it has open.
+		this.socket.on(REALTIME_MESSAGES.mentionCreated, (event: MentionCreatedEvent) => {
+			for (const listener of this.mentionListeners) listener(event);
+		});
 		this.socket.on('disconnect', () => (this.status = 'disconnected'));
 		this.socket.on('connect_error', (error) => this.handleConnectError(error));
 	}
@@ -96,6 +104,12 @@ export class RealtimeConnection {
 			this.courseSubscription = null;
 			if (this.socket.connected) this.socket.emit(REALTIME_MESSAGES.unsubscribeFromCourse);
 		};
+	}
+
+	/** Calls `listener` for each mention of this account. Returns a function that stops listening. */
+	onMentionCreated(listener: (event: MentionCreatedEvent) => void): () => void {
+		this.mentionListeners.add(listener);
+		return () => this.mentionListeners.delete(listener);
 	}
 
 	close(): void {

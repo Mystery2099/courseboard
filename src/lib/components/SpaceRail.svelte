@@ -2,6 +2,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { resolve } from '$app/paths';
 	import * as Tooltip from '#lib/components/ui/tooltip/index.js';
+	import AtSign from 'lucide-svelte/icons/at-sign';
 	import Compass from 'lucide-svelte/icons/compass';
 	import Search from 'lucide-svelte/icons/search';
 	import Shield from 'lucide-svelte/icons/shield';
@@ -14,6 +15,7 @@
 		currentCourseId,
 		isExploreCurrent,
 		isSearchCurrent,
+		isMentionsCurrent,
 		isProfileCurrent,
 		isAdministrator,
 		profile
@@ -22,6 +24,7 @@
 		currentCourseId: string | null;
 		isExploreCurrent: boolean;
 		isSearchCurrent: boolean;
+		isMentionsCurrent: boolean;
 		isProfileCurrent: boolean;
 		isAdministrator: boolean;
 		profile: { username: string; displayName: string; imageUrl: string | null };
@@ -54,6 +57,17 @@
 			]}
 		>
 			<Search size={22} />
+		</a>
+		<a
+			href={resolve('/(app)/mentions')}
+			aria-label={m.navigation_mentions()}
+			aria-current={isMentionsCurrent ? 'page' : undefined}
+			class={[
+				'flex size-12 items-center justify-center rounded-tile state-layer bg-surface transition-colors duration-150 [--state-base:var(--surface)]',
+				isMentionsCurrent && 'ring-3 ring-primary'
+			]}
+		>
+			<AtSign size={22} />
 		</a>
 		<hr class="w-8" />
 		<ul class="flex min-h-0 flex-1 flex-col items-center gap-3 overflow-y-auto">

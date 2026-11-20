@@ -3,6 +3,9 @@ import { ObjectId, type ClientSession } from 'mongodb';
 import { DatabaseIndexInitializer } from '#lib/server/persistence/DatabaseIndexInitializer.ts';
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
+import { MentionRepository } from '#lib/server/mentions/MentionRepository.ts';
+import { MentionService } from '#lib/server/mentions/MentionService.ts';
+import { ApplicationUserRepository } from '#lib/server/users/ApplicationUserRepository.ts';
 import type { PostDetail } from './Post.ts';
 import { PostRepository } from './PostRepository.ts';
 import type { ReplyWithAuthor } from './Reply.ts';
@@ -43,8 +46,20 @@ function createEventPublisher() {
 	return {
 		publishPostCreated: vi.fn(),
 		publishReplyCreated: vi.fn(),
-		publishReactionChanged: vi.fn()
+		publishReactionChanged: vi.fn(),
+		publishMentionCreated: vi.fn()
 	};
+}
+
+function createMentionService(events: ReturnType<typeof createEventPublisher>) {
+	const users = new ApplicationUserRepository();
+	vi.spyOn(users, 'findMentionableByUsernames').mockResolvedValue([]);
+	return new MentionService(
+		users,
+		new MentionRepository(),
+		events,
+		MentionService.createDefaultRateLimiters()
+	);
 }
 
 function createService(storedPost: PostDetail | null = post) {
@@ -62,7 +77,7 @@ function createService(storedPost: PostDetail | null = post) {
 	const insert = vi.spyOn(replies, 'insert').mockResolvedValue();
 	const events = createEventPublisher();
 	return {
-		service: new ReplyService(replies, posts, events),
+		service: new ReplyService(replies, posts, events, createMentionService(events)),
 		replies,
 		recordReply,
 		insert,

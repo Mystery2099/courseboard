@@ -37,7 +37,8 @@ function createService(kind: PostDocument['kind'] = 'question') {
 	const events = {
 		publishPostCreated: vi.fn(),
 		publishReplyCreated: vi.fn(),
-		publishReactionChanged: vi.fn()
+		publishReactionChanged: vi.fn(),
+		publishMentionCreated: vi.fn()
 	};
 	return {
 		service: new ReactionService(reactions, posts, replies, events),

@@ -8,6 +8,7 @@ import { reactionRepository } from '#lib/server/content/ReactionRepository.ts';
 import { replyRepository } from '#lib/server/content/ReplyRepository.ts';
 import { reviewRepository } from '#lib/server/content/ReviewRepository.ts';
 import { academicHistoryRepository } from '#lib/server/history/AcademicHistoryRepository.ts';
+import { mentionRepository } from '#lib/server/mentions/MentionRepository.ts';
 import { moderatorAssignmentRepository } from '#lib/server/moderation/ModeratorAssignmentRepository.ts';
 import { applicationUserRepository } from '#lib/server/users/ApplicationUserRepository.ts';
 import { peopleSearchRepository } from '#lib/server/users/PeopleSearchRepository.ts';
@@ -62,6 +63,7 @@ export class DatabaseIndexInitializer {
 			postRepository.ensureIndexes(),
 			replyRepository.ensureIndexes(),
 			reactionRepository.ensureIndexes(),
+			mentionRepository.ensureIndexes(),
 			reviewRepository.ensureIndexes(),
 			moderatorAssignmentRepository.ensureIndexes(),
 			peopleSearchRepository.ensureIndexes()

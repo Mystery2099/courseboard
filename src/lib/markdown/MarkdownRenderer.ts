@@ -1,4 +1,4 @@
-import createMarkdownParser, { type MarkdownIt, type Token } from 'markdown-it';
+import createMarkdownParser, { type MarkdownIt, type StateInline, type Token } from 'markdown-it';
 
 export type MarkdownLink = { address: string; text: string | null };
 
@@ -10,14 +10,46 @@ export type MarkdownLink = { address: string; text: string | null };
 export class MarkdownRenderer {
 	private static readonly ALLOWED_LINK_PATTERN = /^(?:https?:|mailto:|\/(?!\/))/i;
 	private static readonly SKIPPED_PLAIN_TEXT_BLOCKS = new Set(['fence', 'code_block']);
+	/**
+	 * `@` and a username, not inside a word, an email address, or a path. Usernames are stored
+	 * lowercase, so a match is lowercased before it's compared.
+	 */
+	private static readonly MENTION_PATTERN = /@([A-Za-z0-9_]{3,24})(?![\p{L}\p{M}\p{N}_@])/uy;
+	/**
+	 * A mention can't follow these, so a word, an email address, or a path isn't one. Quotes, `*`,
+	 * `~`, and backticks are left out: they're allowed in email addresses but mostly mark up text.
+	 */
+	private static readonly ATTACHED_CHARACTER_PATTERN = /[\p{L}\p{M}\p{N}!#$%&+/=?^_{|}.@-]/u;
 	private static readonly parser = MarkdownRenderer.createParser();
 
 	/**
 	 * `topHeadingLevel` is the level a body's `#` becomes, one below the heading the body sits under,
-	 * so user headings never compete with the page's own.
+	 * so user headings never compete with the page's own. Only `mentionedUsernames`, the mentions the
+	 * server confirmed, become profile links; any other `@name` stays text.
 	 */
-	static toHtml(markdown: string, topHeadingLevel: 2 | 3): string {
-		return MarkdownRenderer.parser.render(markdown, { topHeadingLevel });
+	static toHtml(
+		markdown: string,
+		topHeadingLevel: 2 | 3,
+		mentionedUsernames: readonly string[] = []
+	): string {
+		return MarkdownRenderer.parser.render(markdown, {
+			topHeadingLevel,
+			mentionedUsernames: new Set(mentionedUsernames)
+		});
+	}
+
+	/**
+	 * The distinct usernames `@`-mentioned in ordinary text, lowercased, in reading order. Code,
+	 * link text, image descriptions, and an escaped `\@` don't count.
+	 */
+	static toMentionedUsernames(markdown: string): string[] {
+		const usernames = new Set<string>();
+		for (const blockToken of MarkdownRenderer.parser.parse(markdown, {})) {
+			for (const token of blockToken.children ?? []) {
+				if (token.type === 'mention') usernames.add(MarkdownRenderer.mentionedUsername(token));
+			}
+		}
+		return [...usernames];
 	}
 
 	/** The readable text of `markdown`, without formatting, link addresses, or code blocks. */
@@ -62,6 +94,30 @@ export class MarkdownRenderer {
 		// Every address parses, so an image always shows just its description; links are checked
 		// after parsing instead.
 		parser.validateLink = () => true;
+		// Reads `@username` as a mention before emphasis can, so `@_sam_` stays one mention. Inside
+		// an open `_` italic, trailing underscores close it instead, as in `_ask @kim_`. Link text
+		// takes no mentions, even when the link itself is dropped later.
+		parser.inline.ruler.before('emphasis', 'mention', (state, silent) => {
+			if (state.src.charCodeAt(state.pos) !== 0x40 || state.linkLevel > 0) return false;
+			if (MarkdownRenderer.isAttachedToPreviousText(state)) return false;
+			const pattern = MarkdownRenderer.MENTION_PATTERN;
+			pattern.lastIndex = state.pos;
+			const match = pattern.exec(state.src);
+			if (!match) return false;
+			let mentionText = match[0];
+			if (MarkdownRenderer.isUnderscoreEmphasisOpen(state)) {
+				// Keeps `@` and the three characters a username needs at least.
+				const closingUnderscores = mentionText.length - mentionText.replace(/_+$/, '').length;
+				mentionText = mentionText.slice(0, Math.max(4, mentionText.length - closingUnderscores));
+			}
+			if (!silent) {
+				const token = state.push('mention', '', 0);
+				token.content = mentionText;
+			}
+			state.pos += mentionText.length;
+			return true;
+		});
+
 		parser.core.ruler.push('remove_disallowed_links', (state) => {
 			for (const blockToken of state.tokens) {
 				if (!blockToken.children) continue;
@@ -101,6 +157,16 @@ export class MarkdownRenderer {
 			return renderLinkOpen(tokens, index, options, env, renderer);
 		};
 
+		// Only the mentions the server confirmed become profile links; usernames are `[a-z0-9_]`.
+		parser.renderer.rules.mention = (tokens, index, _options, env) => {
+			const username = MarkdownRenderer.mentionedUsername(tokens[index]);
+			const text = parser.utils.escapeHtml(tokens[index].content);
+			const mentionedUsernames = env?.mentionedUsernames as ReadonlySet<string> | undefined;
+			return mentionedUsernames?.has(username)
+				? `<a href="/users/${username}" class="mention" rel="nofollow ugc noopener noreferrer">${text}</a>`
+				: text;
+		};
+
 		parser.core.ruler.push('demote_headings', (state) => {
 			const offset = ((state.env.topHeadingLevel as number | undefined) ?? 1) - 1;
 			for (const token of state.tokens) {
@@ -112,12 +178,46 @@ export class MarkdownRenderer {
 		return parser;
 	}
 
+	/** Whether the `@` at `state.pos` continues a word, an email address, or a path. */
+	private static isAttachedToPreviousText(state: StateInline): boolean {
+		const previousCharacter =
+			Array.from(state.src.slice(Math.max(0, state.pos - 2), state.pos)).at(-1) ?? '';
+		if (!MarkdownRenderer.ATTACHED_CHARACTER_PATTERN.test(previousCharacter)) return false;
+		// An `_` that just opened emphasis, as in `_@kim_`, isn't part of a word.
+		const lastDelimiter = state.delimiters.at(-1);
+		const followsOpeningEmphasis =
+			previousCharacter === '_' &&
+			state.pending === '' &&
+			lastDelimiter?.open === true &&
+			lastDelimiter.token === state.tokens.length - 1;
+		return !followsOpeningEmphasis;
+	}
+
+	/**
+	 * Whether an `_` emphasis is still open at this point. Markdown pairs delimiters only after the
+	 * whole line is read, so openers and closers are matched here the same simple way.
+	 */
+	private static isUnderscoreEmphasisOpen(state: StateInline): boolean {
+		let openCount = 0;
+		for (const delimiter of state.delimiters) {
+			if (delimiter.marker !== 0x5f) continue;
+			if (delimiter.close && openCount > 0) openCount -= 1;
+			else if (delimiter.open) openCount += 1;
+		}
+		return openCount > 0;
+	}
+
+	/** Usernames are stored lowercase, so `@Alex_M` mentions `alex_m`. */
+	private static mentionedUsername(mentionToken: Token): string {
+		return mentionToken.content.slice(1).toLowerCase();
+	}
+
 	private static inlineText(tokens: Token[]): string {
 		return tokens
 			.map((token) => {
 				if (token.type === 'softbreak' || token.type === 'hardbreak') return ' ';
 				if (token.type === 'image') return MarkdownRenderer.inlineText(token.children ?? []);
-				return token.type === 'text' || token.type === 'code_inline' ? token.content : '';
+				return ['text', 'code_inline', 'mention'].includes(token.type) ? token.content : '';
 			})
 			.join('');
 	}

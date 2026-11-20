@@ -7,7 +7,10 @@ export class RealtimeRooms {
 		return `${RealtimeRooms.COURSE_PREFIX}${courseId}`;
 	}
 
-	/** Every socket of one account, so an author's own tabs can be left out of their events. */
+	/**
+	 * Every socket of one account, so an author's own tabs can be left out of their events and a
+	 * mention reaches the person whatever course they have open.
+	 */
 	static forUser(userId: string): string {
 		return `user:${userId}`;
 	}

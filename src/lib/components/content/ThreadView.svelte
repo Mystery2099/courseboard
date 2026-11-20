@@ -417,7 +417,12 @@
 				<Badge variant="success"><Check size={14} /> {m.thread_accepted_answer()}</Badge>
 			{/if}
 		</div>
-		<MarkdownBody class="mt-2" markdown={reply.bodyMarkdown} topHeadingLevel={3} />
+		<MarkdownBody
+			class="mt-2"
+			markdown={reply.bodyMarkdown}
+			mentionedUsernames={reply.mentionedUsernames}
+			topHeadingLevel={3}
+		/>
 		<div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
 			{#if reactions}
 				<ReactionBar
@@ -483,6 +488,7 @@
 	<MarkdownBody
 		class="mt-4 font-reading text-[17px] leading-[1.65] text-body desktop:text-lg desktop:leading-[1.7]"
 		markdown={post.bodyMarkdown}
+		mentionedUsernames={post.mentionedUsernames}
 		topHeadingLevel={2}
 	/>
 	{#if reactions}

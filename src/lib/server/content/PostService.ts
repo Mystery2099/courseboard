@@ -17,6 +17,7 @@ import {
 	contentEventPublisher,
 	type ContentEventPublisher
 } from '#lib/server/realtime/ContentEventPublisher.ts';
+import { mentionService, type MentionService } from '#lib/server/mentions/MentionService.ts';
 import {
 	courseModerationAccess,
 	type CourseModerationAccess
@@ -40,7 +41,8 @@ export class PostService {
 		private readonly replies: ReplyRepository,
 		private readonly courses: CourseRepository,
 		private readonly events: ContentEventPublisher,
-		private readonly moderation: CourseModerationAccess
+		private readonly moderation: CourseModerationAccess,
+		private readonly mentions: MentionService
 	) {}
 
 	/** Returns null when the course doesn't exist or the id is malformed. */
@@ -88,6 +90,7 @@ export class PostService {
 		if (!course) return { kind: 'course-not-found' };
 		// Read before the insert, so a failed lookup can't fail a saved post and invite a duplicate retry.
 		const authorCanModerate = await this.moderation.canModerate(author, course.courseId);
+		const mentioned = await this.mentions.resolveMentions(request.bodyMarkdown, author);
 
 		const now = new Date();
 		const post: PostDocument = {
@@ -103,15 +106,19 @@ export class PostService {
 			lockedAt: null,
 			createdAt: now,
 			lastActivityAt: now,
-			state: 'published'
+			state: 'published',
+			...(mentioned.length > 0 && { mentions: mentioned })
 		};
 		await this.posts.insert(post);
+		const courseIdText = post.courseId.toHexString();
+		const postIdText = post._id.toHexString();
 		this.events.publishPostCreated(
-			{
-				courseId: post.courseId.toHexString(),
-				postId: post._id.toHexString(),
-				kind: post.kind
-			},
+			{ courseId: courseIdText, postId: postIdText, kind: post.kind },
+			author.id
+		);
+		this.mentions.announceMentions(
+			mentioned,
+			{ courseId: courseIdText, postId: postIdText, postKind: post.kind, replyId: null },
 			author.id
 		);
 		const { username, displayName } = author.profile;
@@ -227,5 +234,6 @@ export const postService = new PostService(
 	replyRepository,
 	courseRepository,
 	contentEventPublisher,
-	courseModerationAccess
+	courseModerationAccess,
+	mentionService
 );

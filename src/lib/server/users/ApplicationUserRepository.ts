@@ -141,6 +141,20 @@ export class ApplicationUserRepository {
 		return document?._id ?? null;
 	}
 
+	/** The active, onboarded accounts among `usernames`: the people a post may mention. */
+	async findMentionableByUsernames(
+		usernames: readonly string[]
+	): Promise<{ _id: ObjectId; username: string }[]> {
+		if (usernames.length === 0) return [];
+		const documents = await this.collection()
+			.find(
+				{ username: { $in: [...usernames] }, status: 'active' },
+				{ projection: { _id: 1, username: 1 } }
+			)
+			.toArray();
+		return documents.flatMap(({ _id, username }) => (username ? [{ _id, username }] : []));
+	}
+
 	async findPublicProfileByUsername(username: string): Promise<PublicProfileRecord | null> {
 		const document = await this.collection().findOne(
 			{ username },

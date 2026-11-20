@@ -1,6 +1,7 @@
 import type { ObjectId } from 'mongodb';
 import type { PostKind } from '#lib/contracts/PostContract.ts';
 import type { ReviewData } from '#lib/contracts/ReviewContract.ts';
+import type { MentionedUser } from '#lib/server/mentions/MentionedUser.ts';
 
 export const POSTS_COLLECTION_NAME = 'posts';
 
@@ -29,6 +30,8 @@ export interface PostDocument {
 	state?: 'published' | 'removed' | 'deleted';
 	reviewData?: ReviewData;
 	editedAt?: Date;
+	/** Questions and discussions only. Absent on older posts and when nobody is mentioned. */
+	mentions?: MentionedUser[];
 }
 
 export interface ContentAuthor {
@@ -54,7 +57,7 @@ export interface PostSummary extends Pick<
 	author: ContentAuthor;
 }
 
-export interface PostDetail extends PostSummary {
+export interface PostDetail extends PostSummary, Pick<PostDocument, 'mentions'> {
 	bodyMarkdown: string;
 }
 
