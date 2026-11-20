@@ -75,17 +75,17 @@
 			? ComposerDraftTarget.threadReply(postId)
 			: ComposerDraftTarget.branchReply(postId, parentReplyId);
 	// A new queue for each account, so nobody sees or retries replies another account wrote here.
+	const unconfirmedReplies = $derived(accountLocalData.unconfirmedReplies(postId));
 	const submissionQueue = $derived(
-		new ReplySubmissionQueue(
-			postId,
-			accountLocalData.unconfirmedReplies(postId),
-			refreshThread,
-			refreshThread
-		)
+		new ReplySubmissionQueue(postId, unconfirmedReplies, refreshThread, refreshThread)
 	);
+	// Waits for Clerk to confirm the account, so a session switched in another tab since the page
+	// was rendered can't send this account's replies.
 	$effect(() => {
 		const queue = submissionQueue;
-		untrack(() => queue.restoreUnconfirmed());
+		if (accountLocalData.isConfirmedAccount(unconfirmedReplies.boundAccountId)) {
+			untrack(() => queue.restoreUnconfirmed());
+		}
 	});
 
 	const loadedReplies = $derived(repliesQuery.data.pages.flatMap((page) => page.replies));
@@ -139,15 +139,20 @@
 		);
 	}
 
-	// Includes replies to a branch that isn't shown, such as one a reload restored before its page
-	// of the thread was loaded, so they can still be retried or discarded.
-	const threadLevelPendingReplies = $derived.by(() => {
-		const shownBranchIds = new Set(replyBranches.map((branch) => branch.reply.id));
-		return submissionQueue.pendingReplies.filter(
+	// A reply to a branch that isn't shown, such as one restored before its page of the thread was
+	// loaded, appears at thread level, both while pending and once stored, until its branch loads.
+	const shownBranchIds = $derived(new Set(replyBranches.map((branch) => branch.reply.id)));
+	const isUnderHiddenBranch = (parentReplyId: string | null) =>
+		parentReplyId !== null && !shownBranchIds.has(parentReplyId);
+	const threadLevelPendingReplies = $derived(
+		submissionQueue.pendingReplies.filter(
 			(pendingReply) =>
-				pendingReply.parentReplyId === null || !shownBranchIds.has(pendingReply.parentReplyId)
-		);
-	});
+				pendingReply.parentReplyId === null || isUnderHiddenBranch(pendingReply.parentReplyId)
+		)
+	);
+	const storedRepliesUnderHiddenBranches = $derived(
+		submissionQueue.storedReplies.filter((reply) => isUnderHiddenBranch(reply.parentReplyId))
+	);
 
 	/** A reply being answered. Nested replies are answered in their branch, under the top-level reply. */
 	interface ReplyTarget {
@@ -371,6 +376,9 @@
 	{/if}
 
 	<div class="mt-3 flex flex-col gap-3 empty:hidden">
+		{#each storedRepliesUnderHiddenBranches as reply (reply.id)}
+			{@render replyCard(reply)}
+		{/each}
 		{#each threadLevelPendingReplies as pendingReply (pendingReply.submissionId)}
 			<PendingReplyCard
 				{pendingReply}

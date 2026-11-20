@@ -33,20 +33,31 @@ export class ReplySubmissionQueue {
 
 	/**
 	 * Sends replies an earlier visit left unconfirmed again. Their submission ids are unchanged, so one
-	 * the server already stored comes back instead of being written twice.
+	 * the server already stored comes back instead of being written twice. A reply the server refused
+	 * comes back as failed, waiting for Retry or Discard.
 	 */
 	restoreUnconfirmed(): void {
 		for (const reply of this.unconfirmedReplies.loadAll()) {
 			if (this.find(reply.submissionId)) continue;
-			this.pendingReplies.push({ ...reply, status: 'sending', errorMessage: null });
-			void this.send(reply.submissionId);
+			const { refusalMessage, ...pendingFields } = reply;
+			this.pendingReplies.push({
+				...pendingFields,
+				status: refusalMessage === null ? 'sending' : 'failed',
+				errorMessage: refusalMessage
+			});
+			if (refusalMessage === null) void this.send(reply.submissionId);
 		}
 	}
 
 	/** Queues a reply and returns its submission id. */
 	submit(bodyMarkdown: string, parentReplyId: string | null): string {
 		const submissionId = crypto.randomUUID();
-		this.unconfirmedReplies.save({ submissionId, parentReplyId, bodyMarkdown });
+		this.unconfirmedReplies.save({
+			submissionId,
+			parentReplyId,
+			bodyMarkdown,
+			refusalMessage: null
+		});
 		this.pendingReplies.push({
 			submissionId,
 			parentReplyId,
@@ -88,6 +99,15 @@ export class ReplySubmissionQueue {
 		} catch (cause) {
 			pendingReply.status = 'failed';
 			pendingReply.errorMessage = describeRequestFailure(cause, m.error_unavailable);
+			// A refusal, unlike a lost connection, isn't sent again on its own the next visit.
+			if (cause instanceof ApiRequestError && cause.status < 500) {
+				this.unconfirmedReplies.save({
+					submissionId,
+					parentReplyId: pendingReply.parentReplyId,
+					bodyMarkdown: pendingReply.bodyMarkdown,
+					refusalMessage: pendingReply.errorMessage
+				});
+			}
 			// A refusal such as a locked thread means the page is out of date.
 			if (cause instanceof ApiRequestError && cause.status === 409) this.onRefused();
 		}

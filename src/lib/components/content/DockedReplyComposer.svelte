@@ -70,6 +70,12 @@
 		fitFieldHeight();
 	});
 
+	// An error about one reply's text doesn't apply once the bar switches to another's.
+	$effect.pre(() => {
+		void draft;
+		errorMessage = null;
+	});
+
 	// A keyboard opening or the phone turning changes the visible height, and with it the cap.
 	$effect(() => {
 		const viewport = window.visualViewport;
@@ -96,7 +102,7 @@
 			return;
 		}
 		errorMessage = null;
-		draft.clear();
+		draft.clearIfUnchanged({ title: '', bodyMarkdown: draft.bodyMarkdown });
 		onSubmit(parsed.data);
 		// Send pressed from a keyboard keeps focus; return it to the field. A tap leaves focus where
 		// it was, so a phone keyboard the reader closed stays closed.

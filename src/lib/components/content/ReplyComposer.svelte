@@ -35,7 +35,7 @@
 			return;
 		}
 		errorMessage = null;
-		draft.clear();
+		draft.clearIfUnchanged({ title: '', bodyMarkdown: draft.bodyMarkdown });
 		onSubmit(parsed.data);
 	}
 </script>

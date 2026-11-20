@@ -9,6 +9,7 @@ export class AccountLocalData {
 
 	constructor(
 		private readonly resolveAccountId: () => string | null,
+		private readonly resolveIsAccountLoaded: () => boolean = () => true,
 		private readonly storage = new AccountLocalStorage()
 	) {
 		this.composerDrafts = new ComposerDrafts(storage, resolveAccountId);
@@ -21,6 +22,16 @@ export class AccountLocalData {
 			this.resolveAccountId(),
 			postId,
 			this.resolveAccountId
+		);
+	}
+
+	/**
+	 * Whether Clerk has loaded and confirmed this account. Until then the account comes from the
+	 * server's render, and the session cookie may have changed since in another tab.
+	 */
+	isConfirmedAccount(accountId: string | null): boolean {
+		return (
+			accountId !== null && this.resolveIsAccountLoaded() && this.resolveAccountId() === accountId
 		);
 	}
 

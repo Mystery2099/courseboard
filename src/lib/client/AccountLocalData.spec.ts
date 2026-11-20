@@ -29,7 +29,11 @@ const threadTarget = ComposerDraftTarget.threadReply('post-1');
 const branchTarget = ComposerDraftTarget.branchReply('post-1', 'reply-1');
 
 function createLocalData(storage: Storage | null, accountId: { current: string | null }) {
-	return new AccountLocalData(() => accountId.current, new AccountLocalStorage(() => storage));
+	return new AccountLocalData(
+		() => accountId.current,
+		() => true,
+		new AccountLocalStorage(() => storage)
+	);
 }
 
 describe('account local data', () => {
@@ -70,15 +74,30 @@ describe('account local data', () => {
 		const accountId = { current: 'user_a' as string | null };
 		const localData = createLocalData(storage, accountId);
 		const sentByA = localData.unconfirmedReplies('post-1');
-		sentByA.save({ submissionId: 'submission-1', parentReplyId: null, bodyMarkdown: 'from A' });
+		sentByA.save({
+			submissionId: 'submission-1',
+			parentReplyId: null,
+			bodyMarkdown: 'from A',
+			refusalMessage: null
+		});
 		accountId.current = 'user_b';
-		sentByA.save({ submissionId: 'submission-2', parentReplyId: null, bodyMarkdown: 'late' });
+		sentByA.save({
+			submissionId: 'submission-2',
+			parentReplyId: null,
+			bodyMarkdown: 'late',
+			refusalMessage: null
+		});
 		sentByA.remove('submission-1');
 
 		expect(localData.unconfirmedReplies('post-1').loadAll()).toEqual([]);
 		accountId.current = 'user_a';
 		expect(localData.unconfirmedReplies('post-1').loadAll()).toEqual([
-			{ submissionId: 'submission-1', parentReplyId: null, bodyMarkdown: 'from A' }
+			{
+				submissionId: 'submission-1',
+				parentReplyId: null,
+				bodyMarkdown: 'from A',
+				refusalMessage: null
+			}
 		]);
 		expect(localData.unconfirmedReplies('post-2').loadAll()).toEqual([]);
 		sentByA.remove('submission-1');
@@ -94,7 +113,7 @@ describe('account local data', () => {
 		expect(localData.composerDrafts.open(threadTarget).bodyMarkdown).toBe('');
 	});
 
-	it("doesn't clear a newer draft another tab saved after this one was published", () => {
+	it('keeps and shows a newer draft another tab saved while this one was publishing', () => {
 		const storage = new InMemoryStorage();
 		const target = ComposerDraftTarget.newPost('course-1', 'question');
 		const publishingTab = createLocalData(storage, { current: 'user_a' }).composerDrafts.open(
@@ -104,7 +123,7 @@ describe('account local data', () => {
 		createLocalData(storage, { current: 'user_a' }).composerDrafts.open(target).bodyMarkdown =
 			'Newer, from another tab';
 		publishingTab.clearIfUnchanged({ title: '', bodyMarkdown: 'Published' });
-		expect(publishingTab.bodyMarkdown).toBe('');
+		expect(publishingTab.bodyMarkdown).toBe('Newer, from another tab');
 		expect(
 			createLocalData(storage, { current: 'user_a' }).composerDrafts.open(target).bodyMarkdown
 		).toBe('Newer, from another tab');
@@ -151,6 +170,7 @@ describe('account local data', () => {
 		for (const resolveStorage of storages) {
 			const localData = new AccountLocalData(
 				() => 'user_a',
+				() => true,
 				new AccountLocalStorage(resolveStorage)
 			);
 			const draft = localData.composerDrafts.open(threadTarget);

@@ -36,7 +36,8 @@ function isSameText(first: ComposerDraftText, second: ComposerDraftText): boolea
 
 /**
  * A composer's text, saved on every change so it survives leaving the page or the browser closing
- * a background tab. Without an account, or when storage fails, it lasts as long as the tab.
+ * a background tab. When storage fails it is kept in memory until the tab closes or the account
+ * changes.
  */
 export class ComposerDraft {
 	private titleText = $state('');
@@ -77,18 +78,21 @@ export class ComposerDraft {
 	}
 
 	/**
-	 * Clears the draft unless it was edited after the text was sent, here or in another tab whose
-	 * newer text is the one saved.
+	 * Clears the sent text unless it was edited since. When another tab saved newer text, that text
+	 * is kept and shown here instead.
 	 */
 	clearIfUnchanged(sentText: ComposerDraftText): void {
-		if (this.titleText !== sentText.title || this.bodyMarkdownText !== sentText.bodyMarkdown)
+		if (!isSameText({ title: this.titleText, bodyMarkdown: this.bodyMarkdownText }, sentText)) {
 			return;
-		this.titleText = '';
-		this.bodyMarkdownText = '';
-		if (this.accountId === null) return;
-		const storedText = parseDraftText(this.storage.read(this.accountId, this.target.key));
-		if (!storedText || isSameText(storedText, sentText)) {
-			this.storage.remove(this.accountId, this.target.key);
+		}
+		const storedText = this.accountId
+			? parseDraftText(this.storage.read(this.accountId, this.target.key))
+			: null;
+		if (storedText && !isSameText(storedText, sentText)) {
+			this.titleText = storedText.title;
+			this.bodyMarkdownText = storedText.bodyMarkdown;
+		} else {
+			this.clear();
 		}
 	}
 

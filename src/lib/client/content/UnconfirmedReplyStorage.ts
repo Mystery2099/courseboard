@@ -5,19 +5,29 @@ export interface UnconfirmedReply {
 	submissionId: string;
 	parentReplyId: string | null;
 	bodyMarkdown: string;
+	/** Set when the server refused it, so it waits for Retry instead of being sent again. */
+	refusalMessage: string | null;
 }
 
 function parseUnconfirmedReply(value: unknown): UnconfirmedReply | null {
 	if (typeof value !== 'object' || value === null) return null;
-	const { submissionId, parentReplyId, bodyMarkdown } = value as Record<string, unknown>;
+	const { submissionId, parentReplyId, bodyMarkdown, refusalMessage } = value as Record<
+		string,
+		unknown
+	>;
 	if (typeof submissionId !== 'string' || typeof bodyMarkdown !== 'string') return null;
 	if (parentReplyId !== null && typeof parentReplyId !== 'string') return null;
-	return { submissionId, parentReplyId, bodyMarkdown };
+	return {
+		submissionId,
+		parentReplyId,
+		bodyMarkdown,
+		refusalMessage: typeof refusalMessage === 'string' ? refusalMessage : null
+	};
 }
 
 /**
  * Keeps a thread's unconfirmed replies with their submission ids, so a reply whose page was left
- * or closed comes back with a Retry that can't store it twice. Fixed to the account that sent them.
+ * or closed can be sent again without being stored twice. Fixed to the account that sent them.
  */
 export class UnconfirmedReplyStorage {
 	constructor(
@@ -26,6 +36,10 @@ export class UnconfirmedReplyStorage {
 		private readonly postId: string,
 		private readonly resolveCurrentAccountId: () => string | null
 	) {}
+
+	get boundAccountId(): string | null {
+		return this.accountId;
+	}
 
 	loadAll(): UnconfirmedReply[] {
 		if (this.accountId === null) return [];
@@ -41,7 +55,8 @@ export class UnconfirmedReplyStorage {
 		this.storage.write(accountId, this.keyPrefix() + reply.submissionId, {
 			submissionId: reply.submissionId,
 			parentReplyId: reply.parentReplyId,
-			bodyMarkdown: reply.bodyMarkdown
+			bodyMarkdown: reply.bodyMarkdown,
+			refusalMessage: reply.refusalMessage
 		});
 	}
 
