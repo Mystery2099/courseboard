@@ -6,6 +6,8 @@ export class FixedWindowRateLimiter {
 	/** Expired windows are swept once this many keys are held, so memory stays bounded. */
 	private static readonly SWEEP_THRESHOLD = 10_000;
 	private readonly windows = new Map<string, { startedAt: number; count: number }>();
+	/** Doubles after a sweep that leaves many live keys, so sweeps don't run on every new key. */
+	private nextSweepSize = FixedWindowRateLimiter.SWEEP_THRESHOLD;
 
 	constructor(
 		private readonly maximumPerWindow: number,
@@ -18,7 +20,7 @@ export class FixedWindowRateLimiter {
 		const now = this.now();
 		const currentWindow = this.windows.get(key);
 		if (!currentWindow || now - currentWindow.startedAt >= this.windowMilliseconds) {
-			if (this.windows.size >= FixedWindowRateLimiter.SWEEP_THRESHOLD) this.sweepExpired(now);
+			if (this.windows.size >= this.nextSweepSize) this.sweepExpired(now);
 			this.windows.set(key, { startedAt: now, count: 1 });
 			return true;
 		}
@@ -41,5 +43,6 @@ export class FixedWindowRateLimiter {
 		for (const [key, currentWindow] of this.windows) {
 			if (now - currentWindow.startedAt >= this.windowMilliseconds) this.windows.delete(key);
 		}
+		this.nextSweepSize = Math.max(FixedWindowRateLimiter.SWEEP_THRESHOLD, this.windows.size * 2);
 	}
 }

@@ -68,7 +68,13 @@ export class MentionService {
 		const usernames = MarkdownRenderer.toMentionedUsernames(bodyMarkdown)
 			.filter((username) => username !== author.profile.username)
 			.slice(0, MentionService.LOOKUP_LIMIT);
-		const accounts = await this.users.findMentionableByUsernames(usernames);
+		// A mention never refuses the post or reply, so a failed lookup stores it without any.
+		const accounts = await this.users
+			.findMentionableByUsernames(usernames)
+			.catch((error: unknown) => {
+				console.error("Couldn't look up mentioned usernames; storing no mentions:", error);
+				return [];
+			});
 		const idsByUsername = new Map(accounts.map((account) => [account.username, account._id]));
 
 		const mentioned: MentionedUser[] = [];

@@ -142,7 +142,7 @@ describe('Markdown renderer', () => {
 		expect(MarkdownRenderer.toMentionedUsernames(markdown)).toEqual(['alex_m', 'sam']);
 		expect(
 			MarkdownRenderer.toMentionedUsernames(
-				'\\@escaped [@dropped_link](ftp://example.com) ![@in_image](https://example.com/x.png)'
+				'\\@escaped [@dropped_link](ftp://example.com) ![@in_image](https://example.com/x.png) team!@alice.example @samé 𐐀@lee'
 			)
 		).toEqual([]);
 	});
@@ -151,6 +151,12 @@ describe('Markdown renderer', () => {
 		expect(MarkdownRenderer.toMentionedUsernames('cc @_sam_ and _@kim_')).toEqual(['_sam_', 'kim']);
 		expect(MarkdownRenderer.toMentionedUsernames('_ask @kim_ and @kim_')).toEqual(['kim', 'kim_']);
 		expect(MarkdownRenderer.toMentionedUsernames('_ask @ab__')).toEqual(['ab_']);
+		expect(MarkdownRenderer.toMentionedUsernames('_a _b_ @sam_ and *@kim* **@lee**')).toEqual([
+			'sam',
+			'kim',
+			'lee'
+		]);
+		expect(MarkdownRenderer.toHtml('_a _b_ @sam_', 3)).toBe('<p><em>a <em>b</em> @sam</em></p>\n');
 		expect(MarkdownRenderer.toHtml('_ask @ab__', 3)).toBe('<p><em>ask @ab_</em></p>\n');
 		expect(MarkdownRenderer.toHtml('_ask @kim_', 3, ['kim'])).toBe(
 			'<p><em>ask <a href="/users/kim" class="mention" rel="nofollow ugc noopener noreferrer">@kim</a></em></p>\n'

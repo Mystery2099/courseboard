@@ -69,6 +69,14 @@ describe('mention service', () => {
 		]);
 	});
 
+	it('stores no mentions instead of failing when the lookup fails', async () => {
+		const { service, findMentionable } = createService();
+		findMentionable.mockRejectedValue(new Error('database unavailable'));
+		vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+		expect(await service.resolveMentions('@sam', author)).toEqual([]);
+	});
+
 	it('keeps at most ten people per post or reply, after skipping unknown names', async () => {
 		const people = Array.from({ length: 12 }, (_, index) => ({
 			_id: new ObjectId(),

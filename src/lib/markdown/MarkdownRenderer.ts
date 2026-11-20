@@ -1,4 +1,4 @@
-import createMarkdownParser, { type MarkdownIt, type Token } from 'markdown-it';
+import createMarkdownParser, { type MarkdownIt, type StateInline, type Token } from 'markdown-it';
 
 export type MarkdownLink = { address: string; text: string | null };
 
@@ -14,9 +14,10 @@ export class MarkdownRenderer {
 	 * `@` and a username, not inside a word, an email address, or a path. Usernames are stored
 	 * lowercase, so a match is lowercased before it's compared.
 	 */
-	private static readonly MENTION_PATTERN = /@([A-Za-z0-9_]{3,24})(?![A-Za-z0-9_@])/y;
+	private static readonly MENTION_PATTERN = /@([A-Za-z0-9_]{3,24})(?![\p{L}\p{N}_@])/uy;
 	/** A mention can't follow these, so a word, an email address, or a path isn't one. */
-	private static readonly WORD_CHARACTER_PATTERN = /[\p{L}\p{N}_@./+-]/u;
+	private static readonly ATTACHED_CHARACTER_PATTERN = /[\p{L}\p{N}!#$%&'*+/=?^_`{|}~.@-]/u;
+	private static readonly EMPHASIS_MARKERS = new Set(['_', '*']);
 	private static readonly parser = MarkdownRenderer.createParser();
 
 	/**
@@ -96,28 +97,13 @@ export class MarkdownRenderer {
 		// takes no mentions, even when the link itself is dropped later.
 		parser.inline.ruler.before('emphasis', 'mention', (state, silent) => {
 			if (state.src.charCodeAt(state.pos) !== 0x40 || state.linkLevel > 0) return false;
-			const previousCharacter = state.src.charAt(state.pos - 1);
-			const lastDelimiter = state.delimiters.at(-1);
-			const followsOpeningUnderscore =
-				previousCharacter === '_' &&
-				state.pending === '' &&
-				lastDelimiter?.open === true &&
-				lastDelimiter.token === state.tokens.length - 1;
-			if (
-				MarkdownRenderer.WORD_CHARACTER_PATTERN.test(previousCharacter) &&
-				!followsOpeningUnderscore
-			) {
-				return false;
-			}
+			if (MarkdownRenderer.isAttachedToPreviousText(state)) return false;
 			const pattern = MarkdownRenderer.MENTION_PATTERN;
 			pattern.lastIndex = state.pos;
 			const match = pattern.exec(state.src);
 			if (!match) return false;
 			let mentionText = match[0];
-			// Delimiters pair up only after the line is read, so the latest `_` tells whether one is open.
-			const isUnderscoreItalicOpen =
-				state.delimiters.findLast((delimiter) => delimiter.marker === 0x5f)?.open === true;
-			if (isUnderscoreItalicOpen) {
+			if (MarkdownRenderer.isUnderscoreEmphasisOpen(state)) {
 				// Keeps `@` and the three characters a username needs at least.
 				const closingUnderscores = mentionText.length - mentionText.replace(/_+$/, '').length;
 				mentionText = mentionText.slice(0, Math.max(4, mentionText.length - closingUnderscores));
@@ -188,6 +174,35 @@ export class MarkdownRenderer {
 			}
 		});
 		return parser;
+	}
+
+	/** Whether the `@` at `state.pos` continues a word, an email address, or a path. */
+	private static isAttachedToPreviousText(state: StateInline): boolean {
+		const previousCharacter =
+			Array.from(state.src.slice(Math.max(0, state.pos - 2), state.pos)).at(-1) ?? '';
+		if (!MarkdownRenderer.ATTACHED_CHARACTER_PATTERN.test(previousCharacter)) return false;
+		// An `_` or `*` that just opened emphasis, as in `_@kim_`, isn't part of a word.
+		const lastDelimiter = state.delimiters.at(-1);
+		const followsOpeningEmphasis =
+			MarkdownRenderer.EMPHASIS_MARKERS.has(previousCharacter) &&
+			state.pending === '' &&
+			lastDelimiter?.open === true &&
+			lastDelimiter.token === state.tokens.length - 1;
+		return !followsOpeningEmphasis;
+	}
+
+	/**
+	 * Whether an `_` emphasis is still open at this point. Markdown pairs delimiters only after the
+	 * whole line is read, so openers and closers are matched here the same simple way.
+	 */
+	private static isUnderscoreEmphasisOpen(state: StateInline): boolean {
+		let openCount = 0;
+		for (const delimiter of state.delimiters) {
+			if (delimiter.marker !== 0x5f) continue;
+			if (delimiter.close && openCount > 0) openCount -= 1;
+			else if (delimiter.open) openCount += 1;
+		}
+		return openCount > 0;
 	}
 
 	/** Usernames are stored lowercase, so `@Alex_M` mentions `alex_m`. */
