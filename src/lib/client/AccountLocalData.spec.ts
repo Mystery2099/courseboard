@@ -154,8 +154,30 @@ describe('account local data', () => {
 		storage.removeItem('courseboard:account:user_a:draft:reply:post-1');
 		localData.composerDrafts.reloadOpenDrafts('courseboard:account:user_a:something-else');
 		expect(draft.bodyMarkdown).toBe('mine');
+		localData.composerDrafts.reloadOpenDrafts(null);
+		expect(draft.bodyMarkdown).toBe('mine');
 		localData.composerDrafts.reloadOpenDrafts('courseboard:account:user_a:draft:reply:post-1');
 		expect(draft.bodyMarkdown).toBe('');
+	});
+
+	it('keeps a draft in memory when a reload cannot read storage', () => {
+		let isStorageBlocked = false;
+		const storage = new InMemoryStorage();
+		const blockableLocalData = new AccountLocalData(
+			() => 'user_a',
+			() => true,
+			new AccountLocalStorage(() => {
+				if (isStorageBlocked) throw new DOMException('Blocked', 'SecurityError');
+				return storage;
+			})
+		);
+		const draft = blockableLocalData.composerDrafts.open(threadTarget);
+		draft.bodyMarkdown = 'typed';
+		isStorageBlocked = true;
+		blockableLocalData.composerDrafts.reloadOpenDrafts(
+			'courseboard:account:user_a:draft:reply:post-1'
+		);
+		expect(draft.bodyMarkdown).toBe('typed');
 	});
 
 	it("removes other accounts' data, all of it when signed out, and leaves other keys alone", () => {

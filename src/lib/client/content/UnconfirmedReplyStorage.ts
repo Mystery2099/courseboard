@@ -64,7 +64,8 @@ export class UnconfirmedReplyStorage {
 	update(reply: UnconfirmedReply): void {
 		const accountId = this.currentBoundAccountId();
 		if (accountId === null) return;
-		if (this.storage.read(accountId, this.keyPrefix() + reply.submissionId) !== null) {
+		const storedValue = this.storage.read(accountId, this.keyPrefix() + reply.submissionId);
+		if (storedValue !== null && storedValue !== undefined) {
 			this.save(reply);
 		}
 	}

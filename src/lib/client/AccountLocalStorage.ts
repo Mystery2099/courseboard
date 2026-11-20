@@ -16,8 +16,9 @@ function resolveBrowserStorage(): Storage | null {
 export class AccountLocalStorage {
 	constructor(private readonly resolveStorage: () => Storage | null = resolveBrowserStorage) {}
 
+	/** Null when nothing is saved under the key, undefined when storage can't be read. */
 	read(accountId: string, key: string): unknown {
-		return this.attempt(null, (storage) =>
+		return this.attempt(undefined, (storage) =>
 			this.parse(storage.getItem(this.storageKey(accountId, key)))
 		);
 	}

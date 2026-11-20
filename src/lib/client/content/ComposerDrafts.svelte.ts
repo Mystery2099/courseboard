@@ -78,9 +78,11 @@ export class ComposerDraft {
 	reloadIfChanged(changedStorageKey: string | null): void {
 		if (this.accountId === null) return;
 		const storageKey = this.storage.storageKey(this.accountId, this.target.key);
-		// A null key means another tab cleared all of storage.
-		if (changedStorageKey !== null && changedStorageKey !== storageKey) return;
-		const storedText = parseDraftText(this.storage.read(this.accountId, this.target.key));
+		// A null key comes only from clearing all of storage, which this app never does.
+		if (changedStorageKey !== storageKey) return;
+		const storedValue = this.storage.read(this.accountId, this.target.key);
+		if (storedValue === undefined) return;
+		const storedText = parseDraftText(storedValue);
 		this.titleText = storedText?.title ?? '';
 		this.bodyMarkdownText = storedText?.bodyMarkdown ?? '';
 	}
