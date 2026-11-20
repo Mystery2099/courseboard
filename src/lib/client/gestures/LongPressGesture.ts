@@ -28,7 +28,7 @@ export function longPress(onLongPress: (element: HTMLElement) => void): Attachme
 
 		// A second finger anywhere on the page means a pinch, not a press.
 		function cancelOnSecondFinger(event: PointerEvent) {
-			if (event.pointerId !== pressPointerId) cancelPress();
+			if (event.pointerType === 'touch' && event.pointerId !== pressPointerId) cancelPress();
 		}
 
 		function startPress(event: PointerEvent) {

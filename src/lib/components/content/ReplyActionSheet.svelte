@@ -28,6 +28,11 @@
 		if (isOpen) isDismissed = false;
 	});
 
+	function dismiss() {
+		isDismissed = true;
+		onClose();
+	}
+
 	function choose(action: ReplyAction) {
 		// A second tap while the sheet slides away mustn't run another action.
 		if (isDismissed || !isOpen) return;
@@ -40,7 +45,7 @@
 </script>
 
 <!-- One sheet serves every reply on the page, so opening another never stacks a second one. -->
-<Drawer.Root open={isOpen && !isDismissed} onOpenChange={(open) => !open && onClose()} autoFocus>
+<Drawer.Root open={isOpen && !isDismissed} onOpenChange={(open) => !open && dismiss()} autoFocus>
 	<Drawer.Content onCloseAutoFocus={(event) => chosenAction.handleCloseAutoFocus(event, opener)}>
 		<div class="flex items-center justify-between gap-2 px-4 pt-2">
 			<Drawer.Title class="truncate">{title}</Drawer.Title>
