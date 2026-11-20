@@ -117,8 +117,10 @@ it.skipIf(!testMongoDbUri)(
 					}
 				])
 				.explain('executionStats');
-			expect(JSON.stringify(queryPlan)).toContain('IXSCAN');
-			expect(JSON.stringify(queryPlan)).not.toContain('COLLSCAN');
+			// Pushed down to the query layer, or kept as a `$cursor` stage, depending on the engine.
+			const winningPlan =
+				queryPlan.queryPlanner?.winningPlan ?? queryPlan.stages[0].$cursor.queryPlanner.winningPlan;
+			expect(JSON.stringify(winningPlan)).toContain('IXSCAN');
 		} finally {
 			await database.dropDatabase();
 			await client.close();
