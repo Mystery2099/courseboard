@@ -20,6 +20,14 @@
 	$effect(() => {
 		if (clerkContext.isLoaded) accountLocalData.keepOnlyAccount(accountId);
 	});
+
+	// Another tab publishing or editing the same draft updates it here too. Storage events only come
+	// from other tabs, and never when storage is unavailable, so text kept in memory isn't touched.
+	$effect(() => {
+		const reloadOpenDrafts = () => accountLocalData.composerDrafts.reloadOpenDrafts();
+		window.addEventListener('storage', reloadOpenDrafts);
+		return () => window.removeEventListener('storage', reloadOpenDrafts);
+	});
 </script>
 
 {@render children()}

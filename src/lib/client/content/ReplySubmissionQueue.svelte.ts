@@ -52,19 +52,15 @@ export class ReplySubmissionQueue {
 	/** Queues a reply and returns its submission id. */
 	submit(bodyMarkdown: string, parentReplyId: string | null): string {
 		const submissionId = crypto.randomUUID();
-		this.unconfirmedReplies.save({
-			submissionId,
-			parentReplyId,
-			bodyMarkdown,
-			refusalMessage: null
-		});
-		this.pendingReplies.push({
+		const pendingReply: PendingReply = {
 			submissionId,
 			parentReplyId,
 			bodyMarkdown,
 			status: 'sending',
 			errorMessage: null
-		});
+		};
+		this.saveUnconfirmed(pendingReply, null);
+		this.pendingReplies.push(pendingReply);
 		void this.send(submissionId);
 		return submissionId;
 	}
@@ -74,6 +70,8 @@ export class ReplySubmissionQueue {
 		if (!pendingReply || pendingReply.status === 'sending') return;
 		pendingReply.status = 'sending';
 		pendingReply.errorMessage = null;
+		// Choosing Retry overrides an earlier refusal, so an interrupted retry is sent again next visit.
+		this.saveUnconfirmed(pendingReply, null);
 		void this.send(submissionId);
 	}
 
@@ -100,17 +98,20 @@ export class ReplySubmissionQueue {
 			pendingReply.status = 'failed';
 			pendingReply.errorMessage = describeRequestFailure(cause, m.error_unavailable);
 			// A refusal, unlike a lost connection, isn't sent again on its own the next visit.
-			if (cause instanceof ApiRequestError && cause.status < 500) {
-				this.unconfirmedReplies.save({
-					submissionId,
-					parentReplyId: pendingReply.parentReplyId,
-					bodyMarkdown: pendingReply.bodyMarkdown,
-					refusalMessage: pendingReply.errorMessage
-				});
-			}
+			const wasRefused = cause instanceof ApiRequestError && cause.status < 500;
+			this.saveUnconfirmed(pendingReply, wasRefused ? pendingReply.errorMessage : null);
 			// A refusal such as a locked thread means the page is out of date.
 			if (cause instanceof ApiRequestError && cause.status === 409) this.onRefused();
 		}
+	}
+
+	private saveUnconfirmed(pendingReply: PendingReply, refusalMessage: string | null): void {
+		this.unconfirmedReplies.save({
+			submissionId: pendingReply.submissionId,
+			parentReplyId: pendingReply.parentReplyId,
+			bodyMarkdown: pendingReply.bodyMarkdown,
+			refusalMessage
+		});
 	}
 
 	private find(submissionId: string): PendingReply | undefined {

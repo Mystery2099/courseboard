@@ -218,7 +218,7 @@
 	const actionError = $derived(acceptedReplyMutation.error ?? lockMutation.error);
 </script>
 
-{#snippet replyCard(reply: ReplyResponse)}
+{#snippet replyCard(reply: ReplyResponse, canReply = true)}
 	{@const isAccepted = reply.id === post.acceptedReplyId}
 	<article
 		id="reply-{reply.id}"
@@ -233,7 +233,7 @@
 		</div>
 		<MarkdownBody class="mt-2" markdown={reply.bodyMarkdown} topHeadingLevel={3} />
 		<div class="mt-2 flex flex-wrap gap-2 text-sm">
-			{#if !post.isLocked}
+			{#if canReply && !post.isLocked}
 				<Button variant="outlined" size="compact" onclick={() => startReplyingTo(reply)}
 					>{m.common_reply()}</Button
 				>
@@ -377,7 +377,8 @@
 
 	<div class="mt-3 flex flex-col gap-3 empty:hidden">
 		{#each storedRepliesUnderHiddenBranches as reply (reply.id)}
-			{@render replyCard(reply)}
+			<!-- Its branch, where answers to it go, isn't loaded yet. -->
+			{@render replyCard(reply, false)}
 		{/each}
 		{#each threadLevelPendingReplies as pendingReply (pendingReply.submissionId)}
 			<PendingReplyCard

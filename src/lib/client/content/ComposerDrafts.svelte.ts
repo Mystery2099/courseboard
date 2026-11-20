@@ -71,6 +71,14 @@ export class ComposerDraft {
 		this.save();
 	}
 
+	/** Takes up what another tab saved, without writing it back. */
+	reloadFromStorage(): void {
+		if (this.accountId === null) return;
+		const storedText = parseDraftText(this.storage.read(this.accountId, this.target.key));
+		this.titleText = storedText?.title ?? '';
+		this.bodyMarkdownText = storedText?.bodyMarkdown ?? '';
+	}
+
 	clear(): void {
 		this.titleText = '';
 		this.bodyMarkdownText = '';
@@ -127,6 +135,11 @@ export class ComposerDrafts {
 		if (accountId === this.openDraftsAccountId) return;
 		this.openDrafts = {};
 		this.openDraftsAccountId = accountId;
+	}
+
+	/** Called when another tab changed storage, so a draft it published or edited isn't stale here. */
+	reloadOpenDrafts(): void {
+		for (const draft of Object.values(this.openDrafts)) draft.reloadFromStorage();
 	}
 
 	/** Reads the account reactively, so a derived that opens a draft reopens it for a new account. */
