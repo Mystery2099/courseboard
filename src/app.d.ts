@@ -17,7 +17,10 @@ declare global {
 			currentUser: ApplicationUser | null;
 		}
 		// interface PageData {}
-		// interface PageState {}
+		interface PageState {
+			/** The reply whose action sheet is open. A history entry, so Back closes the sheet. */
+			replyActionsReplyId?: string;
+		}
 		// interface Platform {}
 	}
 
