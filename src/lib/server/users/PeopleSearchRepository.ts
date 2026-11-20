@@ -26,6 +26,11 @@ export interface MatchedEntryRow {
 	term: AcademicTerm | null;
 }
 
+export interface MentionSuggestionRow {
+	username: string;
+	displayName: string;
+}
+
 export interface PersonSearchRow {
 	username: string;
 	displayName: string;
@@ -63,6 +68,40 @@ export class PeopleSearchRepository {
 		return criteria.courseId || criteria.status
 			? this.searchByVisibleEntries(criteria, skip, limit)
 			: this.searchByProfile(criteria, skip, limit);
+	}
+
+	/**
+	 * People to offer for an `@` mention typed as `prefix`, other than `excludedUserId`. Username
+	 * matches come first, then display-name matches, each ordered by display name.
+	 */
+	findMentionSuggestions(
+		prefix: string,
+		excludedUserId: ObjectId,
+		limit: number
+	): Promise<MentionSuggestionRow[]> {
+		return this.users()
+			.aggregate<MentionSuggestionRow>([
+				{
+					$match: {
+						...PeopleSearchRepository.listedUserFilter(prefix),
+						_id: { $ne: excludedUserId }
+					}
+				},
+				{
+					$set: {
+						usernameMatches: {
+							$regexMatch: {
+								input: '$username',
+								regex: `^${PeopleSearchRepository.escapeRegex(prefix.toLowerCase())}`
+							}
+						}
+					}
+				},
+				{ $sort: { usernameMatches: -1, displayName: 1, _id: 1 } },
+				{ $limit: limit },
+				{ $project: { _id: 0, username: 1, displayName: 1 } }
+			])
+			.toArray();
 	}
 
 	/** Course or status filters: start from visible entries, then find their owners. */
@@ -175,7 +214,7 @@ export class PeopleSearchRepository {
 	private static listedUserFilter(name: string): Document {
 		const filter: Document = { status: 'active', username: { $exists: true } };
 		if (!name) return filter;
-		const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		const escaped = PeopleSearchRepository.escapeRegex(name);
 		return {
 			...filter,
 			$or: [
@@ -183,6 +222,10 @@ export class PeopleSearchRepository {
 				{ displayName: { $regex: `(^|[\\s-])${escaped}`, $options: 'i' } }
 			]
 		};
+	}
+
+	private static escapeRegex(text: string): string {
+		return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 	}
 
 	/** Replaces an entry's `courseId` with the course code, for showing the matched entry. */

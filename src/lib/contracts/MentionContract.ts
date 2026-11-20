@@ -12,6 +12,25 @@ export const mentionListQuerySchema = z.object({
 		.optional()
 });
 
+/** How many people the `@` list offers at once. */
+export const MENTION_SUGGESTION_LIMIT = 6;
+
+/** What follows an `@` while it's being typed, the longest a username can be. */
+export const mentionSuggestionQuerySchema = z.object({
+	prefix: z.string().min(1).max(24)
+});
+
+/** Someone the signed-in user can mention. */
+export interface MentionSuggestionResponse {
+	username: string;
+	displayName: string;
+}
+
+export interface MentionSuggestionListResponse {
+	/** Username matches first, then display-name matches; never the signed-in user. */
+	suggestions: MentionSuggestionResponse[];
+}
+
 /** A post or reply that mentions the signed-in user. */
 export interface MentionResponse {
 	/** The id of the post or reply that holds the mention. */

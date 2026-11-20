@@ -1,6 +1,9 @@
 import { ApiRequest } from '#lib/client/ApiRequest.ts';
-import type { MentionListResponse } from '#lib/contracts/MentionContract.ts';
-import type { PersonSearchResult, SearchResponse } from '#lib/contracts/SearchContract.ts';
+import type {
+	MentionListResponse,
+	MentionSuggestionListResponse,
+	MentionSuggestionResponse
+} from '#lib/contracts/MentionContract.ts';
 
 export const mentionQueryKeys = {
 	all: ['mentions'] as const,
@@ -14,18 +17,12 @@ export class MentionApiClient {
 		return ApiRequest.get(`/api/mentions${query}`);
 	}
 
-	/**
-	 * People whose username or display name starts with `prefix`, from people search across every
-	 * school, with username matches first.
-	 */
-	static async suggestPeople(prefix: string): Promise<PersonSearchResult[]> {
-		const query = new URLSearchParams({ scope: 'people', institutionId: '', q: prefix });
-		const response = await ApiRequest.get<SearchResponse>(`/api/search?${query}`);
-		const people = response.people?.results ?? [];
-		const startsWithPrefix = (person: PersonSearchResult) => person.username.startsWith(prefix);
-		return [
-			...people.filter(startsWithPrefix),
-			...people.filter((person) => !startsWithPrefix(person))
-		];
+	/** People to mention whose username or display name starts with `prefix`, username matches first. */
+	static async suggestPeople(prefix: string): Promise<MentionSuggestionResponse[]> {
+		const query = new URLSearchParams({ prefix });
+		const response = await ApiRequest.get<MentionSuggestionListResponse>(
+			`/api/mentions/suggestions?${query}`
+		);
+		return response.suggestions;
 	}
 }

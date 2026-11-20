@@ -108,6 +108,20 @@ it.skipIf(!testMongoDbUri)(
 				'hidden_with_entry'
 			]);
 
+			// Mention suggestions put username matches ahead of earlier display names and leave out
+			// the caller.
+			const hidalgo = await addUser('ada', { displayName: 'Hidalgo Ada' });
+			const hiddenSchoolId = (await database
+				.collection('users')
+				.findOne({ username: 'hidden_school' }))!._id;
+			const suggested = async (prefix: string, excludedUserId: ObjectId) =>
+				(await peopleSearchRepository.findMentionSuggestions(prefix, excludedUserId, 2)).map(
+					(person) => person.username
+				);
+			expect(await suggested('HID', hidalgo)).toEqual(['hidden_school', 'hidden_with_entry']);
+			expect(await suggested('hid', hiddenSchoolId)).toEqual(['hidden_with_entry', 'ada']);
+			expect(await suggested('susp', hidalgo)).toEqual([]);
+
 			const queryPlan = await database
 				.collection('academicHistories')
 				.find({ courseId, visibility: 'visible', status: 'took' })
