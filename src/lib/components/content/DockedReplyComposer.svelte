@@ -5,13 +5,13 @@
 	import CaseSensitive from 'lucide-svelte/icons/case-sensitive';
 	import CornerUpLeft from 'lucide-svelte/icons/corner-up-left';
 	import X from 'lucide-svelte/icons/x';
-	import { describeValidationIssue } from '#lib/client/ErrorPresentation.ts';
-	import { REPLY_BODY_MAX_LENGTH, createReplySchema } from '#lib/contracts/PostContract.ts';
+	import { REPLY_BODY_MAX_LENGTH } from '#lib/contracts/PostContract.ts';
 	import { submitFormOnShortcut } from '#lib/client/hotkeys/FormSubmitShortcut.ts';
 	import { formatMarkdownOnShortcut } from '#lib/client/hotkeys/MarkdownFormattingShortcuts.ts';
 	import { stayAboveOnScreenKeyboard } from '#lib/client/navigation/OnScreenKeyboardInset.ts';
 	import { getPhoneDock } from '#lib/client/navigation/PhoneDock.svelte.ts';
 	import type { ComposerDraft } from '#lib/client/content/ComposerDrafts.svelte.ts';
+	import { takeReplyBody } from '#lib/client/content/ReplyBodySubmission.ts';
 	import MentionSuggestions from './MentionSuggestions.svelte';
 
 	const MAXIMUM_FIELD_HEIGHT_PX = 128;
@@ -96,15 +96,14 @@
 		event.preventDefault();
 		const isKeyboardSend = !wasSendClickedByPointer;
 		wasSendClickedByPointer = false;
-		const parsed = createReplySchema.shape.bodyMarkdown.safeParse(draft.bodyMarkdown);
-		if (!parsed.success) {
-			errorMessage = describeValidationIssue(parsed.error.issues[0]);
+		const submission = takeReplyBody(draft);
+		if (!submission.isValid) {
+			errorMessage = submission.errorMessage;
 			bodyField?.focus();
 			return;
 		}
 		errorMessage = null;
-		draft.clearIfUnchanged({ title: '', bodyMarkdown: draft.bodyMarkdown });
-		onSubmit(parsed.data);
+		onSubmit(submission.bodyMarkdown);
 		// Send pressed from a keyboard keeps focus; return it to the field. A tap leaves focus where
 		// it was, so a phone keyboard the reader closed stays closed.
 		if (isKeyboardSend && document.activeElement !== bodyField) {
