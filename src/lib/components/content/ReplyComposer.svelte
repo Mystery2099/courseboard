@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
-	import { describeValidationIssue } from '#lib/client/ErrorPresentation.ts';
-	import { REPLY_BODY_MAX_LENGTH, createReplySchema } from '#lib/contracts/PostContract.ts';
+	import { REPLY_BODY_MAX_LENGTH } from '#lib/contracts/PostContract.ts';
 	import { submitFormOnShortcut } from '#lib/client/hotkeys/FormSubmitShortcut.ts';
 	import { formatMarkdownOnShortcut } from '#lib/client/hotkeys/MarkdownFormattingShortcuts.ts';
 	import type { ComposerDraft } from '#lib/client/content/ComposerDrafts.svelte.ts';
+	import { takeReplyBody } from '#lib/client/content/ReplyBodySubmission.ts';
 	import MarkdownFormattingHelp from './MarkdownFormattingHelp.svelte';
 	import MentionSuggestions from './MentionSuggestions.svelte';
 
@@ -33,15 +33,14 @@
 
 	function submit(event: SubmitEvent) {
 		event.preventDefault();
-		const parsed = createReplySchema.shape.bodyMarkdown.safeParse(draft.bodyMarkdown);
-		if (!parsed.success) {
-			errorMessage = describeValidationIssue(parsed.error.issues[0]);
+		const submission = takeReplyBody(draft);
+		if (!submission.isValid) {
+			errorMessage = submission.errorMessage;
 			bodyField?.focus();
 			return;
 		}
 		errorMessage = null;
-		draft.clearIfUnchanged({ title: '', bodyMarkdown: draft.bodyMarkdown });
-		onSubmit(parsed.data);
+		onSubmit(submission.bodyMarkdown);
 	}
 </script>
 

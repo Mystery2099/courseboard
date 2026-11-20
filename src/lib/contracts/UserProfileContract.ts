@@ -2,12 +2,18 @@ import { z } from 'zod';
 import { objectIdSchema } from './ApiContract.ts';
 import type { ValidationErrorCode } from './ErrorContract.ts';
 
+/** A character a username can hold, as a regular expression class; capitals are lowercased. */
+export const USERNAME_CHARACTER_SOURCE = '[A-Za-z0-9_]';
+export const USERNAME_MAX_LENGTH = 24;
+/** A whole username, as a regular expression source for building mention patterns. */
+export const USERNAME_SOURCE = `${USERNAME_CHARACTER_SOURCE}{3,${USERNAME_MAX_LENGTH}}`;
+
 /** Usernames are stored lowercase, so `Alex_M` and `alex_m` are the same name. */
 export const usernameSchema = z
 	.string()
 	.trim()
 	.toLowerCase()
-	.regex(/^[a-z0-9_]{3,24}$/, 'username-format' satisfies ValidationErrorCode);
+	.regex(new RegExp(`^${USERNAME_SOURCE}$`), 'username-format' satisfies ValidationErrorCode);
 
 export const displayNameSchema = z
 	.string()

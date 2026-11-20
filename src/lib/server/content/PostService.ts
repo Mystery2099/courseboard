@@ -18,6 +18,7 @@ import {
 	type ContentEventPublisher
 } from '#lib/server/realtime/ContentEventPublisher.ts';
 import { mentionService, type MentionService } from '#lib/server/mentions/MentionService.ts';
+import { TimestampIdCursor } from '#lib/server/persistence/TimestampIdCursor.ts';
 import {
 	courseModerationAccess,
 	type CourseModerationAccess
@@ -64,7 +65,7 @@ export class PostService {
 				kinds: kind ? [kind] : POST_KINDS,
 				orderedBy,
 				onlyWithoutReplies: filter === 'unanswered',
-				after: after ? PostService.parseCursor(after) : null
+				after: after ? PostService.toPagePosition(after) : null
 			},
 			pageSize + 1
 		);
@@ -74,7 +75,7 @@ export class PostService {
 			posts: page.map(PostResponseMapper.toSummaryResponse),
 			nextCursor:
 				lastPost && posts.length > pageSize
-					? `${lastPost[orderedBy].getTime()}_${lastPost._id.toHexString()}`
+					? TimestampIdCursor.format(lastPost[orderedBy], lastPost._id)
 					: null
 		};
 	}
@@ -223,9 +224,9 @@ export class PostService {
 		return spaceId ? { courseId: courseObjectId, spaceId } : null;
 	}
 
-	private static parseCursor(cursor: string): PostPagePosition {
-		const [orderedAtMilliseconds, postId] = cursor.split('_');
-		return { orderedAt: new Date(Number(orderedAtMilliseconds)), postId: new ObjectId(postId) };
+	private static toPagePosition(cursor: string): PostPagePosition {
+		const { at, id } = TimestampIdCursor.parse(cursor);
+		return { orderedAt: at, postId: id };
 	}
 }
 

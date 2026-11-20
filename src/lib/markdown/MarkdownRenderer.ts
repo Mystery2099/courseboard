@@ -1,4 +1,5 @@
 import createMarkdownParser, { type MarkdownIt, type StateInline, type Token } from 'markdown-it';
+import { USERNAME_SOURCE } from '#lib/contracts/UserProfileContract.ts';
 
 export type MarkdownLink = { address: string; text: string | null };
 
@@ -14,7 +15,10 @@ export class MarkdownRenderer {
 	 * `@` and a username, not inside a word, an email address, or a path. Usernames are stored
 	 * lowercase, so a match is lowercased before it's compared.
 	 */
-	private static readonly MENTION_PATTERN = /@([A-Za-z0-9_]{3,24})(?![\p{L}\p{M}\p{N}_@])/uy;
+	private static readonly MENTION_PATTERN = new RegExp(
+		`@(${USERNAME_SOURCE})(?![\\p{L}\\p{M}\\p{N}_@])`,
+		'uy'
+	);
 	/**
 	 * A mention can't follow these, so a word, an email address, or a path isn't one. Quotes, `*`,
 	 * `~`, and backticks are left out: they're allowed in email addresses but mostly mark up text.

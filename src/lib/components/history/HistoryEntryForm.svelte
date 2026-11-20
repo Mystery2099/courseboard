@@ -5,7 +5,11 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
 	import { tick, untrack } from 'svelte';
-	import { describeFieldIssues, describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
+	import {
+		describeFieldIssues,
+		describeRequestFailure,
+		focusFirstInvalidField
+	} from '#lib/client/ErrorPresentation.ts';
 	import { reviewQueryKeys } from '#lib/client/content/ReviewApiClient.ts';
 	import {
 		AcademicHistoryApiClient,
@@ -126,8 +130,7 @@
 		});
 		if (!parsed.success) {
 			fieldErrors = describeFieldIssues(parsed.error);
-			const form = event.currentTarget as HTMLFormElement;
-			void tick().then(() => form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
+			void focusFirstInvalidField(event.currentTarget as HTMLFormElement);
 			return;
 		}
 		fieldErrors = {};

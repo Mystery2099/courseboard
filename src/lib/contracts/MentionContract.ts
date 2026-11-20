@@ -1,15 +1,14 @@
 import { z } from 'zod';
+import { timestampIdCursorSchema } from './ApiContract.ts';
 import type { PostAuthorResponse, PostKind } from './PostContract.ts';
+import { USERNAME_CHARACTER_SOURCE, USERNAME_MAX_LENGTH } from './UserProfileContract.ts';
 
 /** The most people one post or reply can mention; later mentions stay plain text. */
 export const MENTIONS_PER_BODY_LIMIT = 10;
 
 export const mentionListQuerySchema = z.object({
 	/** The `nextCursor` of the previous page: a timestamp and a post or reply id. */
-	after: z
-		.string()
-		.regex(/^\d{1,15}_[a-f0-9]{24}$/)
-		.optional()
+	after: timestampIdCursorSchema.optional()
 });
 
 /** How many people the `@` list offers at once. */
@@ -17,7 +16,7 @@ export const MENTION_SUGGESTION_LIMIT = 6;
 
 /** What follows an `@` while it's being typed, the longest a username can be. */
 export const mentionSuggestionQuerySchema = z.object({
-	prefix: z.string().regex(/^[A-Za-z0-9_]{1,24}$/)
+	prefix: z.string().regex(new RegExp(`^${USERNAME_CHARACTER_SOURCE}{1,${USERNAME_MAX_LENGTH}}$`))
 });
 
 /** Someone the signed-in user can mention. */

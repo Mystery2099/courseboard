@@ -2,9 +2,13 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
-	import { tick, untrack } from 'svelte';
+	import { untrack } from 'svelte';
 	import type { ZodError } from 'zod';
-	import { describeFieldIssues, describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
+	import {
+		describeFieldIssues,
+		describeRequestFailure,
+		focusFirstInvalidField
+	} from '#lib/client/ErrorPresentation.ts';
 	import { postQueryKeys } from '#lib/client/content/PostApiClient.ts';
 	import { ReviewApiClient, reviewQueryKeys } from '#lib/client/content/ReviewApiClient.ts';
 	import {
@@ -108,9 +112,7 @@
 		if (fieldErrors.disclosureAcknowledged) {
 			fieldErrors.disclosureAcknowledged = m.review_form_disclosure_required();
 		}
-		void tick().then(() =>
-			formElement.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
-		);
+		void focusFirstInvalidField(formElement);
 	}
 
 	function save(event: SubmitEvent) {

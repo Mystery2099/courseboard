@@ -1,3 +1,4 @@
+import { tick } from 'svelte';
 import type { core, ZodError } from 'zod';
 import { ApiRequestError } from '#lib/client/ApiRequest.ts';
 import { isErrorCode, type ErrorCode } from '#lib/contracts/ErrorContract.ts';
@@ -75,4 +76,10 @@ export function describeFieldIssues(error: ZodError): Record<string, string | un
 /** Translates a failed API request, or uses the fallback when the request never got an answer. */
 export function describeRequestFailure(cause: unknown, fallback: () => string): string {
 	return cause instanceof ApiRequestError ? describeErrorCode(cause.code) : fallback();
+}
+
+/** Moves focus to the form's first field marked invalid, once the errors have rendered. */
+export async function focusFirstInvalidField(form: HTMLFormElement): Promise<void> {
+	await tick();
+	form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
 }

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { tick } from 'svelte';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import EditorDialog from '#lib/components/EditorDialog.svelte';
 	import MarkdownFormattingHelp from './MarkdownFormattingHelp.svelte';
@@ -8,7 +7,11 @@
 	import { formatMarkdownOnShortcut } from '#lib/client/hotkeys/MarkdownFormattingShortcuts.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createMutation, useQueryClient } from '@tanstack/svelte-query';
-	import { describeFieldIssues, describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
+	import {
+		describeFieldIssues,
+		describeRequestFailure,
+		focusFirstInvalidField
+	} from '#lib/client/ErrorPresentation.ts';
 	import { PostApiClient, postQueryKeys } from '#lib/client/content/PostApiClient.ts';
 	import {
 		ComposerDraftTarget,
@@ -77,8 +80,7 @@
 		});
 		if (!parsed.success) {
 			fieldErrors = describeFieldIssues(parsed.error);
-			const form = event.currentTarget as HTMLFormElement;
-			void tick().then(() => form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
+			void focusFirstInvalidField(event.currentTarget as HTMLFormElement);
 			return;
 		}
 		fieldErrors = {};
