@@ -107,6 +107,8 @@ export interface PostListResponse {
 
 export interface PostDetailResponse extends PostSummaryResponse {
 	bodyMarkdown: string;
+	/** The `@username` mentions the server confirmed, which the body links to profiles. */
+	mentionedUsernames: string[];
 	acceptedReplyId: string | null;
 	/** What the caller may do here, so the client shows only controls the server will accept. */
 	viewerPermissions: {
@@ -122,6 +124,8 @@ export interface ReplyResponse {
 	parentReplyId: string | null;
 	author: PostAuthorResponse;
 	bodyMarkdown: string;
+	/** The `@username` mentions the server confirmed, which the body links to profiles. */
+	mentionedUsernames: string[];
 	createdAt: string;
 }
 

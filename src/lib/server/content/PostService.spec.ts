@@ -5,6 +5,9 @@ import { CourseRepository } from '#lib/server/catalog/CourseRepository.ts';
 import { CourseModerationAccess } from '#lib/server/moderation/CourseModerationAccess.ts';
 import { ModeratorAssignmentRepository } from '#lib/server/moderation/ModeratorAssignmentRepository.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
+import { MentionRepository } from '#lib/server/mentions/MentionRepository.ts';
+import { MentionService } from '#lib/server/mentions/MentionService.ts';
+import { ApplicationUserRepository } from '#lib/server/users/ApplicationUserRepository.ts';
 import type { PostDetail } from './Post.ts';
 import { PostRepository } from './PostRepository.ts';
 import { PostService } from './PostService.ts';
@@ -49,8 +52,20 @@ function createEventPublisher() {
 	return {
 		publishPostCreated: vi.fn(),
 		publishReplyCreated: vi.fn(),
-		publishReactionChanged: vi.fn()
+		publishReactionChanged: vi.fn(),
+		publishMentionCreated: vi.fn()
 	};
+}
+
+function createMentionService(events: ReturnType<typeof createEventPublisher>) {
+	const users = new ApplicationUserRepository();
+	vi.spyOn(users, 'findMentionableByUsernames').mockResolvedValue([]);
+	return new MentionService(
+		users,
+		new MentionRepository(),
+		events,
+		MentionService.createDefaultRateLimiters()
+	);
 }
 
 function createService(storedPost: PostDetail | null = question) {
@@ -64,7 +79,14 @@ function createService(storedPost: PostDetail | null = question) {
 	const events = createEventPublisher();
 	const moderation = new CourseModerationAccess(assignments);
 	return {
-		service: new PostService(posts, replies, courses, events, moderation),
+		service: new PostService(
+			posts,
+			replies,
+			courses,
+			events,
+			moderation,
+			createMentionService(events)
+		),
 		posts,
 		replies,
 		events,

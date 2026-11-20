@@ -14,6 +14,7 @@ export class ReplyRepository {
 		parentReplyId: 1,
 		bodyMarkdown: 1,
 		createdAt: 1,
+		mentions: 1,
 		author: 1
 	} as const;
 

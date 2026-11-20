@@ -47,7 +47,8 @@ function createEventPublisher() {
 	return {
 		publishPostCreated: vi.fn(),
 		publishReplyCreated: vi.fn(),
-		publishReactionChanged: vi.fn()
+		publishReactionChanged: vi.fn(),
+		publishMentionCreated: vi.fn()
 	};
 }
 

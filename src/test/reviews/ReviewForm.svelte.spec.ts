@@ -14,6 +14,7 @@ const review: PostDetailResponse = {
 	kind: 'review',
 	title: 'A useful course',
 	bodyMarkdown: 'Start the project early.',
+	mentionedUsernames: [],
 	author: { username: 'student', displayName: 'Student' },
 	createdAt: '2026-11-14T12:00:00.000Z',
 	lastActivityAt: '2026-11-14T12:00:00.000Z',

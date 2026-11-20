@@ -136,7 +136,7 @@ export class PostRepository {
 			.aggregate<PostDetail>([
 				{ $match: { _id: postId, state: { $nin: ['removed', 'deleted'] } } },
 				...ContentAuthorLookup.STAGES,
-				{ $project: { ...PostRepository.SUMMARY_FIELDS, bodyMarkdown: 1 } }
+				{ $project: { ...PostRepository.SUMMARY_FIELDS, bodyMarkdown: 1, mentions: 1 } }
 			])
 			.toArray();
 		return post ?? null;

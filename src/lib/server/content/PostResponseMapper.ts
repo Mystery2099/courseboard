@@ -31,6 +31,7 @@ export class PostResponseMapper {
 		return {
 			...PostResponseMapper.toSummaryResponse(post),
 			bodyMarkdown: post.bodyMarkdown,
+			mentionedUsernames: (post.mentions ?? []).map((mentioned) => mentioned.username),
 			acceptedReplyId: post.acceptedReplyId?.toHexString() ?? null,
 			viewerPermissions: {
 				canChooseAcceptedReply: post.kind === 'question' && isAuthor,

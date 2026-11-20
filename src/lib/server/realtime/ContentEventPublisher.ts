@@ -1,5 +1,6 @@
 import {
 	REALTIME_MESSAGES,
+	type MentionCreatedEvent,
 	type PostCreatedEvent,
 	type ReactionChangedEvent,
 	type ReplyCreatedEvent
@@ -15,6 +16,8 @@ export interface ContentEventPublisher {
 	publishReplyCreated(event: ReplyCreatedEvent, authorId: string): void;
 	/** Sent to everyone in the course, the reacting person's other tabs included. */
 	publishReactionChanged(event: ReactionChangedEvent): void;
+	/** Sent to the mentioned person's sockets only, whichever course they have open. */
+	publishMentionCreated(event: MentionCreatedEvent, mentionedUserId: string): void;
 }
 
 /**
@@ -33,6 +36,18 @@ export class SocketContentEventPublisher implements ContentEventPublisher {
 
 	publishReactionChanged(event: ReactionChangedEvent): void {
 		this.emit(REALTIME_MESSAGES.reactionChanged, event, null);
+	}
+
+	publishMentionCreated(event: MentionCreatedEvent, mentionedUserId: string): void {
+		const socketServer = globalThis.academicPlatformSocketServer;
+		if (!socketServer) return;
+		try {
+			socketServer
+				.to(RealtimeRooms.forUser(mentionedUserId))
+				.emit(REALTIME_MESSAGES.mentionCreated, event);
+		} catch (error) {
+			console.error(`Couldn't publish a mention in course ${event.courseId}:`, error);
+		}
 	}
 
 	/** `excludedUserId` leaves out that account's sockets; null reaches the whole course. */

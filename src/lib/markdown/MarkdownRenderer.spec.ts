@@ -134,4 +134,21 @@ describe('Markdown renderer', () => {
 			'Tips Read the manual first! Run npm test now diagram'
 		);
 	});
+
+	it('finds mentions only in ordinary text', () => {
+		const markdown =
+			'Thanks @Alex_M and @sam, again @alex_m.\n\n`@in_code` [@in_link](https://example.com) mail a@bob.example\n\n```\n@fenced\n```\n\nnot@word @no @this_name_is_far_too_long_for_a_username';
+
+		expect(MarkdownRenderer.toMentionedUsernames(markdown)).toEqual(['alex_m', 'sam']);
+	});
+
+	it('links only the mentions the server confirmed', () => {
+		const html = MarkdownRenderer.toHtml('Ask @Alex_M or @unknown_person', 3, ['alex_m']);
+
+		expect(html).toContain(
+			'<a href="/users/alex_m" class="mention" rel="nofollow ugc noopener noreferrer">@Alex_M</a>'
+		);
+		expect(html).toContain(' or @unknown_person');
+		expect(MarkdownRenderer.toHtml('Ask @alex_m', 3)).toBe('<p>Ask @alex_m</p>\n');
+	});
 });

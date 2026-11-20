@@ -11,7 +11,8 @@ export const REALTIME_MESSAGES = {
 	unsubscribeFromCourse: 'course.unsubscribe',
 	postCreated: 'post.created',
 	replyCreated: 'reply.created',
-	reactionChanged: 'reaction.changed'
+	reactionChanged: 'reaction.changed',
+	mentionCreated: 'mention.created'
 } as const;
 
 export const courseSubscriptionRequestSchema = z.object({ courseId: objectIdSchema });
@@ -39,4 +40,13 @@ export interface ReplyCreatedEvent {
 export interface ReactionChangedEvent {
 	courseId: string;
 	postId: string;
+}
+
+/** Sent only to the mentioned person's own connections, whatever course they have open. */
+export interface MentionCreatedEvent {
+	courseId: string;
+	postId: string;
+	postKind: PostKind;
+	/** Null when the post itself holds the mention. */
+	replyId: string | null;
 }

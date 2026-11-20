@@ -2,6 +2,9 @@ import createMarkdownParser, { type MarkdownIt, type Token } from 'markdown-it';
 
 export type MarkdownLink = { address: string; text: string | null };
 
+/** A piece of plain text: either text as written, or an `@username` mention. */
+type MentionTextPart = { text: string; mentionedUsername: string | null };
+
 /**
  * Turns user-written Markdown into safe HTML, the same way during server rendering and in the
  * browser. Raw HTML is shown as text, links are limited to web, email, and same-site addresses,
@@ -10,14 +13,44 @@ export type MarkdownLink = { address: string; text: string | null };
 export class MarkdownRenderer {
 	private static readonly ALLOWED_LINK_PATTERN = /^(?:https?:|mailto:|\/(?!\/))/i;
 	private static readonly SKIPPED_PLAIN_TEXT_BLOCKS = new Set(['fence', 'code_block']);
+	/**
+	 * `@` and a username, not inside a word, an email address, or a path. Usernames are stored
+	 * lowercase, so a match is lowercased before it's compared.
+	 */
+	private static readonly MENTION_PATTERN =
+		/(?<![\p{L}\p{N}_@./+-])@([A-Za-z0-9_]{3,24})(?![A-Za-z0-9_@])/gu;
 	private static readonly parser = MarkdownRenderer.createParser();
 
 	/**
 	 * `topHeadingLevel` is the level a body's `#` becomes, one below the heading the body sits under,
-	 * so user headings never compete with the page's own.
+	 * so user headings never compete with the page's own. Only `mentionedUsernames`, the mentions the
+	 * server confirmed, become profile links; any other `@name` stays text.
 	 */
-	static toHtml(markdown: string, topHeadingLevel: 2 | 3): string {
-		return MarkdownRenderer.parser.render(markdown, { topHeadingLevel });
+	static toHtml(
+		markdown: string,
+		topHeadingLevel: 2 | 3,
+		mentionedUsernames: readonly string[] = []
+	): string {
+		return MarkdownRenderer.parser.render(markdown, {
+			topHeadingLevel,
+			mentionedUsernames: new Set(mentionedUsernames)
+		});
+	}
+
+	/**
+	 * The distinct usernames `@`-mentioned in ordinary text, lowercased, in reading order. Code and
+	 * link text don't count.
+	 */
+	static toMentionedUsernames(markdown: string): string[] {
+		const usernames = new Set<string>();
+		for (const blockToken of MarkdownRenderer.parser.parse(markdown, {})) {
+			MarkdownRenderer.forEachTextOutsideLinks(blockToken.children ?? [], (token) => {
+				for (const part of MarkdownRenderer.splitMentions(token.content)) {
+					if (part.mentionedUsername) usernames.add(part.mentionedUsername);
+				}
+			});
+		}
+		return [...usernames];
 	}
 
 	/** The readable text of `markdown`, without formatting, link addresses, or code blocks. */
@@ -101,6 +134,38 @@ export class MarkdownRenderer {
 			return renderLinkOpen(tokens, index, options, env, renderer);
 		};
 
+		parser.core.ruler.push('link_mentions', (state) => {
+			const mentionedUsernames = state.env.mentionedUsernames as ReadonlySet<string> | undefined;
+			if (!mentionedUsernames?.size) return;
+			for (const blockToken of state.tokens) {
+				if (!blockToken.children) continue;
+				const linkedTokens = new Map<Token, Token[]>();
+				MarkdownRenderer.forEachTextOutsideLinks(blockToken.children, (token) => {
+					const parts = MarkdownRenderer.splitMentions(token.content);
+					if (!parts.some((part) => part.mentionedUsername)) return;
+					linkedTokens.set(
+						token,
+						parts.flatMap((part) => {
+							const text = new state.Token('text', '', 0);
+							text.content = part.text;
+							if (!part.mentionedUsername || !mentionedUsernames.has(part.mentionedUsername)) {
+								return [text];
+							}
+							const linkOpen = new state.Token('link_open', 'a', 1);
+							linkOpen.attrs = [
+								['href', `/users/${part.mentionedUsername}`],
+								['class', 'mention']
+							];
+							return [linkOpen, text, new state.Token('link_close', 'a', -1)];
+						})
+					);
+				});
+				blockToken.children = blockToken.children.flatMap(
+					(token) => linkedTokens.get(token) ?? [token]
+				);
+			}
+		});
+
 		parser.core.ruler.push('demote_headings', (state) => {
 			const offset = ((state.env.topHeadingLevel as number | undefined) ?? 1) - 1;
 			for (const token of state.tokens) {
@@ -110,6 +175,32 @@ export class MarkdownRenderer {
 			}
 		});
 		return parser;
+	}
+
+	/** Calls `visit` for each text token that isn't inside a link. */
+	private static forEachTextOutsideLinks(tokens: Token[], visit: (token: Token) => void): void {
+		let linkDepth = 0;
+		for (const token of tokens) {
+			if (token.type === 'link_open') linkDepth += 1;
+			else if (token.type === 'link_close') linkDepth -= 1;
+			else if (token.type === 'text' && linkDepth === 0) visit(token);
+		}
+	}
+
+	private static splitMentions(text: string): MentionTextPart[] {
+		const parts: MentionTextPart[] = [];
+		let textStart = 0;
+		for (const match of text.matchAll(MarkdownRenderer.MENTION_PATTERN)) {
+			if (match.index > textStart) {
+				parts.push({ text: text.slice(textStart, match.index), mentionedUsername: null });
+			}
+			parts.push({ text: match[0], mentionedUsername: match[1].toLowerCase() });
+			textStart = match.index + match[0].length;
+		}
+		if (textStart < text.length) {
+			parts.push({ text: text.slice(textStart), mentionedUsername: null });
+		}
+		return parts;
 	}
 
 	private static inlineText(tokens: Token[]): string {

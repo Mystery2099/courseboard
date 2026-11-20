@@ -8,6 +8,7 @@ import {
 	type ReplyResponse
 } from '#lib/contracts/PostContract.ts';
 import { AccessPolicy } from '#lib/server/access/AccessPolicy.ts';
+import { mentionService, type MentionService } from '#lib/server/mentions/MentionService.ts';
 import { DatabaseIndexInitializer } from '#lib/server/persistence/DatabaseIndexInitializer.ts';
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
 import { MongoErrorClassifier } from '#lib/server/persistence/MongoErrorClassifier.ts';
@@ -27,7 +28,8 @@ export class ReplyService {
 	constructor(
 		private readonly replies: ReplyRepository,
 		private readonly posts: PostRepository,
-		private readonly events: ContentEventPublisher
+		private readonly events: ContentEventPublisher,
+		private readonly mentions: MentionService
 	) {}
 
 	/** Returns null when the post doesn't exist or the id is malformed. */
@@ -89,6 +91,7 @@ export class ReplyService {
 			}
 		}
 
+		const mentioned = await this.mentions.resolveMentions(request.bodyMarkdown, author);
 		const reply: ReplyDocument = {
 			_id: new ObjectId(),
 			postId: postObjectId,
@@ -96,7 +99,8 @@ export class ReplyService {
 			authorId,
 			bodyMarkdown: request.bodyMarkdown,
 			submissionId: request.submissionId,
-			createdAt: new Date()
+			createdAt: new Date(),
+			...(mentioned.length > 0 && { mentions: mentioned })
 		};
 		// The unique submission index must exist before it can stop a duplicate.
 		await DatabaseIndexInitializer.ensureIndexes();
@@ -124,14 +128,13 @@ export class ReplyService {
 			await session.endSession();
 		}
 		// Only a new insert is announced; the paths above that return a stored reply already were.
-		this.events.publishReplyCreated(
-			{
-				courseId: post.courseId.toHexString(),
-				postId: post._id.toHexString(),
-				replyId: reply._id.toHexString()
-			},
-			author.id
-		);
+		const event = {
+			courseId: post.courseId.toHexString(),
+			postId: post._id.toHexString(),
+			replyId: reply._id.toHexString()
+		};
+		this.events.publishReplyCreated(event, author.id);
+		this.mentions.announceMentions(mentioned, { ...event, postKind: post.kind }, author.id);
 		const { username, displayName } = author.profile;
 		return {
 			kind: 'created',
@@ -160,6 +163,7 @@ export class ReplyService {
 			parentReplyId: reply.parentReplyId?.toHexString() ?? null,
 			author: reply.author,
 			bodyMarkdown: reply.bodyMarkdown,
+			mentionedUsernames: (reply.mentions ?? []).map((mentioned) => mentioned.username),
 			createdAt: reply.createdAt.toISOString()
 		};
 	}
@@ -168,5 +172,6 @@ export class ReplyService {
 export const replyService = new ReplyService(
 	replyRepository,
 	postRepository,
-	contentEventPublisher
+	contentEventPublisher,
+	mentionService
 );
