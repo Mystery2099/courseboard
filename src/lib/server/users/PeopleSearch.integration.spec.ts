@@ -118,7 +118,7 @@ it.skipIf(!testMongoDbUri)(
 				(await peopleSearchRepository.findMentionSuggestions(prefix, excludedUserId, 2)).map(
 					(person) => person.username
 				);
-			expect(await suggested('HID', hidalgo)).toEqual(['hidden_school', 'hidden_with_entry']);
+			expect(await suggested('HID', open)).toEqual(['hidden_school', 'hidden_with_entry']);
 			expect(await suggested('hid', hiddenSchoolId)).toEqual(['hidden_with_entry', 'ada']);
 			expect(await suggested('susp', hidalgo)).toEqual([]);
 

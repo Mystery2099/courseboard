@@ -17,7 +17,7 @@ export const MENTION_SUGGESTION_LIMIT = 6;
 
 /** What follows an `@` while it's being typed, the longest a username can be. */
 export const mentionSuggestionQuerySchema = z.object({
-	prefix: z.string().min(1).max(24)
+	prefix: z.string().regex(/^[A-Za-z0-9_]{1,24}$/)
 });
 
 /** Someone the signed-in user can mention. */
