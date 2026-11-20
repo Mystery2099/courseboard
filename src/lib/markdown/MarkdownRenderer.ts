@@ -2,9 +2,6 @@ import createMarkdownParser, { type MarkdownIt, type Token } from 'markdown-it';
 
 export type MarkdownLink = { address: string; text: string | null };
 
-/** A piece of plain text: either text as written, or an `@username` mention. */
-type MentionTextPart = { text: string; mentionedUsername: string | null };
-
 /**
  * Turns user-written Markdown into safe HTML, the same way during server rendering and in the
  * browser. Raw HTML is shown as text, links are limited to web, email, and same-site addresses,
@@ -17,13 +14,9 @@ export class MarkdownRenderer {
 	 * `@` and a username, not inside a word, an email address, or a path. Usernames are stored
 	 * lowercase, so a match is lowercased before it's compared.
 	 */
-	private static readonly MENTION_PATTERN =
-		/(?<![\p{L}\p{N}_@./+-])@([A-Za-z0-9_]{3,24})(?![A-Za-z0-9_@])/gu;
-	/** The same pattern, matching only where it's asked to start. */
-	private static readonly MENTION_AT_POSITION_PATTERN = new RegExp(
-		MarkdownRenderer.MENTION_PATTERN.source,
-		'uy'
-	);
+	private static readonly MENTION_PATTERN = /@([A-Za-z0-9_]{3,24})(?![A-Za-z0-9_@])/y;
+	/** A mention can't follow these, so a word, an email address, or a path isn't one. */
+	private static readonly WORD_CHARACTER_PATTERN = /[\p{L}\p{N}_@./+-]/u;
 	private static readonly parser = MarkdownRenderer.createParser();
 
 	/**
@@ -43,17 +36,15 @@ export class MarkdownRenderer {
 	}
 
 	/**
-	 * The distinct usernames `@`-mentioned in ordinary text, lowercased, in reading order. Code and
-	 * link text don't count.
+	 * The distinct usernames `@`-mentioned in ordinary text, lowercased, in reading order. Code,
+	 * link text, image descriptions, and an escaped `\@` don't count.
 	 */
 	static toMentionedUsernames(markdown: string): string[] {
 		const usernames = new Set<string>();
 		for (const blockToken of MarkdownRenderer.parser.parse(markdown, {})) {
-			MarkdownRenderer.forEachTextOutsideLinks(blockToken.children ?? [], (token) => {
-				for (const part of MarkdownRenderer.splitMentions(token.content)) {
-					if (part.mentionedUsername) usernames.add(part.mentionedUsername);
-				}
-			});
+			for (const token of blockToken.children ?? []) {
+				if (token.type === 'mention') usernames.add(MarkdownRenderer.mentionedUsername(token));
+			}
 		}
 		return [...usernames];
 	}
@@ -100,24 +91,41 @@ export class MarkdownRenderer {
 		// Every address parses, so an image always shows just its description; links are checked
 		// after parsing instead.
 		parser.validateLink = () => true;
-		// Reads `@username` as plain text before emphasis can, so `@_sam_` stays one mention. Inside
-		// an open `_` italic, trailing underscores close it instead, as in `_ask @kim_`.
-		parser.inline.ruler.before('emphasis', 'mention_text', (state, silent) => {
-			if (state.src.charCodeAt(state.pos) !== 0x40) return false;
-			const pattern = MarkdownRenderer.MENTION_AT_POSITION_PATTERN;
+		// Reads `@username` as a mention before emphasis can, so `@_sam_` stays one mention. Inside
+		// an open `_` italic, trailing underscores close it instead, as in `_ask @kim_`. Link text
+		// takes no mentions, even when the link itself is dropped later.
+		parser.inline.ruler.before('emphasis', 'mention', (state, silent) => {
+			if (state.src.charCodeAt(state.pos) !== 0x40 || state.linkLevel > 0) return false;
+			const previousCharacter = state.src.charAt(state.pos - 1);
+			const lastDelimiter = state.delimiters.at(-1);
+			const followsOpeningUnderscore =
+				previousCharacter === '_' &&
+				state.pending === '' &&
+				lastDelimiter?.open === true &&
+				lastDelimiter.token === state.tokens.length - 1;
+			if (
+				MarkdownRenderer.WORD_CHARACTER_PATTERN.test(previousCharacter) &&
+				!followsOpeningUnderscore
+			) {
+				return false;
+			}
+			const pattern = MarkdownRenderer.MENTION_PATTERN;
 			pattern.lastIndex = state.pos;
 			const match = pattern.exec(state.src);
 			if (!match) return false;
 			let mentionText = match[0];
-			const isUnderscoreItalicOpen = state.delimiters.some(
-				(delimiter) => delimiter.marker === 0x5f && delimiter.open
-			);
+			// Delimiters pair up only after the line is read, so the latest `_` tells whether one is open.
+			const isUnderscoreItalicOpen =
+				state.delimiters.findLast((delimiter) => delimiter.marker === 0x5f)?.open === true;
 			if (isUnderscoreItalicOpen) {
 				// Keeps `@` and the three characters a username needs at least.
 				const closingUnderscores = mentionText.length - mentionText.replace(/_+$/, '').length;
 				mentionText = mentionText.slice(0, Math.max(4, mentionText.length - closingUnderscores));
 			}
-			if (!silent) state.push('text', '', 0).content = mentionText;
+			if (!silent) {
+				const token = state.push('mention', '', 0);
+				token.content = mentionText;
+			}
 			state.pos += mentionText.length;
 			return true;
 		});
@@ -161,37 +169,15 @@ export class MarkdownRenderer {
 			return renderLinkOpen(tokens, index, options, env, renderer);
 		};
 
-		parser.core.ruler.push('link_mentions', (state) => {
-			const mentionedUsernames = state.env.mentionedUsernames as ReadonlySet<string> | undefined;
-			if (!mentionedUsernames?.size) return;
-			for (const blockToken of state.tokens) {
-				if (!blockToken.children) continue;
-				const linkedTokens = new Map<Token, Token[]>();
-				MarkdownRenderer.forEachTextOutsideLinks(blockToken.children, (token) => {
-					const parts = MarkdownRenderer.splitMentions(token.content);
-					if (!parts.some((part) => part.mentionedUsername)) return;
-					linkedTokens.set(
-						token,
-						parts.flatMap((part) => {
-							const text = new state.Token('text', '', 0);
-							text.content = part.text;
-							if (!part.mentionedUsername || !mentionedUsernames.has(part.mentionedUsername)) {
-								return [text];
-							}
-							const linkOpen = new state.Token('link_open', 'a', 1);
-							linkOpen.attrs = [
-								['href', `/users/${part.mentionedUsername}`],
-								['class', 'mention']
-							];
-							return [linkOpen, text, new state.Token('link_close', 'a', -1)];
-						})
-					);
-				});
-				blockToken.children = blockToken.children.flatMap(
-					(token) => linkedTokens.get(token) ?? [token]
-				);
-			}
-		});
+		// Only the mentions the server confirmed become profile links; usernames are `[a-z0-9_]`.
+		parser.renderer.rules.mention = (tokens, index, _options, env) => {
+			const username = MarkdownRenderer.mentionedUsername(tokens[index]);
+			const text = parser.utils.escapeHtml(tokens[index].content);
+			const mentionedUsernames = env?.mentionedUsernames as ReadonlySet<string> | undefined;
+			return mentionedUsernames?.has(username)
+				? `<a href="/users/${username}" class="mention" rel="nofollow ugc noopener noreferrer">${text}</a>`
+				: text;
+		};
 
 		parser.core.ruler.push('demote_headings', (state) => {
 			const offset = ((state.env.topHeadingLevel as number | undefined) ?? 1) - 1;
@@ -204,30 +190,9 @@ export class MarkdownRenderer {
 		return parser;
 	}
 
-	/** Calls `visit` for each text token that isn't inside a link. */
-	private static forEachTextOutsideLinks(tokens: Token[], visit: (token: Token) => void): void {
-		let linkDepth = 0;
-		for (const token of tokens) {
-			if (token.type === 'link_open') linkDepth += 1;
-			else if (token.type === 'link_close') linkDepth -= 1;
-			else if (token.type === 'text' && linkDepth === 0) visit(token);
-		}
-	}
-
-	private static splitMentions(text: string): MentionTextPart[] {
-		const parts: MentionTextPart[] = [];
-		let textStart = 0;
-		for (const match of text.matchAll(MarkdownRenderer.MENTION_PATTERN)) {
-			if (match.index > textStart) {
-				parts.push({ text: text.slice(textStart, match.index), mentionedUsername: null });
-			}
-			parts.push({ text: match[0], mentionedUsername: match[1].toLowerCase() });
-			textStart = match.index + match[0].length;
-		}
-		if (textStart < text.length) {
-			parts.push({ text: text.slice(textStart), mentionedUsername: null });
-		}
-		return parts;
+	/** Usernames are stored lowercase, so `@Alex_M` mentions `alex_m`. */
+	private static mentionedUsername(mentionToken: Token): string {
+		return mentionToken.content.slice(1).toLowerCase();
 	}
 
 	private static inlineText(tokens: Token[]): string {
@@ -235,7 +200,7 @@ export class MarkdownRenderer {
 			.map((token) => {
 				if (token.type === 'softbreak' || token.type === 'hardbreak') return ' ';
 				if (token.type === 'image') return MarkdownRenderer.inlineText(token.children ?? []);
-				return token.type === 'text' || token.type === 'code_inline' ? token.content : '';
+				return ['text', 'code_inline', 'mention'].includes(token.type) ? token.content : '';
 			})
 			.join('');
 	}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createQuery } from '@tanstack/svelte-query';
+	import { page } from '$app/state';
 	import { m } from '#lib/paraglide/messages.js';
 	import { MentionApiClient, mentionQueryKeys } from '#lib/client/content/MentionApiClient.ts';
 	import { MentionCompletion, type MentionQuery } from '#lib/client/content/MentionCompletion.ts';
@@ -31,9 +32,13 @@
 		enabled: requestedPrefix.length > 0,
 		staleTime: 60_000
 	}));
+	// The server never keeps a mention of the author, so don't offer one.
+	const ownUsername = $derived(page.data.profile?.username);
 	const suggestions = $derived(
 		mentionQuery && requestedPrefix === mentionQuery.prefix
-			? (suggestionsQuery.data ?? []).slice(0, SUGGESTION_LIMIT)
+			? (suggestionsQuery.data ?? [])
+					.filter((person) => person.username !== ownUsername)
+					.slice(0, SUGGESTION_LIMIT)
 			: []
 	);
 	const isOpen = $derived(suggestions.length > 0);
@@ -53,6 +58,8 @@
 		if (isOpen) {
 			field.setAttribute('aria-controls', listId);
 			field.setAttribute('aria-activedescendant', optionId(highlightedIndex));
+			// Focus stays in the field, so the browser won't scroll the highlighted option itself.
+			document.getElementById(optionId(highlightedIndex))?.scrollIntoView({ block: 'nearest' });
 		} else {
 			field.removeAttribute('aria-controls');
 			field.removeAttribute('aria-activedescendant');

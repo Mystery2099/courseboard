@@ -60,7 +60,7 @@
 		</label>
 		<MentionSuggestions field={bodyField} />
 	</div>
-	<MarkdownFormattingHelp id={helpId} />
+	<MarkdownFormattingHelp id={helpId} allowsMentions />
 	{#if errorMessage}
 		<p id={errorId} class="text-sm text-error" role="alert">{errorMessage}</p>
 	{/if}

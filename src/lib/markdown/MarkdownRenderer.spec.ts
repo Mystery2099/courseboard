@@ -140,6 +140,11 @@ describe('Markdown renderer', () => {
 			'Thanks @Alex_M and @sam, again @alex_m.\n\n`@in_code` [@in_link](https://example.com) mail a@bob.example\n\n```\n@fenced\n```\n\nnot@word @no @this_name_is_far_too_long_for_a_username';
 
 		expect(MarkdownRenderer.toMentionedUsernames(markdown)).toEqual(['alex_m', 'sam']);
+		expect(
+			MarkdownRenderer.toMentionedUsernames(
+				'\\@escaped [@dropped_link](ftp://example.com) ![@in_image](https://example.com/x.png)'
+			)
+		).toEqual([]);
 	});
 
 	it('keeps underscores in a mention instead of reading them as italics', () => {

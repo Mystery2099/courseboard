@@ -170,7 +170,7 @@
 				hidden={!isFormattingHelpOpen}
 				class="mb-2 px-2 text-sm text-on-surface-variant"
 			>
-				{m.markdown_formatting_help()}
+				{m.markdown_formatting_help_with_mentions()}
 			</p>
 			{#if errorMessage}
 				<p id={errorId} class="mb-2 px-2 text-sm text-error" role="alert">{errorMessage}</p>

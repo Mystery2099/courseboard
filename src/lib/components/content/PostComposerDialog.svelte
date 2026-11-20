@@ -146,7 +146,7 @@
 			</label>
 			<MentionSuggestions field={bodyField} />
 		</div>
-		<MarkdownFormattingHelp id="{formId}-body-help" />
+		<MarkdownFormattingHelp id="{formId}-body-help" allowsMentions />
 		{#if publishMutation.error}
 			<p class="text-sm text-error" role="alert">
 				{describeRequestFailure(publishMutation.error, m.post_composer_publish_failed)}
