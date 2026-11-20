@@ -262,7 +262,9 @@
 
 	function replyActionsFor(reply: ReplyResponse): ReplyAction[] {
 		const actions: ReplyAction[] = [];
-		if (!post.isLocked) {
+		// Answers go in the reply's branch, so one whose branch isn't loaded yet can't be answered.
+		const canReply = !isUnderHiddenBranch(reply.parentReplyId);
+		if (canReply && !post.isLocked) {
 			actions.push({
 				id: 'reply',
 				label: m.common_reply(),
