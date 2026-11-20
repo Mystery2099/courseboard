@@ -67,7 +67,10 @@
 				>
 			{/snippet}
 		</DropdownMenu.Trigger>
-		<DropdownMenu.Content class="flex w-auto min-w-0 gap-0.5 p-1" collisionPadding={16}>
+		<DropdownMenu.Content
+			class="flex w-auto min-w-0 gap-0.5 p-1 outline-hidden"
+			collisionPadding={16}
+		>
 			{#each REACTION_EMOJIS as emoji (emoji)}
 				{@const isReacted = hasReacted(emoji)}
 				<!-- A checkbox item, so the picker says which reactions are already yours. -->
