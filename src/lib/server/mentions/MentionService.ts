@@ -9,6 +9,7 @@ import { MarkdownRenderer } from '#lib/markdown/MarkdownRenderer.ts';
 import { AccessPolicy } from '#lib/server/access/AccessPolicy.ts';
 import { FixedWindowRateLimiter } from '#lib/server/limits/FixedWindowRateLimiter.ts';
 import { DatabaseIndexInitializer } from '#lib/server/persistence/DatabaseIndexInitializer.ts';
+import { TimestampIdCursor } from '#lib/server/persistence/TimestampIdCursor.ts';
 import {
 	contentEventPublisher,
 	type ContentEventPublisher
@@ -20,7 +21,11 @@ import {
 	type ApplicationUserRepository
 } from '#lib/server/users/ApplicationUserRepository.ts';
 import type { MentionedUser } from './MentionedUser.ts';
-import { mentionRepository, type MentionRepository } from './MentionRepository.ts';
+import {
+	mentionRepository,
+	type MentionPagePosition,
+	type MentionRepository
+} from './MentionRepository.ts';
 
 const HOUR_MILLISECONDS = 60 * 60 * 1000;
 
@@ -109,7 +114,7 @@ export class MentionService {
 		const pageSize = MentionService.PAGE_SIZE;
 		const rows = await this.mentions.findPage(
 			new ObjectId(user.id),
-			after ? MentionService.parseCursor(after) : null,
+			after ? MentionService.toPagePosition(after) : null,
 			pageSize + 1
 		);
 		const page = rows.slice(0, pageSize);
@@ -129,14 +134,14 @@ export class MentionService {
 			})),
 			nextCursor:
 				lastRow && rows.length > pageSize
-					? `${lastRow.createdAt.getTime()}_${lastRow._id.toHexString()}`
+					? TimestampIdCursor.format(lastRow.createdAt, lastRow._id)
 					: null
 		};
 	}
 
-	private static parseCursor(cursor: string) {
-		const [createdAtMilliseconds, id] = cursor.split('_');
-		return { createdAt: new Date(Number(createdAtMilliseconds)), id: new ObjectId(id) };
+	private static toPagePosition(cursor: string): MentionPagePosition {
+		const { at, id } = TimestampIdCursor.parse(cursor);
+		return { createdAt: at, id };
 	}
 }
 

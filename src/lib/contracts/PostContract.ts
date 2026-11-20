@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MULTILINE_TEXT_PATTERN, objectIdSchema } from './ApiContract.ts';
+import { MULTILINE_TEXT_PATTERN, objectIdSchema, timestampIdCursorSchema } from './ApiContract.ts';
 import type { ValidationErrorCode } from './ErrorContract.ts';
 import type { ReviewData } from './ReviewContract.ts';
 
@@ -49,10 +49,7 @@ export const postListQuerySchema = z
 		kind: z.enum(POST_KINDS).optional(),
 		filter: z.enum(POST_LIST_FILTERS).default('active'),
 		/** The `nextCursor` of the previous page: a timestamp and a post id. */
-		after: z
-			.string()
-			.regex(/^\d{1,15}_[a-f0-9]{24}$/)
-			.optional()
+		after: timestampIdCursorSchema.optional()
 	})
 	.refine((query) => query.filter !== 'unanswered' || query.kind === 'question', {
 		path: ['filter'],
