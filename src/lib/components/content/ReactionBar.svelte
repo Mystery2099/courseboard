@@ -19,6 +19,15 @@
 		onToggle: (emoji: ReactionEmoji, isAdding: boolean) => void;
 	} = $props();
 
+	let addButton = $state<HTMLElement | null>(null);
+
+	/** Removing the last of an emoji removes its chip, so focus moves to the add button instead. */
+	function toggleFromChip(reaction: ReactionCountResponse) {
+		const removesChip = reaction.reactedByViewer && reaction.count === 1;
+		onToggle(reaction.emoji, !reaction.reactedByViewer);
+		if (removesChip) addButton?.focus();
+	}
+
 	const hasReacted = (emoji: ReactionEmoji) =>
 		reactions.some((reaction) => reaction.emoji === emoji && reaction.reactedByViewer);
 </script>
@@ -39,7 +48,7 @@
 					? 'border-primary bg-primary-container text-on-primary-container'
 					: 'border-outline-variant text-on-surface-variant'
 			]}
-			onclick={() => onToggle(reaction.emoji, !reaction.reactedByViewer)}
+			onclick={() => toggleFromChip(reaction)}
 		>
 			<span aria-hidden="true">{REACTION_GLYPHS[reaction.emoji]}</span>
 			<span class="font-semibold tabular-nums">{reaction.count}</span>
@@ -50,6 +59,7 @@
 			{#snippet child({ props })}
 				<Button
 					{...props}
+					bind:ref={addButton}
 					variant="ghost"
 					size="icon"
 					class="desktop:size-8"
@@ -70,7 +80,8 @@
 						isReacted && 'bg-primary-container'
 					]}
 					onCheckedChange={(checked) => onToggle(emoji, checked)}
-					>{REACTION_GLYPHS[emoji]}</DropdownMenuPrimitive.CheckboxItem
+					><span aria-hidden="true">{REACTION_GLYPHS[emoji]}</span
+					></DropdownMenuPrimitive.CheckboxItem
 				>
 			{/each}
 		</DropdownMenu.Content>

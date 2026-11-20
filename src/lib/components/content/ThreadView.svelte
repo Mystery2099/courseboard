@@ -94,12 +94,16 @@
 	}));
 	const reactions = $derived(reactionsQuery.data);
 
+	const reactionMutationKey = reactionQueryKeys.toggles(postId);
 	const reactionMutation = createMutation(() => ({
+		mutationKey: reactionMutationKey,
+		// One at a time per thread, so a quick add and remove reach the server in the order tapped.
+		scope: { id: `reactions-${postId}` },
 		mutationFn: ({ replyId, emoji, isAdding }: ReactionToggle) =>
 			isAdding
 				? ReactionApiClient.addReaction(postId, replyId, emoji)
 				: ReactionApiClient.removeReaction(postId, replyId, emoji),
-		// Shown at once; a failure undoes only this toggle, so others still in flight stay.
+		// Shown at once; a failure undoes only this toggle, so others still waiting stay.
 		onMutate: async (toggle: ReactionToggle) => {
 			await queryClient.cancelQueries({ queryKey: reactionsQueryKey });
 			updateReactions((current) => applyReactionToggle(current, toggle));
@@ -108,8 +112,17 @@
 			updateReactions((current) =>
 				applyReactionToggle(current, { ...toggle, isAdding: !toggle.isAdding })
 			),
-		onSettled: () => queryClient.invalidateQueries({ queryKey: reactionsQueryKey })
+		// A refetch while others are still waiting would show the server without them.
+		onSettled: () => {
+			if (queryClient.isMutating({ mutationKey: reactionMutationKey }) === 1) {
+				return queryClient.invalidateQueries({ queryKey: reactionsQueryKey });
+			}
+		}
 	}));
+	/** The target whose toggle failed last: a reply id, or null for the post. */
+	const failedReactionTarget = $derived(
+		reactionMutation.isError ? reactionMutation.variables?.replyId : undefined
+	);
 
 	function updateReactions(update: (current: ThreadReactionsResponse) => ThreadReactionsResponse) {
 		queryClient.setQueryData<ThreadReactionsResponse>(reactionsQueryKey, (current) =>
@@ -289,7 +302,6 @@
 	}));
 
 	const actionError = $derived(acceptedReplyMutation.error ?? lockMutation.error);
-	const reactionError = $derived(reactionMutation.error);
 
 	let copyNotice = $state<{ replyId: string; message: string } | null>(null);
 	let copyNoticeTimer: ReturnType<typeof setTimeout> | undefined;
@@ -376,6 +388,12 @@
 	}
 </script>
 
+{#snippet reactionFailure()}
+	<p class="mt-2 text-sm text-error" role="alert">
+		{describeRequestFailure(reactionMutation.error, m.reaction_failed)}
+	</p>
+{/snippet}
+
 {#snippet replyCard(reply: ReplyResponse, canReply = true)}
 	{@const isAccepted = reply.id === post.acceptedReplyId}
 	<!-- A long press stands in for selecting text on phones, and Copy text covers that. -->
@@ -427,6 +445,9 @@
 				/>
 			</div>
 		</div>
+		{#if failedReactionTarget === reply.id}
+			{@render reactionFailure()}
+		{/if}
 	</article>
 {/snippet}
 
@@ -467,10 +488,8 @@
 			/>
 		</div>
 	{/if}
-	{#if reactionError}
-		<p class="mt-2 text-sm text-error" role="alert">
-			{describeRequestFailure(reactionError, m.reaction_failed)}
-		</p>
+	{#if failedReactionTarget === null}
+		{@render reactionFailure()}
 	{/if}
 	{#if post.viewerPermissions.canEditReview}
 		<details bind:open={isReviewEditorOpen} class="group/disclosure mt-4 rounded-card border p-4">

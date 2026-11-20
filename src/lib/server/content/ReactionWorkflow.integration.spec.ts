@@ -103,11 +103,16 @@ it.skipIf(!testMongoDbUri)(
 				postBefore
 			);
 
+			// The same match and grouping as the thread read.
 			const queryPlan = await database
 				.collection('reactions')
-				.find({ postId: new ObjectId(postId) })
+				.aggregate([
+					{ $match: { postId: new ObjectId(postId) } },
+					{ $group: { _id: { replyId: '$replyId', emoji: '$emoji' }, count: { $sum: 1 } } }
+				])
 				.explain('executionStats');
-			expect(JSON.stringify(queryPlan.queryPlanner.winningPlan)).toContain('IXSCAN');
+			expect(JSON.stringify(queryPlan)).toContain('IXSCAN');
+			expect(JSON.stringify(queryPlan)).not.toContain('COLLSCAN');
 		} finally {
 			await database.dropDatabase();
 			await client.close();

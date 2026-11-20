@@ -17,9 +17,8 @@ const RETRY_DELAY_MILLISECONDS = 30_000;
 /**
  * Creates the indexes that enforce identities (Clerk user IDs, invitation token hashes, institution
  * names, course codes per institution, one space per course, one membership per user and space,
- * one reply per submission, one of each emoji per person and target, one review per author and course, one moderator assignment per user
- * and course)
- * and support current queries. `createIndex` is idempotent, so this runs on every start.
+ * one reply per submission, one of each emoji per person and target, one review per author and
+ * course, one moderator assignment per user and course) and support current queries. `createIndex` is idempotent, so this runs on every start.
  *
  * Writes that rely on a unique index await `ensureIndexes()` first, so no duplicate can be
  * written before the index exists (which would also make the index impossible to build).

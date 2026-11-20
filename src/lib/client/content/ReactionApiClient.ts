@@ -4,7 +4,9 @@ import type { ReactionEmoji, ThreadReactionsResponse } from '#lib/contracts/Reac
 
 /** Under `posts`, so the refetch after every course subscription covers reactions too. */
 export const reactionQueryKeys = {
-	thread: (postId: string) => [...postQueryKeys.all, 'reactions', postId] as const
+	thread: (postId: string) => [...postQueryKeys.all, 'reactions', postId] as const,
+	/** The mutation key of a thread's reaction toggles, so others can tell when one is pending. */
+	toggles: (postId: string) => ['reaction-toggles', postId] as const
 };
 
 export class ReactionApiClient {
