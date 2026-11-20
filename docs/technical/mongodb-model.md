@@ -20,6 +20,7 @@ Embedding can be useful when the data is small, bounded, and really owned by one
 | `academicHistories` | `_id`, userId, courseId, status, term `{ season, year }` (null only while Planning), visibility, privateNote, createdAt, updatedAt | Its own collection, not embedded in `users`; see [below](#why-academic-history-has-its-own-collection). `privateNote` is only ever returned to the owner. Grades are deferred |
 | `posts` | `_id`, spaceId, courseId, kind (`question`/`discussion`/`review`), authorId, title, bodyMarkdown, replyCount, acceptedReplyId, lockedAt, createdAt, lastActivityAt, state, reviewData, editedAt; later imageIds | Questions, discussions, and reviews are built. `replyCount` and `acceptedReplyId` live on the post so lists never read replies. Reviews embed status, term, workload, and would-take-again. New posts have state `published`; older posts without a state remain readable. Removal and deletion actions are still planned |
 | `replies` | `_id`, postId, parentReplyId, authorId, bodyMarkdown, submissionId, createdAt | Their own collection, because a thread's replies are unbounded and paged. `parentReplyId` is null or a top-level reply of the same post, so nesting stops at one level |
+| `reactions` | `_id`, postId, replyId, userId, emoji, createdAt | Built. One document per person, emoji, and target; `replyId` is null for the post itself. Counts are worked out when a thread is read, never stored on posts or replies; see [below](#why-reactions-have-their-own-collection) |
 | `reports` | `_id`, reporterId, target, spaceId, reason, state, actions | Must support space-scoped moderation |
 | `moderatorAssignments` | `_id`, userId, courseId, spaceId, assignedBy, assignedAt | Built. Its own collection, because the role in `users` is platform-wide while an assignment covers one course. `courseId` is copied from the space so permission checks on a post skip a lookup |
 | `images` | `_id`, uploaderId, postId, binary data, MIME type, byte size, dimensions, alt text, state | Binaries stay in their own collection so post queries never load them |
@@ -36,6 +37,7 @@ These are starting points; I don't plan on creating all eleven right away. Invit
 - **Histories (built):** unique `(userId, courseId, term)` for an owner's history, another user's visible entries, and review-eligibility checks. Repeated attempts give one user several entries for a course, but only one per term; a null term counts too, so a course is planned without a term only once. Before November 16, 2026 this was a non-unique `(userId, courseId)` index, which let the same course and term be added twice. `(courseId, visibility, status)` and `(visibility, status)` for people filtering; see [search and people filtering](#search-and-people-filtering-built-november-16-2026).
 - **Posts (built):** `(spaceId, kind, lastActivityAt, _id)` for a course view ordered by activity; Overview asks for every kind with `$in`, and MongoDB merges the sorted runs. `(spaceId, kind, createdAt, _id)` for Newest and Unanswered, added after `explain()` showed them sorting in memory. The unique partial `(courseId, authorId)` index where `kind = review` enforces one review per user per course, including concurrent submissions. Its course prefix also serves the published-review match for statistics; the local verification used `IXSCAN`.
 - **Replies (built):** `(postId, _id)` for a thread's replies in the order they were written. ObjectIds sort by creation time to the second, and within a second only when one server process wrote them, which holds while the app runs as a single instance; the thread page doesn't depend on a nested reply following its parent. Unique `(authorId, submissionId)` so a retried submission is stored once.
+- **Reactions (built):** unique `(postId, replyId, emoji, userId)`, so a person uses each emoji once per target, including under concurrent requests. Its `postId` prefix also serves a thread's counts; the local verification used `IXSCAN`.
 - **Moderator assignments (built):** unique `(courseId, userId)`, so a user is assigned to a course once, and the permission check behind locking and `canLock` reads only that index; the local verification used `IXSCAN`. The admin list sorts the whole small collection by `assignedAt` and joins courses, schools, and usernames with `$lookup`.
 - **Reports:** `(spaceId, state, createdAt)` for moderation queues.
 - **Search:** text indexes on courses (`title`, `code`, `description`) and posts (`title`, `bodyMarkdown`), a `normalizedCode` index for code lookup across schools, and the history indexes above for people filtering. Atlas Search stays deferred.
@@ -96,6 +98,19 @@ My approved proposal to Professor Enke said I'd like to explore **embedded docum
 Embedding would have kept the proposal's promise and made an owner's history one read. What decided it is that `users` is read on every authenticated request and by admin user lists. With embedded entries, each of those queries would have to project out private notes, and forgetting once would leak them. A separate collection keeps private data out of every query that doesn't ask for it. Entries also behave like independent records: each has its own visibility, a course can have several attempts, reviews check eligibility against them, and account deletion removes them without touching the profile.
 
 The demonstration still shows embedding where it fits: review details embedded in review posts, and a user's institutions on their profile. Both are small and owned by one document.
+
+## Why reactions have their own collection
+
+Reactions (built November 19, 2026) could have lived in three places. I compared them and chose a separate `reactions` collection with counts worked out on read.
+
+| | Counts computed from `reactions` | Counts copied onto posts and replies, plus `reactions` | Reactor ids in an array on the post or reply |
+| --- | --- | --- | --- |
+| One of each emoji per person | Unique index | Unique index | `$addToSet` only; a unique index can't enforce it inside one document |
+| A toggle | One insert or delete | A transaction to keep the count in step | One update |
+| Reading a thread | One aggregation grouped by target and emoji | No extra read | Arrays grow with every reactor |
+| Risk | An extra query per thread load | Counts drift; a count field invites sorting | Post documents grow without limit |
+
+Only the thread page shows counts, so a stored copy would save nothing on the lists while costing a transaction per toggle. Keeping counts off `posts` also means nothing that orders, filters, or aggregates posts, including review statistics, has a reaction field to read. Review threads take no reactions at all. When account deletion is built it should delete the account's reactions, and permanently deleting a post or reply should delete the reactions on it.
 
 ## Edge cases we shouldn't ignore
 

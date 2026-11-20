@@ -2,7 +2,12 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { m } from '#lib/paraglide/messages.js';
-	import { createInfiniteQuery, createMutation, createQuery } from '@tanstack/svelte-query';
+	import {
+		createInfiniteQuery,
+		createMutation,
+		createQuery,
+		useMutationState
+	} from '@tanstack/svelte-query';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { onDestroy, tick, untrack } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -30,6 +35,13 @@
 		ReplyListResponse,
 		ReplyResponse
 	} from '#lib/contracts/PostContract.ts';
+	import type { ReactionEmoji, ThreadReactionsResponse } from '#lib/contracts/ReactionContract.ts';
+	import { ReactionApiClient, reactionQueryKeys } from '#lib/client/content/ReactionApiClient.ts';
+	import {
+		applyReactionToggle,
+		type ReactionToggle
+	} from '#lib/client/content/ReactionPresentation.ts';
+	import ReactionBar from './ReactionBar.svelte';
 	import ContentByline from './ContentByline.svelte';
 	import MarkdownBody from './MarkdownBody.svelte';
 	import PendingReplyCard from './PendingReplyCard.svelte';
@@ -46,10 +58,13 @@
 	let {
 		initialPost,
 		initialReplies,
+		initialReactions,
 		initialLoadedAt
 	}: {
 		initialPost: PostDetailResponse;
 		initialReplies: ReplyListResponse;
+		/** Null on a review thread, which takes no reactions. */
+		initialReactions: ThreadReactionsResponse | null;
 		initialLoadedAt: number;
 	} = $props();
 
@@ -73,6 +88,56 @@
 		initialData: { pages: [initialReplies], pageParams: [null] },
 		initialDataUpdatedAt: initialLoadedAt
 	}));
+
+	const reactionsQueryKey = reactionQueryKeys.thread(postId);
+	const reactionsQuery = createQuery(() => ({
+		queryKey: reactionsQueryKey,
+		queryFn: () => ReactionApiClient.listThreadReactions(postId),
+		initialData: initialReactions ?? undefined,
+		initialDataUpdatedAt: initialLoadedAt,
+		enabled: initialReactions !== null
+	}));
+	const reactionMutationKey = reactionQueryKeys.toggles(postId);
+	const reactionMutation = createMutation(() => ({
+		mutationKey: reactionMutationKey,
+		// One at a time per thread, so a quick add and remove reach the server in the order tapped.
+		scope: { id: `reactions-${postId}` },
+		mutationFn: ({ replyId, emoji, isAdding }: ReactionToggle) =>
+			isAdding
+				? ReactionApiClient.addReaction(postId, replyId, emoji)
+				: ReactionApiClient.removeReaction(postId, replyId, emoji),
+		// Kept in the cache too, so a saved toggle stays shown even if the refetch below fails. A fetch
+		// begun before the save is cancelled first, so its older counts can't land on top.
+		onSuccess: async (_result, toggle) => {
+			await queryClient.cancelQueries({ queryKey: reactionsQueryKey });
+			queryClient.setQueryData<ThreadReactionsResponse>(reactionsQueryKey, (current) =>
+				current ? applyReactionToggle(current, toggle) : current
+			);
+		},
+		onError: (error, { replyId }) => (reactionFailure = { replyId, error }),
+		// A saved toggle stays pending until the refetch lands, so it never blinks off in between. A
+		// failed one settles at once, so it drops out and the next toggle isn't held behind the fetch.
+		onSettled: (_result, error) => {
+			const refetch = queryClient.invalidateQueries({ queryKey: reactionsQueryKey });
+			if (!error) return refetch;
+		}
+	}));
+	// Toggles still waiting or sending are shown over the server's counts, so any refetch, including
+	// one from another tab's reaction, keeps them, and a failed one simply drops out.
+	const pendingReactionToggles = useMutationState({
+		filters: { mutationKey: reactionMutationKey, status: 'pending' },
+		select: (mutation) => mutation.state.variables as ReactionToggle
+	});
+	const reactions = $derived(
+		reactionsQuery.data && pendingReactionToggles.reduce(applyReactionToggle, reactionsQuery.data)
+	);
+	/** The last toggle that failed: its target, a reply id or null for the post, and why. */
+	let reactionFailure = $state<{ replyId: string | null; error: Error } | null>(null);
+
+	function toggleReaction(replyId: string | null, emoji: ReactionEmoji, isAdding: boolean) {
+		reactionFailure = null;
+		reactionMutation.mutate({ replyId, emoji, isAdding });
+	}
 
 	const refreshThread = () =>
 		Promise.all([
@@ -328,6 +393,12 @@
 	}
 </script>
 
+{#snippet reactionFailureAlert()}
+	<p class="mt-2 text-sm text-error" role="alert">
+		{describeRequestFailure(reactionFailure?.error, m.reaction_failed)}
+	</p>
+{/snippet}
+
 {#snippet replyCard(reply: ReplyResponse, canReply = true)}
 	{@const isAccepted = reply.id === post.acceptedReplyId}
 	<!-- A long press stands in for selecting text on phones, and Copy text covers that. -->
@@ -348,6 +419,12 @@
 		</div>
 		<MarkdownBody class="mt-2" markdown={reply.bodyMarkdown} topHeadingLevel={3} />
 		<div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
+			{#if reactions}
+				<ReactionBar
+					reactions={reactions.replies[reply.id] ?? []}
+					onToggle={(emoji, isAdding) => toggleReaction(reply.id, emoji, isAdding)}
+				/>
+			{/if}
 			{#if canReply && !post.isLocked}
 				<Button variant="outlined" size="compact" onclick={() => startReplyingTo(reply)}
 					>{m.common_reply()}</Button
@@ -373,6 +450,9 @@
 				/>
 			</div>
 		</div>
+		{#if reactionFailure?.replyId === reply.id}
+			{@render reactionFailureAlert()}
+		{/if}
 	</article>
 {/snippet}
 
@@ -405,6 +485,17 @@
 		markdown={post.bodyMarkdown}
 		topHeadingLevel={2}
 	/>
+	{#if reactions}
+		<div class="mt-3">
+			<ReactionBar
+				reactions={reactions.post}
+				onToggle={(emoji, isAdding) => toggleReaction(null, emoji, isAdding)}
+			/>
+		</div>
+	{/if}
+	{#if reactionFailure && reactionFailure.replyId === null}
+		{@render reactionFailureAlert()}
+	{/if}
 	{#if post.viewerPermissions.canEditReview}
 		<details bind:open={isReviewEditorOpen} class="group/disclosure mt-4 rounded-card border p-4">
 			<summary

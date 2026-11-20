@@ -24,6 +24,7 @@ const ERROR_MESSAGES: Record<ErrorCode, () => string> = {
 	'post-locked': m.error_post_locked,
 	'parent-reply-unavailable': m.error_parent_reply_unavailable,
 	'not-a-question': m.error_not_a_question,
+	'reactions-not-allowed': m.error_reactions_not_allowed,
 	'history-required': m.error_history_required,
 	'review-exists': m.error_review_exists,
 	'entry-limit-reached': m.error_entry_limit_reached,

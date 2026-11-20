@@ -428,5 +428,24 @@
 				"countPlural=*": "Mostrar {count} respuestas nuevas"
 			}
 		}
-	]
+	],
+	"reaction_add": "Añadir una reacción",
+	"reaction_count_label": [
+		{
+			"declarations": ["input name", "input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{name}, {count} reacción",
+				"countPlural=*": "{name}, {count} reacciones"
+			}
+		}
+	],
+	"reaction_thumbs_up": "Pulgar arriba",
+	"reaction_heart": "Corazón",
+	"reaction_laugh": "Risa",
+	"reaction_celebrate": "Celebración",
+	"reaction_thinking": "Pensando",
+	"reaction_thanks": "Gracias",
+	"reaction_failed": "No se pudo guardar tu reacción. Inténtalo de nuevo.",
+	"error_reactions_not_allowed": "Las reseñas y sus respuestas no admiten reacciones."
 }

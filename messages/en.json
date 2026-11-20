@@ -428,5 +428,24 @@
 				"countPlural=*": "Show {count} new replies"
 			}
 		}
-	]
+	],
+	"reaction_add": "Add a reaction",
+	"reaction_count_label": [
+		{
+			"declarations": ["input name", "input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{name}, {count} reaction",
+				"countPlural=*": "{name}, {count} reactions"
+			}
+		}
+	],
+	"reaction_thumbs_up": "Thumbs up",
+	"reaction_heart": "Heart",
+	"reaction_laugh": "Laugh",
+	"reaction_celebrate": "Celebrate",
+	"reaction_thinking": "Thinking",
+	"reaction_thanks": "Thanks",
+	"reaction_failed": "Couldn't save your reaction. Try again.",
+	"error_reactions_not_allowed": "Reviews and their replies don't take reactions."
 }
