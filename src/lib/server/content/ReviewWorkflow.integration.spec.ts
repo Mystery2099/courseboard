@@ -4,6 +4,7 @@ import { academicHistoryRepository } from '#lib/server/history/AcademicHistoryRe
 import { DatabaseIndexInitializer } from '#lib/server/persistence/DatabaseIndexInitializer.ts';
 import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
+import { postRepository } from './PostRepository.ts';
 import { postService } from './PostService.ts';
 import { replyService } from './ReplyService.ts';
 import { reviewService } from './ReviewService.ts';
@@ -155,15 +156,22 @@ it.skipIf(!testMongoDbUri)(
 				secondUser
 			);
 			expect(secondResult.kind).toBe('created');
-			await database.collection('posts').insertMany(
-				['removed', 'deleted'].map((state) => ({
-					_id: new ObjectId(),
-					courseId,
-					authorId: new ObjectId(),
-					kind: 'review',
-					state,
-					reviewData: { workload: 5, wouldTakeAgain: false }
-				}))
+			const hiddenReviews = ['removed', 'deleted'].map((state) => ({
+				_id: new ObjectId(),
+				courseId,
+				authorId: new ObjectId(),
+				kind: 'review',
+				state,
+				lockedAt: null,
+				reviewData: { workload: 5, wouldTakeAgain: false }
+			}));
+			await database.collection('posts').insertMany(hiddenReviews);
+			// A removed or deleted post can't be locked, even by a caller that read it moments before.
+			for (const review of hiddenReviews) {
+				expect(await postRepository.setLockedAt(review._id, new Date())).toBe(false);
+			}
+			expect(await database.collection('posts').countDocuments({ lockedAt: { $ne: null } })).toBe(
+				0
 			);
 			const context = await reviewService.getCourseContext(courseId.toHexString(), secondUser);
 			expect(context?.statistics).toEqual({

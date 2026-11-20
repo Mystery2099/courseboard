@@ -1,9 +1,14 @@
-import type { ObjectId } from 'mongodb';
+import type { Filter, ObjectId } from 'mongodb';
 import type { PostKind } from '#lib/contracts/PostContract.ts';
 import type { ReviewData } from '#lib/contracts/ReviewContract.ts';
 import type { MentionedUser } from '#lib/server/mentions/MentionedUser.ts';
 
 export const POSTS_COLLECTION_NAME = 'posts';
+
+/** Matches posts that can still be read and changed. Older posts have no state and count as published. */
+export const VISIBLE_POST_FILTER: Filter<PostDocument> = {
+	state: { $nin: ['removed', 'deleted'] }
+};
 
 /**
  * A question, discussion, or review in a course space. Replies live in their own collection, because a
