@@ -115,8 +115,12 @@
 			);
 		},
 		onError: (error, { replyId }) => (reactionFailure = { replyId, error }),
-		// Stays pending until the refetch lands, so its toggle never blinks off in between.
-		onSettled: () => queryClient.invalidateQueries({ queryKey: reactionsQueryKey })
+		// A saved toggle stays pending until the refetch lands, so it never blinks off in between. A
+		// failed one settles at once, so it drops out and the next toggle isn't held behind the fetch.
+		onSettled: (_result, error) => {
+			const refetch = queryClient.invalidateQueries({ queryKey: reactionsQueryKey });
+			if (!error) return refetch;
+		}
 	}));
 	// Toggles still waiting or sending are shown over the server's counts, so any refetch, including
 	// one from another tab's reaction, keeps them, and a failed one simply drops out.
