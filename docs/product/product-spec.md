@@ -22,7 +22,7 @@ After sign-in, resume the last accessible course or open Explore. New users star
 
 Discovery defaults to the primary institution but allows other institutions. Admitted users can read, ask, discuss, and reply without following a course or claiming attendance.
 
-Discussion lists default to newest activity, with Newest and Unanswered filters for questions. Unanswered means no replies yet. Replies remain chronological. Thread activity advances only on creation and new replies, not edits, moderation actions, or accepted-answer changes.
+Discussion lists default to newest activity, with Newest and Unanswered filters for questions. Reviews can also be ordered by lowest or highest workload and narrowed to one workload or one would-take-again answer. Unanswered means no replies yet. Replies remain chronological. Thread activity advances only on creation and new replies, not edits, moderation actions, or accepted-answer changes.
 
 ## Histories and profiles
 

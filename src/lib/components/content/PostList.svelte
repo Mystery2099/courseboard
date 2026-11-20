@@ -22,6 +22,7 @@
 	import {
 		REVIEW_LIST_ORDERS,
 		REVIEW_WORKLOADS,
+		isWorkloadOrder,
 		type PostListFilter,
 		type PostListResponse,
 		type PostKind
@@ -83,17 +84,22 @@
 		};
 	});
 
-	// A review whose workload was edited between pages can come back on a later page too.
-	const posts = $derived([
-		...new Map(
-			(postsQuery.data?.pages.flatMap((page) => page.posts) ?? []).map((post) => [post.id, post])
-		).values()
-	]);
+	// A review whose workload was edited between pages can come back on a later page; keep only the
+	// later copy, which is in its current place in the order.
+	const posts = $derived.by(() => {
+		const loadedPosts = postsQuery.data?.pages.flatMap((page) => page.posts) ?? [];
+		const lastIndexById = new Map(loadedPosts.map((post, index) => [post.id, index]));
+		return loadedPosts.filter((post, index) => lastIndexById.get(post.id) === index);
+	});
 
 	const queryClient = useQueryClient();
 	const courseActivityNotices = getCourseActivityNotices();
+	// A new review lands on the first page only of an unfiltered list ordered by date.
+	const canShowNewPosts = $derived(!isReviewListNarrowed && !isWorkloadOrder(filter));
 	const newPostIds = $derived(
-		courseActivityNotices.findNewPostIds(kind, new Set(posts.map((post) => post.id)))
+		canShowNewPosts
+			? courseActivityNotices.findNewPostIds(kind, new Set(posts.map((post) => post.id)))
+			: []
 	);
 	const newPostsReveal = new NewActivityReveal();
 

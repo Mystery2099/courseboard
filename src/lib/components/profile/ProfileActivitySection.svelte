@@ -144,8 +144,11 @@
 				variant="outlined"
 				size="compact"
 				class="mt-3"
-				disabled={activityQuery.isFetchingNextPage}
-				onclick={() => activityQuery.fetchNextPage()}
+				disabled={activityQuery.isFetching}
+				onclick={() => {
+					// Loading more during the refresh on return would cancel that refresh.
+					if (!activityQuery.isFetching) void activityQuery.fetchNextPage();
+				}}
 				>{activityQuery.isFetchingNextPage
 					? m.common_loading()
 					: activityQuery.isFetchNextPageError
