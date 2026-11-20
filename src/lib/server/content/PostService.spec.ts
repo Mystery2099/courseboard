@@ -12,6 +12,7 @@ import type { PostDetail } from './Post.ts';
 import { PostRepository } from './PostRepository.ts';
 import { PostService } from './PostService.ts';
 import { ReplyRepository } from './ReplyRepository.ts';
+import { ReviewRepository } from './ReviewRepository.ts';
 
 const profile = {
 	username: 'alex_m',
@@ -71,6 +72,7 @@ function createMentionService(events: ReturnType<typeof createEventPublisher>) {
 function createService(storedPost: PostDetail | null = question) {
 	const posts = new PostRepository();
 	const replies = new ReplyRepository();
+	const reviews = new ReviewRepository();
 	const courses = new CourseRepository();
 	vi.spyOn(courses, 'findSpaceId').mockResolvedValue(spaceId);
 	vi.spyOn(posts, 'findById').mockResolvedValue(storedPost);
@@ -82,6 +84,7 @@ function createService(storedPost: PostDetail | null = question) {
 		service: new PostService(
 			posts,
 			replies,
+			reviews,
 			courses,
 			events,
 			moderation,
@@ -89,6 +92,7 @@ function createService(storedPost: PostDetail | null = question) {
 		),
 		posts,
 		replies,
+		reviews,
 		events,
 		isAssigned
 	};

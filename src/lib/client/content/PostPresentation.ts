@@ -11,7 +11,9 @@ export const THREAD_KIND_LABELS: Record<PostKind, () => string> = {
 export const POST_LIST_FILTER_LABELS: Record<PostListFilter, () => string> = {
 	active: m.post_list_filter_active,
 	newest: m.post_list_filter_newest,
-	unanswered: m.post_list_filter_unanswered
+	unanswered: m.post_list_filter_unanswered,
+	'lowest-workload': m.post_list_filter_lowest_workload,
+	'highest-workload': m.post_list_filter_highest_workload
 };
 
 export function formatReplyCount(replyCount: number): string {

@@ -470,5 +470,15 @@
 	"reaction_thinking": "Pensando",
 	"reaction_thanks": "Gracias",
 	"reaction_failed": "No se pudo guardar tu reacción. Inténtalo de nuevo.",
-	"error_reactions_not_allowed": "Las reseñas y sus respuestas no admiten reacciones."
+	"error_reactions_not_allowed": "Las reseñas y sus respuestas no admiten reacciones.",
+	"post_list_filter_lowest_workload": "Menor carga",
+	"post_list_filter_highest_workload": "Mayor carga",
+	"validation_review_filter_requires_review": "Solo las reseñas se pueden filtrar u ordenar por carga de trabajo o por si lo volverían a cursar.",
+	"validation_cursor_order_mismatch": "Esta página no coincide con el orden de la lista. Vuelve a cargar la lista.",
+	"reviews_filter_workload": "Carga de trabajo",
+	"reviews_filter_any_workload": "Cualquiera",
+	"reviews_filter_take_again": "Lo volvería a cursar",
+	"reviews_filter_any_answer": "Cualquiera",
+	"reviews_filter_none_match": "Ninguna reseña coincide con estos filtros.",
+	"reviews_filter_clear": "Quitar filtros"
 }

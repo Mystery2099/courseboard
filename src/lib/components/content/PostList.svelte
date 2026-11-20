@@ -7,14 +7,26 @@
 	import { resolve } from '$app/paths';
 	import Check from 'lucide-svelte/icons/check';
 	import Lock from 'lucide-svelte/icons/lock';
-	import { PostApiClient, postQueryKeys } from '#lib/client/content/PostApiClient.ts';
+	import {
+		NO_REVIEW_FILTERS,
+		PostApiClient,
+		postQueryKeys,
+		type ReviewListFilters
+	} from '#lib/client/content/PostApiClient.ts';
 	import { reviewQueryKeys } from '#lib/client/content/ReviewApiClient.ts';
 	import {
 		POST_LIST_FILTER_LABELS,
 		formatRelativeTime,
 		formatReplyCount
 	} from '#lib/client/content/PostPresentation.ts';
-	import type { PostListFilter, PostListResponse, PostKind } from '#lib/contracts/PostContract.ts';
+	import {
+		REVIEW_LIST_ORDERS,
+		REVIEW_WORKLOADS,
+		type PostListFilter,
+		type PostListResponse,
+		type PostKind
+	} from '#lib/contracts/PostContract.ts';
+	import FilterChipSelect from '#lib/components/FilterChipSelect.svelte';
 	import { THREAD_ROUTE_IDS } from '#lib/client/navigation/CourseChannel.ts';
 	import ThreadKindBadge from './ThreadKindBadge.svelte';
 	import ReviewFacts from './ReviewFacts.svelte';
@@ -38,20 +50,32 @@
 		emptyMessage: string;
 	} = $props();
 
-	const filters = $derived<PostListFilter[]>(
-		kind === 'question' ? ['active', 'newest', 'unanswered'] : kind ? ['active', 'newest'] : []
+	const filters = $derived<readonly PostListFilter[]>(
+		kind === 'question'
+			? ['active', 'newest', 'unanswered']
+			: kind === 'review'
+				? REVIEW_LIST_ORDERS
+				: kind
+					? ['active', 'newest']
+					: []
 	);
 	let filter = $state<PostListFilter>('active');
+	let reviewFilters = $state<ReviewListFilters>(NO_REVIEW_FILTERS);
+	const isReviewListNarrowed = $derived(
+		reviewFilters.workload !== null || reviewFilters.wouldTakeAgain !== null
+	);
 
 	const postsQuery = createInfiniteQuery(() => ({
-		queryKey: postQueryKeys.list(courseId, kind, filter),
-		queryFn: ({ pageParam }) => PostApiClient.listPosts(courseId, kind, filter, pageParam),
+		queryKey: postQueryKeys.list(courseId, kind, filter, reviewFilters),
+		queryFn: ({ pageParam }) =>
+			PostApiClient.listPosts(courseId, kind, filter, pageParam, reviewFilters),
 		initialPageParam: null as string | null,
 		getNextPageParam: (lastPage) => lastPage.nextCursor,
-		...(filter === 'active' && {
-			initialData: { pages: [initialPage], pageParams: [null] },
-			initialDataUpdatedAt: initialPageLoadedAt
-		})
+		...(filter === 'active' &&
+			!isReviewListNarrowed && {
+				initialData: { pages: [initialPage], pageParams: [null] },
+				initialDataUpdatedAt: initialPageLoadedAt
+			})
 	}));
 
 	const posts = $derived(postsQuery.data?.pages.flatMap((page) => page.posts) ?? []);
@@ -97,6 +121,49 @@
 	}
 </script>
 
+{#if kind === 'review'}
+	<div class="mt-4 flex flex-wrap gap-2">
+		<FilterChipSelect
+			label={m.reviews_filter_workload()}
+			onchange={(event) => {
+				const workload = event.currentTarget.value;
+				reviewFilters = { ...reviewFilters, workload: workload ? Number(workload) : null };
+			}}
+			options={[
+				{
+					value: '',
+					label: m.reviews_filter_any_workload(),
+					isSelected: reviewFilters.workload === null
+				},
+				...REVIEW_WORKLOADS.map((workload) => ({
+					value: String(workload),
+					label: m.review_facts_workload_value({ workload }),
+					isSelected: reviewFilters.workload === workload
+				}))
+			]}
+		/>
+		<FilterChipSelect
+			label={m.reviews_filter_take_again()}
+			onchange={(event) => {
+				const answer = event.currentTarget.value;
+				reviewFilters = {
+					...reviewFilters,
+					wouldTakeAgain: answer === 'yes' || answer === 'no' ? answer : null
+				};
+			}}
+			options={[
+				{
+					value: '',
+					label: m.reviews_filter_any_answer(),
+					isSelected: reviewFilters.wouldTakeAgain === null
+				},
+				{ value: 'yes', label: m.common_yes(), isSelected: reviewFilters.wouldTakeAgain === 'yes' },
+				{ value: 'no', label: m.common_no(), isSelected: reviewFilters.wouldTakeAgain === 'no' }
+			]}
+		/>
+	</div>
+{/if}
+
 {#if filters.length > 0}
 	<ToggleGroup.Root
 		type="single"
@@ -125,6 +192,15 @@
 			type="button"
 			class="font-semibold underline underline-offset-2 hover:decoration-2"
 			onclick={() => postsQuery.refetch()}>{m.common_try_again()}</button
+		>
+	</p>
+{:else if posts.length === 0 && isReviewListNarrowed}
+	<p class="mt-4 text-sm text-on-surface-variant">
+		{m.reviews_filter_none_match()}
+		<button
+			type="button"
+			class="font-semibold text-primary underline-offset-2 hover:underline"
+			onclick={() => (reviewFilters = NO_REVIEW_FILTERS)}>{m.reviews_filter_clear()}</button
 		>
 	</p>
 {:else if posts.length === 0}

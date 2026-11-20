@@ -4,6 +4,7 @@ import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider
 import { ContentAuthorLookup } from './ContentAuthorLookup.ts';
 import {
 	POSTS_COLLECTION_NAME,
+	POST_SUMMARY_FIELDS,
 	VISIBLE_POST_FILTER,
 	type PostDetail,
 	type PostDocument,
@@ -23,21 +24,6 @@ export interface PostSearchRow {
 }
 
 export class PostRepository {
-	private static readonly SUMMARY_FIELDS = {
-		courseId: 1,
-		kind: 1,
-		authorId: 1,
-		title: 1,
-		replyCount: 1,
-		acceptedReplyId: 1,
-		lockedAt: 1,
-		createdAt: 1,
-		lastActivityAt: 1,
-		reviewData: 1,
-		editedAt: 1,
-		author: 1
-	} as const;
-
 	private collection(): Collection<PostDocument> {
 		return mongoClientProvider.getDatabase().collection<PostDocument>(POSTS_COLLECTION_NAME);
 	}
@@ -127,7 +113,7 @@ export class PostRepository {
 				{ $sort: { [orderedBy]: -1, _id: -1 } },
 				{ $limit: limit },
 				...ContentAuthorLookup.STAGES,
-				{ $project: PostRepository.SUMMARY_FIELDS }
+				{ $project: POST_SUMMARY_FIELDS }
 			])
 			.toArray();
 	}
@@ -137,7 +123,7 @@ export class PostRepository {
 			.aggregate<PostDetail>([
 				{ $match: { _id: postId, ...VISIBLE_POST_FILTER } },
 				...ContentAuthorLookup.STAGES,
-				{ $project: { ...PostRepository.SUMMARY_FIELDS, bodyMarkdown: 1, mentions: 1 } }
+				{ $project: { ...POST_SUMMARY_FIELDS, bodyMarkdown: 1, mentions: 1 } }
 			])
 			.toArray();
 		return post ?? null;

@@ -46,6 +46,8 @@ const ERROR_MESSAGES: Record<ErrorCode, () => string> = {
 	'school-required': m.validation_school_required,
 	'email-invalid': m.validation_email_invalid,
 	'unanswered-requires-question': m.validation_unanswered_requires_question,
+	'review-filter-requires-review': m.validation_review_filter_requires_review,
+	'cursor-order-mismatch': m.validation_cursor_order_mismatch,
 	'profile-change-required': m.validation_profile_change_required
 };
 

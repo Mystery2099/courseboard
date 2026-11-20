@@ -9,9 +9,35 @@ export type ThreadKind = (typeof THREAD_KINDS)[number];
 export const POST_KINDS = [...THREAD_KINDS, 'review'] as const;
 export type PostKind = (typeof POST_KINDS)[number];
 
-/** `active` orders by latest reply or creation; `unanswered` lists questions without replies. */
-export const POST_LIST_FILTERS = ['active', 'newest', 'unanswered'] as const;
+/**
+ * `active` orders by latest reply or creation; `unanswered` lists questions without replies. The
+ * workload orders list reviews only, by workload and then newest first.
+ */
+export const POST_LIST_FILTERS = [
+	'active',
+	'newest',
+	'unanswered',
+	'lowest-workload',
+	'highest-workload'
+] as const;
 export type PostListFilter = (typeof POST_LIST_FILTERS)[number];
+
+export const REVIEW_LIST_ORDERS = [
+	'active',
+	'newest',
+	'lowest-workload',
+	'highest-workload'
+] as const satisfies readonly PostListFilter[];
+export type ReviewListOrder = (typeof REVIEW_LIST_ORDERS)[number];
+
+export const REVIEW_WORKLOADS = [1, 2, 3, 4, 5] as const;
+
+/** A workload order's `nextCursor`: the last review's workload, then a timestamp and a post id. */
+const workloadCursorSchema = z.string().regex(/^[1-5]_\d{1,15}_[a-f0-9]{24}$/);
+
+export function isWorkloadOrder(filter: PostListFilter): boolean {
+	return filter === 'lowest-workload' || filter === 'highest-workload';
+}
 
 export const POST_TITLE_MAX_LENGTH = 150;
 export const POST_BODY_MAX_LENGTH = 10_000;
@@ -48,13 +74,31 @@ export const postListQuerySchema = z
 		/** Left out on the course overview, which lists every kind. */
 		kind: z.enum(POST_KINDS).optional(),
 		filter: z.enum(POST_LIST_FILTERS).default('active'),
-		/** The `nextCursor` of the previous page: a timestamp and a post id. */
-		after: timestampIdCursorSchema.optional()
+		/** Reviews only: one workload from 1 to 5. */
+		workload: z.coerce.number().int().min(1).max(REVIEW_WORKLOADS.length).optional(),
+		/** Reviews only. */
+		wouldTakeAgain: z.enum(['yes', 'no']).optional(),
+		/** The `nextCursor` of the previous page. */
+		after: z.union([timestampIdCursorSchema, workloadCursorSchema]).optional()
 	})
 	.refine((query) => query.filter !== 'unanswered' || query.kind === 'question', {
 		path: ['filter'],
 		message: 'unanswered-requires-question' satisfies ValidationErrorCode
-	});
+	})
+	.refine(
+		(query) =>
+			query.kind === 'review' ||
+			(!isWorkloadOrder(query.filter) &&
+				query.workload === undefined &&
+				query.wouldTakeAgain === undefined),
+		{ path: ['kind'], message: 'review-filter-requires-review' satisfies ValidationErrorCode }
+	)
+	.refine(
+		(query) =>
+			query.after === undefined ||
+			workloadCursorSchema.safeParse(query.after).success === isWorkloadOrder(query.filter),
+		{ path: ['after'], message: 'cursor-order-mismatch' satisfies ValidationErrorCode }
+	);
 
 export const createReplySchema = z.object({
 	bodyMarkdown: bodySchema(REPLY_BODY_MAX_LENGTH),

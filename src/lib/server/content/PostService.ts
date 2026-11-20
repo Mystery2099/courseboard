@@ -8,7 +8,8 @@ import {
 	type AcceptedReplyChangeResult,
 	type PostCreationResult,
 	type PostDetailResponse,
-	type PostListResponse
+	type PostListResponse,
+	type ReviewListOrder
 } from '#lib/contracts/PostContract.ts';
 import { courseIdSchema } from '#lib/contracts/CourseCatalogContract.ts';
 import { AccessDeniedError, AccessPolicy } from '#lib/server/access/AccessPolicy.ts';
@@ -24,10 +25,18 @@ import {
 	type CourseModerationAccess
 } from '#lib/server/moderation/CourseModerationAccess.ts';
 import type { ApplicationUser } from '#lib/server/users/ApplicationUser.ts';
-import type { PostDetail, PostDocument, PostOrderField, PostPagePosition } from './Post.ts';
+import type {
+	PostDetail,
+	PostDocument,
+	PostOrderField,
+	PostPagePosition,
+	ReviewPageCriteria
+} from './Post.ts';
 import { postRepository, type PostRepository } from './PostRepository.ts';
 import { PostResponseMapper } from './PostResponseMapper.ts';
 import { replyRepository, type ReplyRepository } from './ReplyRepository.ts';
+import { ReviewPageCursor } from './ReviewPageCursor.ts';
+import { reviewRepository, type ReviewRepository } from './ReviewRepository.ts';
 
 /**
  * Reads every post kind and publishes questions and discussions without requiring course history
@@ -40,6 +49,7 @@ export class PostService {
 	constructor(
 		private readonly posts: PostRepository,
 		private readonly replies: ReplyRepository,
+		private readonly reviews: ReviewRepository,
 		private readonly courses: CourseRepository,
 		private readonly events: ContentEventPublisher,
 		private readonly moderation: CourseModerationAccess,
@@ -53,9 +63,20 @@ export class PostService {
 		actor: ApplicationUser | null
 	): Promise<PostListResponse | null> {
 		AccessPolicy.requireAdmittedUser(actor);
-		const { kind, filter, after } = postListQuerySchema.parse(query);
+		const { kind, filter, workload, wouldTakeAgain, after } = postListQuerySchema.parse(query);
 		const course = await this.findCourseSpace(courseId);
 		if (!course) return null;
+		if (kind === 'review') {
+			// The schema allows `unanswered` only with questions.
+			const order = filter as ReviewListOrder;
+			return this.listReviews({
+				courseId: course.courseId,
+				order,
+				workload: workload ?? null,
+				wouldTakeAgain: wouldTakeAgain === undefined ? null : wouldTakeAgain === 'yes',
+				after: after ? ReviewPageCursor.parse(order, after) : null
+			});
+		}
 
 		const orderedBy: PostOrderField = filter === 'active' ? 'lastActivityAt' : 'createdAt';
 		const pageSize = PostService.PAGE_SIZE;
@@ -209,6 +230,20 @@ export class PostService {
 		};
 	}
 
+	private async listReviews(criteria: ReviewPageCriteria): Promise<PostListResponse> {
+		const pageSize = PostService.PAGE_SIZE;
+		const reviews = await this.reviews.findPage(criteria, pageSize + 1);
+		const page = reviews.slice(0, pageSize);
+		const lastReview = page.at(-1);
+		return {
+			posts: page.map(PostResponseMapper.toSummaryResponse),
+			nextCursor:
+				lastReview && reviews.length > pageSize
+					? ReviewPageCursor.format(criteria.order, lastReview)
+					: null
+		};
+	}
+
 	private async findPost(postId: string): Promise<PostDetail | null> {
 		const parsedPostId = postIdSchema.safeParse(postId);
 		return parsedPostId.success ? this.posts.findById(new ObjectId(parsedPostId.data)) : null;
@@ -233,6 +268,7 @@ export class PostService {
 export const postService = new PostService(
 	postRepository,
 	replyRepository,
+	reviewRepository,
 	courseRepository,
 	contentEventPublisher,
 	courseModerationAccess,
