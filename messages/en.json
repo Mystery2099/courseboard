@@ -480,5 +480,16 @@
 	"reviews_filter_take_again": "Would take again",
 	"reviews_filter_any_answer": "Any",
 	"reviews_filter_none_match": "No reviews match these filters.",
-	"reviews_filter_clear": "Clear filters"
+	"reviews_filter_clear": "Clear filters",
+	"profile_activity_heading": "Your activity",
+	"profile_activity_type": "Activity",
+	"profile_activity_posts": "Posts",
+	"profile_activity_replies": "Replies",
+	"profile_activity_reviews": "Reviews",
+	"profile_activity_explanation": "Only you see this list. Other students find your posts and replies in each course.",
+	"profile_activity_no_posts": "You haven't asked a question or started a discussion yet.",
+	"profile_activity_no_replies": "You haven't replied to a post yet.",
+	"profile_activity_no_reviews": "You haven't reviewed a course yet.",
+	"profile_activity_load_failed": "Your activity couldn't be loaded.",
+	"profile_activity_reply_on": "Reply on {title}"
 }

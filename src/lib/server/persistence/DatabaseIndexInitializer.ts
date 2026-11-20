@@ -3,6 +3,7 @@ import { courseRepository } from '#lib/server/catalog/CourseRepository.ts';
 import { institutionRepository } from '#lib/server/catalog/InstitutionRepository.ts';
 import { membershipRepository } from '#lib/server/catalog/MembershipRepository.ts';
 import { spaceRepository } from '#lib/server/catalog/SpaceRepository.ts';
+import { authorActivityRepository } from '#lib/server/content/AuthorActivityRepository.ts';
 import { postRepository } from '#lib/server/content/PostRepository.ts';
 import { reactionRepository } from '#lib/server/content/ReactionRepository.ts';
 import { replyRepository } from '#lib/server/content/ReplyRepository.ts';
@@ -61,6 +62,7 @@ export class DatabaseIndexInitializer {
 			membershipRepository.ensureIndexes(),
 			academicHistoryRepository.ensureIndexes(),
 			postRepository.ensureIndexes(),
+			authorActivityRepository.ensureIndexes(),
 			replyRepository.ensureIndexes(),
 			reactionRepository.ensureIndexes(),
 			mentionRepository.ensureIndexes(),
