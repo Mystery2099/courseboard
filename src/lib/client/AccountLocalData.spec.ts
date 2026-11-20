@@ -129,6 +129,35 @@ describe('account local data', () => {
 		).toBe('Newer, from another tab');
 	});
 
+	it('updates an unconfirmed reply only while it is still kept', () => {
+		const unconfirmedReplies = createLocalData(new InMemoryStorage(), {
+			current: 'user_a'
+		}).unconfirmedReplies('post-1');
+		const reply = {
+			submissionId: 'submission-1',
+			parentReplyId: null,
+			bodyMarkdown: 'text',
+			refusalMessage: null
+		};
+		unconfirmedReplies.update(reply);
+		expect(unconfirmedReplies.loadAll()).toEqual([]);
+		unconfirmedReplies.save(reply);
+		unconfirmedReplies.update({ ...reply, refusalMessage: 'Locked.' });
+		expect(unconfirmedReplies.loadAll()).toEqual([{ ...reply, refusalMessage: 'Locked.' }]);
+	});
+
+	it('reloads a draft only for a change to its own key', () => {
+		const storage = new InMemoryStorage();
+		const localData = createLocalData(storage, { current: 'user_a' });
+		const draft = localData.composerDrafts.open(threadTarget);
+		draft.bodyMarkdown = 'mine';
+		storage.removeItem('courseboard:account:user_a:draft:reply:post-1');
+		localData.composerDrafts.reloadOpenDrafts('courseboard:account:user_a:something-else');
+		expect(draft.bodyMarkdown).toBe('mine');
+		localData.composerDrafts.reloadOpenDrafts('courseboard:account:user_a:draft:reply:post-1');
+		expect(draft.bodyMarkdown).toBe('');
+	});
+
 	it("removes other accounts' data, all of it when signed out, and leaves other keys alone", () => {
 		const storage = new InMemoryStorage();
 		storage.setItem('unrelated', 'kept');

@@ -3,7 +3,7 @@ import { describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 import { m } from '#lib/paraglide/messages.js';
 import type { ReplyResponse } from '#lib/contracts/PostContract.ts';
 import { PostApiClient } from './PostApiClient.ts';
-import type { UnconfirmedReplyStorage } from './UnconfirmedReplyStorage.ts';
+import type { UnconfirmedReply, UnconfirmedReplyStorage } from './UnconfirmedReplyStorage.ts';
 
 export interface PendingReply {
 	submissionId: string;
@@ -11,6 +11,14 @@ export interface PendingReply {
 	bodyMarkdown: string;
 	status: 'sending' | 'failed';
 	errorMessage: string | null;
+}
+
+function toUnconfirmedReply(
+	pendingReply: PendingReply,
+	refusalMessage: string | null
+): UnconfirmedReply {
+	const { submissionId, parentReplyId, bodyMarkdown } = pendingReply;
+	return { submissionId, parentReplyId, bodyMarkdown, refusalMessage };
 }
 
 /**
@@ -59,7 +67,7 @@ export class ReplySubmissionQueue {
 			status: 'sending',
 			errorMessage: null
 		};
-		this.saveUnconfirmed(pendingReply, null);
+		this.unconfirmedReplies.save(toUnconfirmedReply(pendingReply, null));
 		this.pendingReplies.push(pendingReply);
 		void this.send(submissionId);
 		return submissionId;
@@ -71,7 +79,7 @@ export class ReplySubmissionQueue {
 		pendingReply.status = 'sending';
 		pendingReply.errorMessage = null;
 		// Choosing Retry overrides an earlier refusal, so an interrupted retry is sent again next visit.
-		this.saveUnconfirmed(pendingReply, null);
+		this.unconfirmedReplies.update(toUnconfirmedReply(pendingReply, null));
 		void this.send(submissionId);
 	}
 
@@ -99,19 +107,13 @@ export class ReplySubmissionQueue {
 			pendingReply.errorMessage = describeRequestFailure(cause, m.error_unavailable);
 			// A refusal, unlike a lost connection, isn't sent again on its own the next visit.
 			const wasRefused = cause instanceof ApiRequestError && cause.status < 500;
-			this.saveUnconfirmed(pendingReply, wasRefused ? pendingReply.errorMessage : null);
+			// Updates only, so a late failure can't bring back a reply discarded meanwhile in another view.
+			this.unconfirmedReplies.update(
+				toUnconfirmedReply(pendingReply, wasRefused ? pendingReply.errorMessage : null)
+			);
 			// A refusal such as a locked thread means the page is out of date.
 			if (cause instanceof ApiRequestError && cause.status === 409) this.onRefused();
 		}
-	}
-
-	private saveUnconfirmed(pendingReply: PendingReply, refusalMessage: string | null): void {
-		this.unconfirmedReplies.save({
-			submissionId: pendingReply.submissionId,
-			parentReplyId: pendingReply.parentReplyId,
-			bodyMarkdown: pendingReply.bodyMarkdown,
-			refusalMessage
-		});
 	}
 
 	private find(submissionId: string): PendingReply | undefined {

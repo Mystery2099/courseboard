@@ -22,9 +22,10 @@
 	});
 
 	// Another tab publishing or editing the same draft updates it here too. Storage events only come
-	// from other tabs, and never when storage is unavailable, so text kept in memory isn't touched.
+	// from other tabs.
 	$effect(() => {
-		const reloadOpenDrafts = () => accountLocalData.composerDrafts.reloadOpenDrafts();
+		const reloadOpenDrafts = (event: StorageEvent) =>
+			accountLocalData.composerDrafts.reloadOpenDrafts(event.key);
 		window.addEventListener('storage', reloadOpenDrafts);
 		return () => window.removeEventListener('storage', reloadOpenDrafts);
 	});

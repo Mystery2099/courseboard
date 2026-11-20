@@ -71,9 +71,15 @@ export class ComposerDraft {
 		this.save();
 	}
 
-	/** Takes up what another tab saved, without writing it back. */
-	reloadFromStorage(): void {
+	/**
+	 * Takes up what another tab saved under this draft's key, without writing it back. A change to
+	 * any other key leaves the draft alone, including text kept only in memory because storage failed.
+	 */
+	reloadIfChanged(changedStorageKey: string | null): void {
 		if (this.accountId === null) return;
+		const storageKey = this.storage.storageKey(this.accountId, this.target.key);
+		// A null key means another tab cleared all of storage.
+		if (changedStorageKey !== null && changedStorageKey !== storageKey) return;
 		const storedText = parseDraftText(this.storage.read(this.accountId, this.target.key));
 		this.titleText = storedText?.title ?? '';
 		this.bodyMarkdownText = storedText?.bodyMarkdown ?? '';
@@ -138,8 +144,8 @@ export class ComposerDrafts {
 	}
 
 	/** Called when another tab changed storage, so a draft it published or edited isn't stale here. */
-	reloadOpenDrafts(): void {
-		for (const draft of Object.values(this.openDrafts)) draft.reloadFromStorage();
+	reloadOpenDrafts(changedStorageKey: string | null): void {
+		for (const draft of Object.values(this.openDrafts)) draft.reloadIfChanged(changedStorageKey);
 	}
 
 	/** Reads the account reactively, so a derived that opens a draft reopens it for a new account. */

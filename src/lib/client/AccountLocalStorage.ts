@@ -55,7 +55,8 @@ export class AccountLocalStorage {
 		});
 	}
 
-	private storageKey(accountId: string, key: string): string {
+	/** The key a value is kept under, as a `storage` event from another tab reports it. */
+	storageKey(accountId: string, key: string): string {
 		return `${STORAGE_KEY_PREFIX}${accountId}:${key}`;
 	}
 

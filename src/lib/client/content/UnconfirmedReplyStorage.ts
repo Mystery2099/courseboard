@@ -60,6 +60,15 @@ export class UnconfirmedReplyStorage {
 		});
 	}
 
+	/** Rewrites a reply still kept, but never brings back one that was discarded or confirmed. */
+	update(reply: UnconfirmedReply): void {
+		const accountId = this.currentBoundAccountId();
+		if (accountId === null) return;
+		if (this.storage.read(accountId, this.keyPrefix() + reply.submissionId) !== null) {
+			this.save(reply);
+		}
+	}
+
 	remove(submissionId: string): void {
 		const accountId = this.currentBoundAccountId();
 		if (accountId === null) return;
