@@ -14,8 +14,11 @@ export interface ReplyAction {
 	disabled?: boolean;
 	/** Runs while the menu is still open, so browser features that need a tap, such as the clipboard, work. */
 	run: () => void;
-	/** Moves focus once the menu has closed. Without it, focus goes back to where it was before. */
-	moveFocusAfterClose?: () => void;
+	/**
+	 * Moves focus out of the menu as it closes, such as into the reply field. The sheet closes
+	 * during the tap, so a phone keyboard opens. Without it, focus goes back to where it was before.
+	 */
+	moveFocus?: () => void;
 }
 
 /** Remembers the action chosen from an open menu, so the menu can hand focus to it as it closes. */
@@ -34,9 +37,9 @@ export class ChosenReplyAction {
 	handleCloseAutoFocus(event: Event, opener?: HTMLElement | null) {
 		const action = this.#action;
 		this.#action = null;
-		if (action?.moveFocusAfterClose) {
+		if (action?.moveFocus) {
 			event.preventDefault();
-			action.moveFocusAfterClose();
+			action.moveFocus();
 		} else if (opener?.isConnected) {
 			event.preventDefault();
 			opener.focus();

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button } from '#lib/components/ui/button/index.js';
 	import * as Drawer from '#lib/components/ui/drawer/index.js';
+	import { flushSync } from 'svelte';
 	import { m } from '#lib/paraglide/messages.js';
 	import { ChosenReplyAction, type ReplyAction } from '#lib/client/content/ReplyAction.ts';
 
@@ -20,15 +21,24 @@
 	} = $props();
 
 	const chosenAction = new ChosenReplyAction();
+	// Set while the history entry is still being removed, so the sheet doesn't wait for it.
+	let isDismissed = $state(false);
+
+	$effect.pre(() => {
+		if (isOpen) isDismissed = false;
+	});
 
 	function choose(action: ReplyAction) {
 		chosenAction.choose(action);
+		// Closing now releases the focus trap during the tap, so focus moved into the reply field
+		// opens the keyboard on iOS too.
+		flushSync(() => (isDismissed = true));
 		onClose();
 	}
 </script>
 
 <!-- One sheet serves every reply on the page, so opening another never stacks a second one. -->
-<Drawer.Root open={isOpen} onOpenChange={(open) => !open && onClose()} autoFocus>
+<Drawer.Root open={isOpen && !isDismissed} onOpenChange={(open) => !open && onClose()} autoFocus>
 	<Drawer.Content onCloseAutoFocus={(event) => chosenAction.handleCloseAutoFocus(event, opener)}>
 		<div class="flex items-center justify-between gap-2 px-4 pt-2">
 			<Drawer.Title class="truncate">{title}</Drawer.Title>

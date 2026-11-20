@@ -4,7 +4,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery, createMutation, createQuery } from '@tanstack/svelte-query';
 	import { useQueryClient } from '@tanstack/svelte-query';
-	import { tick, untrack } from 'svelte';
+	import { onDestroy, tick, untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -189,15 +189,16 @@
 
 	function startReplyingTo(reply: ReplyResponse) {
 		setReplyTarget(reply);
-		// Phones answer in the docked composer; on desktop it is hidden and the branch shows its own.
-		dockedReplyComposer?.focus();
+		void focusReplyField();
 	}
 
-	/** Only one composer is visible at a time, and focusing a hidden one does nothing. */
+	/**
+	 * Phones answer in the docked composer, focused during the tap so the keyboard opens. On desktop
+	 * it is hidden, so focusing it does nothing, and the branch's composer takes focus once mounted.
+	 */
 	async function focusReplyField() {
-		// The branch's composer mounts once the reply target is set.
-		await tick();
 		dockedReplyComposer?.focus();
+		await tick();
 		branchReplyComposer?.focus();
 	}
 
@@ -257,6 +258,7 @@
 		copyNotice = { replyId: reply.id, message };
 		copyNoticeTimer = setTimeout(() => (copyNotice = null), 3000);
 	}
+	onDestroy(() => clearTimeout(copyNoticeTimer));
 
 	function replyActionsFor(reply: ReplyResponse): ReplyAction[] {
 		const actions: ReplyAction[] = [];
@@ -266,7 +268,7 @@
 				label: m.common_reply(),
 				icon: ReplyIcon,
 				run: () => setReplyTarget(reply),
-				moveFocusAfterClose: () => void focusReplyField()
+				moveFocus: () => void focusReplyField()
 			});
 		}
 		actions.push({
@@ -299,15 +301,26 @@
 		actionSheetReply = reply;
 		actionSheetOpener = opener;
 		// A shallow history entry for the same page, so Back closes the sheet instead of leaving.
-		void goto(resolve(THREAD_ROUTE_IDS[post.kind], { courseId, postId }), {
-			state: { replyActionsReplyId: reply.id },
+		const threadPath = resolve(THREAD_ROUTE_IDS[post.kind], { courseId, postId });
+		// Resolved above; the query and fragment stay so the address doesn't change.
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		void goto(`${threadPath}${page.url.search}${page.url.hash}`, {
+			state: { ...page.state, replyActionsReplyId: reply.id },
 			shallow: true,
 			replace: page.state.replyActionsReplyId !== undefined
 		});
 	}
 
+	// A swipe can report the close twice before Back lands, and a second Back would leave the thread.
+	let isClosingActionSheet = false;
+	$effect(() => {
+		if (page.state.replyActionsReplyId === undefined) isClosingActionSheet = false;
+	});
+
 	function closeReplyActionSheet() {
-		if (page.state.replyActionsReplyId) history.back();
+		if (!page.state.replyActionsReplyId || isClosingActionSheet) return;
+		isClosingActionSheet = true;
+		history.back();
 	}
 </script>
 
@@ -318,7 +331,7 @@
 		id="reply-{reply.id}"
 		tabindex="-1"
 		class={[
-			'rounded-2xl p-3 pointer-coarse:select-none pointer-coarse:[-webkit-touch-callout:none]',
+			'rounded-2xl p-3 pointer-coarse:select-none pointer-coarse:[-webkit-touch-callout:none] pointer-coarse:[&_a]:[-webkit-touch-callout:default]',
 			isAccepted ? 'bg-success-container' : 'bg-surface-container'
 		]}
 		{@attach longPress((article) => openReplyActionSheet(reply, article))}
