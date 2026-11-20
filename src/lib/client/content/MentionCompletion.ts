@@ -9,7 +9,12 @@ export interface MentionQuery {
 
 /** Finds the mention being typed and completes it, following the server's mention rules. */
 export class MentionCompletion {
-	private static readonly TYPED_MENTION_PATTERN = /(?<![\p{L}\p{N}_@./+-])@([A-Za-z0-9_]{1,24})$/u;
+	/**
+	 * The same boundary as `MarkdownRenderer`: not after a word, an email address, or a path, though
+	 * an `_` that starts italics, as in `_@kim_`, is fine.
+	 */
+	private static readonly TYPED_MENTION_PATTERN =
+		/(?<![\p{L}\p{M}\p{N}!#$%&+/=?^{|}.@-]|[^\s]_)@([A-Za-z0-9_]{1,24})$/u;
 
 	/** The mention being typed when the caret sits at its end, or null. */
 	static findQuery(text: string, caret: number): MentionQuery | null {
