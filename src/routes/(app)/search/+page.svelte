@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { toggleVariants } from '#lib/components/ui/toggle/index.js';
+	import FilterChipSelect from '#lib/components/FilterChipSelect.svelte';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import SearchIcon from 'lucide-svelte/icons/search';
 	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import { formatRelativeTime, THREAD_KIND_LABELS } from '#lib/client/content/PostPresentation.ts';
@@ -127,62 +127,53 @@
 			{/each}
 		</nav>
 		<span class="mx-1 hidden h-7 w-px bg-outline-variant tablet:block" aria-hidden="true"></span>
-		{@render filterChip(m.search_school(), 'institutionId', [
-			{ value: '', label: m.search_all_schools(), isSelected: !search.institution },
-			...data.institutions.map((institution) => ({
-				value: institution.id,
-				label: institution.name,
-				isSelected: institution.id === search.institution?.id
-			}))
-		])}
+		<FilterChipSelect
+			label={m.search_school()}
+			name="institutionId"
+			form="search-form"
+			onchange={applyFilters}
+			options={[
+				{ value: '', label: m.search_all_schools(), isSelected: !search.institution },
+				...data.institutions.map((institution) => ({
+					value: institution.id,
+					label: institution.name,
+					isSelected: institution.id === search.institution?.id
+				}))
+			]}
+		/>
 		{#if query.scope === 'people'}
 			{#if search.courseOptions.length > 0}
-				{@render filterChip(m.search_course(), 'courseId', [
-					{ value: '', label: m.search_any_course(), isSelected: !query.courseId },
-					...search.courseOptions.map((course) => ({
-						value: course.id,
-						label: `${course.code} · ${course.title}`,
-						isSelected: course.id === query.courseId
-					}))
-				])}
+				<FilterChipSelect
+					label={m.search_course()}
+					name="courseId"
+					form="search-form"
+					onchange={applyFilters}
+					options={[
+						{ value: '', label: m.search_any_course(), isSelected: !query.courseId },
+						...search.courseOptions.map((course) => ({
+							value: course.id,
+							label: `${course.code} · ${course.title}`,
+							isSelected: course.id === query.courseId
+						}))
+					]}
+				/>
 			{/if}
-			{@render filterChip(m.search_status(), 'status', [
-				{ value: '', label: m.search_any_status(), isSelected: !query.status },
-				...HISTORY_STATUSES.map((status) => ({
-					value: status,
-					label: HISTORY_STATUS_LABELS[status](),
-					isSelected: status === query.status
-				}))
-			])}
-		{/if}
-	</div>
-
-	{#snippet filterChip(
-		label: string,
-		name: string,
-		options: { value: string; label: string; isSelected: boolean }[]
-	)}
-		<!-- A native select styled as a chip, so the filter works without JavaScript. -->
-		<label
-			class="{toggleVariants({
-				variant: 'chip'
-			})} items-stretch gap-0 pr-2 outline-primary after:hidden focus-within:outline-2 focus-within:outline-offset-2"
-		>
-			<span class="self-center whitespace-nowrap">{label}:</span>
-			<!-- Taller than the chip it sits in, so the select itself is a 44px target. -->
-			<select
-				{name}
+			<FilterChipSelect
+				label={m.search_status()}
+				name="status"
 				form="search-form"
 				onchange={applyFilters}
-				class="-my-1.5 field-sizing-content min-h-11 max-w-48 appearance-none border-0 bg-transparent bg-none py-0 pr-6 pl-1 text-base font-semibold focus:ring-0 focus:outline-none desktop:text-sm"
-			>
-				{#each options as option (option.value)}
-					<option value={option.value} selected={option.isSelected}>{option.label}</option>
-				{/each}
-			</select>
-			<ChevronDown size={16} class="pointer-events-none -ml-5 self-center" aria-hidden="true" />
-		</label>
-	{/snippet}
+				options={[
+					{ value: '', label: m.search_any_status(), isSelected: !query.status },
+					...HISTORY_STATUSES.map((status) => ({
+						value: status,
+						label: HISTORY_STATUS_LABELS[status](),
+						isSelected: status === query.status
+					}))
+				]}
+			/>
+		{/if}
+	</div>
 
 	{#if query.scope === 'people'}
 		<p class="mt-3 text-sm text-on-surface-variant">{m.search_people_explanation()}</p>

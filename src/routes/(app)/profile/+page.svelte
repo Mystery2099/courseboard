@@ -5,6 +5,7 @@
 	import { useClerkContext } from 'svelte-clerk';
 	import ProfileHeader from '#lib/components/profile/ProfileHeader.svelte';
 	import AcademicHistorySection from '#lib/components/history/AcademicHistorySection.svelte';
+	import ProfileActivitySection from '#lib/components/profile/ProfileActivitySection.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -38,5 +39,6 @@
 			username={data.profile.username}
 			primaryInstitutionId={data.profile.primaryInstitution.id}
 		/>
+		<ProfileActivitySection />
 	</div>
 </main>

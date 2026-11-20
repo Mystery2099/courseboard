@@ -1,5 +1,5 @@
 import type { Filter, ObjectId } from 'mongodb';
-import type { PostKind } from '#lib/contracts/PostContract.ts';
+import type { PostKind, ReviewListOrder } from '#lib/contracts/PostContract.ts';
 import type { ReviewData } from '#lib/contracts/ReviewContract.ts';
 import type { MentionedUser } from '#lib/server/mentions/MentionedUser.ts';
 
@@ -66,6 +66,22 @@ export interface PostDetail extends PostSummary, Pick<PostDocument, 'mentions'> 
 	bodyMarkdown: string;
 }
 
+/** The fields a post list projects: everything but the body and mentions. */
+export const POST_SUMMARY_FIELDS = {
+	courseId: 1,
+	kind: 1,
+	authorId: 1,
+	title: 1,
+	replyCount: 1,
+	acceptedReplyId: 1,
+	lockedAt: 1,
+	createdAt: 1,
+	lastActivityAt: 1,
+	reviewData: 1,
+	editedAt: 1,
+	author: 1
+} as const;
+
 export type PostOrderField = 'lastActivityAt' | 'createdAt';
 
 /** Where the previous page ended: the ordering date of its last post, with the id as tie-breaker. */
@@ -80,4 +96,19 @@ export interface PostPageCriteria {
 	orderedBy: PostOrderField;
 	onlyWithoutReplies: boolean;
 	after: PostPagePosition | null;
+}
+
+/** Where the previous page of reviews ended. `workload` is set only when ordered by workload. */
+export interface ReviewPagePosition extends PostPagePosition {
+	workload: number | null;
+}
+
+export interface ReviewPageCriteria {
+	courseId: ObjectId;
+	order: ReviewListOrder;
+	/** Null lists every workload. */
+	workload: number | null;
+	/** Null lists both answers. */
+	wouldTakeAgain: boolean | null;
+	after: ReviewPagePosition | null;
 }

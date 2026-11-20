@@ -48,6 +48,8 @@ export const VALIDATION_ERROR_CODES = [
 	'school-required',
 	'email-invalid',
 	'unanswered-requires-question',
+	'review-filter-requires-review',
+	'cursor-order-mismatch',
 	'profile-change-required'
 ] as const;
 

@@ -63,7 +63,7 @@ it('expands the composer, requires disclosure, retains a failed review, and refr
 	await screen.getByText('Write a review', { exact: true }).click();
 	await screen.getByRole('textbox', { name: 'Title', exact: true }).fill(review.title);
 	await screen.getByRole('textbox', { name: 'Your review' }).fill(review.bodyMarkdown);
-	await screen.getByRole('combobox', { name: 'Workload' }).selectOptions('4');
+	await screen.getByRole('combobox', { name: 'Workload', exact: true }).selectOptions('4');
 	await screen.getByRole('combobox', { name: 'Would you take it again?' }).selectOptions('false');
 	await screen.getByRole('button', { name: 'Publish review' }).click();
 	await expect

@@ -1,6 +1,6 @@
 import { MarkdownRenderer } from '#lib/markdown/MarkdownRenderer.ts';
 
-/** Plain-text excerpts of post bodies for search results. */
+/** Plain-text excerpts of post and reply bodies. */
 export class SearchSnippet {
 	static readonly MAX_LENGTH = 160;
 	private static readonly LEAD_IN_LENGTH = 40;

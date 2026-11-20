@@ -22,7 +22,7 @@ After sign-in, resume the last accessible course or open Explore. New users star
 
 Discovery defaults to the primary institution but allows other institutions. Admitted users can read, ask, discuss, and reply without following a course or claiming attendance.
 
-Discussion lists default to newest activity, with Newest and Unanswered filters for questions. Unanswered means no replies yet. Replies remain chronological. Thread activity advances only on creation and new replies, not edits, moderation actions, or accepted-answer changes.
+Discussion lists default to newest activity, with Newest and Unanswered filters for questions. Reviews can also be ordered by lowest or highest workload and narrowed to one workload or one would-take-again answer. Unanswered means no replies yet. Replies remain chronological. Thread activity advances only on creation and new replies, not edits, moderation actions, or accepted-answer changes.
 
 ## Histories and profiles
 
@@ -30,7 +30,7 @@ History entries are self-reported Planning, Taking, or Took records. Support rep
 
 Entries start Private. Visible on profile exposes permitted course, status, and term fields to other admitted users. Private notes stay private. Grade entry and storage are deferred. Own profiles include all entries and a Preview as others option.
 
-Other profiles group visible entries by institution and term and show course and status. Profiles with no visible entries show a neutral empty state that doesn't reveal whether private entries exist.
+Your own profile also lists your posts, replies, and reviews, newest first, with Load more. Other profiles don't show this list. Other profiles group visible entries by institution and term and show course and status. Profiles with no visible entries show a neutral empty state that doesn't reveal whether private entries exist.
 
 Users can hide their primary institution from profiles and other users' institution filters while retaining it privately for discovery defaults. Show other institutions only when they have visible history entries.
 
