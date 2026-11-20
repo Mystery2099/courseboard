@@ -128,8 +128,8 @@
 	/** Loads the next page when the end of the list scrolls into view; Load more stays as fallback. */
 	function loadWhenVisible(sentinel: HTMLElement) {
 		const observer = new IntersectionObserver(([entry]) => {
-			if (entry.isIntersecting && postsQuery.hasNextPage && !postsQuery.isFetchingNextPage) {
-				void postsQuery.fetchNextPage();
+			if (entry.isIntersecting && postsQuery.hasNextPage && !postsQuery.isFetching) {
+				void postsQuery.fetchNextPage({ cancelRefetch: false });
 			}
 		});
 		observer.observe(sentinel);
@@ -261,8 +261,8 @@
 				variant="outlined"
 				size="compact"
 				class="mt-3"
-				disabled={postsQuery.isFetchingNextPage}
-				onclick={() => postsQuery.fetchNextPage()}
+				disabled={postsQuery.isFetching}
+				onclick={() => postsQuery.fetchNextPage({ cancelRefetch: false })}
 				>{postsQuery.isFetchingNextPage
 					? m.common_loading()
 					: postsQuery.isFetchNextPageError

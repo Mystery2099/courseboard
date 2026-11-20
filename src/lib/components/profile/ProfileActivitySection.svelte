@@ -121,7 +121,7 @@
 							>
 								<span class="block text-sm text-on-surface-variant">
 									<span class="font-mono font-semibold text-primary">{post.course.code}</span>
-									· {THREAD_KIND_LABELS[post.kind]()}
+									{#if type === 'posts'}· {THREAD_KIND_LABELS[post.kind]()}{/if}
 								</span>
 								<span class="mt-1 block font-heading text-lg leading-snug font-bold wrap-break-word"
 									>{post.title}</span
@@ -147,7 +147,7 @@
 				disabled={activityQuery.isFetching}
 				onclick={() => {
 					// Loading more during the refresh on return would cancel that refresh.
-					if (!activityQuery.isFetching) void activityQuery.fetchNextPage();
+					if (!activityQuery.isFetching) void activityQuery.fetchNextPage({ cancelRefetch: false });
 				}}
 				>{activityQuery.isFetchingNextPage
 					? m.common_loading()
