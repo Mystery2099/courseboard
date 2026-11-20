@@ -23,8 +23,6 @@ export const completeOnboardingSchema = z.object({
 	displayName: displayNameSchema
 });
 
-export type CompleteOnboardingRequest = z.infer<typeof completeOnboardingSchema>;
-
 export const updateProfileSchema = z
 	.object({
 		displayName: displayNameSchema.optional(),
@@ -35,8 +33,6 @@ export const updateProfileSchema = z
 			changes.displayName !== undefined || changes.isPrimaryInstitutionHidden !== undefined,
 		'profile-change-required' satisfies ValidationErrorCode
 	);
-
-export type UpdateProfileRequest = z.infer<typeof updateProfileSchema>;
 
 export interface OwnProfileResponse {
 	username: string;
