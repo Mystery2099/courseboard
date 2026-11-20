@@ -106,11 +106,14 @@
 			isAdding
 				? ReactionApiClient.addReaction(postId, replyId, emoji)
 				: ReactionApiClient.removeReaction(postId, replyId, emoji),
-		// Kept in the cache too, so a saved toggle stays shown even if the refetch below fails.
-		onSuccess: (_result, toggle) =>
+		// Kept in the cache too, so a saved toggle stays shown even if the refetch below fails. A fetch
+		// begun before the save is cancelled first, so its older counts can't land on top.
+		onSuccess: async (_result, toggle) => {
+			await queryClient.cancelQueries({ queryKey: reactionsQueryKey });
 			queryClient.setQueryData<ThreadReactionsResponse>(reactionsQueryKey, (current) =>
 				current ? applyReactionToggle(current, toggle) : current
-			),
+			);
+		},
 		onError: (error, { replyId }) => (reactionFailure = { replyId, error }),
 		// Stays pending until the refetch lands, so its toggle never blinks off in between.
 		onSettled: () => queryClient.invalidateQueries({ queryKey: reactionsQueryKey })
