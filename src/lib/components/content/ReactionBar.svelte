@@ -79,7 +79,7 @@
 					closeOnSelect
 					aria-label={REACTION_NAMES[emoji]()}
 					class={[
-						'flex size-11 cursor-default items-center justify-center rounded-xl text-xl outline-hidden select-none focus:bg-accent desktop:size-9',
+						'flex size-11 cursor-default items-center justify-center rounded-xl text-xl select-none focus-visible:-outline-offset-2 desktop:size-9',
 						isReacted && 'bg-primary-container'
 					]}
 					onCheckedChange={(checked) => onToggle(emoji, checked)}
