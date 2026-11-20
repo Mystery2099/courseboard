@@ -142,6 +142,19 @@ describe('Markdown renderer', () => {
 		expect(MarkdownRenderer.toMentionedUsernames(markdown)).toEqual(['alex_m', 'sam']);
 	});
 
+	it('keeps underscores in a mention instead of reading them as italics', () => {
+		expect(MarkdownRenderer.toMentionedUsernames('cc @_sam_ and _@kim_')).toEqual(['_sam_', 'kim']);
+		expect(MarkdownRenderer.toMentionedUsernames('_ask @kim_ and @kim_')).toEqual(['kim', 'kim_']);
+		expect(MarkdownRenderer.toMentionedUsernames('_ask @ab__')).toEqual(['ab_']);
+		expect(MarkdownRenderer.toHtml('_ask @ab__', 3)).toBe('<p><em>ask @ab_</em></p>\n');
+		expect(MarkdownRenderer.toHtml('_ask @kim_', 3, ['kim'])).toBe(
+			'<p><em>ask <a href="/users/kim" class="mention" rel="nofollow ugc noopener noreferrer">@kim</a></em></p>\n'
+		);
+		expect(MarkdownRenderer.toHtml('cc @_sam_', 3, ['_sam_'])).toBe(
+			'<p>cc <a href="/users/_sam_" class="mention" rel="nofollow ugc noopener noreferrer">@_sam_</a></p>\n'
+		);
+	});
+
 	it('links only the mentions the server confirmed', () => {
 		const html = MarkdownRenderer.toHtml('Ask @Alex_M or @unknown_person', 3, ['alex_m']);
 

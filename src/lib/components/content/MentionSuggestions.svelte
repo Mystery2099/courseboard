@@ -112,8 +112,18 @@
 	});
 
 	function insert(username: string) {
-		if (!field || !mentionQuery) return;
-		applyMarkdownTextEdit(field, MentionCompletion.complete(mentionQuery, username));
+		// The field's text can change under an open list, such as when the reply bar switches drafts.
+		const typedQuery = field
+			? MentionCompletion.findQuery(field.value, field.selectionStart)
+			: null;
+		if (
+			field &&
+			typedQuery &&
+			typedQuery.start === mentionQuery?.start &&
+			typedQuery?.prefix === mentionQuery?.prefix
+		) {
+			applyMarkdownTextEdit(field, MentionCompletion.complete(typedQuery, username));
+		}
 		mentionQuery = null;
 	}
 </script>

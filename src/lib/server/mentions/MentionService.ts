@@ -42,6 +42,8 @@ export interface MentionRateLimiters {
  */
 export class MentionService {
 	private static readonly PAGE_SIZE = 20;
+	/** Bounds the account lookup for a body full of handles; only the first ten kept are stored. */
+	private static readonly LOOKUP_LIMIT = 50;
 
 	constructor(
 		private readonly users: ApplicationUserRepository,
@@ -65,12 +67,13 @@ export class MentionService {
 	async resolveMentions(bodyMarkdown: string, author: OnboardedUser): Promise<MentionedUser[]> {
 		const usernames = MarkdownRenderer.toMentionedUsernames(bodyMarkdown)
 			.filter((username) => username !== author.profile.username)
-			.slice(0, MENTIONS_PER_BODY_LIMIT);
+			.slice(0, MentionService.LOOKUP_LIMIT);
 		const accounts = await this.users.findMentionableByUsernames(usernames);
 		const idsByUsername = new Map(accounts.map((account) => [account.username, account._id]));
 
 		const mentioned: MentionedUser[] = [];
 		for (const username of usernames) {
+			if (mentioned.length === MENTIONS_PER_BODY_LIMIT) break;
 			const userId = idsByUsername.get(username);
 			if (!userId) continue;
 			if (!this.limiters.byAuthor.hasCapacity(author.id)) break;

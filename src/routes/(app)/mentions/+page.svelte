@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createInfiniteQuery } from '@tanstack/svelte-query';
+	import { createInfiniteQuery, useQueryClient } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import ThreadKindBadge from '#lib/components/content/ThreadKindBadge.svelte';
@@ -10,6 +10,16 @@
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
+	const queryClient = useQueryClient();
+
+	// Each visit loads the list on the server, which replaces any older copy in the cache.
+	$effect.pre(() => {
+		queryClient.setQueryData(
+			mentionQueryKeys.list(),
+			{ pages: [data.mentions], pageParams: [null] },
+			{ updatedAt: data.loadedAt }
+		);
+	});
 
 	const mentionsQuery = createInfiniteQuery(() => ({
 		queryKey: mentionQueryKeys.list(),

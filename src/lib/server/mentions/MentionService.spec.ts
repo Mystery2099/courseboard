@@ -69,13 +69,20 @@ describe('mention service', () => {
 		]);
 	});
 
-	it('looks up at most ten people per post or reply', async () => {
-		const { service, findMentionable } = createService();
-		const names = Array.from({ length: 12 }, (_, index) => `@person${index}`).join(' ');
+	it('keeps at most ten people per post or reply, after skipping unknown names', async () => {
+		const people = Array.from({ length: 12 }, (_, index) => ({
+			_id: new ObjectId(),
+			username: `person${index}`
+		}));
+		const { service } = createService(people);
+		const unknown = Array.from({ length: 10 }, (_, index) => `@ghost${index}`).join(' ');
+		const known = people.map((person) => `@${person.username}`).join(' ');
 
-		await service.resolveMentions(names, author);
+		const mentioned = await service.resolveMentions(`${unknown} ${known}`, author);
 
-		expect(findMentionable.mock.calls[0][0]).toHaveLength(10);
+		expect(mentioned.map((person) => person.username)).toEqual(
+			people.slice(0, 10).map((person) => person.username)
+		);
 	});
 
 	it('stops storing mentions of one person after five an hour, then allows them again', async () => {

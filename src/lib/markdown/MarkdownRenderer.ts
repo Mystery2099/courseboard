@@ -19,6 +19,11 @@ export class MarkdownRenderer {
 	 */
 	private static readonly MENTION_PATTERN =
 		/(?<![\p{L}\p{N}_@./+-])@([A-Za-z0-9_]{3,24})(?![A-Za-z0-9_@])/gu;
+	/** The same pattern, matching only where it's asked to start. */
+	private static readonly MENTION_AT_POSITION_PATTERN = new RegExp(
+		MarkdownRenderer.MENTION_PATTERN.source,
+		'uy'
+	);
 	private static readonly parser = MarkdownRenderer.createParser();
 
 	/**
@@ -95,6 +100,28 @@ export class MarkdownRenderer {
 		// Every address parses, so an image always shows just its description; links are checked
 		// after parsing instead.
 		parser.validateLink = () => true;
+		// Reads `@username` as plain text before emphasis can, so `@_sam_` stays one mention. Inside
+		// an open `_` italic, trailing underscores close it instead, as in `_ask @kim_`.
+		parser.inline.ruler.before('emphasis', 'mention_text', (state, silent) => {
+			if (state.src.charCodeAt(state.pos) !== 0x40) return false;
+			const pattern = MarkdownRenderer.MENTION_AT_POSITION_PATTERN;
+			pattern.lastIndex = state.pos;
+			const match = pattern.exec(state.src);
+			if (!match) return false;
+			let mentionText = match[0];
+			const isUnderscoreItalicOpen = state.delimiters.some(
+				(delimiter) => delimiter.marker === 0x5f && delimiter.open
+			);
+			if (isUnderscoreItalicOpen) {
+				// Keeps `@` and the three characters a username needs at least.
+				const closingUnderscores = mentionText.length - mentionText.replace(/_+$/, '').length;
+				mentionText = mentionText.slice(0, Math.max(4, mentionText.length - closingUnderscores));
+			}
+			if (!silent) state.push('text', '', 0).content = mentionText;
+			state.pos += mentionText.length;
+			return true;
+		});
+
 		parser.core.ruler.push('remove_disallowed_links', (state) => {
 			for (const blockToken of state.tokens) {
 				if (!blockToken.children) continue;
