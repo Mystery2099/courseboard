@@ -21,6 +21,7 @@ export const REQUEST_ERROR_CODES = [
 	'post-locked',
 	'parent-reply-unavailable',
 	'not-a-question',
+	'reactions-not-allowed',
 	'history-required',
 	'review-exists',
 	'entry-limit-reached',

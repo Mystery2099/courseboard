@@ -10,7 +10,8 @@ export const REALTIME_MESSAGES = {
 	subscribeToCourse: 'course.subscribe',
 	unsubscribeFromCourse: 'course.unsubscribe',
 	postCreated: 'post.created',
-	replyCreated: 'reply.created'
+	replyCreated: 'reply.created',
+	reactionChanged: 'reaction.changed'
 } as const;
 
 export const courseSubscriptionRequestSchema = z.object({ courseId: objectIdSchema });
@@ -32,4 +33,10 @@ export interface ReplyCreatedEvent {
 	courseId: string;
 	postId: string;
 	replyId: string;
+}
+
+/** Someone added or removed a reaction somewhere in the thread; the open thread refetches its counts. */
+export interface ReactionChangedEvent {
+	courseId: string;
+	postId: string;
 }

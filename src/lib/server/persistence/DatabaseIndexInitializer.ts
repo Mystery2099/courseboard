@@ -4,6 +4,7 @@ import { institutionRepository } from '#lib/server/catalog/InstitutionRepository
 import { membershipRepository } from '#lib/server/catalog/MembershipRepository.ts';
 import { spaceRepository } from '#lib/server/catalog/SpaceRepository.ts';
 import { postRepository } from '#lib/server/content/PostRepository.ts';
+import { reactionRepository } from '#lib/server/content/ReactionRepository.ts';
 import { replyRepository } from '#lib/server/content/ReplyRepository.ts';
 import { reviewRepository } from '#lib/server/content/ReviewRepository.ts';
 import { academicHistoryRepository } from '#lib/server/history/AcademicHistoryRepository.ts';
@@ -16,7 +17,7 @@ const RETRY_DELAY_MILLISECONDS = 30_000;
 /**
  * Creates the indexes that enforce identities (Clerk user IDs, invitation token hashes, institution
  * names, course codes per institution, one space per course, one membership per user and space,
- * one reply per submission, one review per author and course, one moderator assignment per user
+ * one reply per submission, one of each emoji per person and target, one review per author and course, one moderator assignment per user
  * and course)
  * and support current queries. `createIndex` is idempotent, so this runs on every start.
  *
@@ -60,6 +61,7 @@ export class DatabaseIndexInitializer {
 			academicHistoryRepository.ensureIndexes(),
 			postRepository.ensureIndexes(),
 			replyRepository.ensureIndexes(),
+			reactionRepository.ensureIndexes(),
 			reviewRepository.ensureIndexes(),
 			moderatorAssignmentRepository.ensureIndexes(),
 			peopleSearchRepository.ensureIndexes()

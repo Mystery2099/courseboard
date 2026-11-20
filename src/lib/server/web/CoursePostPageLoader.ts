@@ -5,8 +5,10 @@ import type {
 	ReplyListResponse,
 	PostKind
 } from '#lib/contracts/PostContract.ts';
+import type { ThreadReactionsResponse } from '#lib/contracts/ReactionContract.ts';
 import { AccessGuard } from '#lib/server/access/AccessGuard.ts';
 import { postService } from '#lib/server/content/PostService.ts';
+import { reactionService } from '#lib/server/content/ReactionService.ts';
 import { replyService } from '#lib/server/content/ReplyService.ts';
 
 export interface PostListPageData {
@@ -17,6 +19,8 @@ export interface PostListPageData {
 export interface ThreadPageData {
 	post: PostDetailResponse;
 	replies: ReplyListResponse;
+	/** Null on a review thread, which takes no reactions. */
+	reactions: ThreadReactionsResponse | null;
 	threadLoadedAt: number;
 }
 
@@ -41,13 +45,19 @@ export class CoursePostPageLoader {
 		kind: PostKind
 	): Promise<ThreadPageData> {
 		const user = AccessGuard.requireAdmittedUser(locals);
-		const [post, replies] = await Promise.all([
+		const [post, replies, reactions] = await Promise.all([
 			postService.getPost(params.postId, user),
-			replyService.listReplies(params.postId, {}, user)
+			replyService.listReplies(params.postId, {}, user),
+			reactionService.listThreadReactions(params.postId, user)
 		]);
 		if (!post || !replies || post.courseId !== params.courseId || post.kind !== kind) {
 			error(404, 'This post does not exist.', { code: 'post-not-found' });
 		}
-		return { post, replies, threadLoadedAt: Date.now() };
+		return {
+			post,
+			replies,
+			reactions: reactions.kind === 'found' ? reactions.reactions : null,
+			threadLoadedAt: Date.now()
+		};
 	}
 }

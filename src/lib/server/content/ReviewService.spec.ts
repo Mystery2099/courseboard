@@ -44,7 +44,11 @@ const request = {
 };
 
 function createEventPublisher() {
-	return { publishPostCreated: vi.fn(), publishReplyCreated: vi.fn() };
+	return {
+		publishPostCreated: vi.fn(),
+		publishReplyCreated: vi.fn(),
+		publishReactionChanged: vi.fn()
+	};
 }
 
 function createService() {

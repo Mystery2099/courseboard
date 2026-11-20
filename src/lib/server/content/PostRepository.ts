@@ -142,6 +142,16 @@ export class PostRepository {
 		return post ?? null;
 	}
 
+	/** The kind and course of a published post, without its author or body. */
+	async findKindAndCourse(
+		postId: ObjectId
+	): Promise<Pick<PostDocument, 'kind' | 'courseId'> | null> {
+		return this.collection().findOne(
+			{ _id: postId, state: { $nin: ['removed', 'deleted'] } },
+			{ projection: { _id: 0, kind: 1, courseId: 1 } }
+		);
+	}
+
 	async exists(postId: ObjectId): Promise<boolean> {
 		return (
 			(await this.collection().countDocuments(

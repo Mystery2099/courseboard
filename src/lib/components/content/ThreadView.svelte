@@ -30,6 +30,13 @@
 		ReplyListResponse,
 		ReplyResponse
 	} from '#lib/contracts/PostContract.ts';
+	import type { ReactionEmoji, ThreadReactionsResponse } from '#lib/contracts/ReactionContract.ts';
+	import { ReactionApiClient, reactionQueryKeys } from '#lib/client/content/ReactionApiClient.ts';
+	import {
+		applyReactionToggle,
+		type ReactionToggle
+	} from '#lib/client/content/ReactionPresentation.ts';
+	import ReactionBar from './ReactionBar.svelte';
 	import ContentByline from './ContentByline.svelte';
 	import MarkdownBody from './MarkdownBody.svelte';
 	import PendingReplyCard from './PendingReplyCard.svelte';
@@ -46,10 +53,13 @@
 	let {
 		initialPost,
 		initialReplies,
+		initialReactions,
 		initialLoadedAt
 	}: {
 		initialPost: PostDetailResponse;
 		initialReplies: ReplyListResponse;
+		/** Null on a review thread, which takes no reactions. */
+		initialReactions: ThreadReactionsResponse | null;
 		initialLoadedAt: number;
 	} = $props();
 
@@ -73,6 +83,43 @@
 		initialData: { pages: [initialReplies], pageParams: [null] },
 		initialDataUpdatedAt: initialLoadedAt
 	}));
+
+	const reactionsQueryKey = reactionQueryKeys.thread(postId);
+	const reactionsQuery = createQuery(() => ({
+		queryKey: reactionsQueryKey,
+		queryFn: () => ReactionApiClient.listThreadReactions(postId),
+		initialData: initialReactions ?? undefined,
+		initialDataUpdatedAt: initialLoadedAt,
+		enabled: initialReactions !== null
+	}));
+	const reactions = $derived(reactionsQuery.data);
+
+	const reactionMutation = createMutation(() => ({
+		mutationFn: ({ replyId, emoji, isAdding }: ReactionToggle) =>
+			isAdding
+				? ReactionApiClient.addReaction(postId, replyId, emoji)
+				: ReactionApiClient.removeReaction(postId, replyId, emoji),
+		// Shown at once; a failure undoes only this toggle, so others still in flight stay.
+		onMutate: async (toggle: ReactionToggle) => {
+			await queryClient.cancelQueries({ queryKey: reactionsQueryKey });
+			updateReactions((current) => applyReactionToggle(current, toggle));
+		},
+		onError: (_error, toggle) =>
+			updateReactions((current) =>
+				applyReactionToggle(current, { ...toggle, isAdding: !toggle.isAdding })
+			),
+		onSettled: () => queryClient.invalidateQueries({ queryKey: reactionsQueryKey })
+	}));
+
+	function updateReactions(update: (current: ThreadReactionsResponse) => ThreadReactionsResponse) {
+		queryClient.setQueryData<ThreadReactionsResponse>(reactionsQueryKey, (current) =>
+			current ? update(current) : current
+		);
+	}
+
+	function toggleReaction(replyId: string | null, emoji: ReactionEmoji, isAdding: boolean) {
+		reactionMutation.mutate({ replyId, emoji, isAdding });
+	}
 
 	const refreshThread = () =>
 		Promise.all([
@@ -242,6 +289,7 @@
 	}));
 
 	const actionError = $derived(acceptedReplyMutation.error ?? lockMutation.error);
+	const reactionError = $derived(reactionMutation.error);
 
 	let copyNotice = $state<{ replyId: string; message: string } | null>(null);
 	let copyNoticeTimer: ReturnType<typeof setTimeout> | undefined;
@@ -348,6 +396,12 @@
 		</div>
 		<MarkdownBody class="mt-2" markdown={reply.bodyMarkdown} topHeadingLevel={3} />
 		<div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
+			{#if reactions}
+				<ReactionBar
+					reactions={reactions.replies[reply.id] ?? []}
+					onToggle={(emoji, isAdding) => toggleReaction(reply.id, emoji, isAdding)}
+				/>
+			{/if}
 			{#if canReply && !post.isLocked}
 				<Button variant="outlined" size="compact" onclick={() => startReplyingTo(reply)}
 					>{m.common_reply()}</Button
@@ -405,6 +459,19 @@
 		markdown={post.bodyMarkdown}
 		topHeadingLevel={2}
 	/>
+	{#if reactions}
+		<div class="mt-3">
+			<ReactionBar
+				reactions={reactions.post}
+				onToggle={(emoji, isAdding) => toggleReaction(null, emoji, isAdding)}
+			/>
+		</div>
+	{/if}
+	{#if reactionError}
+		<p class="mt-2 text-sm text-error" role="alert">
+			{describeRequestFailure(reactionError, m.reaction_failed)}
+		</p>
+	{/if}
 	{#if post.viewerPermissions.canEditReview}
 		<details bind:open={isReviewEditorOpen} class="group/disclosure mt-4 rounded-card border p-4">
 			<summary

@@ -3,6 +3,7 @@ import {
 	REALTIME_MESSAGES,
 	type CourseSubscriptionResult,
 	type PostCreatedEvent,
+	type ReactionChangedEvent,
 	type ReplyCreatedEvent
 } from '#lib/contracts/RealtimeContract.ts';
 
@@ -16,6 +17,7 @@ const RETRY_DELAY_MILLISECONDS = 5_000;
 export interface CourseActivityListener {
 	onPostCreated(event: PostCreatedEvent): void;
 	onReplyCreated(event: ReplyCreatedEvent): void;
+	onReactionChanged(event: ReactionChangedEvent): void;
 	/**
 	 * Called each time the server confirms the subscription. Events sent before then, such as
 	 * between loading the page and joining the room or while disconnected, never reach this tab.
@@ -72,6 +74,11 @@ export class RealtimeConnection {
 		this.socket.on(REALTIME_MESSAGES.replyCreated, (event: ReplyCreatedEvent) => {
 			if (event.courseId === this.courseSubscription?.courseId) {
 				this.courseSubscription.listener.onReplyCreated(event);
+			}
+		});
+		this.socket.on(REALTIME_MESSAGES.reactionChanged, (event: ReactionChangedEvent) => {
+			if (event.courseId === this.courseSubscription?.courseId) {
+				this.courseSubscription.listener.onReactionChanged(event);
 			}
 		});
 		this.socket.on('disconnect', () => (this.status = 'disconnected'));

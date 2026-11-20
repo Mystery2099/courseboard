@@ -1,6 +1,7 @@
 import {
 	REALTIME_MESSAGES,
 	type PostCreatedEvent,
+	type ReactionChangedEvent,
 	type ReplyCreatedEvent
 } from '#lib/contracts/RealtimeContract.ts';
 import { RealtimeRooms } from './RealtimeRooms.ts';
@@ -12,6 +13,8 @@ import { RealtimeRooms } from './RealtimeRooms.ts';
 export interface ContentEventPublisher {
 	publishPostCreated(event: PostCreatedEvent, authorId: string): void;
 	publishReplyCreated(event: ReplyCreatedEvent, authorId: string): void;
+	/** Sent to everyone in the course, the reacting person's other tabs included. */
+	publishReactionChanged(event: ReactionChangedEvent): void;
 }
 
 /**
@@ -28,19 +31,25 @@ export class SocketContentEventPublisher implements ContentEventPublisher {
 		this.emit(REALTIME_MESSAGES.replyCreated, event, authorId);
 	}
 
+	publishReactionChanged(event: ReactionChangedEvent): void {
+		this.emit(REALTIME_MESSAGES.reactionChanged, event, null);
+	}
+
+	/** `excludedUserId` leaves out that account's sockets; null reaches the whole course. */
 	private emit(
 		message: string,
-		event: PostCreatedEvent | ReplyCreatedEvent,
-		authorId: string
+		event: PostCreatedEvent | ReplyCreatedEvent | ReactionChangedEvent,
+		excludedUserId: string | null
 	): void {
 		const socketServer = globalThis.academicPlatformSocketServer;
 		if (!socketServer) return;
 		// The write already succeeded; a notice that can't be sent must not turn it into an error.
 		try {
-			socketServer
-				.to(RealtimeRooms.forCourse(event.courseId))
-				.except(RealtimeRooms.forUser(authorId))
-				.emit(message, event);
+			const courseRoom = socketServer.to(RealtimeRooms.forCourse(event.courseId));
+			(excludedUserId ? courseRoom.except(RealtimeRooms.forUser(excludedUserId)) : courseRoom).emit(
+				message,
+				event
+			);
 		} catch (error) {
 			console.error(`Couldn't publish ${message} for course ${event.courseId}:`, error);
 		}

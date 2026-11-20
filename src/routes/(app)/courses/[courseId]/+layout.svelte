@@ -20,6 +20,7 @@
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { postQueryKeys } from '#lib/client/content/PostApiClient.ts';
 	import { reviewQueryKeys } from '#lib/client/content/ReviewApiClient.ts';
+	import { reactionQueryKeys } from '#lib/client/content/ReactionApiClient.ts';
 	import { getRealtimeConnectionAccessor } from '#lib/client/realtime/RealtimeConnectionContext.ts';
 	import {
 		CourseActivityNotices,
@@ -55,6 +56,9 @@
 		return connection.subscribeToCourse(courseId, {
 			onPostCreated: (event) => courseActivityNotices.recordPost(event),
 			onReplyCreated: (event) => courseActivityNotices.recordReply(event),
+			// Counts change in place without moving anything, so they refresh without a notice.
+			onReactionChanged: (event) =>
+				void queryClient.invalidateQueries({ queryKey: reactionQueryKeys.thread(event.postId) }),
 			// Catches up on anything sent before the room was joined. Only queries on screen refetch,
 			// and the notices then clear themselves.
 			onSubscribed: () => {
