@@ -143,7 +143,7 @@
 	"review_form_take_again_placeholder": "Elige una respuesta",
 	"review_form_take_again_required": "Elige Sí o No.",
 	"review_form_body": "Tu reseña",
-	"markdown_formatting_help": "Formato: **negrita**, `código`, [texto](https://enlace), - listas, > citas y ``` en las líneas antes y después de un bloque de código.",
+	"markdown_formatting_help": "Formato: **negrita**, `código`, [texto](https://enlace), - listas, > citas, ``` en las líneas antes y después de un bloque de código y @nombre de usuario para mencionar a alguien.",
 	"markdown_formatting_help_toggle": "Ayuda de formato",
 	"review_form_disclosure": "Al publicar, se comparte tu estado {status} y el período {term} de este curso, aunque tu entrada del historial sea privada. Seguirá marcado como autodeclarado. La visibilidad y las notas de tu historial no cambiarán.",
 	"review_form_disclosure_acknowledgement": "Entiendo lo que se comparte al publicar.",
@@ -392,6 +392,28 @@
 	"search_person_entry": "{courseCode} · {status} · {term} · autodeclarado",
 	"search_person_entry_no_term": "{courseCode} · {status} · autodeclarado",
 	"navigation_search": "Buscar",
+	"navigation_mentions": "Menciones",
+	"mentions_title": "Menciones",
+	"mentions_description": "Publicaciones y respuestas que te mencionan.",
+	"mentions_empty": "Todavía nadie te ha mencionado. Cuando alguien escriba tu @nombre de usuario en una publicación o respuesta, aparecerá aquí.",
+	"mentions_load_failed": "No se pudieron cargar tus menciones.",
+	"mentions_by_in_post": "{name} te mencionó en la publicación",
+	"mentions_by_in_reply": "{name} te mencionó en una respuesta",
+	"mention_notice_in_post": "Alguien te mencionó en una publicación.",
+	"mention_notice_in_reply": "Alguien te mencionó en una respuesta.",
+	"mention_notice_open": "Abrir",
+	"mention_notice_dismiss": "Cerrar aviso",
+	"mention_suggestions_label": "Personas para mencionar",
+	"mention_suggestions_available": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "1 persona para mencionar. Usa las flechas y Enter para añadirla.",
+				"countPlural=*": "{count} personas para mencionar. Usa las flechas y Enter para añadir una."
+			}
+		}
+	],
 	"keyboard_shortcuts_title": "Atajos de teclado",
 	"keyboard_shortcuts_description": "Pulsa {keys} para mostrar u ocultar esta lista.",
 	"keyboard_shortcuts_section_general": "General",

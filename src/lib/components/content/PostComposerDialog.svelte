@@ -3,6 +3,7 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import EditorDialog from '#lib/components/EditorDialog.svelte';
 	import MarkdownFormattingHelp from './MarkdownFormattingHelp.svelte';
+	import MentionSuggestions from './MentionSuggestions.svelte';
 	import { submitFormOnShortcut } from '#lib/client/hotkeys/FormSubmitShortcut.ts';
 	import { formatMarkdownOnShortcut } from '#lib/client/hotkeys/MarkdownFormattingShortcuts.ts';
 	import { m } from '#lib/paraglide/messages.js';
@@ -42,6 +43,7 @@
 	// Closing the dialog keeps the draft; each channel of each course has its own.
 	const draft = $derived(composerDrafts.open(ComposerDraftTarget.newPost(courseId, kind)));
 	let fieldErrors = $state<{ title?: string; bodyMarkdown?: string }>({});
+	let bodyField = $state<HTMLTextAreaElement | null>(null);
 
 	interface PublishRequest {
 		request: CreatePostRequest;
@@ -119,25 +121,31 @@
 				>
 			{/if}
 		</label>
-		<label class="flex flex-col gap-1">
-			<span class="text-sm font-semibold">
-				{kind === 'question' ? m.post_composer_question_body() : m.post_composer_discussion_body()}
-			</span>
-			<textarea
-				{@attach formatMarkdownOnShortcut}
-				class="min-h-48 rounded-field px-4 py-3 text-base"
-				bind:value={draft.bodyMarkdown}
-				maxlength={POST_BODY_MAX_LENGTH}
-				aria-invalid={fieldErrors.bodyMarkdown ? 'true' : undefined}
-				aria-describedby={fieldErrors.bodyMarkdown
-					? `${formId}-body-help ${formId}-body-error`
-					: `${formId}-body-help`}></textarea>
-			{#if fieldErrors.bodyMarkdown}
-				<span id="{formId}-body-error" class="text-sm text-error" role="alert"
-					>{fieldErrors.bodyMarkdown}</span
-				>
-			{/if}
-		</label>
+		<div class="relative">
+			<label class="flex flex-col gap-1">
+				<span class="text-sm font-semibold">
+					{kind === 'question'
+						? m.post_composer_question_body()
+						: m.post_composer_discussion_body()}
+				</span>
+				<textarea
+					{@attach formatMarkdownOnShortcut}
+					bind:this={bodyField}
+					class="min-h-48 rounded-field px-4 py-3 text-base"
+					bind:value={draft.bodyMarkdown}
+					maxlength={POST_BODY_MAX_LENGTH}
+					aria-invalid={fieldErrors.bodyMarkdown ? 'true' : undefined}
+					aria-describedby={fieldErrors.bodyMarkdown
+						? `${formId}-body-help ${formId}-body-error`
+						: `${formId}-body-help`}></textarea>
+				{#if fieldErrors.bodyMarkdown}
+					<span id="{formId}-body-error" class="text-sm text-error" role="alert"
+						>{fieldErrors.bodyMarkdown}</span
+					>
+				{/if}
+			</label>
+			<MentionSuggestions field={bodyField} />
+		</div>
 		<MarkdownFormattingHelp id="{formId}-body-help" />
 		{#if publishMutation.error}
 			<p class="text-sm text-error" role="alert">

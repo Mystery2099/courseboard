@@ -12,6 +12,7 @@
 	import { stayAboveOnScreenKeyboard } from '#lib/client/navigation/OnScreenKeyboardInset.ts';
 	import { getPhoneDock } from '#lib/client/navigation/PhoneDock.svelte.ts';
 	import type { ComposerDraft } from '#lib/client/content/ComposerDrafts.svelte.ts';
+	import MentionSuggestions from './MentionSuggestions.svelte';
 
 	const MAXIMUM_FIELD_HEIGHT_PX = 128;
 	/** Share of the visible height the field may take, so the bar fits above a landscape keyboard. */
@@ -143,7 +144,8 @@
 		{@attach submitFormOnShortcut}
 		{@attach stayAboveOnScreenKeyboard}
 	>
-		<div class="mx-auto max-w-3xl">
+		<div class="relative mx-auto max-w-3xl">
+			<MentionSuggestions field={bodyField} placement="above" />
 			<p class="sr-only" aria-live="polite">
 				{replyTargetName ? m.thread_replying_to({ name: replyTargetName }) : ''}
 			</p>

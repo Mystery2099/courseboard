@@ -22,10 +22,11 @@ function toggleStyle(field: HTMLTextAreaElement, style: MarkdownInlineStyle) {
 		field.selectionEnd,
 		style
 	);
-	if (edit) applyEdit(field, edit);
+	if (edit) applyMarkdownTextEdit(field, edit);
 }
 
-function applyEdit(field: HTMLTextAreaElement, edit: MarkdownTextEdit) {
+/** Applies `edit` as typing would, so Undo reverts it. Does nothing if it would pass maxlength. */
+export function applyMarkdownTextEdit(field: HTMLTextAreaElement, edit: MarkdownTextEdit) {
 	// Chrome cuts inserted text at maxlength instead of refusing it, which would lose selected text.
 	const resultLength =
 		field.value.length - (edit.replaceEnd - edit.replaceStart) + edit.insertedText.length;

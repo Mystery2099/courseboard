@@ -143,7 +143,7 @@
 	"review_form_take_again_placeholder": "Choose an answer",
 	"review_form_take_again_required": "Choose Yes or No.",
 	"review_form_body": "Your review",
-	"markdown_formatting_help": "Formatting: **bold**, `code`, [text](https://link), - lists, > quotes, and ``` on the lines above and below a code block.",
+	"markdown_formatting_help": "Formatting: **bold**, `code`, [text](https://link), - lists, > quotes, ``` on the lines above and below a code block, and @username to mention someone.",
 	"markdown_formatting_help_toggle": "Formatting help",
 	"review_form_disclosure": "Publishing shares your {status} status and {term} term for this course, even if your history entry is private. It stays labeled self-reported. Your history visibility and notes won’t change.",
 	"review_form_disclosure_acknowledgement": "I understand what publishing shares.",
@@ -392,6 +392,28 @@
 	"search_person_entry": "{courseCode} · {status} · {term} · self-reported",
 	"search_person_entry_no_term": "{courseCode} · {status} · self-reported",
 	"navigation_search": "Search",
+	"navigation_mentions": "Mentions",
+	"mentions_title": "Mentions",
+	"mentions_description": "Posts and replies that mention you.",
+	"mentions_empty": "Nobody has mentioned you yet. When someone writes your @username in a post or reply, it shows up here.",
+	"mentions_load_failed": "Your mentions couldn't be loaded.",
+	"mentions_by_in_post": "{name} mentioned you in the post",
+	"mentions_by_in_reply": "{name} mentioned you in a reply",
+	"mention_notice_in_post": "Someone mentioned you in a post.",
+	"mention_notice_in_reply": "Someone mentioned you in a reply.",
+	"mention_notice_open": "Open",
+	"mention_notice_dismiss": "Close notice",
+	"mention_suggestions_label": "People to mention",
+	"mention_suggestions_available": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "1 person to mention. Use the arrow keys and Enter to add them.",
+				"countPlural=*": "{count} people to mention. Use the arrow keys and Enter to add one."
+			}
+		}
+	],
 	"keyboard_shortcuts_title": "Keyboard shortcuts",
 	"keyboard_shortcuts_description": "Press {keys} to show or hide this list.",
 	"keyboard_shortcuts_section_general": "General",

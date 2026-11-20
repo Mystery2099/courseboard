@@ -7,6 +7,7 @@
 	import { formatMarkdownOnShortcut } from '#lib/client/hotkeys/MarkdownFormattingShortcuts.ts';
 	import type { ComposerDraft } from '#lib/client/content/ComposerDrafts.svelte.ts';
 	import MarkdownFormattingHelp from './MarkdownFormattingHelp.svelte';
+	import MentionSuggestions from './MentionSuggestions.svelte';
 
 	let {
 		label,
@@ -45,17 +46,20 @@
 </script>
 
 <form class="flex flex-col gap-2" onsubmit={submit} novalidate {@attach submitFormOnShortcut}>
-	<label class="flex flex-col gap-1">
-		<span class="text-sm font-semibold">{label}</span>
-		<textarea
-			{@attach formatMarkdownOnShortcut}
-			bind:this={bodyField}
-			class="min-h-24 rounded-field px-4 py-3 text-base"
-			bind:value={draft.bodyMarkdown}
-			maxlength={REPLY_BODY_MAX_LENGTH}
-			aria-invalid={errorMessage ? 'true' : undefined}
-			aria-describedby={errorMessage ? `${helpId} ${errorId}` : helpId}></textarea>
-	</label>
+	<div class="relative">
+		<label class="flex flex-col gap-1">
+			<span class="text-sm font-semibold">{label}</span>
+			<textarea
+				{@attach formatMarkdownOnShortcut}
+				bind:this={bodyField}
+				class="min-h-24 rounded-field px-4 py-3 text-base"
+				bind:value={draft.bodyMarkdown}
+				maxlength={REPLY_BODY_MAX_LENGTH}
+				aria-invalid={errorMessage ? 'true' : undefined}
+				aria-describedby={errorMessage ? `${helpId} ${errorId}` : helpId}></textarea>
+		</label>
+		<MentionSuggestions field={bodyField} />
+	</div>
 	<MarkdownFormattingHelp id={helpId} />
 	{#if errorMessage}
 		<p id={errorId} class="text-sm text-error" role="alert">{errorMessage}</p>

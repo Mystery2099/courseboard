@@ -6,6 +6,7 @@
 	import { RealtimeConnection } from '#lib/client/realtime/RealtimeConnection.svelte.ts';
 	import { setRealtimeConnectionAccessor } from '#lib/client/realtime/RealtimeConnectionContext.ts';
 	import FloatingDock from '#lib/components/FloatingDock.svelte';
+	import MentionNotice from '#lib/components/MentionNotice.svelte';
 	import { PhoneDock, setPhoneDock } from '#lib/client/navigation/PhoneDock.svelte.ts';
 	import SpaceRail from '#lib/components/SpaceRail.svelte';
 	import { findCourseChannel } from '#lib/client/navigation/CourseChannel.ts';
@@ -25,6 +26,7 @@
 	const currentChannel = $derived(findCourseChannel(page.route.id));
 	const isExploreCurrent = $derived(page.route.id === '/(app)/explore');
 	const isSearchCurrent = $derived(page.route.id === '/(app)/search');
+	const isMentionsCurrent = $derived(page.route.id === '/(app)/mentions');
 	const isProfileCurrent = $derived(
 		page.route.id === '/(app)/profile' || page.route.id === '/(app)/settings'
 	);
@@ -68,6 +70,7 @@
 
 <HotkeysProvider appHotkeys={KEYBOARD_SHORTCUTS}>
 	<KeyboardShortcutsDialog bind:open={isKeyboardShortcutsDialogOpen} />
+	<MentionNotice />
 	<HotkeysProvider scope={PAGE_SHORTCUT_SCOPE}>
 		<PageNavigationShortcuts
 			followedCourses={data.followedCourses}
@@ -86,6 +89,7 @@
 					currentCourseId={currentCourse?.id ?? null}
 					{isExploreCurrent}
 					{isSearchCurrent}
+					{isMentionsCurrent}
 					{isProfileCurrent}
 					{isAdministrator}
 					{profile}
@@ -108,6 +112,7 @@
 					{currentChannel}
 					{isExploreCurrent}
 					{isSearchCurrent}
+					{isMentionsCurrent}
 					{isProfileCurrent}
 					{isAdministrator}
 					{profile}

@@ -7,10 +7,17 @@
 	let {
 		markdown,
 		topHeadingLevel,
+		mentionedUsernames = [],
 		class: className
-	}: { markdown: string; topHeadingLevel: 2 | 3; class?: ClassValue } = $props();
+	}: {
+		markdown: string;
+		topHeadingLevel: 2 | 3;
+		/** Mentions the server confirmed; text not yet sent has none, so its `@name` stays plain. */
+		mentionedUsernames?: readonly string[];
+		class?: ClassValue;
+	} = $props();
 
-	const html = $derived(MarkdownRenderer.toHtml(markdown, topHeadingLevel));
+	const html = $derived(MarkdownRenderer.toHtml(markdown, topHeadingLevel, mentionedUsernames));
 	const linkPreviews = $derived(LinkPreviewResolver.resolveAll(MarkdownRenderer.toLinks(markdown)));
 </script>
 

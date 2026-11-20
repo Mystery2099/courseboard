@@ -6,6 +6,7 @@
 	import * as Drawer from '#lib/components/ui/drawer/index.js';
 	import Check from 'lucide-svelte/icons/check';
 	import ChevronUp from 'lucide-svelte/icons/chevron-up';
+	import AtSign from 'lucide-svelte/icons/at-sign';
 	import Compass from 'lucide-svelte/icons/compass';
 	import Search from 'lucide-svelte/icons/search';
 	import type { FollowedCourseResponse } from '#lib/contracts/CourseFollowingContract.ts';
@@ -24,6 +25,7 @@
 		currentChannel,
 		isExploreCurrent,
 		isSearchCurrent,
+		isMentionsCurrent,
 		isProfileCurrent,
 		isAdministrator,
 		profile
@@ -33,6 +35,7 @@
 		currentChannel: CourseChannel | null;
 		isExploreCurrent: boolean;
 		isSearchCurrent: boolean;
+		isMentionsCurrent: boolean;
 		isProfileCurrent: boolean;
 		isAdministrator: boolean;
 		profile: { username: string; displayName: string; imageUrl: string | null };
@@ -45,7 +48,8 @@
 
 <!--
 	One-row dock (design handoff): 60px tall, floating 24px above the bottom on tall phones. Icons only
-	on phones; tablets show labels, which the accessible names contain.
+	on phones; tablets show labels, which the accessible names contain. Below 400px, Mentions moves into
+	the switcher so the course code still fits.
 -->
 <nav
 	aria-label={m.navigation_main()}
@@ -130,6 +134,13 @@
 					<Button href={resolve('/(app)/explore')} variant="text"
 						>{m.navigation_explore_all_courses()}</Button
 					>
+					<!-- The narrowest phones have no room for Mentions in the dock itself. -->
+					<Button
+						href={resolve('/(app)/mentions')}
+						variant="text"
+						class="min-[400px]:hidden"
+						aria-current={isMentionsCurrent ? 'page' : undefined}>{m.navigation_mentions()}</Button
+					>
 					{#if isAdministrator}
 						<Button href={resolve('/(app)/admin/invitations')} variant="text" size="compact"
 							>{m.navigation_admin()}</Button
@@ -147,6 +158,15 @@
 	>
 		<Search size={24} />
 		<span class="hidden text-sm font-semibold tablet:inline">{m.navigation_search()}</span>
+	</a>
+	<a
+		href={resolve('/(app)/mentions')}
+		aria-label={m.navigation_mentions()}
+		aria-current={isMentionsCurrent ? 'page' : undefined}
+		class="flex size-12 shrink-0 items-center justify-center gap-2 rounded-full navigation-item text-on-surface max-[399px]:hidden tablet:w-auto tablet:px-3"
+	>
+		<AtSign size={24} />
+		<span class="hidden text-sm font-semibold tablet:inline">{m.navigation_mentions()}</span>
 	</a>
 	<a
 		href={resolve('/(app)/profile')}
