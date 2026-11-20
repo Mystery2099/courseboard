@@ -4,7 +4,6 @@
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery, useQueryClient } from '@tanstack/svelte-query';
-	import { tick } from 'svelte';
 	import { resolve } from '$app/paths';
 	import Check from 'lucide-svelte/icons/check';
 	import Lock from 'lucide-svelte/icons/lock';
@@ -21,6 +20,7 @@
 	import ReviewFacts from './ReviewFacts.svelte';
 	import NewActivityNotice from './NewActivityNotice.svelte';
 	import { getCourseActivityNotices } from '#lib/client/realtime/CourseActivityNotices.svelte.ts';
+	import { NewActivityReveal } from '#lib/client/realtime/NewActivityReveal.svelte.ts';
 
 	let {
 		courseId,
@@ -61,28 +61,28 @@
 	const newPostIds = $derived(
 		courseActivityNotices.findNewPostIds(kind, new Set(posts.map((post) => post.id)))
 	);
-	let isShowingNewPosts = $state(false);
+	const newPostsReveal = new NewActivityReveal();
 
-	/** Refetches the list, then moves focus to the newest post shown, since the notice disappears. */
-	async function showNewPosts() {
+	/** Refetches the list, then moves focus to the newest post shown. */
+	function showNewPosts() {
 		const announcedPostIds = new Set(newPostIds);
-		isShowingNewPosts = true;
-		try {
-			await Promise.all([
-				queryClient.invalidateQueries({ queryKey: postQueryKeys.lists(courseId) }),
-				// Review statistics include the new reviews.
-				kind === 'review' &&
-					queryClient.invalidateQueries({ queryKey: reviewQueryKeys.context(courseId) })
-			]);
-		} finally {
-			isShowingNewPosts = false;
-		}
-		// A post that left this filter meanwhile, such as a question answered before the click,
-		// can't be shown here, so stop offering it.
-		if (!postsQuery.isError) courseActivityNotices.forgetPosts(announcedPostIds);
-		await tick();
-		const firstNewPost = posts.find((post) => announcedPostIds.has(post.id));
-		if (firstNewPost) document.getElementById(`post-${firstNewPost.id}`)?.focus();
+		return newPostsReveal.reveal(
+			async () => {
+				await Promise.all([
+					queryClient.invalidateQueries({ queryKey: postQueryKeys.lists(courseId) }),
+					// Review statistics include the new reviews.
+					kind === 'review' &&
+						queryClient.invalidateQueries({ queryKey: reviewQueryKeys.context(courseId) })
+				]);
+				// A post that left this filter meanwhile, such as a question answered before the click,
+				// can't be shown here, so stop offering it.
+				if (!postsQuery.isError) courseActivityNotices.forgetPosts(announcedPostIds);
+			},
+			() => {
+				const firstNewPost = posts.find((post) => announcedPostIds.has(post.id));
+				return firstNewPost && `post-${firstNewPost.id}`;
+			}
+		);
 	}
 
 	/** Loads the next page when the end of the list scrolls into view; Load more stays as fallback. */
@@ -112,7 +112,7 @@
 
 <NewActivityNotice
 	label={newPostIds.length > 0 ? m.realtime_show_new_posts({ count: newPostIds.length }) : ''}
-	isShowing={isShowingNewPosts}
+	isShowing={newPostsReveal.isShowing}
 	onShow={showNewPosts}
 />
 
