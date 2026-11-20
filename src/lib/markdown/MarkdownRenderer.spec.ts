@@ -151,6 +151,9 @@ describe('Markdown renderer', () => {
 		expect(MarkdownRenderer.toMentionedUsernames('cc @_sam_ and _@kim_')).toEqual(['_sam_', 'kim']);
 		expect(MarkdownRenderer.toMentionedUsernames('_ask @kim_ and @kim_')).toEqual(['kim', 'kim_']);
 		expect(MarkdownRenderer.toMentionedUsernames('_ask @ab__')).toEqual(['ab_']);
+		expect(
+			MarkdownRenderer.toMentionedUsernames("Tell '@ann' and ~~@bob~~, not @cafe\u0301")
+		).toEqual(['ann', 'bob']);
 		expect(MarkdownRenderer.toMentionedUsernames('_a _b_ @sam_ and *@kim* **@lee**')).toEqual([
 			'sam',
 			'kim',

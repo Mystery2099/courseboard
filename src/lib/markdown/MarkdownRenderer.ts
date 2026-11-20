@@ -14,10 +14,12 @@ export class MarkdownRenderer {
 	 * `@` and a username, not inside a word, an email address, or a path. Usernames are stored
 	 * lowercase, so a match is lowercased before it's compared.
 	 */
-	private static readonly MENTION_PATTERN = /@([A-Za-z0-9_]{3,24})(?![\p{L}\p{N}_@])/uy;
-	/** A mention can't follow these, so a word, an email address, or a path isn't one. */
-	private static readonly ATTACHED_CHARACTER_PATTERN = /[\p{L}\p{N}!#$%&'*+/=?^_`{|}~.@-]/u;
-	private static readonly EMPHASIS_MARKERS = new Set(['_', '*']);
+	private static readonly MENTION_PATTERN = /@([A-Za-z0-9_]{3,24})(?![\p{L}\p{M}\p{N}_@])/uy;
+	/**
+	 * A mention can't follow these, so a word, an email address, or a path isn't one. Quotes, `*`,
+	 * `~`, and backticks are left out: they're allowed in email addresses but mostly mark up text.
+	 */
+	private static readonly ATTACHED_CHARACTER_PATTERN = /[\p{L}\p{M}\p{N}!#$%&+/=?^_{|}.@-]/u;
 	private static readonly parser = MarkdownRenderer.createParser();
 
 	/**
@@ -181,10 +183,10 @@ export class MarkdownRenderer {
 		const previousCharacter =
 			Array.from(state.src.slice(Math.max(0, state.pos - 2), state.pos)).at(-1) ?? '';
 		if (!MarkdownRenderer.ATTACHED_CHARACTER_PATTERN.test(previousCharacter)) return false;
-		// An `_` or `*` that just opened emphasis, as in `_@kim_`, isn't part of a word.
+		// An `_` that just opened emphasis, as in `_@kim_`, isn't part of a word.
 		const lastDelimiter = state.delimiters.at(-1);
 		const followsOpeningEmphasis =
-			MarkdownRenderer.EMPHASIS_MARKERS.has(previousCharacter) &&
+			previousCharacter === '_' &&
 			state.pending === '' &&
 			lastDelimiter?.open === true &&
 			lastDelimiter.token === state.tokens.length - 1;
