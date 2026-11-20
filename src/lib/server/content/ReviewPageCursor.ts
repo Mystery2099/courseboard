@@ -10,7 +10,9 @@ export class ReviewPageCursor {
 	static format(order: ReviewListOrder, lastReview: PostSummary): string {
 		const orderedAt = order === 'active' ? lastReview.lastActivityAt : lastReview.createdAt;
 		const position = TimestampIdCursor.format(orderedAt, lastReview._id);
-		return isWorkloadOrder(order) ? `${lastReview.reviewData?.workload}_${position}` : position;
+		if (!isWorkloadOrder(order)) return position;
+		if (!lastReview.reviewData) throw new Error('A listed review has no review data.');
+		return `${lastReview.reviewData.workload}_${position}`;
 	}
 
 	/** Expects a cursor the list query schema already matched to `order`. */

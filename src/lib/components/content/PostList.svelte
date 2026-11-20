@@ -65,20 +65,30 @@
 		reviewFilters.workload !== null || reviewFilters.wouldTakeAgain !== null
 	);
 
-	const postsQuery = createInfiniteQuery(() => ({
-		queryKey: postQueryKeys.list(courseId, kind, filter, reviewFilters),
-		queryFn: ({ pageParam }) =>
-			PostApiClient.listPosts(courseId, kind, filter, pageParam, reviewFilters),
-		initialPageParam: null as string | null,
-		getNextPageParam: (lastPage) => lastPage.nextCursor,
-		...(filter === 'active' &&
-			!isReviewListNarrowed && {
-				initialData: { pages: [initialPage], pageParams: [null] },
-				initialDataUpdatedAt: initialPageLoadedAt
-			})
-	}));
+	const postsQuery = createInfiniteQuery(() => {
+		// Read once per key, so a request still running for an earlier selection keeps its own.
+		const listFilter = filter;
+		const listReviewFilters = reviewFilters;
+		return {
+			queryKey: postQueryKeys.list(courseId, kind, listFilter, listReviewFilters),
+			queryFn: ({ pageParam }: { pageParam: string | null }) =>
+				PostApiClient.listPosts(courseId, kind, listFilter, pageParam, listReviewFilters),
+			initialPageParam: null as string | null,
+			getNextPageParam: (lastPage: PostListResponse) => lastPage.nextCursor,
+			...(listFilter === 'active' &&
+				!isReviewListNarrowed && {
+					initialData: { pages: [initialPage], pageParams: [null] },
+					initialDataUpdatedAt: initialPageLoadedAt
+				})
+		};
+	});
 
-	const posts = $derived(postsQuery.data?.pages.flatMap((page) => page.posts) ?? []);
+	// A review whose workload was edited between pages can come back on a later page too.
+	const posts = $derived([
+		...new Map(
+			(postsQuery.data?.pages.flatMap((page) => page.posts) ?? []).map((post) => [post.id, post])
+		).values()
+	]);
 
 	const queryClient = useQueryClient();
 	const courseActivityNotices = getCourseActivityNotices();

@@ -30,7 +30,7 @@ History entries are self-reported Planning, Taking, or Took records. Support rep
 
 Entries start Private. Visible on profile exposes permitted course, status, and term fields to other admitted users. Private notes stay private. Grade entry and storage are deferred. Own profiles include all entries and a Preview as others option.
 
-Other profiles group visible entries by institution and term and show course and status. Profiles with no visible entries show a neutral empty state that doesn't reveal whether private entries exist.
+Your own profile also lists your posts, replies, and reviews, newest first, with Load more. Other profiles don't show this list. Other profiles group visible entries by institution and term and show course and status. Profiles with no visible entries show a neutral empty state that doesn't reveal whether private entries exist.
 
 Users can hide their primary institution from profiles and other users' institution filters while retaining it privately for discovery defaults. Show other institutions only when they have visible history entries.
 

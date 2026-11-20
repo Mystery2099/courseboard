@@ -31,6 +31,7 @@ export const REVIEW_LIST_ORDERS = [
 export type ReviewListOrder = (typeof REVIEW_LIST_ORDERS)[number];
 
 export const REVIEW_WORKLOADS = [1, 2, 3, 4, 5] as const;
+export const MAX_REVIEW_WORKLOAD = REVIEW_WORKLOADS[REVIEW_WORKLOADS.length - 1];
 
 /** A workload order's `nextCursor`: the last review's workload, then a timestamp and a post id. */
 const workloadCursorSchema = z.string().regex(/^[1-5]_\d{1,15}_[a-f0-9]{24}$/);
@@ -75,7 +76,7 @@ export const postListQuerySchema = z
 		kind: z.enum(POST_KINDS).optional(),
 		filter: z.enum(POST_LIST_FILTERS).default('active'),
 		/** Reviews only: one workload from 1 to 5. */
-		workload: z.coerce.number().int().min(1).max(REVIEW_WORKLOADS.length).optional(),
+		workload: z.coerce.number().int().min(1).max(MAX_REVIEW_WORKLOAD).optional(),
 		/** Reviews only. */
 		wouldTakeAgain: z.enum(['yes', 'no']).optional(),
 		/** The `nextCursor` of the previous page. */

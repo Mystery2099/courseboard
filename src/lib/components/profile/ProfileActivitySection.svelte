@@ -16,6 +16,7 @@
 	import { THREAD_ROUTE_IDS } from '#lib/client/navigation/CourseChannel.ts';
 	import {
 		PROFILE_ACTIVITY_TYPES,
+		type ProfileActivityPageResponse,
 		type ProfileActivityType
 	} from '#lib/contracts/ProfileActivityContract.ts';
 	import ReviewFacts from '#lib/components/content/ReviewFacts.svelte';
@@ -33,12 +34,19 @@
 
 	let type = $state<ProfileActivityType>('posts');
 
-	const activityQuery = createInfiniteQuery(() => ({
-		queryKey: profileActivityQueryKeys.list(type),
-		queryFn: ({ pageParam }) => ProfileActivityApiClient.listOwnActivity(type, pageParam),
-		initialPageParam: null as string | null,
-		getNextPageParam: (lastPage) => lastPage.nextCursor
-	}));
+	const activityQuery = createInfiniteQuery(() => {
+		// Read once per key, so a request still running for an earlier tab keeps its own type.
+		const listType = type;
+		return {
+			queryKey: profileActivityQueryKeys.list(listType),
+			queryFn: ({ pageParam }: { pageParam: string | null }) =>
+				ProfileActivityApiClient.listOwnActivity(listType, pageParam),
+			initialPageParam: null as string | null,
+			getNextPageParam: (lastPage: ProfileActivityPageResponse) => lastPage.nextCursor,
+			// Posting elsewhere doesn't refresh this list, so read it again whenever the profile opens.
+			staleTime: 0
+		};
+	});
 
 	const pages = $derived(activityQuery.data?.pages ?? []);
 	const posts = $derived(pages.flatMap((page) => (page.type === 'replies' ? [] : page.posts)));

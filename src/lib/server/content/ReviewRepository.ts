@@ -59,7 +59,8 @@ export class ReviewRepository {
 		for (const workload of workloads) {
 			let pagePosition: PostPagePosition | null = after;
 			if (after && workloadDirection !== 0) {
-				const workloadsApart = (workload - (after.workload ?? 0)) * workloadDirection;
+				if (after.workload === null) throw new Error('A workload order needs a workload cursor.');
+				const workloadsApart = (workload - after.workload) * workloadDirection;
 				// Workloads before the cursor's are done, and later ones start from their newest review.
 				if (workloadsApart < 0) continue;
 				if (workloadsApart > 0) pagePosition = null;
