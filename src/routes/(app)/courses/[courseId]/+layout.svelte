@@ -56,15 +56,9 @@
 		return connection.subscribeToCourse(courseId, {
 			onPostCreated: (event) => courseActivityNotices.recordPost(event),
 			onReplyCreated: (event) => courseActivityNotices.recordReply(event),
-			// Counts change in place without moving anything, so they refresh without a notice. While
-			// this tab's own toggles are pending, the last of them refetches instead.
-			onReactionChanged: (event) => {
-				if (
-					queryClient.isMutating({ mutationKey: reactionQueryKeys.toggles(event.postId) }) === 0
-				) {
-					void queryClient.invalidateQueries({ queryKey: reactionQueryKeys.thread(event.postId) });
-				}
-			},
+			// Counts change in place without moving anything, so they refresh without a notice.
+			onReactionChanged: (event) =>
+				void queryClient.invalidateQueries({ queryKey: reactionQueryKeys.thread(event.postId) }),
 			// Catches up on anything sent before the room was joined. Only queries on screen refetch,
 			// and the notices then clear themselves.
 			onSubscribed: () => {

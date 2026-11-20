@@ -108,7 +108,13 @@ it.skipIf(!testMongoDbUri)(
 				.collection('reactions')
 				.aggregate([
 					{ $match: { postId: new ObjectId(postId) } },
-					{ $group: { _id: { replyId: '$replyId', emoji: '$emoji' }, count: { $sum: 1 } } }
+					{
+						$group: {
+							_id: { replyId: '$replyId', emoji: '$emoji' },
+							count: { $sum: 1 },
+							reactedByViewer: { $max: { $eq: ['$userId', new ObjectId(firstUser.id)] } }
+						}
+					}
 				])
 				.explain('executionStats');
 			expect(JSON.stringify(queryPlan)).toContain('IXSCAN');

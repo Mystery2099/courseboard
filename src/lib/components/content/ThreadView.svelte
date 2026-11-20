@@ -2,7 +2,12 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { m } from '#lib/paraglide/messages.js';
-	import { createInfiniteQuery, createMutation, createQuery } from '@tanstack/svelte-query';
+	import {
+		createInfiniteQuery,
+		createMutation,
+		createQuery,
+		useMutationState
+	} from '@tanstack/svelte-query';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { onDestroy, tick, untrack } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -92,8 +97,6 @@
 		initialDataUpdatedAt: initialLoadedAt,
 		enabled: initialReactions !== null
 	}));
-	const reactions = $derived(reactionsQuery.data);
-
 	const reactionMutationKey = reactionQueryKeys.toggles(postId);
 	const reactionMutation = createMutation(() => ({
 		mutationKey: reactionMutationKey,
@@ -103,34 +106,24 @@
 			isAdding
 				? ReactionApiClient.addReaction(postId, replyId, emoji)
 				: ReactionApiClient.removeReaction(postId, replyId, emoji),
-		// Shown at once; a failure undoes only this toggle, so others still waiting stay.
-		onMutate: async (toggle: ReactionToggle) => {
-			await queryClient.cancelQueries({ queryKey: reactionsQueryKey });
-			updateReactions((current) => applyReactionToggle(current, toggle));
-		},
-		onError: (_error, toggle) =>
-			updateReactions((current) =>
-				applyReactionToggle(current, { ...toggle, isAdding: !toggle.isAdding })
-			),
-		// A refetch while others are still waiting would show the server without them.
-		onSettled: () => {
-			if (queryClient.isMutating({ mutationKey: reactionMutationKey }) === 1) {
-				return queryClient.invalidateQueries({ queryKey: reactionsQueryKey });
-			}
-		}
+		onError: (error, { replyId }) => (reactionFailure = { replyId, error }),
+		// Stays pending until the refetch lands, so its toggle never blinks off in between.
+		onSettled: () => queryClient.invalidateQueries({ queryKey: reactionsQueryKey })
 	}));
-	/** The target whose toggle failed last: a reply id, or null for the post. */
-	const failedReactionTarget = $derived(
-		reactionMutation.isError ? reactionMutation.variables?.replyId : undefined
+	// Toggles still waiting or sending are shown over the server's counts, so any refetch, including
+	// one from another tab's reaction, keeps them, and a failed one simply drops out.
+	const pendingReactionToggles = useMutationState({
+		filters: { mutationKey: reactionMutationKey, status: 'pending' },
+		select: (mutation) => mutation.state.variables as ReactionToggle
+	});
+	const reactions = $derived(
+		reactionsQuery.data && pendingReactionToggles.reduce(applyReactionToggle, reactionsQuery.data)
 	);
-
-	function updateReactions(update: (current: ThreadReactionsResponse) => ThreadReactionsResponse) {
-		queryClient.setQueryData<ThreadReactionsResponse>(reactionsQueryKey, (current) =>
-			current ? update(current) : current
-		);
-	}
+	/** The last toggle that failed: its target, a reply id or null for the post, and why. */
+	let reactionFailure = $state<{ replyId: string | null; error: Error } | null>(null);
 
 	function toggleReaction(replyId: string | null, emoji: ReactionEmoji, isAdding: boolean) {
+		reactionFailure = null;
 		reactionMutation.mutate({ replyId, emoji, isAdding });
 	}
 
@@ -388,9 +381,9 @@
 	}
 </script>
 
-{#snippet reactionFailure()}
+{#snippet reactionFailureAlert()}
 	<p class="mt-2 text-sm text-error" role="alert">
-		{describeRequestFailure(reactionMutation.error, m.reaction_failed)}
+		{describeRequestFailure(reactionFailure?.error, m.reaction_failed)}
 	</p>
 {/snippet}
 
@@ -445,8 +438,8 @@
 				/>
 			</div>
 		</div>
-		{#if failedReactionTarget === reply.id}
-			{@render reactionFailure()}
+		{#if reactionFailure?.replyId === reply.id}
+			{@render reactionFailureAlert()}
 		{/if}
 	</article>
 {/snippet}
@@ -488,8 +481,8 @@
 			/>
 		</div>
 	{/if}
-	{#if failedReactionTarget === null}
-		{@render reactionFailure()}
+	{#if reactionFailure && reactionFailure.replyId === null}
+		{@render reactionFailureAlert()}
 	{/if}
 	{#if post.viewerPermissions.canEditReview}
 		<details bind:open={isReviewEditorOpen} class="group/disclosure mt-4 rounded-card border p-4">

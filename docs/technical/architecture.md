@@ -186,7 +186,7 @@ TanStack Hotkeys (`@tanstack/svelte-hotkeys`, pinned while it's in beta) handles
 
 ## Reply actions
 
-Reactions show as chips with a count under the post and in each reply's action row, followed by a button that opens the six emoji. A chip or emoji toggles the caller's reaction at once and undoes only that toggle if the request fails.
+Reactions show as chips with a count under the post and in each reply's action row, followed by a button that opens the six emoji. A chip or emoji toggles the caller's reaction at once. Toggles in a thread go to the server one at a time, in the order tapped, and the page shows the ones still waiting over the server's counts, so a refetch keeps them and a failed one drops out with an alert under its post or reply.
 
 Every reply has a ⋯ button. On phones it opens a bottom sheet, and so does a long press on the reply. On desktop the same button opens a dropdown. Both list the actions `ThreadView` builds as `ReplyAction` objects (`src/lib/client/content/ReplyAction.ts`): Reply, Copy text, and, for the question's author, Accept as answer or Clear accepted answer.
 
