@@ -75,20 +75,17 @@ export function longPress(onLongPress: (element: HTMLElement) => void): Attachme
 			event.stopPropagation();
 		}
 
-		element.addEventListener('pointerdown', startPress);
-		element.addEventListener('pointermove', trackMovement);
-		element.addEventListener('pointerup', endPress);
-		element.addEventListener('pointercancel', endPress);
-		element.addEventListener('contextmenu', suppressBrowserMenu);
-		element.addEventListener('click', suppressTrailingClick, true);
+		const listeners = new AbortController();
+		const { signal } = listeners;
+		element.addEventListener('pointerdown', startPress, { signal });
+		element.addEventListener('pointermove', trackMovement, { signal });
+		element.addEventListener('pointerup', endPress, { signal });
+		element.addEventListener('pointercancel', endPress, { signal });
+		element.addEventListener('contextmenu', suppressBrowserMenu, { signal });
+		element.addEventListener('click', suppressTrailingClick, { capture: true, signal });
 		return () => {
 			cancelPress();
-			element.removeEventListener('pointerdown', startPress);
-			element.removeEventListener('pointermove', trackMovement);
-			element.removeEventListener('pointerup', endPress);
-			element.removeEventListener('pointercancel', endPress);
-			element.removeEventListener('contextmenu', suppressBrowserMenu);
-			element.removeEventListener('click', suppressTrailingClick, true);
+			listeners.abort();
 		};
 	};
 }

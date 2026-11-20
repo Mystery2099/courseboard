@@ -96,18 +96,14 @@
 				close();
 			}
 		};
-		textField.addEventListener('input', findQuery);
-		textField.addEventListener('click', findQuery);
-		textField.addEventListener('keyup', findQuery);
-		textField.addEventListener('keydown', handleKeydown);
-		textField.addEventListener('blur', close);
-		return () => {
-			textField.removeEventListener('input', findQuery);
-			textField.removeEventListener('click', findQuery);
-			textField.removeEventListener('keyup', findQuery);
-			textField.removeEventListener('keydown', handleKeydown);
-			textField.removeEventListener('blur', close);
-		};
+		const listeners = new AbortController();
+		const { signal } = listeners;
+		textField.addEventListener('input', findQuery, { signal });
+		textField.addEventListener('click', findQuery, { signal });
+		textField.addEventListener('keyup', findQuery, { signal });
+		textField.addEventListener('keydown', handleKeydown, { signal });
+		textField.addEventListener('blur', close, { signal });
+		return () => listeners.abort();
 	});
 
 	function insert(username: string) {
