@@ -4,6 +4,7 @@ import { COURSES_COLLECTION_NAME } from '#lib/server/catalog/Course.ts';
 import { ContentAuthorLookup } from '#lib/server/content/ContentAuthorLookup.ts';
 import {
 	POSTS_COLLECTION_NAME,
+	VISIBLE_POST_FILTER,
 	type ContentAuthor,
 	type PostDocument
 } from '#lib/server/content/Post.ts';
@@ -35,8 +36,6 @@ export interface MentionRow {
  * `mentions.userId` with the creation date, so each side of a page is an index range.
  */
 export class MentionRepository {
-	private static readonly VISIBLE_POST_FILTER = { state: { $nin: ['removed', 'deleted'] } };
-
 	private posts(): Collection<PostDocument> {
 		return mongoClientProvider.getDatabase().collection<PostDocument>(POSTS_COLLECTION_NAME);
 	}
@@ -72,7 +71,7 @@ export class MentionRepository {
 		const newestFirst = { $sort: { createdAt: -1, _id: -1 } };
 		return this.posts()
 			.aggregate<MentionRow>([
-				{ $match: { ...pageFilter, ...MentionRepository.VISIBLE_POST_FILTER } },
+				{ $match: { ...pageFilter, ...VISIBLE_POST_FILTER } },
 				newestFirst,
 				{ $limit: limit },
 				{
@@ -100,7 +99,7 @@ export class MentionRepository {
 									foreignField: '_id',
 									as: 'post',
 									pipeline: [
-										{ $match: MentionRepository.VISIBLE_POST_FILTER },
+										{ $match: VISIBLE_POST_FILTER },
 										{ $project: { _id: 0, courseId: 1, kind: 1, title: 1 } }
 									]
 								}

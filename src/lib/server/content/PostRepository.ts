@@ -4,6 +4,7 @@ import { mongoClientProvider } from '#lib/server/persistence/MongoClientProvider
 import { ContentAuthorLookup } from './ContentAuthorLookup.ts';
 import {
 	POSTS_COLLECTION_NAME,
+	VISIBLE_POST_FILTER,
 	type PostDetail,
 	type PostDocument,
 	type PostPageCriteria,
@@ -68,7 +69,7 @@ export class PostRepository {
 				{
 					$match: {
 						$text: { $search: text },
-						state: { $nin: ['removed', 'deleted'] },
+						...VISIBLE_POST_FILTER,
 						...(courseIds && { courseId: { $in: courseIds } })
 					}
 				},
@@ -111,7 +112,7 @@ export class PostRepository {
 		const filter: Filter<PostDocument> = {
 			spaceId: criteria.spaceId,
 			kind: { $in: [...criteria.kinds] },
-			state: { $nin: ['removed', 'deleted'] },
+			...VISIBLE_POST_FILTER,
 			...(criteria.onlyWithoutReplies && { replyCount: 0 }),
 			...(after && {
 				$or: [
@@ -134,7 +135,7 @@ export class PostRepository {
 	async findById(postId: ObjectId): Promise<PostDetail | null> {
 		const [post] = await this.collection()
 			.aggregate<PostDetail>([
-				{ $match: { _id: postId, state: { $nin: ['removed', 'deleted'] } } },
+				{ $match: { _id: postId, ...VISIBLE_POST_FILTER } },
 				...ContentAuthorLookup.STAGES,
 				{ $project: { ...PostRepository.SUMMARY_FIELDS, bodyMarkdown: 1, mentions: 1 } }
 			])
@@ -147,7 +148,7 @@ export class PostRepository {
 		postId: ObjectId
 	): Promise<Pick<PostDocument, 'kind' | 'courseId'> | null> {
 		return this.collection().findOne(
-			{ _id: postId, state: { $nin: ['removed', 'deleted'] } },
+			{ _id: postId, ...VISIBLE_POST_FILTER },
 			{ projection: { _id: 0, kind: 1, courseId: 1 } }
 		);
 	}
@@ -155,7 +156,7 @@ export class PostRepository {
 	async exists(postId: ObjectId): Promise<boolean> {
 		return (
 			(await this.collection().countDocuments(
-				{ _id: postId, state: { $nin: ['removed', 'deleted'] } },
+				{ _id: postId, ...VISIBLE_POST_FILTER },
 				{ limit: 1 }
 			)) === 1
 		);
@@ -168,7 +169,7 @@ export class PostRepository {
 	 */
 	async recordReply(postId: ObjectId, repliedAt: Date, session: ClientSession): Promise<boolean> {
 		const result = await this.collection().updateOne(
-			{ _id: postId, lockedAt: null, state: { $nin: ['removed', 'deleted'] } },
+			{ _id: postId, lockedAt: null, ...VISIBLE_POST_FILTER },
 			{ $inc: { replyCount: 1 }, $max: { lastActivityAt: repliedAt } },
 			{ session }
 		);
@@ -182,14 +183,17 @@ export class PostRepository {
 		acceptedReplyId: ObjectId | null
 	): Promise<boolean> {
 		const result = await this.collection().updateOne(
-			{ _id: postId, authorId, kind: 'question' },
+			{ _id: postId, authorId, kind: 'question', ...VISIBLE_POST_FILTER },
 			{ $set: { acceptedReplyId } }
 		);
 		return result.matchedCount === 1;
 	}
 
 	async setLockedAt(postId: ObjectId, lockedAt: Date | null): Promise<boolean> {
-		const result = await this.collection().updateOne({ _id: postId }, { $set: { lockedAt } });
+		const result = await this.collection().updateOne(
+			{ _id: postId, ...VISIBLE_POST_FILTER },
+			{ $set: { lockedAt } }
+		);
 		return result.matchedCount === 1;
 	}
 }

@@ -1,12 +1,10 @@
 <script lang="ts">
 	import { createQuery } from '@tanstack/svelte-query';
-	import { page } from '$app/state';
 	import { m } from '#lib/paraglide/messages.js';
 	import { MentionApiClient, mentionQueryKeys } from '#lib/client/content/MentionApiClient.ts';
 	import { MentionCompletion, type MentionQuery } from '#lib/client/content/MentionCompletion.ts';
 	import { applyMarkdownTextEdit } from '#lib/client/hotkeys/MarkdownFormattingShortcuts.ts';
 
-	const SUGGESTION_LIMIT = 6;
 	const TYPING_PAUSE_MILLISECONDS = 150;
 
 	let {
@@ -32,14 +30,8 @@
 		enabled: requestedPrefix.length > 0,
 		staleTime: 60_000
 	}));
-	// The server never keeps a mention of the author, so don't offer one.
-	const ownUsername = $derived(page.data.profile?.username);
 	const suggestions = $derived(
-		mentionQuery && requestedPrefix === mentionQuery.prefix
-			? (suggestionsQuery.data ?? [])
-					.filter((person) => person.username !== ownUsername)
-					.slice(0, SUGGESTION_LIMIT)
-			: []
+		mentionQuery && requestedPrefix === mentionQuery.prefix ? (suggestionsQuery.data ?? []) : []
 	);
 	const isOpen = $derived(suggestions.length > 0);
 	const highlightedIndex = $derived(Math.min(activeIndex, suggestions.length - 1));

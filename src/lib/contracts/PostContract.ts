@@ -59,8 +59,6 @@ export const postListQuerySchema = z
 		message: 'unanswered-requires-question' satisfies ValidationErrorCode
 	});
 
-export type PostListQuery = z.input<typeof postListQuerySchema>;
-
 export const createReplySchema = z.object({
 	bodyMarkdown: bodySchema(REPLY_BODY_MAX_LENGTH),
 	/** A top-level reply of the same post. Replies nest one level, so a nested reply can't be a parent. */
