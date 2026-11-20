@@ -29,6 +29,8 @@ I'm using the [OWASP Top 10 (2021)](https://owasp.org/Top10/) as the industry ch
 
 Free hosting makes abuse a practical problem, not just a security one: a flood of uploads could fill the 100 MB image quota, and a flood of posts could fill the database. The app runs on a single Render instance, so a simple in-memory rate limiter is enough. I'm planning limits on invitation redemption, image uploads, and creating posts, replies, and reports, plus the size limits already in the spec: bounded request bodies, Markdown length, two images per post, and 2 MB per image. Invitations already keep strangers out, which removes most of the spam risk.
 
+Mentions use the first limiter, `FixedWindowRateLimiter`, held in memory and swept so it stays bounded. An author can store 30 mentions an hour, and 5 of the same person; a mention over either limit stays plain text and the post or reply is still saved, so a queued reply can't fail because of one. Each author can send one person one live notice every 10 minutes. A restart resets the counts, which only loosens the limits briefly.
+
 ## Data recovery
 
 ### What gets backed up
