@@ -13,6 +13,8 @@
 	import { PostApiClient, postQueryKeys } from '#lib/client/content/PostApiClient.ts';
 	import { formatReplyCount, groupReplies } from '#lib/client/content/PostPresentation.ts';
 	import { ReplySubmissionQueue } from '#lib/client/content/ReplySubmissionQueue.svelte.ts';
+	import { ComposerDraftTarget } from '#lib/client/content/ComposerDrafts.svelte.ts';
+	import { getAccountLocalData } from '#lib/client/AccountLocalData.ts';
 	import type {
 		PostDetailResponse,
 		ReplyListResponse,
@@ -66,7 +68,25 @@
 			queryClient.invalidateQueries({ queryKey: postQueryKeys.replies(postId) }),
 			queryClient.invalidateQueries({ queryKey: postQueryKeys.lists(courseId) })
 		]);
-	const submissionQueue = new ReplySubmissionQueue(postId, refreshThread, refreshThread);
+	const accountLocalData = getAccountLocalData();
+	const composerDrafts = accountLocalData.composerDrafts;
+	const replyDraftTarget = (parentReplyId: string | null) =>
+		parentReplyId === null
+			? ComposerDraftTarget.threadReply(postId)
+			: ComposerDraftTarget.branchReply(postId, parentReplyId);
+	// A new queue for each account, so nobody sees or retries replies another account wrote here.
+	const unconfirmedReplies = $derived(accountLocalData.unconfirmedReplies(postId));
+	const submissionQueue = $derived(
+		new ReplySubmissionQueue(postId, unconfirmedReplies, refreshThread, refreshThread)
+	);
+	// Waits for Clerk to confirm the account, so a session switched in another tab since the page
+	// was rendered can't send this account's replies.
+	$effect(() => {
+		const queue = submissionQueue;
+		if (accountLocalData.isConfirmedAccount(unconfirmedReplies.boundAccountId)) {
+			untrack(() => queue.restoreUnconfirmed());
+		}
+	});
 
 	const loadedReplies = $derived(repliesQuery.data.pages.flatMap((page) => page.replies));
 	// Replies sent from this page stay visible even when their page of the thread isn't loaded yet.
@@ -113,11 +133,26 @@
 		if (firstNewReply) document.getElementById(`reply-${firstNewReply.id}`)?.focus();
 	}
 
-	function pendingRepliesUnder(parentReplyId: string | null) {
+	function pendingRepliesUnder(parentReplyId: string) {
 		return submissionQueue.pendingReplies.filter(
 			(pendingReply) => pendingReply.parentReplyId === parentReplyId
 		);
 	}
+
+	// A reply to a branch that isn't shown, such as one restored before its page of the thread was
+	// loaded, appears at thread level, both while pending and once stored, until its branch loads.
+	const shownBranchIds = $derived(new Set(replyBranches.map((branch) => branch.reply.id)));
+	const isUnderHiddenBranch = (parentReplyId: string | null) =>
+		parentReplyId !== null && !shownBranchIds.has(parentReplyId);
+	const threadLevelPendingReplies = $derived(
+		submissionQueue.pendingReplies.filter(
+			(pendingReply) =>
+				pendingReply.parentReplyId === null || isUnderHiddenBranch(pendingReply.parentReplyId)
+		)
+	);
+	const storedRepliesUnderHiddenBranches = $derived(
+		submissionQueue.storedReplies.filter((reply) => isUnderHiddenBranch(reply.parentReplyId))
+	);
 
 	/** A reply being answered. Nested replies are answered in their branch, under the top-level reply. */
 	interface ReplyTarget {
@@ -125,6 +160,11 @@
 		authorName: string;
 	}
 	let replyTarget = $state<ReplyTarget | null>(null);
+	// Shared by the phone bar and the desktop composer for the same target, so they show the same text.
+	const threadReplyDraft = $derived(composerDrafts.open(replyDraftTarget(null)));
+	const branchReplyDraft = $derived(
+		replyTarget ? composerDrafts.open(replyDraftTarget(replyTarget.parentReplyId)) : null
+	);
 	let dockedReplyComposer = $state<ReturnType<typeof DockedReplyComposer> | null>(null);
 
 	function startReplyingTo(reply: ReplyResponse) {
@@ -178,7 +218,7 @@
 	const actionError = $derived(acceptedReplyMutation.error ?? lockMutation.error);
 </script>
 
-{#snippet replyCard(reply: ReplyResponse)}
+{#snippet replyCard(reply: ReplyResponse, canReply = true)}
 	{@const isAccepted = reply.id === post.acceptedReplyId}
 	<article
 		id="reply-{reply.id}"
@@ -193,7 +233,7 @@
 		</div>
 		<MarkdownBody class="mt-2" markdown={reply.bodyMarkdown} topHeadingLevel={3} />
 		<div class="mt-2 flex flex-wrap gap-2 text-sm">
-			{#if !post.isLocked}
+			{#if canReply && !post.isLocked}
 				<Button variant="outlined" size="compact" onclick={() => startReplyingTo(reply)}
 					>{m.common_reply()}</Button
 				>
@@ -306,10 +346,11 @@
 							onDiscard={() => submissionQueue.discard(pendingReply.submissionId)}
 						/>
 					{/each}
-					{#if replyTarget?.parentReplyId === branch.reply.id && !post.isLocked}
+					{#if replyTarget?.parentReplyId === branch.reply.id && branchReplyDraft && !post.isLocked}
 						<div class="hidden desktop:block">
 							<ReplyComposer
 								label={m.thread_reply_to({ name: replyTarget.authorName })}
+								draft={branchReplyDraft}
 								onSubmit={(bodyMarkdown) => sendReply(bodyMarkdown, branch.reply.id)}
 								onCancel={() => (replyTarget = null)}
 							/>
@@ -335,7 +376,11 @@
 	{/if}
 
 	<div class="mt-3 flex flex-col gap-3 empty:hidden">
-		{#each pendingRepliesUnder(null) as pendingReply (pendingReply.submissionId)}
+		{#each storedRepliesUnderHiddenBranches as reply (reply.id)}
+			<!-- Its branch, where answers to it go, isn't loaded yet. -->
+			{@render replyCard(reply, false)}
+		{/each}
+		{#each threadLevelPendingReplies as pendingReply (pendingReply.submissionId)}
 			<PendingReplyCard
 				{pendingReply}
 				onRetry={() => submissionQueue.retry(pendingReply.submissionId)}
@@ -352,6 +397,7 @@
 		<div class="mt-6 hidden desktop:block">
 			<ReplyComposer
 				label={m.thread_your_reply()}
+				draft={threadReplyDraft}
 				onSubmit={(bodyMarkdown) => sendReply(bodyMarkdown, null)}
 			/>
 		</div>
@@ -362,6 +408,7 @@
 	<DockedReplyComposer
 		bind:this={dockedReplyComposer}
 		replyTargetName={replyTarget?.authorName ?? null}
+		draft={branchReplyDraft ?? threadReplyDraft}
 		onSubmit={(bodyMarkdown) => sendReply(bodyMarkdown, replyTarget?.parentReplyId ?? null)}
 		onClearReplyTarget={() => (replyTarget = null)}
 	/>

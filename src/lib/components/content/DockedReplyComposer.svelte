@@ -11,6 +11,7 @@
 	import { formatMarkdownOnShortcut } from '#lib/client/hotkeys/MarkdownFormattingShortcuts.ts';
 	import { stayAboveOnScreenKeyboard } from '#lib/client/navigation/OnScreenKeyboardInset.ts';
 	import { getPhoneDock } from '#lib/client/navigation/PhoneDock.svelte.ts';
+	import type { ComposerDraft } from '#lib/client/content/ComposerDrafts.svelte.ts';
 
 	const MAXIMUM_FIELD_HEIGHT_PX = 128;
 	/** Share of the visible height the field may take, so the bar fits above a landscape keyboard. */
@@ -18,11 +19,14 @@
 
 	let {
 		replyTargetName,
+		draft,
 		onSubmit,
 		onClearReplyTarget
 	}: {
 		/** Whose reply is being answered, or null for a reply to the thread itself. */
 		replyTargetName: string | null;
+		/** The draft for whichever reply the bar is writing, so changing target swaps the text. */
+		draft: ComposerDraft;
 		onSubmit: (bodyMarkdown: string) => void;
 		onClearReplyTarget: () => void;
 	} = $props();
@@ -30,7 +34,6 @@
 	const fieldId = $props.id();
 	const helpId = `${fieldId}-help`;
 	const errorId = `${fieldId}-error`;
-	let bodyMarkdown = $state('');
 	let errorMessage = $state<string | null>(null);
 	let isFormattingHelpOpen = $state(false);
 	let bodyField = $state<HTMLTextAreaElement | null>(null);
@@ -63,8 +66,14 @@
 	}
 
 	$effect(() => {
-		void bodyMarkdown;
+		void draft.bodyMarkdown;
 		fitFieldHeight();
+	});
+
+	// An error about one reply's text doesn't apply once the bar switches to another's.
+	$effect.pre(() => {
+		void draft;
+		errorMessage = null;
 	});
 
 	// A keyboard opening or the phone turning changes the visible height, and with it the cap.
@@ -86,14 +95,14 @@
 		event.preventDefault();
 		const isKeyboardSend = !wasSendClickedByPointer;
 		wasSendClickedByPointer = false;
-		const parsed = createReplySchema.shape.bodyMarkdown.safeParse(bodyMarkdown);
+		const parsed = createReplySchema.shape.bodyMarkdown.safeParse(draft.bodyMarkdown);
 		if (!parsed.success) {
 			errorMessage = describeValidationIssue(parsed.error.issues[0]);
 			bodyField?.focus();
 			return;
 		}
 		errorMessage = null;
-		bodyMarkdown = '';
+		draft.clearIfUnchanged({ title: '', bodyMarkdown: draft.bodyMarkdown });
 		onSubmit(parsed.data);
 		// Send pressed from a keyboard keeps focus; return it to the field. A tap leaves focus where
 		// it was, so a phone keyboard the reader closed stays closed.
@@ -180,7 +189,7 @@
 					{@attach formatMarkdownOnShortcut}
 					id={fieldId}
 					bind:this={bodyField}
-					bind:value={bodyMarkdown}
+					bind:value={draft.bodyMarkdown}
 					rows="1"
 					placeholder={m.thread_reply_placeholder()}
 					class="min-h-11 flex-1 resize-none rounded-[22px] bg-surface-container px-4 py-2.5 text-base"

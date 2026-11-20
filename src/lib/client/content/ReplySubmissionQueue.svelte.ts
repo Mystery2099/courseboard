@@ -3,6 +3,7 @@ import { describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 import { m } from '#lib/paraglide/messages.js';
 import type { ReplyResponse } from '#lib/contracts/PostContract.ts';
 import { PostApiClient } from './PostApiClient.ts';
+import type { UnconfirmedReply, UnconfirmedReplyStorage } from './UnconfirmedReplyStorage.ts';
 
 export interface PendingReply {
 	submissionId: string;
@@ -12,10 +13,19 @@ export interface PendingReply {
 	errorMessage: string | null;
 }
 
+function toUnconfirmedReply(
+	pendingReply: PendingReply,
+	refusalMessage: string | null
+): UnconfirmedReply {
+	const { submissionId, parentReplyId, bodyMarkdown } = pendingReply;
+	return { submissionId, parentReplyId, bodyMarkdown, refusalMessage };
+}
+
 /**
  * Replies on their way to the server. Each keeps one submission id for its whole life, so Retry
  * after a lost response gets the stored reply back instead of writing a second one. A failed reply
- * keeps its text until it is retried or discarded.
+ * keeps its text until it is retried or discarded. Until the server confirms a reply it is also
+ * kept in local storage, and sent again when the thread is next opened.
  */
 export class ReplySubmissionQueue {
 	pendingReplies = $state<PendingReply[]>([]);
@@ -24,20 +34,41 @@ export class ReplySubmissionQueue {
 
 	constructor(
 		private readonly postId: string,
+		private readonly unconfirmedReplies: UnconfirmedReplyStorage,
 		private readonly onStored: () => void,
 		private readonly onRefused: () => void
 	) {}
 
+	/**
+	 * Sends replies an earlier visit left unconfirmed again. Their submission ids are unchanged, so one
+	 * the server already stored comes back instead of being written twice. A reply the server refused
+	 * comes back as failed, waiting for Retry or Discard.
+	 */
+	restoreUnconfirmed(): void {
+		for (const reply of this.unconfirmedReplies.loadAll()) {
+			if (this.find(reply.submissionId)) continue;
+			const { refusalMessage, ...pendingFields } = reply;
+			this.pendingReplies.push({
+				...pendingFields,
+				status: refusalMessage === null ? 'sending' : 'failed',
+				errorMessage: refusalMessage
+			});
+			if (refusalMessage === null) void this.send(reply.submissionId);
+		}
+	}
+
 	/** Queues a reply and returns its submission id. */
 	submit(bodyMarkdown: string, parentReplyId: string | null): string {
 		const submissionId = crypto.randomUUID();
-		this.pendingReplies.push({
+		const pendingReply: PendingReply = {
 			submissionId,
 			parentReplyId,
 			bodyMarkdown,
 			status: 'sending',
 			errorMessage: null
-		});
+		};
+		this.unconfirmedReplies.save(toUnconfirmedReply(pendingReply, null));
+		this.pendingReplies.push(pendingReply);
 		void this.send(submissionId);
 		return submissionId;
 	}
@@ -47,10 +78,13 @@ export class ReplySubmissionQueue {
 		if (!pendingReply || pendingReply.status === 'sending') return;
 		pendingReply.status = 'sending';
 		pendingReply.errorMessage = null;
+		// Choosing Retry overrides an earlier refusal, so an interrupted retry is sent again next visit.
+		this.unconfirmedReplies.update(toUnconfirmedReply(pendingReply, null));
 		void this.send(submissionId);
 	}
 
 	discard(submissionId: string): void {
+		this.unconfirmedReplies.remove(submissionId);
 		this.pendingReplies = this.pendingReplies.filter(
 			(pendingReply) => pendingReply.submissionId !== submissionId
 		);
@@ -71,6 +105,12 @@ export class ReplySubmissionQueue {
 		} catch (cause) {
 			pendingReply.status = 'failed';
 			pendingReply.errorMessage = describeRequestFailure(cause, m.error_unavailable);
+			// A refusal, unlike a lost connection, isn't sent again on its own the next visit.
+			const wasRefused = cause instanceof ApiRequestError && cause.status < 500;
+			// Updates only, so a late failure can't bring back a reply discarded meanwhile in another view.
+			this.unconfirmedReplies.update(
+				toUnconfirmedReply(pendingReply, wasRefused ? pendingReply.errorMessage : null)
+			);
 			// A refusal such as a locked thread means the page is out of date.
 			if (cause instanceof ApiRequestError && cause.status === 409) this.onRefused();
 		}

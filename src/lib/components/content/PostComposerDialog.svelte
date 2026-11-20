@@ -10,6 +10,12 @@
 	import { describeFieldIssues, describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 	import { PostApiClient, postQueryKeys } from '#lib/client/content/PostApiClient.ts';
 	import {
+		ComposerDraftTarget,
+		type ComposerDraft,
+		type ComposerDraftText
+	} from '#lib/client/content/ComposerDrafts.svelte.ts';
+	import { getAccountLocalData } from '#lib/client/AccountLocalData.ts';
+	import {
 		POST_BODY_MAX_LENGTH,
 		POST_TITLE_MAX_LENGTH,
 		createPostSchema,
@@ -32,16 +38,24 @@
 
 	const formId = $props.id();
 	const queryClient = useQueryClient();
-	let title = $state('');
-	let bodyMarkdown = $state('');
+	const composerDrafts = getAccountLocalData().composerDrafts;
+	// Closing the dialog keeps the draft; each channel of each course has its own.
+	const draft = $derived(composerDrafts.open(ComposerDraftTarget.newPost(courseId, kind)));
 	let fieldErrors = $state<{ title?: string; bodyMarkdown?: string }>({});
 
+	interface PublishRequest {
+		request: CreatePostRequest;
+		submittedDraft: ComposerDraft;
+		submittedText: ComposerDraftText;
+	}
+
 	const publishMutation = createMutation(() => ({
-		mutationFn: (request: CreatePostRequest) => PostApiClient.createPost(courseId, request),
-		onSuccess: async (post) => {
+		mutationFn: ({ request }: PublishRequest) => PostApiClient.createPost(courseId, request),
+		onSuccess: async (post, { submittedDraft, submittedText }) => {
+			// The draft that was sent, even if the dialog has since moved to another channel, keeping
+			// anything typed while it was publishing.
+			submittedDraft.clearIfUnchanged(submittedText);
 			await queryClient.invalidateQueries({ queryKey: postQueryKeys.lists(courseId) });
-			title = '';
-			bodyMarkdown = '';
 			open = false;
 			onCreated(post);
 		}
@@ -54,7 +68,11 @@
 	function submit(event: SubmitEvent) {
 		event.preventDefault();
 		if (publishMutation.isPending) return;
-		const parsed = createPostSchema.safeParse({ kind, title, bodyMarkdown });
+		const parsed = createPostSchema.safeParse({
+			kind,
+			title: draft.title,
+			bodyMarkdown: draft.bodyMarkdown
+		});
 		if (!parsed.success) {
 			fieldErrors = describeFieldIssues(parsed.error);
 			const form = event.currentTarget as HTMLFormElement;
@@ -62,7 +80,11 @@
 			return;
 		}
 		fieldErrors = {};
-		publishMutation.mutate(parsed.data);
+		publishMutation.mutate({
+			request: parsed.data,
+			submittedDraft: draft,
+			submittedText: { title: draft.title, bodyMarkdown: draft.bodyMarkdown }
+		});
 	}
 </script>
 
@@ -86,7 +108,7 @@
 			<input
 				type="text"
 				class="min-h-12 rounded-field px-4 py-2 text-base"
-				bind:value={title}
+				bind:value={draft.title}
 				maxlength={POST_TITLE_MAX_LENGTH}
 				aria-invalid={fieldErrors.title ? 'true' : undefined}
 				aria-describedby={fieldErrors.title ? `${formId}-title-error` : undefined}
@@ -104,7 +126,7 @@
 			<textarea
 				{@attach formatMarkdownOnShortcut}
 				class="min-h-48 rounded-field px-4 py-3 text-base"
-				bind:value={bodyMarkdown}
+				bind:value={draft.bodyMarkdown}
 				maxlength={POST_BODY_MAX_LENGTH}
 				aria-invalid={fieldErrors.bodyMarkdown ? 'true' : undefined}
 				aria-describedby={fieldErrors.bodyMarkdown
