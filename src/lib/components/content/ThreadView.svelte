@@ -5,16 +5,26 @@
 	import { createInfiniteQuery, createMutation, createQuery } from '@tanstack/svelte-query';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { tick, untrack } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import Check from 'lucide-svelte/icons/check';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+	import CircleCheck from 'lucide-svelte/icons/circle-check';
+	import CircleX from 'lucide-svelte/icons/circle-x';
+	import Copy from 'lucide-svelte/icons/copy';
 	import Lock from 'lucide-svelte/icons/lock';
+	import ReplyIcon from 'lucide-svelte/icons/reply';
 	import { describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 	import { PostApiClient, postQueryKeys } from '#lib/client/content/PostApiClient.ts';
 	import { formatReplyCount, groupReplies } from '#lib/client/content/PostPresentation.ts';
+	import { THREAD_ROUTE_IDS } from '#lib/client/navigation/CourseChannel.ts';
 	import { ReplySubmissionQueue } from '#lib/client/content/ReplySubmissionQueue.svelte.ts';
 	import { ComposerDraftTarget } from '#lib/client/content/ComposerDrafts.svelte.ts';
 	import { getAccountLocalData } from '#lib/client/AccountLocalData.ts';
+	import type { ReplyAction } from '#lib/client/content/ReplyAction.ts';
+	import { longPress } from '#lib/client/gestures/LongPressGesture.ts';
 	import type {
 		PostDetailResponse,
 		ReplyListResponse,
@@ -24,6 +34,8 @@
 	import MarkdownBody from './MarkdownBody.svelte';
 	import PendingReplyCard from './PendingReplyCard.svelte';
 	import ReplyComposer from './ReplyComposer.svelte';
+	import ReplyActionMenuButton from './ReplyActionMenuButton.svelte';
+	import ReplyActionSheet from './ReplyActionSheet.svelte';
 	import DockedReplyComposer from './DockedReplyComposer.svelte';
 	import ThreadKindBadge from './ThreadKindBadge.svelte';
 	import ReviewFacts from './ReviewFacts.svelte';
@@ -166,14 +178,27 @@
 		replyTarget ? composerDrafts.open(replyDraftTarget(replyTarget.parentReplyId)) : null
 	);
 	let dockedReplyComposer = $state<ReturnType<typeof DockedReplyComposer> | null>(null);
+	let branchReplyComposer = $state<ReturnType<typeof ReplyComposer> | null>(null);
 
-	function startReplyingTo(reply: ReplyResponse) {
+	function setReplyTarget(reply: ReplyResponse) {
 		replyTarget = {
 			parentReplyId: reply.parentReplyId ?? reply.id,
 			authorName: reply.author.displayName
 		};
+	}
+
+	function startReplyingTo(reply: ReplyResponse) {
+		setReplyTarget(reply);
 		// Phones answer in the docked composer; on desktop it is hidden and the branch shows its own.
 		dockedReplyComposer?.focus();
+	}
+
+	/** Only one composer is visible at a time, and focusing a hidden one does nothing. */
+	async function focusReplyField() {
+		// The branch's composer mounts once the reply target is set.
+		await tick();
+		dockedReplyComposer?.focus();
+		branchReplyComposer?.focus();
 	}
 
 	/** Queues the reply, then brings its pending card into view without moving focus. */
@@ -216,14 +241,87 @@
 	}));
 
 	const actionError = $derived(acceptedReplyMutation.error ?? lockMutation.error);
+
+	let copyNotice = $state<{ replyId: string; message: string } | null>(null);
+	let copyNoticeTimer: ReturnType<typeof setTimeout> | undefined;
+
+	async function copyReplyText(reply: ReplyResponse) {
+		let message: string;
+		try {
+			await navigator.clipboard.writeText(reply.bodyMarkdown);
+			message = m.thread_reply_text_copied();
+		} catch {
+			message = m.thread_reply_text_copy_failed();
+		}
+		clearTimeout(copyNoticeTimer);
+		copyNotice = { replyId: reply.id, message };
+		copyNoticeTimer = setTimeout(() => (copyNotice = null), 3000);
+	}
+
+	function replyActionsFor(reply: ReplyResponse): ReplyAction[] {
+		const actions: ReplyAction[] = [];
+		if (!post.isLocked) {
+			actions.push({
+				id: 'reply',
+				label: m.common_reply(),
+				icon: ReplyIcon,
+				run: () => setReplyTarget(reply),
+				moveFocusAfterClose: () => void focusReplyField()
+			});
+		}
+		actions.push({
+			id: 'copy-text',
+			label: m.thread_copy_reply_text(),
+			icon: Copy,
+			run: () => void copyReplyText(reply)
+		});
+		if (post.viewerPermissions.canChooseAcceptedReply) {
+			const isAccepted = reply.id === post.acceptedReplyId;
+			actions.push({
+				id: 'accept-answer',
+				label: isAccepted ? m.thread_clear_accepted_answer() : m.thread_accept_answer(),
+				icon: isAccepted ? CircleX : CircleCheck,
+				disabled: acceptedReplyMutation.isPending,
+				run: () => acceptedReplyMutation.mutate(isAccepted ? null : reply.id)
+			});
+		}
+		return actions;
+	}
+
+	// Kept after the sheet closes, so its contents stay put while it slides away.
+	let actionSheetReply = $state<ReplyResponse | null>(null);
+	let actionSheetOpener = $state<HTMLElement | null>(null);
+	const isActionSheetOpen = $derived(
+		actionSheetReply !== null && page.state.replyActionsReplyId === actionSheetReply.id
+	);
+
+	function openReplyActionSheet(reply: ReplyResponse, opener: HTMLElement) {
+		actionSheetReply = reply;
+		actionSheetOpener = opener;
+		// A shallow history entry for the same page, so Back closes the sheet instead of leaving.
+		void goto(resolve(THREAD_ROUTE_IDS[post.kind], { courseId, postId }), {
+			state: { replyActionsReplyId: reply.id },
+			shallow: true,
+			replace: page.state.replyActionsReplyId !== undefined
+		});
+	}
+
+	function closeReplyActionSheet() {
+		if (page.state.replyActionsReplyId) history.back();
+	}
 </script>
 
 {#snippet replyCard(reply: ReplyResponse, canReply = true)}
 	{@const isAccepted = reply.id === post.acceptedReplyId}
+	<!-- A long press stands in for selecting text on phones, and Copy text covers that. -->
 	<article
 		id="reply-{reply.id}"
 		tabindex="-1"
-		class={['rounded-2xl p-3', isAccepted ? 'bg-success-container' : 'bg-surface-container']}
+		class={[
+			'rounded-2xl p-3 pointer-coarse:select-none pointer-coarse:[-webkit-touch-callout:none]',
+			isAccepted ? 'bg-success-container' : 'bg-surface-container'
+		]}
+		{@attach longPress((article) => openReplyActionSheet(reply, article))}
 	>
 		<div class="flex flex-wrap items-center justify-between gap-2">
 			<ContentByline author={reply.author} createdAt={reply.createdAt} />
@@ -232,7 +330,7 @@
 			{/if}
 		</div>
 		<MarkdownBody class="mt-2" markdown={reply.bodyMarkdown} topHeadingLevel={3} />
-		<div class="mt-2 flex flex-wrap gap-2 text-sm">
+		<div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
 			{#if canReply && !post.isLocked}
 				<Button variant="outlined" size="compact" onclick={() => startReplyingTo(reply)}
 					>{m.common_reply()}</Button
@@ -247,6 +345,16 @@
 					>{isAccepted ? m.thread_clear_accepted_answer() : m.thread_accept_answer()}</Button
 				>
 			{/if}
+			<span role="status" class="text-on-surface-variant"
+				>{copyNotice?.replyId === reply.id ? copyNotice.message : ''}</span
+			>
+			<div class="ml-auto">
+				<ReplyActionMenuButton
+					label={m.thread_reply_actions({ name: reply.author.displayName })}
+					actions={replyActionsFor(reply)}
+					onOpenSheet={(opener) => openReplyActionSheet(reply, opener)}
+				/>
+			</div>
 		</div>
 	</article>
 {/snippet}
@@ -349,6 +457,7 @@
 					{#if replyTarget?.parentReplyId === branch.reply.id && branchReplyDraft && !post.isLocked}
 						<div class="hidden desktop:block">
 							<ReplyComposer
+								bind:this={branchReplyComposer}
 								label={m.thread_reply_to({ name: replyTarget.authorName })}
 								draft={branchReplyDraft}
 								onSubmit={(bodyMarkdown) => sendReply(bodyMarkdown, branch.reply.id)}
@@ -413,3 +522,11 @@
 		onClearReplyTarget={() => (replyTarget = null)}
 	/>
 {/if}
+
+<ReplyActionSheet
+	isOpen={isActionSheetOpen}
+	opener={actionSheetOpener}
+	title={actionSheetReply ? m.thread_reply_by({ name: actionSheetReply.author.displayName }) : ''}
+	actions={actionSheetReply ? replyActionsFor(actionSheetReply) : []}
+	onClose={closeReplyActionSheet}
+/>

@@ -26,6 +26,10 @@
 	let errorMessage = $state<string | null>(null);
 	let bodyField = $state<HTMLTextAreaElement | null>(null);
 
+	export function focus() {
+		bodyField?.focus();
+	}
+
 	function submit(event: SubmitEvent) {
 		event.preventDefault();
 		const parsed = createReplySchema.shape.bodyMarkdown.safeParse(draft.bodyMarkdown);
