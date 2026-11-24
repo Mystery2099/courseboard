@@ -318,8 +318,11 @@
 	outline: 3px solid var(--primary);
 	outline-offset: 2px;
 
+	/* A keyboard focus ring never fades: the outline holds, then the focus style takes over. */
 	@media (prefers-reduced-motion: no-preference) {
-		animation: scroll-highlight-fade 2s ease-in forwards;
+		&:not(:focus-visible) {
+			animation: scroll-highlight-fade 2s ease-in forwards;
+		}
 	}
 }
 
