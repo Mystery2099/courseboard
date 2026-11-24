@@ -371,7 +371,8 @@
 		const focusedElementAtStart = document.activeElement;
 		let isLoaded: boolean;
 		try {
-			isLoaded = await loadRemainingReplyPages(isTargetRendered);
+			// Stops once the reader leaves the thread, after any page already requested.
+			isLoaded = await loadRemainingReplyPages(() => !isThreadOpen || isTargetRendered());
 		} finally {
 			loadingReplyJump = null;
 		}
@@ -646,7 +647,7 @@
 				size="compact"
 				aria-disabled={loadingReplyJump !== null}
 				onclick={jumpToAcceptedReply}
-				><CircleCheck aria-hidden="true" />{loadingReplyJump === 'accepted-answer'
+				><CircleCheck aria-hidden="true" />{loadingReplyJump !== null
 					? m.common_loading()
 					: m.thread_jump_to_accepted_answer()}</Button
 			>
@@ -663,7 +664,7 @@
 			onfocus={() => (isLatestReplyJumpFocused = true)}
 			onblur={() => (isLatestReplyJumpFocused = false)}
 			onclick={jumpToLatestReply}
-			><ArrowDown aria-hidden="true" />{loadingReplyJump === 'latest-reply'
+			><ArrowDown aria-hidden="true" />{loadingReplyJump !== null
 				? m.common_loading()
 				: m.thread_jump_to_latest_reply()}</Button
 		>

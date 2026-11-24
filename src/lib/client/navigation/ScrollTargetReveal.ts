@@ -1,3 +1,4 @@
+/** Matches the fade in `layout.css`. */
 const HIGHLIGHT_DURATION_MS = 2000;
 const HIGHLIGHT_ATTRIBUTE = 'data-scroll-highlight';
 
@@ -27,11 +28,16 @@ export class ScrollTargetReveal {
 		ScrollTargetReveal.highlight(element);
 	}
 
-	/** The bottom of the area the page isn't covering, in window coordinates. */
+	/**
+	 * The bottom of the area the phone's dock or reply bar and keyboard leave uncovered, in window
+	 * coordinates. Floating buttons are left out, so whether one shows doesn't move this.
+	 */
 	static visibleAreaBottom(): number {
-		const scrollPaddingBottom =
-			parseFloat(getComputedStyle(document.documentElement).scrollPaddingBottom) || 0;
-		return window.innerHeight - scrollPaddingBottom;
+		const bottomBarClearance =
+			parseFloat(
+				getComputedStyle(document.documentElement).getPropertyValue('--bottom-bar-clearance')
+			) || 0;
+		return window.innerHeight - bottomBarClearance;
 	}
 
 	private static highlight(element: HTMLElement): void {
