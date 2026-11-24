@@ -368,7 +368,13 @@
 	) {
 		if (loadingReplyJump) return;
 		loadingReplyJump = jump;
+		// A reader who moves focus away during the load, even by clicking text, keeps it there. Focus
+		// that leaves with the pressed button, as it disappears, doesn't count.
 		const focusedElementAtStart = document.activeElement;
+		let didReaderMoveFocus = false;
+		const noteFocusMove = () =>
+			(didReaderMoveFocus ||= focusedElementAtStart?.isConnected ?? false);
+		focusedElementAtStart?.addEventListener('focusout', noteFocusMove);
 		let isLoaded: boolean;
 		try {
 			// Stops once the reader leaves the thread, after any page already requested.
@@ -378,12 +384,11 @@
 		}
 		if (!isThreadOpen) return;
 		await tick();
-		// Focus on the page body counts as moved too, as after a click on text, unless the button
-		// pressed has left the page and taken focus with it.
+		focusedElementAtStart?.removeEventListener('focusout', noteFocusMove);
 		const focusedElement = document.activeElement;
 		const isFocusWhereReaderLeftIt =
-			focusedElement === focusedElementAtStart ||
-			(focusedElement === document.body && !focusedElementAtStart?.isConnected);
+			!didReaderMoveFocus &&
+			(focusedElement === focusedElementAtStart || focusedElement === document.body);
 		if (!isFocusWhereReaderLeftIt) return;
 		if (!isLoaded) {
 			if (loadMoreRepliesButton)
