@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type {
+	LinkedReplyResponse,
 	PostDetailResponse,
 	PostListResponse,
 	ReplyListResponse,
@@ -19,6 +20,8 @@ export interface PostListPageData {
 export interface ThreadPageData {
 	post: PostDetailResponse;
 	replies: ReplyListResponse;
+	/** The reply the address links to, which may be past the first page; null without one. */
+	linkedReply: LinkedReplyResponse | null;
 	/** Null on a review thread, which takes no reactions. */
 	reactions: ThreadReactionsResponse | null;
 	threadLoadedAt: number;
@@ -38,17 +41,22 @@ export class CoursePostPageLoader {
 		return { postPage, postPageLoadedAt: Date.now() };
 	}
 
-	/** A thread opened under another course or the other channel doesn't exist at that address. */
+	/**
+	 * A thread opened under another course or the other channel doesn't exist at that address. A
+	 * linked reply that isn't in the thread is left out, and the thread opens without it.
+	 */
 	static async loadThread(
 		locals: App.Locals,
 		params: { courseId: string; postId: string },
-		kind: PostKind
+		kind: PostKind,
+		linkedReplyId: string | null
 	): Promise<ThreadPageData> {
 		const user = AccessGuard.requireAdmittedUser(locals);
-		const [post, replies, reactions] = await Promise.all([
+		const [post, replies, reactions, linkedReply] = await Promise.all([
 			postService.getPost(params.postId, user),
 			replyService.listReplies(params.postId, {}, user),
-			reactionService.listThreadReactions(params.postId, user)
+			reactionService.listThreadReactions(params.postId, user),
+			linkedReplyId ? replyService.findLinkedReply(params.postId, linkedReplyId, user) : null
 		]);
 		if (!post || !replies || post.courseId !== params.courseId || post.kind !== kind) {
 			error(404, 'This post does not exist.', { code: 'post-not-found' });
@@ -56,6 +64,7 @@ export class CoursePostPageLoader {
 		return {
 			post,
 			replies,
+			linkedReply,
 			reactions: reactions.kind === 'found' ? reactions.reactions : null,
 			threadLoadedAt: Date.now()
 		};

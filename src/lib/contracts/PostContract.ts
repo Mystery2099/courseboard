@@ -169,6 +169,15 @@ export interface ReplyResponse {
 	createdAt: string;
 }
 
+/** The query parameter of a reply's link, so the server can load that reply even past the first page. */
+export const LINKED_REPLY_QUERY_PARAMETER = 'reply';
+
+/** The reply a link points at, with its top-level reply when it is nested. */
+export interface LinkedReplyResponse {
+	reply: ReplyResponse;
+	parentReply: ReplyResponse | null;
+}
+
 export interface ReplyListResponse {
 	/** Ordered by id, which is chronological to the second. */
 	replies: ReplyResponse[];

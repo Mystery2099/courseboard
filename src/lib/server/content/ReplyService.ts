@@ -1,8 +1,10 @@
 import { ObjectId } from 'mongodb';
+import { objectIdSchema } from '#lib/contracts/ApiContract.ts';
 import {
 	createReplySchema,
 	postIdSchema,
 	replyListQuerySchema,
+	type LinkedReplyResponse,
 	type ReplyCreationResult,
 	type ReplyListResponse,
 	type ReplyResponse
@@ -56,6 +58,33 @@ export class ReplyService {
 		return {
 			replies: page.map(ReplyService.toResponse),
 			nextCursor: lastReply && replies.length > pageSize ? lastReply._id.toHexString() : null
+		};
+	}
+
+	/**
+	 * The reply a link points at and its top-level reply, read by id, so a link opens on a reply
+	 * however far into the thread it is. Null when either isn't in this post or an id is malformed.
+	 */
+	async findLinkedReply(
+		postId: string,
+		replyId: string,
+		actor: ApplicationUser | null
+	): Promise<LinkedReplyResponse | null> {
+		AccessPolicy.requireAdmittedUser(actor);
+		const parsedPostId = postIdSchema.safeParse(postId);
+		const parsedReplyId = objectIdSchema.safeParse(replyId);
+		if (!parsedPostId.success || !parsedReplyId.success) return null;
+		const postObjectId = new ObjectId(parsedPostId.data);
+		if (!(await this.posts.exists(postObjectId))) return null;
+
+		const reply = await this.replies.findInPost(postObjectId, new ObjectId(parsedReplyId.data));
+		if (!reply) return null;
+		if (!reply.parentReplyId) return { reply: ReplyService.toResponse(reply), parentReply: null };
+		const parentReply = await this.replies.findInPost(postObjectId, reply.parentReplyId);
+		if (!parentReply) return null;
+		return {
+			reply: ReplyService.toResponse(reply),
+			parentReply: ReplyService.toResponse(parentReply)
 		};
 	}
 

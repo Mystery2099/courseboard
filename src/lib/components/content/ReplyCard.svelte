@@ -19,6 +19,7 @@
 	let {
 		reply,
 		isAccepted,
+		isLinked,
 		actions,
 		reactions,
 		reactionError,
@@ -28,6 +29,8 @@
 	}: {
 		reply: ReplyResponse;
 		isAccepted: boolean;
+		/** The reply the address links to, marked so the reader finds it. */
+		isLinked: boolean;
 		/** The reply's menu actions; Reply and Accept also appear as buttons. */
 		actions: ReplyAction[];
 		/** Null on a review thread, which takes no reactions. */
@@ -48,7 +51,8 @@
 	tabindex="-1"
 	class={[
 		'rounded-2xl p-3 pointer-coarse:select-none pointer-coarse:[-webkit-touch-callout:none] pointer-coarse:[&_a]:[-webkit-touch-callout:default]',
-		isAccepted ? 'bg-success-container' : 'bg-surface-container'
+		isAccepted ? 'bg-success-container' : 'bg-surface-container',
+		isLinked && 'ring-2 ring-primary'
 	]}
 	{@attach longPress((article) => onOpenActionSheet(article))}
 >

@@ -11,6 +11,7 @@
 	<ThreadView
 		initialPost={data.post}
 		initialReplies={data.replies}
+		linkedReply={data.linkedReply}
 		initialReactions={data.reactions}
 		initialLoadedAt={data.threadLoadedAt}
 	/>
