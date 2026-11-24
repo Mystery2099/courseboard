@@ -156,7 +156,7 @@
 			const firstNewReply = shownReplies.find((reply) => announcedReplyIds.has(reply.id));
 			return firstNewReply && `reply-${firstNewReply.id}`;
 		});
-		// Replies that arrived during this load wait behind the notice, as focus has moved.
+		// Focus has moved into the replies, so nothing that arrived during this load appears directly.
 		wasFollowingArrivalDuringLoad = false;
 	}
 
