@@ -144,25 +144,31 @@
 	}
 
 	/** Refetches the thread, then moves focus to the first reply shown. */
-	function showNewReplies() {
+	async function showNewReplies() {
 		const announcedReplyIds = new Set(newReplyIds);
-		return newRepliesReveal.reveal(
+		await newRepliesReveal.reveal(
 			() => loadReplies(announcedReplyIds),
 			() => {
 				const firstNewReply = shownReplies.find((reply) => announcedReplyIds.has(reply.id));
 				return firstNewReply && `reply-${firstNewReply.id}`;
 			}
 		);
+		// Replies that arrived during this load wait behind the notice, as focus has moved.
+		wasFollowingArrivalDuringLoad = false;
 	}
 
 	// Replies that arrive while the reader is at the end of the thread, reading, appear directly.
 	// Focus stays put, and screen readers hear about them through this announcement instead.
 	let arrivedRepliesAnnouncement = $state('');
 	let isShowingArrivedReplies = $state(false);
-	// Bookkeeping for the effect below, not state anything renders.
+	// Replies already waiting when the thread opens, such as on a return to it, stay behind the
+	// notice. Bookkeeping for the effect below, not state anything renders.
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity
-	const seenNewReplyIds = new Set<string>();
-	let hasArrivalWhileShowing = false;
+	const seenNewReplyIds = new Set<string>(untrack(() => newReplyIds));
+	// Whether the reader was at the end when a reply arrived during the last load.
+	let wasFollowingArrivalDuringLoad = false;
+	let isThreadOpen = true;
+	onDestroy(() => (isThreadOpen = false));
 
 	// Before rendering, so the notice never flashes for replies about to appear.
 	$effect.pre(() => {
@@ -171,23 +177,33 @@
 			const hasArrival = replyIds.some((replyId) => !seenNewReplyIds.has(replyId));
 			for (const replyId of replyIds) seenNewReplyIds.add(replyId);
 			if (!hasArrival) return;
-			if (newRepliesReveal.isShowing) hasArrivalWhileShowing = true;
-			else if (ReaderPosition.isFollowingPageEnd()) void showArrivedReplies();
+			const isFollowing = ReaderPosition.isFollowingPageEnd();
+			if (newRepliesReveal.isShowing) wasFollowingArrivalDuringLoad ||= isFollowing;
+			else if (isFollowing) void showArrivedReplies();
 		});
 	});
 
 	async function showArrivedReplies() {
-		const arrivedReplyIds = new Set(newReplyIds);
-		hasArrivalWhileShowing = false;
+		wasFollowingArrivalDuringLoad = false;
+		const scrollPositionBeforeLoad = window.scrollY;
+		const replyIdsBeforeLoad = new Set(shownReplies.map((reply) => reply.id));
 		isShowingArrivedReplies = true;
 		try {
-			await newRepliesReveal.reveal(() => loadReplies(arrivedReplyIds));
+			await newRepliesReveal.reveal(() => loadReplies(new Set(newReplyIds)));
 		} finally {
 			isShowingArrivedReplies = false;
 		}
-		ReaderPosition.scrollToPageEnd();
-		void announceArrivedReplies(shownReplies.filter((reply) => arrivedReplyIds.has(reply.id)));
-		if (hasArrivalWhileShowing && newReplyIds.length > 0 && ReaderPosition.isFollowingPageEnd()) {
+		if (!isThreadOpen) return;
+		// A reader who scrolled up or started typing during the load stays where they are.
+		const isStillFollowing =
+			ReaderPosition.isReading() && window.scrollY >= scrollPositionBeforeLoad - 1;
+		if (isStillFollowing) ReaderPosition.scrollToPageEnd();
+		void announceArrivedReplies(
+			shownReplies.filter(
+				(reply) => !replyIdsBeforeLoad.has(reply.id) && seenNewReplyIds.has(reply.id)
+			)
+		);
+		if (wasFollowingArrivalDuringLoad && isStillFollowing && newReplyIds.length > 0) {
 			void showArrivedReplies();
 		}
 	}

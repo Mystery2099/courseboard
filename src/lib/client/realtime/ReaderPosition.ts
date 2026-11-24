@@ -6,16 +6,20 @@ const EDITABLE_SELECTOR =
 
 /** Where the reader is and what they're doing, for deciding whether new activity can appear directly. */
 export class ReaderPosition {
-	/**
-	 * True when the reader is at the end of the page and reading: the tab is visible, no dialog or
-	 * sheet is open, and no text field has focus.
-	 */
+	/** True when the reader is reading and at the end of the page. */
 	static isFollowingPageEnd(): boolean {
-		if (document.visibilityState !== 'visible') return false;
-		if (document.querySelector('[aria-modal="true"]')) return false;
-		if (document.activeElement?.matches(EDITABLE_SELECTOR)) return false;
+		if (!ReaderPosition.isReading()) return false;
 		const pageHeight = document.documentElement.scrollHeight;
 		return window.scrollY + window.innerHeight >= pageHeight - PAGE_END_TOLERANCE_PX;
+	}
+
+	/** True when the tab is visible, no dialog or sheet is open, and no text field has focus. */
+	static isReading(): boolean {
+		return (
+			document.visibilityState === 'visible' &&
+			!document.querySelector('[aria-modal="true"]') &&
+			!document.activeElement?.matches(EDITABLE_SELECTOR)
+		);
 	}
 
 	/** Scrolls to the end of the page, smoothly unless the reader prefers reduced motion. */
