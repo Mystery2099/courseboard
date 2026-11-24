@@ -378,8 +378,13 @@
 		}
 		if (!isThreadOpen) return;
 		await tick();
+		// Focus on the page body counts as moved too, as after a click on text, unless the button
+		// pressed has left the page and taken focus with it.
 		const focusedElement = document.activeElement;
-		if (focusedElement !== focusedElementAtStart && focusedElement !== document.body) return;
+		const isFocusWhereReaderLeftIt =
+			focusedElement === focusedElementAtStart ||
+			(focusedElement === document.body && !focusedElementAtStart?.isConnected);
+		if (!isFocusWhereReaderLeftIt) return;
 		if (!isLoaded) {
 			if (loadMoreRepliesButton)
 				ScrollTargetReveal.reveal(loadMoreRepliesButton, { moveFocus: true });
@@ -720,7 +725,8 @@
 			>{repliesQuery.isFetchingNextPage ? m.common_loading() : m.thread_load_more_replies()}</Button
 		>
 	{/if}
-	{#if repliesQuery.isFetchNextPageError}
+	<!-- A jump can join a refetch of the whole thread, so that failing counts too. -->
+	{#if repliesQuery.isFetchNextPageError || repliesQuery.isRefetchError}
 		<p class="mt-2 text-sm text-error" role="alert">{m.thread_replies_load_failed()}</p>
 	{/if}
 
