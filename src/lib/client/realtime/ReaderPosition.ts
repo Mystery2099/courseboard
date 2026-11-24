@@ -13,13 +13,23 @@ export class ReaderPosition {
 		return window.scrollY + window.innerHeight >= pageHeight - PAGE_END_TOLERANCE_PX;
 	}
 
-	/** True when the tab is visible, no dialog or sheet is open, and no text field has focus. */
+	/**
+	 * True when the tab is visible, no dialog or sheet is open, and focus is in neither a text field
+	 * nor a new activity notice, which would disappear from under it.
+	 */
 	static isReading(): boolean {
+		const focusedElement = document.activeElement;
 		return (
 			document.visibilityState === 'visible' &&
 			!document.querySelector('[aria-modal="true"]') &&
-			!document.activeElement?.matches(EDITABLE_SELECTOR)
+			!focusedElement?.matches(EDITABLE_SELECTOR) &&
+			!focusedElement?.closest('[data-new-activity-notice]')
 		);
+	}
+
+	/** More than a nudge, such as scroll anchoring after content above changes height. */
+	static hasScrolledUpFrom(scrollPosition: number): boolean {
+		return window.scrollY < scrollPosition - PAGE_END_TOLERANCE_PX;
 	}
 
 	/** Scrolls to the end of the page, smoothly unless the reader prefers reduced motion. */

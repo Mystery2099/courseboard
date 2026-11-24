@@ -131,14 +131,16 @@
 	);
 	const newRepliesReveal = new NewActivityReveal();
 
-	async function loadReplies(replyIds: ReadonlySet<string>) {
+	/**
+	 * Refetches the thread. New replies are only offered once every page is loaded, so any further
+	 * pages hold only replies that arrived since, including ones that filled the last page.
+	 */
+	async function loadNewReplies() {
 		await Promise.all([
 			queryClient.invalidateQueries({ queryKey: postQueryKeys.detail(postId) }),
 			queryClient.invalidateQueries({ queryKey: postQueryKeys.replies(postId) })
 		]);
-		// A full last page leaves new replies on the next one.
-		const isShown = (replyId: string) => shownReplies.some((reply) => reply.id === replyId);
-		while (repliesQuery.hasNextPage && ![...replyIds].every(isShown)) {
+		while (repliesQuery.hasNextPage) {
 			if ((await repliesQuery.fetchNextPage()).isError) break;
 		}
 	}
@@ -146,13 +148,10 @@
 	/** Refetches the thread, then moves focus to the first reply shown. */
 	async function showNewReplies() {
 		const announcedReplyIds = new Set(newReplyIds);
-		await newRepliesReveal.reveal(
-			() => loadReplies(announcedReplyIds),
-			() => {
-				const firstNewReply = shownReplies.find((reply) => announcedReplyIds.has(reply.id));
-				return firstNewReply && `reply-${firstNewReply.id}`;
-			}
-		);
+		await newRepliesReveal.reveal(loadNewReplies, () => {
+			const firstNewReply = shownReplies.find((reply) => announcedReplyIds.has(reply.id));
+			return firstNewReply && `reply-${firstNewReply.id}`;
+		});
 		// Replies that arrived during this load wait behind the notice, as focus has moved.
 		wasFollowingArrivalDuringLoad = false;
 	}
@@ -189,18 +188,19 @@
 		const replyIdsBeforeLoad = new Set(shownReplies.map((reply) => reply.id));
 		isShowingArrivedReplies = true;
 		try {
-			await newRepliesReveal.reveal(() => loadReplies(new Set(newReplyIds)));
+			await newRepliesReveal.reveal(loadNewReplies);
 		} finally {
 			isShowingArrivedReplies = false;
 		}
 		if (!isThreadOpen) return;
 		// A reader who scrolled up or started typing during the load stays where they are.
 		const isStillFollowing =
-			ReaderPosition.isReading() && window.scrollY >= scrollPositionBeforeLoad - 1;
+			ReaderPosition.isReading() && !ReaderPosition.hasScrolledUpFrom(scrollPositionBeforeLoad);
 		if (isStillFollowing) ReaderPosition.scrollToPageEnd();
+		const ownReplyIds = new Set(submissionQueue.storedReplies.map((reply) => reply.id));
 		void announceArrivedReplies(
 			shownReplies.filter(
-				(reply) => !replyIdsBeforeLoad.has(reply.id) && seenNewReplyIds.has(reply.id)
+				(reply) => !replyIdsBeforeLoad.has(reply.id) && !ownReplyIds.has(reply.id)
 			)
 		);
 		if (wasFollowingArrivalDuringLoad && isStillFollowing && newReplyIds.length > 0) {
