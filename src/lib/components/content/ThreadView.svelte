@@ -162,7 +162,8 @@
 		// reader leaves the thread.
 		let hasNextPage = repliesQuery.hasNextPage;
 		while (hasNextPage && !isTargetRendered()) {
-			const pageResult = await repliesQuery.fetchNextPage();
+			// Joins a page request already in flight, such as from Load more replies, instead of repeating it.
+			const pageResult = await repliesQuery.fetchNextPage({ cancelRefetch: false });
 			if (pageResult.isError) return false;
 			hasNextPage = pageResult.hasNextPage;
 			await tick();
@@ -357,7 +358,8 @@
 
 	/**
 	 * Loads pages until the target reply is drawn, then goes to it. If a page fails, focus goes to
-	 * Load more replies, where the failure is shown and the load can be retried.
+	 * Load more replies, where the failure is shown and the load can be retried. A reader who moved
+	 * focus elsewhere during the load, such as into the reply field, is left there.
 	 */
 	async function jumpToReply(
 		jump: ReplyJump,
@@ -366,6 +368,7 @@
 	) {
 		if (loadingReplyJump) return;
 		loadingReplyJump = jump;
+		const focusedElementAtStart = document.activeElement;
 		let isLoaded: boolean;
 		try {
 			isLoaded = await loadRemainingReplyPages(isTargetRendered);
@@ -374,6 +377,8 @@
 		}
 		if (!isThreadOpen) return;
 		await tick();
+		const focusedElement = document.activeElement;
+		if (focusedElement !== focusedElementAtStart && focusedElement !== document.body) return;
 		if (!isLoaded) {
 			if (loadMoreRepliesButton)
 				ScrollTargetReveal.reveal(loadMoreRepliesButton, { moveFocus: true });
@@ -405,6 +410,28 @@
 	let repliesList = $state<HTMLElement | null>(null);
 	let isLatestReplyBelowView = $state(false);
 	let isLatestReplyJumpFocused = $state(false);
+	let latestReplyJumpButton = $state<HTMLElement | null>(null);
+
+	// While the button shows, the page's scroll padding clears it too, so focus never lands under it.
+	$effect(() => {
+		const button = latestReplyJumpButton;
+		if (!button) return;
+		const root = document.documentElement;
+		const updateClearance = () =>
+			root.style.setProperty(
+				'--latest-reply-jump-clearance',
+				`${window.innerHeight - button.getBoundingClientRect().top + 8}px`
+			);
+		updateClearance();
+		const pageResizeObserver = new ResizeObserver(updateClearance);
+		pageResizeObserver.observe(document.body);
+		window.visualViewport?.addEventListener('resize', updateClearance, { passive: true });
+		return () => {
+			pageResizeObserver.disconnect();
+			window.visualViewport?.removeEventListener('resize', updateClearance);
+			root.style.removeProperty('--latest-reply-jump-clearance');
+		};
+	});
 
 	/**
 	 * True in a thread over two screens long when the latest reply, or the end of the loaded replies
@@ -628,6 +655,7 @@
 	{#if isLatestReplyBelowView || isLatestReplyJumpFocused || loadingReplyJump === 'latest-reply'}
 		<!-- Fixed above the phone's reply bar or dock and the on-screen keyboard, but early in the tab order. -->
 		<Button
+			bind:ref={latestReplyJumpButton}
 			variant="tonal"
 			size="compact"
 			class="fixed end-4 bottom-[calc(var(--keyboard-inset,0px)+var(--docked-reply-composer-height,calc(7rem+env(safe-area-inset-bottom))))] z-20 shadow-raised desktop:end-8 desktop:bottom-8"

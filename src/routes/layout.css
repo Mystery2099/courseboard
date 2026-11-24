@@ -189,14 +189,20 @@
 		background-color: var(--background);
 		color: var(--on-surface);
 		font-family: var(--font-sans);
-		/* Keeps focused and scrolled-to elements clear of the phone dock, or of a thread's reply bar. */
-		scroll-padding-bottom: calc(
-			var(--keyboard-inset, 0px) +
-				var(--docked-reply-composer-height, calc(7rem + env(safe-area-inset-bottom)))
+		/*
+		 * Keeps focused and scrolled-to elements clear of the phone dock, or of a thread's reply bar,
+		 * and of a thread's Jump to latest button while it shows.
+		 */
+		scroll-padding-bottom: max(
+			calc(
+				var(--keyboard-inset, 0px) +
+					var(--docked-reply-composer-height, calc(7rem + env(safe-area-inset-bottom)))
+			),
+			var(--latest-reply-jump-clearance, 0px)
 		);
 
 		@variant desktop {
-			scroll-padding-bottom: 0;
+			scroll-padding-bottom: var(--latest-reply-jump-clearance, 0px);
 		}
 	}
 
