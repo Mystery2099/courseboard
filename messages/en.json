@@ -452,6 +452,17 @@
 			}
 		}
 	],
+	"realtime_new_reply_from": "New reply from {name}",
+	"realtime_new_replies_shown": [
+		{
+			"declarations": ["input count", "local countPlural = count: plural"],
+			"selectors": ["countPlural"],
+			"match": {
+				"countPlural=one": "{count} new reply",
+				"countPlural=*": "{count} new replies"
+			}
+		}
+	],
 	"reaction_add": "Add a reaction",
 	"reaction_count_label": [
 		{

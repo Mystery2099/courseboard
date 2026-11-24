@@ -15,7 +15,7 @@
 </script>
 
 <!-- Takes no height, so content below doesn't move when the notice appears. -->
-<div class="sticky top-3 z-10 flex h-0 justify-center" role="status">
+<div class="sticky top-3 z-10 flex h-0 justify-center" role="status" data-new-activity-notice>
 	{#if label}
 		<Button size="compact" class="shadow-floating" disabled={isShowing} onclick={onShow}
 			>{isShowing ? m.common_loading() : label}</Button

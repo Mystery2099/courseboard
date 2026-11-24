@@ -38,6 +38,7 @@
 	import NewActivityNotice from './NewActivityNotice.svelte';
 	import { getCourseActivityNotices } from '#lib/client/realtime/CourseActivityNotices.svelte.ts';
 	import { NewActivityReveal } from '#lib/client/realtime/NewActivityReveal.svelte.ts';
+	import { ReaderPosition } from '#lib/client/realtime/ReaderPosition.ts';
 
 	let {
 		initialPost,
@@ -119,37 +120,108 @@
 	const replyBranches = $derived(groupReplies(shownReplies));
 
 	const courseActivityNotices = getCourseActivityNotices();
-	// While older pages are still unloaded, new replies arrive through Load more replies instead.
-	const newReplyIds = $derived(
-		repliesQuery.hasNextPage
-			? []
-			: courseActivityNotices.findNewReplyIds(
-					postId,
-					new Set(shownReplies.map((reply) => reply.id))
-				)
+	const unshownAnnouncedReplyIds = $derived(
+		courseActivityNotices.findNewReplyIds(postId, new Set(shownReplies.map((reply) => reply.id)))
 	);
+	// While older pages are still unloaded, new replies arrive through Load more replies instead.
+	const newReplyIds = $derived(repliesQuery.hasNextPage ? [] : unshownAnnouncedReplyIds);
 	const newRepliesReveal = new NewActivityReveal();
 
+	/**
+	 * Refetches the thread. New replies are only offered once every page is loaded, so any further
+	 * pages hold only replies that arrived since, including ones that filled the last page.
+	 */
+	async function loadNewReplies() {
+		await Promise.all([
+			queryClient.invalidateQueries({ queryKey: postQueryKeys.detail(postId) }),
+			queryClient.invalidateQueries({ queryKey: postQueryKeys.replies(postId) })
+		]);
+		// Each result says whether another page follows, since the query stops updating once the
+		// reader leaves the thread.
+		let hasNextPage = repliesQuery.hasNextPage;
+		while (hasNextPage) {
+			const pageResult = await repliesQuery.fetchNextPage();
+			hasNextPage = !pageResult.isError && pageResult.hasNextPage;
+		}
+	}
+
 	/** Refetches the thread, then moves focus to the first reply shown. */
-	function showNewReplies() {
+	async function showNewReplies() {
 		const announcedReplyIds = new Set(newReplyIds);
-		return newRepliesReveal.reveal(
-			async () => {
-				await Promise.all([
-					queryClient.invalidateQueries({ queryKey: postQueryKeys.detail(postId) }),
-					queryClient.invalidateQueries({ queryKey: postQueryKeys.replies(postId) })
-				]);
-				// A full last page leaves new replies on the next one.
-				const isShown = (replyId: string) => shownReplies.some((reply) => reply.id === replyId);
-				while (repliesQuery.hasNextPage && ![...announcedReplyIds].every(isShown)) {
-					if ((await repliesQuery.fetchNextPage()).isError) break;
-				}
-			},
-			() => {
-				const firstNewReply = shownReplies.find((reply) => announcedReplyIds.has(reply.id));
-				return firstNewReply && `reply-${firstNewReply.id}`;
-			}
+		await newRepliesReveal.reveal(loadNewReplies, () => {
+			const firstNewReply = shownReplies.find((reply) => announcedReplyIds.has(reply.id));
+			return firstNewReply && `reply-${firstNewReply.id}`;
+		});
+		// Focus has moved into the replies, so nothing that arrived during this load appears directly.
+		wasFollowingArrivalDuringLoad = false;
+	}
+
+	// Replies that arrive while the reader is at the end of the thread, reading, appear directly.
+	// Focus stays put, and screen readers hear about them through this announcement instead.
+	let arrivedRepliesAnnouncement = $state('');
+	let isShowingArrivedReplies = $state(false);
+	// Replies already waiting when the thread opens, such as on a return to it, stay behind the
+	// notice. Bookkeeping for the effect below, not state anything renders.
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity
+	const seenNewReplyIds = new Set<string>(untrack(() => unshownAnnouncedReplyIds));
+	// Whether the reader was at the end when a reply arrived during the last load.
+	let wasFollowingArrivalDuringLoad = false;
+	let isThreadOpen = true;
+	onDestroy(() => (isThreadOpen = false));
+
+	// Before rendering, so the notice never flashes for replies about to appear. Arrivals are
+	// recorded even while older pages are unloaded, so one isn't taken as new once they load.
+	$effect.pre(() => {
+		const replyIds = unshownAnnouncedReplyIds;
+		untrack(() => {
+			const hasArrival = replyIds.some((replyId) => !seenNewReplyIds.has(replyId));
+			for (const replyId of replyIds) seenNewReplyIds.add(replyId);
+			if (!hasArrival || repliesQuery.hasNextPage) return;
+			const isFollowing = ReaderPosition.isFollowingPageEnd();
+			if (newRepliesReveal.isShowing) wasFollowingArrivalDuringLoad ||= isFollowing;
+			else if (isFollowing) void showArrivedReplies();
+		});
+	});
+
+	async function showArrivedReplies() {
+		wasFollowingArrivalDuringLoad = false;
+		const pageHeightBeforeLoad = document.documentElement.scrollHeight;
+		const replyIdsBeforeLoad = new Set(shownReplies.map((reply) => reply.id));
+		isShowingArrivedReplies = true;
+		try {
+			await newRepliesReveal.reveal(loadNewReplies);
+		} finally {
+			isShowingArrivedReplies = false;
+		}
+		if (!isThreadOpen) return;
+		// A reader who scrolled away from the end or started typing during the load stays put.
+		const isStillFollowing =
+			ReaderPosition.isReading() && ReaderPosition.isNearPageEnd(pageHeightBeforeLoad);
+		if (isStillFollowing) ReaderPosition.scrollToPageEnd();
+		const ownReplyIds = new Set(submissionQueue.storedReplies.map((reply) => reply.id));
+		announceArrivedReplies(
+			shownReplies.filter(
+				(reply) => !replyIdsBeforeLoad.has(reply.id) && !ownReplyIds.has(reply.id)
+			)
 		);
+		if (wasFollowingArrivalDuringLoad && isStillFollowing && newReplyIds.length > 0) {
+			void showArrivedReplies();
+		}
+	}
+
+	let announcementTimer: ReturnType<typeof setTimeout> | undefined;
+	onDestroy(() => clearTimeout(announcementTimer));
+
+	function announceArrivedReplies(arrivedReplies: ReplyResponse[]) {
+		if (arrivedReplies.length === 0) return;
+		const announcement =
+			arrivedReplies.length === 1
+				? m.realtime_new_reply_from({ name: arrivedReplies[0].author.displayName })
+				: m.realtime_new_replies_shown({ count: arrivedReplies.length });
+		// Cleared, then set in a later task, so the same words twice in a row are still read out.
+		clearTimeout(announcementTimer);
+		arrivedRepliesAnnouncement = '';
+		announcementTimer = setTimeout(() => (arrivedRepliesAnnouncement = announcement), 100);
 	}
 
 	function pendingRepliesUnder(parentReplyId: string) {
@@ -356,10 +428,13 @@
 <section class="mt-8" aria-labelledby="replies-heading">
 	<h2 id="replies-heading" class="text-lg font-semibold">{formatReplyCount(post.replyCount)}</h2>
 	<NewActivityNotice
-		label={newReplyIds.length > 0 ? m.realtime_show_new_replies({ count: newReplyIds.length }) : ''}
+		label={newReplyIds.length > 0 && !isShowingArrivedReplies
+			? m.realtime_show_new_replies({ count: newReplyIds.length })
+			: ''}
 		isShowing={newRepliesReveal.isShowing}
 		onShow={showNewReplies}
 	/>
+	<p class="sr-only" aria-live="polite">{arrivedRepliesAnnouncement}</p>
 
 	<ul class="mt-3 flex flex-col gap-3">
 		{#each replyBranches as branch (branch.reply.id)}
