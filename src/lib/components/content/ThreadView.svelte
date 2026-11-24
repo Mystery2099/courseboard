@@ -38,6 +38,7 @@
 	import NewActivityNotice from './NewActivityNotice.svelte';
 	import { getCourseActivityNotices } from '#lib/client/realtime/CourseActivityNotices.svelte.ts';
 	import { NewActivityReveal } from '#lib/client/realtime/NewActivityReveal.svelte.ts';
+	import { ReaderPosition } from '#lib/client/realtime/ReaderPosition.ts';
 
 	let {
 		initialPost,
@@ -130,26 +131,76 @@
 	);
 	const newRepliesReveal = new NewActivityReveal();
 
+	async function loadReplies(replyIds: ReadonlySet<string>) {
+		await Promise.all([
+			queryClient.invalidateQueries({ queryKey: postQueryKeys.detail(postId) }),
+			queryClient.invalidateQueries({ queryKey: postQueryKeys.replies(postId) })
+		]);
+		// A full last page leaves new replies on the next one.
+		const isShown = (replyId: string) => shownReplies.some((reply) => reply.id === replyId);
+		while (repliesQuery.hasNextPage && ![...replyIds].every(isShown)) {
+			if ((await repliesQuery.fetchNextPage()).isError) break;
+		}
+	}
+
 	/** Refetches the thread, then moves focus to the first reply shown. */
 	function showNewReplies() {
 		const announcedReplyIds = new Set(newReplyIds);
 		return newRepliesReveal.reveal(
-			async () => {
-				await Promise.all([
-					queryClient.invalidateQueries({ queryKey: postQueryKeys.detail(postId) }),
-					queryClient.invalidateQueries({ queryKey: postQueryKeys.replies(postId) })
-				]);
-				// A full last page leaves new replies on the next one.
-				const isShown = (replyId: string) => shownReplies.some((reply) => reply.id === replyId);
-				while (repliesQuery.hasNextPage && ![...announcedReplyIds].every(isShown)) {
-					if ((await repliesQuery.fetchNextPage()).isError) break;
-				}
-			},
+			() => loadReplies(announcedReplyIds),
 			() => {
 				const firstNewReply = shownReplies.find((reply) => announcedReplyIds.has(reply.id));
 				return firstNewReply && `reply-${firstNewReply.id}`;
 			}
 		);
+	}
+
+	// Replies that arrive while the reader is at the end of the thread, reading, appear directly.
+	// Focus stays put, and screen readers hear about them through this announcement instead.
+	let arrivedRepliesAnnouncement = $state('');
+	let isShowingArrivedReplies = $state(false);
+	// Bookkeeping for the effect below, not state anything renders.
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity
+	const seenNewReplyIds = new Set<string>();
+	let hasArrivalWhileShowing = false;
+
+	// Before rendering, so the notice never flashes for replies about to appear.
+	$effect.pre(() => {
+		const replyIds = newReplyIds;
+		untrack(() => {
+			const hasArrival = replyIds.some((replyId) => !seenNewReplyIds.has(replyId));
+			for (const replyId of replyIds) seenNewReplyIds.add(replyId);
+			if (!hasArrival) return;
+			if (newRepliesReveal.isShowing) hasArrivalWhileShowing = true;
+			else if (ReaderPosition.isFollowingPageEnd()) void showArrivedReplies();
+		});
+	});
+
+	async function showArrivedReplies() {
+		const arrivedReplyIds = new Set(newReplyIds);
+		hasArrivalWhileShowing = false;
+		isShowingArrivedReplies = true;
+		try {
+			await newRepliesReveal.reveal(() => loadReplies(arrivedReplyIds));
+		} finally {
+			isShowingArrivedReplies = false;
+		}
+		ReaderPosition.scrollToPageEnd();
+		void announceArrivedReplies(shownReplies.filter((reply) => arrivedReplyIds.has(reply.id)));
+		if (hasArrivalWhileShowing && newReplyIds.length > 0 && ReaderPosition.isFollowingPageEnd()) {
+			void showArrivedReplies();
+		}
+	}
+
+	async function announceArrivedReplies(arrivedReplies: ReplyResponse[]) {
+		if (arrivedReplies.length === 0) return;
+		// Cleared first, so the same words said twice in a row are still read out.
+		arrivedRepliesAnnouncement = '';
+		await tick();
+		arrivedRepliesAnnouncement =
+			arrivedReplies.length === 1
+				? m.realtime_new_reply_from({ name: arrivedReplies[0].author.displayName })
+				: m.realtime_new_replies_shown({ count: arrivedReplies.length });
 	}
 
 	function pendingRepliesUnder(parentReplyId: string) {
@@ -356,10 +407,13 @@
 <section class="mt-8" aria-labelledby="replies-heading">
 	<h2 id="replies-heading" class="text-lg font-semibold">{formatReplyCount(post.replyCount)}</h2>
 	<NewActivityNotice
-		label={newReplyIds.length > 0 ? m.realtime_show_new_replies({ count: newReplyIds.length }) : ''}
+		label={newReplyIds.length > 0 && !isShowingArrivedReplies
+			? m.realtime_show_new_replies({ count: newReplyIds.length })
+			: ''}
 		isShowing={newRepliesReveal.isShowing}
 		onShow={showNewReplies}
 	/>
+	<p class="sr-only" aria-live="polite">{arrivedRepliesAnnouncement}</p>
 
 	<ul class="mt-3 flex flex-col gap-3">
 		{#each replyBranches as branch (branch.reply.id)}
