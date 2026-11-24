@@ -14,6 +14,7 @@
 	import CircleCheck from 'lucide-svelte/icons/circle-check';
 	import CircleX from 'lucide-svelte/icons/circle-x';
 	import Copy from 'lucide-svelte/icons/copy';
+	import LinkIcon from 'lucide-svelte/icons/link';
 	import ReplyIcon from 'lucide-svelte/icons/reply';
 	import { PostApiClient, postQueryKeys } from '#lib/client/content/PostApiClient.ts';
 	import { formatReplyCount, groupReplies } from '#lib/client/content/PostPresentation.ts';
@@ -22,10 +23,12 @@
 	import { ComposerDraftTarget } from '#lib/client/content/ComposerDrafts.svelte.ts';
 	import { getAccountLocalData } from '#lib/client/AccountLocalData.ts';
 	import type { ReplyAction } from '#lib/client/content/ReplyAction.ts';
-	import type {
-		PostDetailResponse,
-		ReplyListResponse,
-		ReplyResponse
+	import {
+		LINKED_REPLY_QUERY_PARAMETER,
+		type LinkedReplyResponse,
+		type PostDetailResponse,
+		type ReplyListResponse,
+		type ReplyResponse
 	} from '#lib/contracts/PostContract.ts';
 	import type { ThreadReactionsResponse } from '#lib/contracts/ReactionContract.ts';
 	import { ThreadReactions } from '#lib/client/content/ThreadReactions.svelte.ts';
@@ -43,11 +46,14 @@
 	let {
 		initialPost,
 		initialReplies,
+		linkedReply,
 		initialReactions,
 		initialLoadedAt
 	}: {
 		initialPost: PostDetailResponse;
 		initialReplies: ReplyListResponse;
+		/** The reply the address links to, shown with its branch even before its page is loaded. */
+		linkedReply: LinkedReplyResponse | null;
 		/** Null on a review thread, which takes no reactions. */
 		initialReactions: ThreadReactionsResponse | null;
 		initialLoadedAt: number;
@@ -109,13 +115,19 @@
 	});
 
 	const loadedReplies = $derived(repliesQuery.data.pages.flatMap((page) => page.replies));
-	// Replies sent from this page stay visible even when their page of the thread isn't loaded yet.
+	// Replies sent from this page, and the linked reply with its top-level reply, stay visible even
+	// when their page of the thread isn't loaded yet. Once it is, they move to their place in it.
 	const shownReplies = $derived.by(() => {
 		const loadedReplyIds = new Set(loadedReplies.map((reply) => reply.id));
-		return [
-			...loadedReplies,
-			...submissionQueue.storedReplies.filter((reply) => !loadedReplyIds.has(reply.id))
-		];
+		const linkedBranch = linkedReply
+			? [linkedReply.parentReply, linkedReply.reply].filter((reply) => reply !== null)
+			: [];
+		const unloadedReplies = [...submissionQueue.storedReplies, ...linkedBranch].filter(
+			(reply, index, replies) =>
+				!loadedReplyIds.has(reply.id) &&
+				replies.findIndex((other) => other.id === reply.id) === index
+		);
+		return [...loadedReplies, ...unloadedReplies];
 	});
 	const replyBranches = $derived(groupReplies(shownReplies));
 
@@ -319,19 +331,31 @@
 	let copyNotice = $state<{ replyId: string; message: string } | null>(null);
 	let copyNoticeTimer: ReturnType<typeof setTimeout> | undefined;
 
-	async function copyReplyText(reply: ReplyResponse) {
+	async function copyFromReply(
+		reply: ReplyResponse,
+		text: string,
+		copiedMessage: string,
+		failedMessage: string
+	) {
 		let message: string;
 		try {
-			await navigator.clipboard.writeText(reply.bodyMarkdown);
-			message = m.thread_reply_text_copied();
+			await navigator.clipboard.writeText(text);
+			message = copiedMessage;
 		} catch {
-			message = m.thread_reply_text_copy_failed();
+			message = failedMessage;
 		}
 		clearTimeout(copyNoticeTimer);
 		copyNotice = { replyId: reply.id, message };
 		copyNoticeTimer = setTimeout(() => (copyNotice = null), 3000);
 	}
 	onDestroy(() => clearTimeout(copyNoticeTimer));
+
+	/** The thread's address with the reply as a query parameter, which the server loads it by. */
+	function linkToReply(reply: ReplyResponse): string {
+		const threadPath = resolve(THREAD_ROUTE_IDS[post.kind], { courseId, postId });
+		// Reply ids are hexadecimal, so they need no escaping.
+		return `${page.url.origin}${threadPath}?${LINKED_REPLY_QUERY_PARAMETER}=${reply.id}#reply-${reply.id}`;
+	}
 
 	function replyActionsFor(reply: ReplyResponse): ReplyAction[] {
 		const actions: ReplyAction[] = [];
@@ -350,7 +374,25 @@
 			id: 'copy-text',
 			label: m.thread_copy_reply_text(),
 			icon: Copy,
-			run: () => void copyReplyText(reply)
+			run: () =>
+				void copyFromReply(
+					reply,
+					reply.bodyMarkdown,
+					m.thread_reply_text_copied(),
+					m.thread_reply_text_copy_failed()
+				)
+		});
+		actions.push({
+			id: 'copy-link',
+			label: m.thread_copy_reply_link(),
+			icon: LinkIcon,
+			run: () =>
+				void copyFromReply(
+					reply,
+					linkToReply(reply),
+					m.thread_reply_link_copied(),
+					m.thread_reply_link_copy_failed()
+				)
 		});
 		if (post.viewerPermissions.canChooseAcceptedReply) {
 			const isAccepted = reply.id === post.acceptedReplyId;
@@ -405,6 +447,7 @@
 	<ReplyCard
 		{reply}
 		isAccepted={reply.id === post.acceptedReplyId}
+		isLinked={reply.id === linkedReply?.reply.id}
 		actions={replyActionsFor(reply)}
 		reactions={reactions ? (reactions.replies[reply.id] ?? []) : null}
 		reactionError={reactionFailure?.replyId === reply.id ? reactionFailure.error : null}
