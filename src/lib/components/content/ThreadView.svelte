@@ -140,8 +140,12 @@
 			queryClient.invalidateQueries({ queryKey: postQueryKeys.detail(postId) }),
 			queryClient.invalidateQueries({ queryKey: postQueryKeys.replies(postId) })
 		]);
-		while (repliesQuery.hasNextPage) {
-			if ((await repliesQuery.fetchNextPage()).isError) break;
+		// Each result says whether another page follows, since the query stops updating once the
+		// reader leaves the thread.
+		let hasNextPage = repliesQuery.hasNextPage;
+		while (hasNextPage) {
+			const pageResult = await repliesQuery.fetchNextPage();
+			hasNextPage = !pageResult.isError && pageResult.hasNextPage;
 		}
 	}
 
