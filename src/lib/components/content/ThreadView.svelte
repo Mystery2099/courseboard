@@ -199,7 +199,7 @@
 			ReaderPosition.isReading() && ReaderPosition.isNearPageEnd(pageHeightBeforeLoad);
 		if (isStillFollowing) ReaderPosition.scrollToPageEnd();
 		const ownReplyIds = new Set(submissionQueue.storedReplies.map((reply) => reply.id));
-		void announceArrivedReplies(
+		announceArrivedReplies(
 			shownReplies.filter(
 				(reply) => !replyIdsBeforeLoad.has(reply.id) && !ownReplyIds.has(reply.id)
 			)
@@ -209,15 +209,19 @@
 		}
 	}
 
-	async function announceArrivedReplies(arrivedReplies: ReplyResponse[]) {
+	let announcementTimer: ReturnType<typeof setTimeout> | undefined;
+	onDestroy(() => clearTimeout(announcementTimer));
+
+	function announceArrivedReplies(arrivedReplies: ReplyResponse[]) {
 		if (arrivedReplies.length === 0) return;
-		// Cleared first, so the same words said twice in a row are still read out.
-		arrivedRepliesAnnouncement = '';
-		await tick();
-		arrivedRepliesAnnouncement =
+		const announcement =
 			arrivedReplies.length === 1
 				? m.realtime_new_reply_from({ name: arrivedReplies[0].author.displayName })
 				: m.realtime_new_replies_shown({ count: arrivedReplies.length });
+		// Cleared, then set in a later task, so the same words twice in a row are still read out.
+		clearTimeout(announcementTimer);
+		arrivedRepliesAnnouncement = '';
+		announcementTimer = setTimeout(() => (arrivedRepliesAnnouncement = announcement), 100);
 	}
 
 	function pendingRepliesUnder(parentReplyId: string) {
