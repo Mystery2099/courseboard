@@ -153,18 +153,21 @@
 		await loadRemainingReplyPages();
 	}
 
-	/** Loads further pages of replies until one holds `untilReplyId`, or until the last page. */
-	async function loadRemainingReplyPages(untilReplyId?: string) {
+	/**
+	 * Loads further pages of replies until `isTargetRendered` holds or the last page is in. Returns
+	 * false when a page fails to load.
+	 */
+	async function loadRemainingReplyPages(isTargetRendered = () => false): Promise<boolean> {
 		// Each result says whether another page follows, since the query stops updating once the
 		// reader leaves the thread.
 		let hasNextPage = repliesQuery.hasNextPage;
-		while (hasNextPage) {
+		while (hasNextPage && !isTargetRendered()) {
 			const pageResult = await repliesQuery.fetchNextPage();
-			const isFound = pageResult.data?.pages.some((page) =>
-				page.replies.some((reply) => reply.id === untilReplyId)
-			);
-			hasNextPage = !pageResult.isError && pageResult.hasNextPage && !isFound;
+			if (pageResult.isError) return false;
+			hasNextPage = pageResult.hasNextPage;
+			await tick();
 		}
+		return true;
 	}
 
 	/** Refetches the thread, then moves focus to the first reply shown. */
@@ -322,31 +325,14 @@
 		if (replyElement) ScrollTargetReveal.reveal(replyElement, { moveFocus });
 	}
 
+	const isReplyRendered = (replyId: string) => document.getElementById(`reply-${replyId}`) !== null;
+
 	const shownRepliesById = $derived(new Map(shownReplies.map((reply) => [reply.id, reply])));
 	/** The reply a nested reply's branch answers, when that branch is shown. */
 	const parentReplyOf = (reply: ReplyResponse) =>
 		reply.parentReplyId !== null && !isUnderHiddenBranch(reply.parentReplyId)
 			? (shownRepliesById.get(reply.parentReplyId) ?? null)
 			: null;
-
-	const jumpableAcceptedReplyId = $derived(post.kind === 'question' ? post.acceptedReplyId : null);
-	let isLoadingAcceptedReply = $state(false);
-
-	/** Loads pages of replies until the accepted answer is among them, then goes to it. */
-	async function jumpToAcceptedReply() {
-		const acceptedReplyId = jumpableAcceptedReplyId;
-		if (!acceptedReplyId) return;
-		if (!shownRepliesById.has(acceptedReplyId)) {
-			isLoadingAcceptedReply = true;
-			try {
-				await loadRemainingReplyPages(acceptedReplyId);
-			} finally {
-				isLoadingAcceptedReply = false;
-			}
-			await tick();
-		}
-		revealReply(acceptedReplyId);
-	}
 
 	// Replies as the list renders them; nested replies whose branch isn't loaded aren't drawn.
 	const renderedReplies = $derived([
@@ -359,8 +345,66 @@
 			null
 		)
 	);
+	const jumpableAcceptedReplyId = $derived(post.kind === 'question' ? post.acceptedReplyId : null);
+
+	type ReplyJump = 'accepted-answer' | 'latest-reply';
+	/**
+	 * The jump loading pages, if any. One runs at a time, so two can't fetch the same page or fight
+	 * over focus. Its buttons are only `aria-disabled` meanwhile, so focus stays on the one pressed.
+	 */
+	let loadingReplyJump = $state<ReplyJump | null>(null);
+	let loadMoreRepliesButton = $state<HTMLElement | null>(null);
+
+	/**
+	 * Loads pages until the target reply is drawn, then goes to it. If a page fails, focus goes to
+	 * Load more replies, where the failure is shown and the load can be retried.
+	 */
+	async function jumpToReply(
+		jump: ReplyJump,
+		isTargetRendered: () => boolean,
+		findTargetReplyId: () => string | undefined
+	) {
+		if (loadingReplyJump) return;
+		loadingReplyJump = jump;
+		let isLoaded: boolean;
+		try {
+			isLoaded = await loadRemainingReplyPages(isTargetRendered);
+		} finally {
+			loadingReplyJump = null;
+		}
+		if (!isThreadOpen) return;
+		await tick();
+		if (!isLoaded) {
+			if (loadMoreRepliesButton)
+				ScrollTargetReveal.reveal(loadMoreRepliesButton, { moveFocus: true });
+			return;
+		}
+		const targetReplyId = findTargetReplyId();
+		if (targetReplyId) revealReply(targetReplyId);
+	}
+
+	function jumpToAcceptedReply() {
+		const acceptedReplyId = jumpableAcceptedReplyId;
+		if (!acceptedReplyId) return;
+		void jumpToReply(
+			'accepted-answer',
+			() => isReplyRendered(acceptedReplyId),
+			() => acceptedReplyId
+		);
+	}
+
+	/** Every remaining page is loaded first, since the newest reply may be on any of them. */
+	function jumpToLatestReply() {
+		void jumpToReply(
+			'latest-reply',
+			() => false,
+			() => latestRenderedReply?.id
+		);
+	}
+
 	let repliesList = $state<HTMLElement | null>(null);
 	let isLatestReplyBelowView = $state(false);
+	let isLatestReplyJumpFocused = $state(false);
 
 	/**
 	 * True in a thread over two screens long when the latest reply, or the end of the loaded replies
@@ -376,6 +420,8 @@
 			isLongThread && anchorTop !== undefined && anchorTop > ScrollTargetReveal.visibleAreaBottom();
 	}
 
+	// The page's height also changes when the reply bar grows or the phone keyboard opens, since the
+	// bar's spacer grows with both.
 	$effect(() => {
 		void latestRenderedReply;
 		void repliesQuery.hasNextPage;
@@ -384,31 +430,19 @@
 			cancelAnimationFrame(frame);
 			frame = requestAnimationFrame(updateLatestReplyVisibility);
 		};
-		scheduleUpdate();
+		const pageResizeObserver = new ResizeObserver(scheduleUpdate);
+		pageResizeObserver.observe(document.body);
 		window.addEventListener('scroll', scheduleUpdate, { passive: true });
 		window.addEventListener('resize', scheduleUpdate, { passive: true });
+		window.visualViewport?.addEventListener('resize', scheduleUpdate, { passive: true });
 		return () => {
 			cancelAnimationFrame(frame);
+			pageResizeObserver.disconnect();
 			window.removeEventListener('scroll', scheduleUpdate);
 			window.removeEventListener('resize', scheduleUpdate);
+			window.visualViewport?.removeEventListener('resize', scheduleUpdate);
 		};
 	});
-
-	let isLoadingLatestReply = $state(false);
-
-	/** Loads any remaining pages, then goes to the newest reply. */
-	async function jumpToLatestReply() {
-		if (repliesQuery.hasNextPage) {
-			isLoadingLatestReply = true;
-			try {
-				await loadRemainingReplyPages();
-			} finally {
-				isLoadingLatestReply = false;
-			}
-			await tick();
-		}
-		if (latestRenderedReply) revealReply(latestRenderedReply.id);
-	}
 
 	function showUpdatedPost(updatedPost: PostDetailResponse) {
 		queryClient.setQueryData(postQueryKeys.detail(postId), updatedPost);
@@ -583,14 +617,29 @@
 			<Button
 				variant="tonal"
 				size="compact"
-				disabled={isLoadingAcceptedReply}
+				aria-disabled={loadingReplyJump !== null}
 				onclick={jumpToAcceptedReply}
-				><CircleCheck aria-hidden="true" />{isLoadingAcceptedReply
+				><CircleCheck aria-hidden="true" />{loadingReplyJump === 'accepted-answer'
 					? m.common_loading()
 					: m.thread_jump_to_accepted_answer()}</Button
 			>
 		{/if}
 	</div>
+	{#if isLatestReplyBelowView || isLatestReplyJumpFocused || loadingReplyJump === 'latest-reply'}
+		<!-- Fixed above the phone's reply bar or dock and the on-screen keyboard, but early in the tab order. -->
+		<Button
+			variant="tonal"
+			size="compact"
+			class="fixed end-4 bottom-[calc(var(--keyboard-inset,0px)+var(--docked-reply-composer-height,calc(7rem+env(safe-area-inset-bottom))))] z-20 shadow-raised desktop:end-8 desktop:bottom-8"
+			aria-disabled={loadingReplyJump !== null}
+			onfocus={() => (isLatestReplyJumpFocused = true)}
+			onblur={() => (isLatestReplyJumpFocused = false)}
+			onclick={jumpToLatestReply}
+			><ArrowDown aria-hidden="true" />{loadingReplyJump === 'latest-reply'
+				? m.common_loading()
+				: m.thread_jump_to_latest_reply()}</Button
+		>
+	{/if}
 	<NewActivityNotice
 		label={newReplyIds.length > 0 && !isShowingArrivedReplies
 			? m.realtime_show_new_replies({ count: newReplyIds.length })
@@ -633,6 +682,7 @@
 
 	{#if repliesQuery.hasNextPage}
 		<Button
+			bind:ref={loadMoreRepliesButton}
 			variant="outlined"
 			size="compact"
 			class="mt-3"
@@ -673,20 +723,6 @@
 		</div>
 	{/if}
 </section>
-
-{#if isLatestReplyBelowView || isLoadingLatestReply}
-	<!-- Above the phone's reply bar or dock, and the on-screen keyboard. -->
-	<Button
-		variant="tonal"
-		size="compact"
-		class="fixed end-4 bottom-[calc(var(--keyboard-inset,0px)+var(--docked-reply-composer-height,calc(7rem+env(safe-area-inset-bottom))))] z-20 shadow-raised desktop:end-8 desktop:bottom-8"
-		disabled={isLoadingLatestReply}
-		onclick={jumpToLatestReply}
-		><ArrowDown aria-hidden="true" />{isLoadingLatestReply
-			? m.common_loading()
-			: m.thread_jump_to_latest_reply()}</Button
-	>
-{/if}
 
 {#if !post.isLocked}
 	<DockedReplyComposer
