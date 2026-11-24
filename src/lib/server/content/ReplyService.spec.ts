@@ -208,4 +208,44 @@ describe('reply service', () => {
 			expect(insert).not.toHaveBeenCalled();
 		}
 	);
+
+	it('finds a linked reply with its top-level reply, for admitted users only', async () => {
+		const { service, replies } = createService();
+		vi.spyOn(PostRepository.prototype, 'exists').mockResolvedValue(true);
+		const nestedReplyId = new ObjectId('000000000000000000000007');
+		const author = { username: 'sam', displayName: 'Sam' };
+		const createdAt = new Date('2026-11-02T10:00:00Z');
+		const findInPost = vi
+			.spyOn(replies, 'findInPost')
+			.mockImplementation(async (_postId, replyId) => ({
+				_id: replyId,
+				postId,
+				parentReplyId: replyId.equals(nestedReplyId) ? topLevelReplyId : null,
+				bodyMarkdown: 'Same here.',
+				createdAt,
+				author
+			}));
+
+		const linked = await service.findLinkedReply(
+			postId.toHexString(),
+			nestedReplyId.toHexString(),
+			student
+		);
+
+		expect(linked).toMatchObject({
+			reply: { id: nestedReplyId.toHexString(), parentReplyId: topLevelReplyId.toHexString() },
+			parentReply: { id: topLevelReplyId.toHexString(), parentReplyId: null }
+		});
+		expect(findInPost).toHaveBeenCalledWith(postId, topLevelReplyId);
+		await expect(
+			service.findLinkedReply(postId.toHexString(), 'not-an-id', student)
+		).resolves.toBeNull();
+		for (const visitor of [null, { ...student, status: 'suspended' as const }]) {
+			findInPost.mockClear();
+			await expect(
+				service.findLinkedReply(postId.toHexString(), nestedReplyId.toHexString(), visitor)
+			).rejects.toThrow();
+			expect(findInPost).not.toHaveBeenCalled();
+		}
+	});
 });

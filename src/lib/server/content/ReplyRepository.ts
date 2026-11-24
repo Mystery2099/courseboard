@@ -44,6 +44,12 @@ export class ReplyRepository {
 		);
 	}
 
+	/** Matches on the post too, so a reply of another thread is never returned. */
+	async findInPost(postId: ObjectId, replyId: ObjectId): Promise<ReplyWithAuthor | null> {
+		const [reply] = await this.findWithAuthor({ _id: replyId, postId }, 1);
+		return reply ?? null;
+	}
+
 	async findBySubmission(
 		authorId: ObjectId,
 		submissionId: string
