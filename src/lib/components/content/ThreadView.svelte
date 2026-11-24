@@ -11,6 +11,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import ArrowDown from 'lucide-svelte/icons/arrow-down';
 	import CircleCheck from 'lucide-svelte/icons/circle-check';
 	import CircleX from 'lucide-svelte/icons/circle-x';
 	import Copy from 'lucide-svelte/icons/copy';
@@ -42,6 +43,7 @@
 	import { getCourseActivityNotices } from '#lib/client/realtime/CourseActivityNotices.svelte.ts';
 	import { NewActivityReveal } from '#lib/client/realtime/NewActivityReveal.svelte.ts';
 	import { ReaderPosition } from '#lib/client/realtime/ReaderPosition.ts';
+	import { ScrollTargetReveal } from '#lib/client/navigation/ScrollTargetReveal.ts';
 
 	let {
 		initialPost,
@@ -148,13 +150,25 @@
 			queryClient.invalidateQueries({ queryKey: postQueryKeys.detail(postId) }),
 			queryClient.invalidateQueries({ queryKey: postQueryKeys.replies(postId) })
 		]);
+		await loadRemainingReplyPages();
+	}
+
+	/**
+	 * Loads further pages of replies until `isTargetRendered` holds or the last page is in. Returns
+	 * false when a page fails to load.
+	 */
+	async function loadRemainingReplyPages(isTargetRendered = () => false): Promise<boolean> {
 		// Each result says whether another page follows, since the query stops updating once the
 		// reader leaves the thread.
 		let hasNextPage = repliesQuery.hasNextPage;
-		while (hasNextPage) {
-			const pageResult = await repliesQuery.fetchNextPage();
-			hasNextPage = !pageResult.isError && pageResult.hasNextPage;
+		while (hasNextPage && !isTargetRendered()) {
+			// Joins a page request already in flight, such as from Load more replies, instead of repeating it.
+			const pageResult = await repliesQuery.fetchNextPage({ cancelRefetch: false });
+			if (pageResult.isError) return false;
+			hasNextPage = pageResult.hasNextPage;
+			await tick();
 		}
+		return true;
 	}
 
 	/** Refetches the thread, then moves focus to the first reply shown. */
@@ -259,6 +273,7 @@
 
 	/** A reply being answered. Nested replies are answered in their branch, under the top-level reply. */
 	interface ReplyTarget {
+		replyId: string;
 		parentReplyId: string;
 		authorName: string;
 	}
@@ -273,6 +288,7 @@
 
 	function setReplyTarget(reply: ReplyResponse) {
 		replyTarget = {
+			replyId: reply.id,
 			parentReplyId: reply.parentReplyId ?? reply.id,
 			authorName: reply.author.displayName
 		};
@@ -303,6 +319,168 @@
 			)
 		);
 	}
+
+	/** Scrolls to a reply on the page and highlights it, moving focus there unless told not to. */
+	function revealReply(replyId: string, moveFocus = true) {
+		const replyElement = document.getElementById(`reply-${replyId}`);
+		if (replyElement) ScrollTargetReveal.reveal(replyElement, { moveFocus });
+	}
+
+	const isReplyRendered = (replyId: string) => document.getElementById(`reply-${replyId}`) !== null;
+
+	const shownRepliesById = $derived(new Map(shownReplies.map((reply) => [reply.id, reply])));
+	/** The reply a nested reply's branch answers, when that branch is shown. */
+	const parentReplyOf = (reply: ReplyResponse) =>
+		reply.parentReplyId !== null && !isUnderHiddenBranch(reply.parentReplyId)
+			? (shownRepliesById.get(reply.parentReplyId) ?? null)
+			: null;
+
+	// Replies as the list renders them; nested replies whose branch isn't loaded aren't drawn.
+	const renderedReplies = $derived([
+		...replyBranches.flatMap((branch) => [branch.reply, ...branch.nestedReplies]),
+		...storedRepliesUnderHiddenBranches
+	]);
+	const latestRenderedReply = $derived(
+		renderedReplies.reduce<ReplyResponse | null>(
+			(latest, reply) => (latest === null || reply.createdAt > latest.createdAt ? reply : latest),
+			null
+		)
+	);
+	const jumpableAcceptedReplyId = $derived(post.kind === 'question' ? post.acceptedReplyId : null);
+
+	type ReplyJump = 'accepted-answer' | 'latest-reply';
+	/**
+	 * The jump loading pages, if any. One runs at a time, so two can't fetch the same page or fight
+	 * over focus. Its buttons are only `aria-disabled` meanwhile, so focus stays on the one pressed.
+	 */
+	let loadingReplyJump = $state<ReplyJump | null>(null);
+	let loadMoreRepliesButton = $state<HTMLElement | null>(null);
+
+	/**
+	 * Loads pages until the target reply is drawn, then goes to it. If a page fails, focus goes to
+	 * Load more replies, where the failure is shown and the load can be retried. A reader who moved
+	 * focus elsewhere during the load, such as into the reply field, is left there.
+	 */
+	async function jumpToReply(
+		jump: ReplyJump,
+		isTargetRendered: () => boolean,
+		findTargetReplyId: () => string | undefined
+	) {
+		if (loadingReplyJump) return;
+		loadingReplyJump = jump;
+		// A reader who moves focus away during the load, even by clicking text, keeps it there. Focus
+		// that leaves with the pressed button, as it disappears, doesn't count.
+		const focusedElementAtStart = document.activeElement;
+		let didReaderMoveFocus = false;
+		const noteFocusMove = () =>
+			(didReaderMoveFocus ||= focusedElementAtStart?.isConnected ?? false);
+		focusedElementAtStart?.addEventListener('focusout', noteFocusMove);
+		let isLoaded: boolean;
+		try {
+			// Stops once the reader leaves the thread, after any page already requested.
+			isLoaded = await loadRemainingReplyPages(() => !isThreadOpen || isTargetRendered());
+		} finally {
+			loadingReplyJump = null;
+		}
+		if (!isThreadOpen) return;
+		await tick();
+		focusedElementAtStart?.removeEventListener('focusout', noteFocusMove);
+		const focusedElement = document.activeElement;
+		const isFocusWhereReaderLeftIt =
+			!didReaderMoveFocus &&
+			(focusedElement === focusedElementAtStart || focusedElement === document.body);
+		if (!isFocusWhereReaderLeftIt) return;
+		if (!isLoaded) {
+			if (loadMoreRepliesButton)
+				ScrollTargetReveal.reveal(loadMoreRepliesButton, { moveFocus: true });
+			return;
+		}
+		const targetReplyId = findTargetReplyId();
+		if (targetReplyId) revealReply(targetReplyId);
+	}
+
+	function jumpToAcceptedReply() {
+		const acceptedReplyId = jumpableAcceptedReplyId;
+		if (!acceptedReplyId) return;
+		void jumpToReply(
+			'accepted-answer',
+			() => isReplyRendered(acceptedReplyId),
+			() => acceptedReplyId
+		);
+	}
+
+	/** Every remaining page is loaded first, since the newest reply may be on any of them. */
+	function jumpToLatestReply() {
+		void jumpToReply(
+			'latest-reply',
+			() => false,
+			() => latestRenderedReply?.id
+		);
+	}
+
+	let repliesList = $state<HTMLElement | null>(null);
+	let isLatestReplyBelowView = $state(false);
+	let isLatestReplyJumpFocused = $state(false);
+	let latestReplyJumpButton = $state<HTMLElement | null>(null);
+
+	// While the button shows, the page's scroll padding clears it too, so focus never lands under it.
+	$effect(() => {
+		const button = latestReplyJumpButton;
+		if (!button) return;
+		const root = document.documentElement;
+		const updateClearance = () =>
+			root.style.setProperty(
+				'--latest-reply-jump-clearance',
+				`${window.innerHeight - button.getBoundingClientRect().top + 8}px`
+			);
+		updateClearance();
+		const pageResizeObserver = new ResizeObserver(updateClearance);
+		pageResizeObserver.observe(document.body);
+		window.visualViewport?.addEventListener('resize', updateClearance, { passive: true });
+		return () => {
+			pageResizeObserver.disconnect();
+			window.visualViewport?.removeEventListener('resize', updateClearance);
+			root.style.removeProperty('--latest-reply-jump-clearance');
+		};
+	});
+
+	/**
+	 * True in a thread over two screens long when the latest reply, or the end of the loaded replies
+	 * while more pages follow, is below what the reader can see.
+	 */
+	function updateLatestReplyVisibility() {
+		const isLongThread = document.documentElement.scrollHeight > window.innerHeight * 2;
+		const anchor = repliesQuery.hasNextPage
+			? repliesList
+			: latestRenderedReply && document.getElementById(`reply-${latestRenderedReply.id}`);
+		const anchorTop = anchor?.getBoundingClientRect()[repliesQuery.hasNextPage ? 'bottom' : 'top'];
+		isLatestReplyBelowView =
+			isLongThread && anchorTop !== undefined && anchorTop > ScrollTargetReveal.visibleAreaBottom();
+	}
+
+	// The page's height also changes when the reply bar grows or the phone keyboard opens, since the
+	// bar's spacer grows with both.
+	$effect(() => {
+		void latestRenderedReply;
+		void repliesQuery.hasNextPage;
+		let frame = 0;
+		const scheduleUpdate = () => {
+			cancelAnimationFrame(frame);
+			frame = requestAnimationFrame(updateLatestReplyVisibility);
+		};
+		const pageResizeObserver = new ResizeObserver(scheduleUpdate);
+		pageResizeObserver.observe(document.body);
+		window.addEventListener('scroll', scheduleUpdate, { passive: true });
+		window.addEventListener('resize', scheduleUpdate, { passive: true });
+		window.visualViewport?.addEventListener('resize', scheduleUpdate, { passive: true });
+		return () => {
+			cancelAnimationFrame(frame);
+			pageResizeObserver.disconnect();
+			window.removeEventListener('scroll', scheduleUpdate);
+			window.removeEventListener('resize', scheduleUpdate);
+			window.visualViewport?.removeEventListener('resize', scheduleUpdate);
+		};
+	});
 
 	function showUpdatedPost(updatedPost: PostDetailResponse) {
 		queryClient.setQueryData(postQueryKeys.detail(postId), updatedPost);
@@ -452,6 +630,8 @@
 		reactions={reactions ? (reactions.replies[reply.id] ?? []) : null}
 		reactionError={reactionFailure?.replyId === reply.id ? reactionFailure.error : null}
 		copyNotice={copyNotice?.replyId === reply.id ? copyNotice.message : ''}
+		parentReplyAuthorName={parentReplyOf(reply)?.author.displayName ?? null}
+		onShowParentReply={() => reply.parentReplyId && revealReply(reply.parentReplyId)}
 		onToggleReaction={(emoji, isAdding) => threadReactions.toggle(reply.id, emoji, isAdding)}
 		onOpenActionSheet={(opener) => openReplyActionSheet(reply, opener)}
 	/>
@@ -469,7 +649,36 @@
 />
 
 <section class="mt-8" aria-labelledby="replies-heading">
-	<h2 id="replies-heading" class="text-lg font-semibold">{formatReplyCount(post.replyCount)}</h2>
+	<div class="flex flex-wrap items-center justify-between gap-2">
+		<h2 id="replies-heading" class="text-lg font-semibold">{formatReplyCount(post.replyCount)}</h2>
+		{#if jumpableAcceptedReplyId}
+			<Button
+				variant="tonal"
+				size="compact"
+				aria-disabled={loadingReplyJump !== null}
+				onclick={jumpToAcceptedReply}
+				><CircleCheck aria-hidden="true" />{loadingReplyJump !== null
+					? m.common_loading()
+					: m.thread_jump_to_accepted_answer()}</Button
+			>
+		{/if}
+	</div>
+	{#if isLatestReplyBelowView || isLatestReplyJumpFocused || loadingReplyJump === 'latest-reply'}
+		<!-- Fixed above the phone's reply bar or dock and the on-screen keyboard, but early in the tab order. -->
+		<Button
+			bind:ref={latestReplyJumpButton}
+			variant="tonal"
+			size="compact"
+			class="fixed end-4 bottom-[calc(var(--keyboard-inset,0px)+var(--docked-reply-composer-height,calc(7rem+env(safe-area-inset-bottom))))] z-20 shadow-raised desktop:end-8 desktop:bottom-8"
+			aria-disabled={loadingReplyJump !== null}
+			onfocus={() => (isLatestReplyJumpFocused = true)}
+			onblur={() => (isLatestReplyJumpFocused = false)}
+			onclick={jumpToLatestReply}
+			><ArrowDown aria-hidden="true" />{loadingReplyJump !== null
+				? m.common_loading()
+				: m.thread_jump_to_latest_reply()}</Button
+		>
+	{/if}
 	<NewActivityNotice
 		label={newReplyIds.length > 0 && !isShowingArrivedReplies
 			? m.realtime_show_new_replies({ count: newReplyIds.length })
@@ -479,7 +688,7 @@
 	/>
 	<p class="sr-only" aria-live="polite">{arrivedRepliesAnnouncement}</p>
 
-	<ul class="mt-3 flex flex-col gap-3">
+	<ul bind:this={repliesList} class="mt-3 flex flex-col gap-3">
 		{#each replyBranches as branch (branch.reply.id)}
 			<li>
 				{@render replyCard(branch.reply)}
@@ -512,6 +721,7 @@
 
 	{#if repliesQuery.hasNextPage}
 		<Button
+			bind:ref={loadMoreRepliesButton}
 			variant="outlined"
 			size="compact"
 			class="mt-3"
@@ -520,7 +730,8 @@
 			>{repliesQuery.isFetchingNextPage ? m.common_loading() : m.thread_load_more_replies()}</Button
 		>
 	{/if}
-	{#if repliesQuery.isFetchNextPageError}
+	<!-- A jump can join a refetch of the whole thread, so that failing counts too. -->
+	{#if repliesQuery.isFetchNextPageError || repliesQuery.isRefetchError}
 		<p class="mt-2 text-sm text-error" role="alert">{m.thread_replies_load_failed()}</p>
 	{/if}
 
@@ -560,6 +771,7 @@
 		draft={branchReplyDraft ?? threadReplyDraft}
 		onSubmit={(bodyMarkdown) => sendReply(bodyMarkdown, replyTarget?.parentReplyId ?? null)}
 		onClearReplyTarget={() => (replyTarget = null)}
+		onShowReplyTarget={(moveFocus) => replyTarget && revealReply(replyTarget.replyId, moveFocus)}
 	/>
 {/if}
 

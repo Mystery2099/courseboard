@@ -1,3 +1,5 @@
+import { ScrollTargetReveal } from '#lib/client/navigation/ScrollTargetReveal.ts';
+
 /** How far above the page's end still counts as being there, so a reader a few pixels short isn't left out. */
 const PAGE_END_TOLERANCE_PX = 80;
 
@@ -35,10 +37,9 @@ export class ReaderPosition {
 
 	/** Scrolls to the end of the page, smoothly unless the reader prefers reduced motion. */
 	static scrollToPageEnd(): void {
-		const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		window.scrollTo({
 			top: document.documentElement.scrollHeight,
-			behavior: prefersReducedMotion ? 'instant' : 'smooth'
+			behavior: ScrollTargetReveal.scrollBehavior()
 		});
 	}
 }

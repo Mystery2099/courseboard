@@ -3,6 +3,7 @@
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import Check from 'lucide-svelte/icons/check';
+	import CornerLeftUp from 'lucide-svelte/icons/corner-left-up';
 	import { describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 	import type { ReplyAction } from '#lib/client/content/ReplyAction.ts';
 	import { longPress } from '#lib/client/gestures/LongPressGesture.ts';
@@ -24,8 +25,10 @@
 		reactions,
 		reactionError,
 		copyNotice,
+		parentReplyAuthorName = null,
 		onToggleReaction,
-		onOpenActionSheet
+		onOpenActionSheet,
+		onShowParentReply
 	}: {
 		reply: ReplyResponse;
 		isAccepted: boolean;
@@ -38,8 +41,11 @@
 		/** Why the last reaction toggle on this reply failed, if it did. */
 		reactionError: Error | null;
 		copyNotice: string;
+		/** On a nested reply, who wrote the reply its branch answers, which it links back to. */
+		parentReplyAuthorName?: string | null;
 		onToggleReaction: (emoji: ReactionEmoji, isAdding: boolean) => void;
 		onOpenActionSheet: (opener: HTMLElement) => void;
+		onShowParentReply?: () => void;
 	} = $props();
 
 	const inlineActions = $derived(actions.filter((action) => INLINE_ACTION_IDS.has(action.id)));
@@ -56,6 +62,17 @@
 	]}
 	{@attach longPress((article) => onOpenActionSheet(article))}
 >
+	{#if parentReplyAuthorName && onShowParentReply}
+		<Button
+			variant="text"
+			size="compact"
+			class="-ms-2 -mt-1 mb-1 max-w-full px-2"
+			onclick={onShowParentReply}
+			><CornerLeftUp aria-hidden="true" /><span class="truncate"
+				>{m.thread_in_reply_to({ name: parentReplyAuthorName })}</span
+			></Button
+		>
+	{/if}
 	<div class="flex flex-wrap items-center justify-between gap-2">
 		<ContentByline author={reply.author} createdAt={reply.createdAt} />
 		{#if isAccepted}

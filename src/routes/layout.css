@@ -189,14 +189,19 @@
 		background-color: var(--background);
 		color: var(--on-surface);
 		font-family: var(--font-sans);
-		/* Keeps focused and scrolled-to elements clear of the phone dock, or of a thread's reply bar. */
-		scroll-padding-bottom: calc(
+		/* The phone dock, or a thread's reply bar, and the on-screen keyboard. */
+		--bottom-bar-clearance: calc(
 			var(--keyboard-inset, 0px) +
 				var(--docked-reply-composer-height, calc(7rem + env(safe-area-inset-bottom)))
 		);
+		/* Keeps focused and scrolled-to elements clear of those, and of Jump to latest while it shows. */
+		scroll-padding-bottom: max(
+			var(--bottom-bar-clearance),
+			var(--latest-reply-jump-clearance, 0px)
+		);
 
 		@variant desktop {
-			scroll-padding-bottom: 0;
+			--bottom-bar-clearance: 0px;
 		}
 	}
 
@@ -294,6 +299,39 @@
 		animation-iteration-count: 1 !important;
 		transition-duration: 0.01ms !important;
 		scroll-behavior: auto !important;
+	}
+}
+
+/* Registered as a length, so scripts read it in pixels (`ScrollTargetReveal.visibleAreaBottom`). */
+@property --bottom-bar-clearance {
+	syntax: '<length>';
+	inherits: true;
+	initial-value: 0px;
+}
+
+/*
+ * A reply or section the reader just jumped to. The outline fades out; with reduced motion the
+ * fade is skipped and the outline stays put until `ScrollTargetReveal` removes the attribute, on
+ * the same 2s timer as the fade.
+ */
+[data-scroll-highlight] {
+	outline: 3px solid var(--primary);
+	outline-offset: 2px;
+
+	/* A keyboard focus ring never fades: the outline holds, then the focus style takes over. */
+	@media (prefers-reduced-motion: no-preference) {
+		&:not(:focus-visible) {
+			animation: scroll-highlight-fade 2s ease-in forwards;
+		}
+	}
+}
+
+@keyframes scroll-highlight-fade {
+	60% {
+		outline-color: var(--primary);
+	}
+	100% {
+		outline-color: transparent;
 	}
 }
 
