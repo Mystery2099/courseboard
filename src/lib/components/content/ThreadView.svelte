@@ -120,15 +120,11 @@
 	const replyBranches = $derived(groupReplies(shownReplies));
 
 	const courseActivityNotices = getCourseActivityNotices();
-	// While older pages are still unloaded, new replies arrive through Load more replies instead.
-	const newReplyIds = $derived(
-		repliesQuery.hasNextPage
-			? []
-			: courseActivityNotices.findNewReplyIds(
-					postId,
-					new Set(shownReplies.map((reply) => reply.id))
-				)
+	const unshownAnnouncedReplyIds = $derived(
+		courseActivityNotices.findNewReplyIds(postId, new Set(shownReplies.map((reply) => reply.id)))
 	);
+	// While older pages are still unloaded, new replies arrive through Load more replies instead.
+	const newReplyIds = $derived(repliesQuery.hasNextPage ? [] : unshownAnnouncedReplyIds);
 	const newRepliesReveal = new NewActivityReveal();
 
 	/**
@@ -167,19 +163,20 @@
 	// Replies already waiting when the thread opens, such as on a return to it, stay behind the
 	// notice. Bookkeeping for the effect below, not state anything renders.
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity
-	const seenNewReplyIds = new Set<string>(untrack(() => newReplyIds));
+	const seenNewReplyIds = new Set<string>(untrack(() => unshownAnnouncedReplyIds));
 	// Whether the reader was at the end when a reply arrived during the last load.
 	let wasFollowingArrivalDuringLoad = false;
 	let isThreadOpen = true;
 	onDestroy(() => (isThreadOpen = false));
 
-	// Before rendering, so the notice never flashes for replies about to appear.
+	// Before rendering, so the notice never flashes for replies about to appear. Arrivals are
+	// recorded even while older pages are unloaded, so one isn't taken as new once they load.
 	$effect.pre(() => {
-		const replyIds = newReplyIds;
+		const replyIds = unshownAnnouncedReplyIds;
 		untrack(() => {
 			const hasArrival = replyIds.some((replyId) => !seenNewReplyIds.has(replyId));
 			for (const replyId of replyIds) seenNewReplyIds.add(replyId);
-			if (!hasArrival) return;
+			if (!hasArrival || repliesQuery.hasNextPage) return;
 			const isFollowing = ReaderPosition.isFollowingPageEnd();
 			if (newRepliesReveal.isShowing) wasFollowingArrivalDuringLoad ||= isFollowing;
 			else if (isFollowing) void showArrivedReplies();
@@ -188,7 +185,7 @@
 
 	async function showArrivedReplies() {
 		wasFollowingArrivalDuringLoad = false;
-		const scrollPositionBeforeLoad = window.scrollY;
+		const pageHeightBeforeLoad = document.documentElement.scrollHeight;
 		const replyIdsBeforeLoad = new Set(shownReplies.map((reply) => reply.id));
 		isShowingArrivedReplies = true;
 		try {
@@ -197,9 +194,9 @@
 			isShowingArrivedReplies = false;
 		}
 		if (!isThreadOpen) return;
-		// A reader who scrolled up or started typing during the load stays where they are.
+		// A reader who scrolled away from the end or started typing during the load stays put.
 		const isStillFollowing =
-			ReaderPosition.isReading() && !ReaderPosition.hasScrolledUpFrom(scrollPositionBeforeLoad);
+			ReaderPosition.isReading() && ReaderPosition.isNearPageEnd(pageHeightBeforeLoad);
 		if (isStillFollowing) ReaderPosition.scrollToPageEnd();
 		const ownReplyIds = new Set(submissionQueue.storedReplies.map((reply) => reply.id));
 		void announceArrivedReplies(

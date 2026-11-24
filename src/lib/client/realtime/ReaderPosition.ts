@@ -8,9 +8,10 @@ const EDITABLE_SELECTOR =
 export class ReaderPosition {
 	/** True when the reader is reading and at the end of the page. */
 	static isFollowingPageEnd(): boolean {
-		if (!ReaderPosition.isReading()) return false;
-		const pageHeight = document.documentElement.scrollHeight;
-		return window.scrollY + window.innerHeight >= pageHeight - PAGE_END_TOLERANCE_PX;
+		return (
+			ReaderPosition.isReading() &&
+			ReaderPosition.isNearPageEnd(document.documentElement.scrollHeight)
+		);
 	}
 
 	/**
@@ -27,9 +28,9 @@ export class ReaderPosition {
 		);
 	}
 
-	/** More than a nudge, such as scroll anchoring after content above changes height. */
-	static hasScrolledUpFrom(scrollPosition: number): boolean {
-		return window.scrollY < scrollPosition - PAGE_END_TOLERANCE_PX;
+	/** True when the bottom of the window is near the end of a page of the given height. */
+	static isNearPageEnd(pageHeight: number): boolean {
+		return window.scrollY + window.innerHeight >= pageHeight - PAGE_END_TOLERANCE_PX;
 	}
 
 	/** Scrolls to the end of the page, smoothly unless the reader prefers reduced motion. */
