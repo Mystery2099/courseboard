@@ -22,7 +22,8 @@
 		replyTargetName,
 		draft,
 		onSubmit,
-		onClearReplyTarget
+		onClearReplyTarget,
+		onShowReplyTarget
 	}: {
 		/** Whose reply is being answered, or null for a reply to the thread itself. */
 		replyTargetName: string | null;
@@ -30,6 +31,8 @@
 		draft: ComposerDraft;
 		onSubmit: (bodyMarkdown: string) => void;
 		onClearReplyTarget: () => void;
+		/** Shows the reply being answered, moving focus to it unless the field should keep it. */
+		onShowReplyTarget: (moveFocus: boolean) => void;
 	} = $props();
 
 	const fieldId = $props.id();
@@ -118,6 +121,11 @@
 		if (event.detail === 0) bodyField?.focus();
 	}
 
+	/** A tap while typing leaves focus, and the keyboard, in the field; otherwise focus goes to the reply. */
+	function showReplyTarget() {
+		onShowReplyTarget(document.activeElement !== bodyField);
+	}
+
 	/** Keeps focus, and so the keyboard, on the field when a bar button is tapped. */
 	function keepFieldFocused(event: MouseEvent) {
 		if (event.button === 0 && document.activeElement === bodyField) event.preventDefault();
@@ -149,11 +157,17 @@
 				{replyTargetName ? m.thread_replying_to({ name: replyTargetName }) : ''}
 			</p>
 			{#if replyTargetName}
-				<div class="mb-1 flex items-center gap-2 ps-2 text-sm text-on-surface-variant">
-					<CornerUpLeft size={16} aria-hidden="true" class="shrink-0" />
-					<span class="min-w-0 truncate" aria-hidden="true"
-						>{m.thread_replying_to({ name: replyTargetName })}</span
+				<div class="mb-1 flex items-center gap-2 text-sm text-on-surface-variant">
+					<button
+						type="button"
+						class="flex min-h-11 min-w-0 items-center gap-2 rounded-full state-layer-primary ps-2 pe-3"
+						aria-label={m.thread_show_reply_target({ name: replyTargetName })}
+						onmousedown={keepFieldFocused}
+						onclick={showReplyTarget}
 					>
+						<CornerUpLeft size={16} aria-hidden="true" class="shrink-0" />
+						<span class="min-w-0 truncate">{m.thread_replying_to({ name: replyTargetName })}</span>
+					</button>
 					<Button
 						variant="ghost"
 						size="icon"

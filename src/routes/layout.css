@@ -297,6 +297,28 @@
 	}
 }
 
+/*
+ * A reply or section the reader just jumped to. The outline fades out; with reduced motion the
+ * fade is skipped and the outline stays put until the attribute is removed.
+ */
+[data-scroll-highlight] {
+	outline: 3px solid var(--primary);
+	outline-offset: 2px;
+
+	@media (prefers-reduced-motion: no-preference) {
+		animation: scroll-highlight-fade 2s ease-in forwards;
+	}
+}
+
+@keyframes scroll-highlight-fade {
+	60% {
+		outline-color: var(--primary);
+	}
+	100% {
+		outline-color: transparent;
+	}
+}
+
 /* The blueprint grid drawn behind headers. */
 @utility bg-blueprint-grid {
 	background-color: var(--surface-container);

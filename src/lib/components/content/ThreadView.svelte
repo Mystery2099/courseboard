@@ -11,6 +11,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import ArrowDown from 'lucide-svelte/icons/arrow-down';
 	import CircleCheck from 'lucide-svelte/icons/circle-check';
 	import CircleX from 'lucide-svelte/icons/circle-x';
 	import Copy from 'lucide-svelte/icons/copy';
@@ -42,6 +43,7 @@
 	import { getCourseActivityNotices } from '#lib/client/realtime/CourseActivityNotices.svelte.ts';
 	import { NewActivityReveal } from '#lib/client/realtime/NewActivityReveal.svelte.ts';
 	import { ReaderPosition } from '#lib/client/realtime/ReaderPosition.ts';
+	import { ScrollTargetReveal } from '#lib/client/navigation/ScrollTargetReveal.ts';
 
 	let {
 		initialPost,
@@ -148,12 +150,20 @@
 			queryClient.invalidateQueries({ queryKey: postQueryKeys.detail(postId) }),
 			queryClient.invalidateQueries({ queryKey: postQueryKeys.replies(postId) })
 		]);
+		await loadRemainingReplyPages();
+	}
+
+	/** Loads further pages of replies until one holds `untilReplyId`, or until the last page. */
+	async function loadRemainingReplyPages(untilReplyId?: string) {
 		// Each result says whether another page follows, since the query stops updating once the
 		// reader leaves the thread.
 		let hasNextPage = repliesQuery.hasNextPage;
 		while (hasNextPage) {
 			const pageResult = await repliesQuery.fetchNextPage();
-			hasNextPage = !pageResult.isError && pageResult.hasNextPage;
+			const isFound = pageResult.data?.pages.some((page) =>
+				page.replies.some((reply) => reply.id === untilReplyId)
+			);
+			hasNextPage = !pageResult.isError && pageResult.hasNextPage && !isFound;
 		}
 	}
 
@@ -259,6 +269,7 @@
 
 	/** A reply being answered. Nested replies are answered in their branch, under the top-level reply. */
 	interface ReplyTarget {
+		replyId: string;
 		parentReplyId: string;
 		authorName: string;
 	}
@@ -273,6 +284,7 @@
 
 	function setReplyTarget(reply: ReplyResponse) {
 		replyTarget = {
+			replyId: reply.id,
 			parentReplyId: reply.parentReplyId ?? reply.id,
 			authorName: reply.author.displayName
 		};
@@ -302,6 +314,100 @@
 					?.scrollIntoView({ block: 'nearest' })
 			)
 		);
+	}
+
+	/** Scrolls to a reply on the page and highlights it, moving focus there unless told not to. */
+	function revealReply(replyId: string, moveFocus = true) {
+		const replyElement = document.getElementById(`reply-${replyId}`);
+		if (replyElement) ScrollTargetReveal.reveal(replyElement, { moveFocus });
+	}
+
+	const shownRepliesById = $derived(new Map(shownReplies.map((reply) => [reply.id, reply])));
+	/** The reply a nested reply's branch answers, when that branch is shown. */
+	const parentReplyOf = (reply: ReplyResponse) =>
+		reply.parentReplyId !== null && !isUnderHiddenBranch(reply.parentReplyId)
+			? (shownRepliesById.get(reply.parentReplyId) ?? null)
+			: null;
+
+	const jumpableAcceptedReplyId = $derived(post.kind === 'question' ? post.acceptedReplyId : null);
+	let isLoadingAcceptedReply = $state(false);
+
+	/** Loads pages of replies until the accepted answer is among them, then goes to it. */
+	async function jumpToAcceptedReply() {
+		const acceptedReplyId = jumpableAcceptedReplyId;
+		if (!acceptedReplyId) return;
+		if (!shownRepliesById.has(acceptedReplyId)) {
+			isLoadingAcceptedReply = true;
+			try {
+				await loadRemainingReplyPages(acceptedReplyId);
+			} finally {
+				isLoadingAcceptedReply = false;
+			}
+			await tick();
+		}
+		revealReply(acceptedReplyId);
+	}
+
+	// Replies as the list renders them; nested replies whose branch isn't loaded aren't drawn.
+	const renderedReplies = $derived([
+		...replyBranches.flatMap((branch) => [branch.reply, ...branch.nestedReplies]),
+		...storedRepliesUnderHiddenBranches
+	]);
+	const latestRenderedReply = $derived(
+		renderedReplies.reduce<ReplyResponse | null>(
+			(latest, reply) => (latest === null || reply.createdAt > latest.createdAt ? reply : latest),
+			null
+		)
+	);
+	let repliesList = $state<HTMLElement | null>(null);
+	let isLatestReplyBelowView = $state(false);
+
+	/**
+	 * True in a thread over two screens long when the latest reply, or the end of the loaded replies
+	 * while more pages follow, is below what the reader can see.
+	 */
+	function updateLatestReplyVisibility() {
+		const isLongThread = document.documentElement.scrollHeight > window.innerHeight * 2;
+		const anchor = repliesQuery.hasNextPage
+			? repliesList
+			: latestRenderedReply && document.getElementById(`reply-${latestRenderedReply.id}`);
+		const anchorTop = anchor?.getBoundingClientRect()[repliesQuery.hasNextPage ? 'bottom' : 'top'];
+		isLatestReplyBelowView =
+			isLongThread && anchorTop !== undefined && anchorTop > ScrollTargetReveal.visibleAreaBottom();
+	}
+
+	$effect(() => {
+		void latestRenderedReply;
+		void repliesQuery.hasNextPage;
+		let frame = 0;
+		const scheduleUpdate = () => {
+			cancelAnimationFrame(frame);
+			frame = requestAnimationFrame(updateLatestReplyVisibility);
+		};
+		scheduleUpdate();
+		window.addEventListener('scroll', scheduleUpdate, { passive: true });
+		window.addEventListener('resize', scheduleUpdate, { passive: true });
+		return () => {
+			cancelAnimationFrame(frame);
+			window.removeEventListener('scroll', scheduleUpdate);
+			window.removeEventListener('resize', scheduleUpdate);
+		};
+	});
+
+	let isLoadingLatestReply = $state(false);
+
+	/** Loads any remaining pages, then goes to the newest reply. */
+	async function jumpToLatestReply() {
+		if (repliesQuery.hasNextPage) {
+			isLoadingLatestReply = true;
+			try {
+				await loadRemainingReplyPages();
+			} finally {
+				isLoadingLatestReply = false;
+			}
+			await tick();
+		}
+		if (latestRenderedReply) revealReply(latestRenderedReply.id);
 	}
 
 	function showUpdatedPost(updatedPost: PostDetailResponse) {
@@ -452,6 +558,8 @@
 		reactions={reactions ? (reactions.replies[reply.id] ?? []) : null}
 		reactionError={reactionFailure?.replyId === reply.id ? reactionFailure.error : null}
 		copyNotice={copyNotice?.replyId === reply.id ? copyNotice.message : ''}
+		parentReplyAuthorName={parentReplyOf(reply)?.author.displayName ?? null}
+		onShowParentReply={() => reply.parentReplyId && revealReply(reply.parentReplyId)}
 		onToggleReaction={(emoji, isAdding) => threadReactions.toggle(reply.id, emoji, isAdding)}
 		onOpenActionSheet={(opener) => openReplyActionSheet(reply, opener)}
 	/>
@@ -469,7 +577,20 @@
 />
 
 <section class="mt-8" aria-labelledby="replies-heading">
-	<h2 id="replies-heading" class="text-lg font-semibold">{formatReplyCount(post.replyCount)}</h2>
+	<div class="flex flex-wrap items-center justify-between gap-2">
+		<h2 id="replies-heading" class="text-lg font-semibold">{formatReplyCount(post.replyCount)}</h2>
+		{#if jumpableAcceptedReplyId}
+			<Button
+				variant="tonal"
+				size="compact"
+				disabled={isLoadingAcceptedReply}
+				onclick={jumpToAcceptedReply}
+				><CircleCheck aria-hidden="true" />{isLoadingAcceptedReply
+					? m.common_loading()
+					: m.thread_jump_to_accepted_answer()}</Button
+			>
+		{/if}
+	</div>
 	<NewActivityNotice
 		label={newReplyIds.length > 0 && !isShowingArrivedReplies
 			? m.realtime_show_new_replies({ count: newReplyIds.length })
@@ -479,7 +600,7 @@
 	/>
 	<p class="sr-only" aria-live="polite">{arrivedRepliesAnnouncement}</p>
 
-	<ul class="mt-3 flex flex-col gap-3">
+	<ul bind:this={repliesList} class="mt-3 flex flex-col gap-3">
 		{#each replyBranches as branch (branch.reply.id)}
 			<li>
 				{@render replyCard(branch.reply)}
@@ -553,6 +674,20 @@
 	{/if}
 </section>
 
+{#if isLatestReplyBelowView || isLoadingLatestReply}
+	<!-- Above the phone's reply bar or dock, and the on-screen keyboard. -->
+	<Button
+		variant="tonal"
+		size="compact"
+		class="fixed end-4 bottom-[calc(var(--keyboard-inset,0px)+var(--docked-reply-composer-height,calc(7rem+env(safe-area-inset-bottom))))] z-20 shadow-raised desktop:end-8 desktop:bottom-8"
+		disabled={isLoadingLatestReply}
+		onclick={jumpToLatestReply}
+		><ArrowDown aria-hidden="true" />{isLoadingLatestReply
+			? m.common_loading()
+			: m.thread_jump_to_latest_reply()}</Button
+	>
+{/if}
+
 {#if !post.isLocked}
 	<DockedReplyComposer
 		bind:this={dockedReplyComposer}
@@ -560,6 +695,7 @@
 		draft={branchReplyDraft ?? threadReplyDraft}
 		onSubmit={(bodyMarkdown) => sendReply(bodyMarkdown, replyTarget?.parentReplyId ?? null)}
 		onClearReplyTarget={() => (replyTarget = null)}
+		onShowReplyTarget={(moveFocus) => replyTarget && revealReply(replyTarget.replyId, moveFocus)}
 	/>
 {/if}
 
