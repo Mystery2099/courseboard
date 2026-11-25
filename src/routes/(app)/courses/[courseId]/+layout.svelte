@@ -213,13 +213,15 @@
 					{/if}
 					<nav
 						aria-label={m.course_space_channels_short()}
-						class="mt-2.5 flex flex-wrap gap-2 py-1.5 desktop:hidden"
+						class="-mx-4 mt-2.5 flex scroll-px-4 [scrollbar-width:none] gap-2 overflow-x-auto px-4 py-1.5 desktop:hidden"
 					>
+						<!-- One scrolling row, since the four chips are wider than a phone and wrapped one alone. -->
 						{#each COURSE_CHANNELS as channel (channel)}
 							<a
 								href={resolve(COURSE_CHANNEL_ROUTE_IDS[channel], { courseId: data.course.id })}
 								aria-current={channel === currentChannel ? 'page' : undefined}
-								class={toggleVariants({ variant: 'chip' })}>{COURSE_CHANNEL_LABELS[channel]()}</a
+								class={[toggleVariants({ variant: 'chip' }), 'shrink-0']}
+								>{COURSE_CHANNEL_LABELS[channel]()}</a
 							>
 						{/each}
 					</nav>
