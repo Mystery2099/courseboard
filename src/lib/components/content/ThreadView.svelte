@@ -289,6 +289,13 @@
 	let branchReplyComposer = $state<ReturnType<typeof ReplyComposer> | null>(null);
 	let lockedNotice = $state<HTMLParagraphElement | null>(null);
 
+	/**
+	 * A disabled control, such as the Lock button waiting for its request, is never one the swap
+	 * displaced, and measuring it would make the browser move focus off it.
+	 */
+	const isStillShown = (element: Element) =>
+		element.matches(':disabled') || element.getClientRects().length > 0;
+
 	// Locking or unlocking, from here or elsewhere, swaps the reply composers for the locked notice.
 	// When that removes or hides the focused element, such as a control in the phone's navigation
 	// dock, focus moves to whatever took its place.
@@ -304,7 +311,7 @@
 			wasWritingThreadReply = threadReplyComposerContainer?.contains(focusedBeforeSwap) ?? false;
 		}
 		void tick().then(() => {
-			if (focusedBeforeSwap.isConnected && focusedBeforeSwap.checkVisibility()) return;
+			if (focusedBeforeSwap.isConnected && isStillShown(focusedBeforeSwap)) return;
 			if (isLocked) {
 				lockedNotice?.focus();
 				return;
