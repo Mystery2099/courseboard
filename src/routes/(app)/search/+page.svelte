@@ -141,23 +141,23 @@
 				}))
 			]}
 		/>
+		{#if search.courseOptions.length > 0}
+			<FilterChipSelect
+				label={m.search_course()}
+				name="courseId"
+				form="search-form"
+				onchange={applyFilters}
+				options={[
+					{ value: '', label: m.search_any_course(), isSelected: !query.courseId },
+					...search.courseOptions.map((course) => ({
+						value: course.id,
+						label: `${course.code} · ${course.title}`,
+						isSelected: course.id === query.courseId
+					}))
+				]}
+			/>
+		{/if}
 		{#if query.scope === 'people'}
-			{#if search.courseOptions.length > 0}
-				<FilterChipSelect
-					label={m.search_course()}
-					name="courseId"
-					form="search-form"
-					onchange={applyFilters}
-					options={[
-						{ value: '', label: m.search_any_course(), isSelected: !query.courseId },
-						...search.courseOptions.map((course) => ({
-							value: course.id,
-							label: `${course.code} · ${course.title}`,
-							isSelected: course.id === query.courseId
-						}))
-					]}
-				/>
-			{/if}
 			<FilterChipSelect
 				label={m.search_status()}
 				name="status"
