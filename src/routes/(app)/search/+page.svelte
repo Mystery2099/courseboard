@@ -190,7 +190,7 @@
 			<p class="font-heading text-xl font-bold">
 				{#if query.scope === 'people' && !query.q}
 					{m.search_no_people()}
-				{:else if search.institution}
+				{:else if search.institution && !query.courseId}
 					{m.search_no_results_at_school({ query: query.q, school: search.institution.name })}
 				{:else}
 					{m.search_no_results({ query: query.q })}
