@@ -315,6 +315,7 @@
 			const desktopComposer =
 				(replyTarget && !wasWritingThreadReply && branchReplyComposer) || threadReplyComposer;
 			desktopComposer?.focus();
+			wasWritingThreadReply = false;
 		});
 	});
 

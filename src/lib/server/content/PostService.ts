@@ -192,13 +192,16 @@ export class PostService {
 		const post = await this.findPost(postId);
 		if (!post) return null;
 		await this.moderation.requireModerator(moderator, post.courseId);
+		const wasLocked = post.lockedAt !== null;
 		// Locking again keeps the original time.
 		const lockedAt = isLocked ? (post.lockedAt ?? new Date()) : null;
 		if (!(await this.posts.setLockedAt(post._id, lockedAt))) return null;
-		this.events.publishPostLockChanged({
-			courseId: post.courseId.toHexString(),
-			postId: post._id.toHexString()
-		});
+		if (isLocked !== wasLocked) {
+			this.events.publishPostLockChanged({
+				courseId: post.courseId.toHexString(),
+				postId: post._id.toHexString()
+			});
+		}
 		return PostResponseMapper.toDetailResponse({ ...post, lockedAt }, moderator, true);
 	}
 

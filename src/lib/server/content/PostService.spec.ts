@@ -250,11 +250,15 @@ describe('post service', () => {
 		});
 	});
 
-	it('announces a lock change only when the write found the post', async () => {
-		const { service, posts, events } = createService();
-		vi.spyOn(posts, 'setLockedAt').mockResolvedValue(false);
+	it('announces a lock change only when the write found the post and changed it', async () => {
+		const { service, posts, events } = createService({ ...question, lockedAt: new Date() });
+		const setLockedAt = vi.spyOn(posts, 'setLockedAt').mockResolvedValue(false);
 
 		expect(await service.setLocked(postId.toHexString(), false, administrator)).toBeNull();
+		expect(events.publishPostLockChanged).not.toHaveBeenCalled();
+
+		setLockedAt.mockResolvedValue(true);
+		await service.setLocked(postId.toHexString(), true, administrator);
 		expect(events.publishPostLockChanged).not.toHaveBeenCalled();
 	});
 
