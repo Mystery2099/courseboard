@@ -10,6 +10,7 @@ export const REALTIME_MESSAGES = {
 	subscribeToCourse: 'course.subscribe',
 	unsubscribeFromCourse: 'course.unsubscribe',
 	postCreated: 'post.created',
+	postLockChanged: 'post.lock.changed',
 	replyCreated: 'reply.created',
 	reactionChanged: 'reaction.changed',
 	mentionCreated: 'mention.created'
@@ -28,6 +29,12 @@ export interface PostCreatedEvent {
 	courseId: string;
 	postId: string;
 	kind: PostKind;
+}
+
+/** A moderator locked or unlocked the thread; the open thread refetches it to learn which. */
+export interface PostLockChangedEvent {
+	courseId: string;
+	postId: string;
 }
 
 export interface ReplyCreatedEvent {

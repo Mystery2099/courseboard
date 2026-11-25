@@ -53,6 +53,7 @@ function createEventPublisher() {
 	return {
 		publishPostCreated: vi.fn(),
 		publishReplyCreated: vi.fn(),
+		publishPostLockChanged: vi.fn(),
 		publishReactionChanged: vi.fn(),
 		publishMentionCreated: vi.fn()
 	};
@@ -229,19 +230,32 @@ describe('post service', () => {
 	});
 
 	it('lets administrators lock a thread, without changing its activity', async () => {
-		const { service, posts } = createService();
+		const { service, posts, events } = createService();
 		const setLockedAt = vi.spyOn(posts, 'setLockedAt').mockResolvedValue(true);
 
 		await expect(service.setLocked(postId.toHexString(), true, asker)).rejects.toBeInstanceOf(
 			AccessDeniedError
 		);
 		expect(setLockedAt).not.toHaveBeenCalled();
+		expect(events.publishPostLockChanged).not.toHaveBeenCalled();
 
 		const locked = await service.setLocked(postId.toHexString(), true, administrator);
 		expect(locked).toMatchObject({
 			isLocked: true,
 			lastActivityAt: question.lastActivityAt.toISOString()
 		});
+		expect(events.publishPostLockChanged).toHaveBeenCalledExactlyOnceWith({
+			courseId: courseId.toHexString(),
+			postId: postId.toHexString()
+		});
+	});
+
+	it('announces a lock change only when the write found the post', async () => {
+		const { service, posts, events } = createService();
+		vi.spyOn(posts, 'setLockedAt').mockResolvedValue(false);
+
+		expect(await service.setLocked(postId.toHexString(), false, administrator)).toBeNull();
+		expect(events.publishPostLockChanged).not.toHaveBeenCalled();
 	});
 
 	it("lets a course's moderators lock only that course's threads", async () => {

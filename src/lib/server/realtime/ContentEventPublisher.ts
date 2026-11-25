@@ -2,18 +2,22 @@ import {
 	REALTIME_MESSAGES,
 	type MentionCreatedEvent,
 	type PostCreatedEvent,
+	type PostLockChangedEvent,
 	type ReactionChangedEvent,
 	type ReplyCreatedEvent
 } from '#lib/contracts/RealtimeContract.ts';
 import { RealtimeRooms } from './RealtimeRooms.ts';
 
 /**
- * Announces stored content to the course's listeners, except the author, whose page already shows
- * it. Call only after the write has committed.
+ * Announces stored changes to the course's listeners. Call only after the write has committed.
  */
 export interface ContentEventPublisher {
+	/** Sent to everyone in the course except the author, whose page already shows it. */
 	publishPostCreated(event: PostCreatedEvent, authorId: string): void;
+	/** Sent to everyone in the course except the author, whose page already shows it. */
 	publishReplyCreated(event: ReplyCreatedEvent, authorId: string): void;
+	/** Sent to everyone in the course, the moderator's other tabs included. */
+	publishPostLockChanged(event: PostLockChangedEvent): void;
 	/** Sent to everyone in the course, the reacting person's other tabs included. */
 	publishReactionChanged(event: ReactionChangedEvent): void;
 	/** Sent to the mentioned person's sockets only, whichever course they have open. */
@@ -32,6 +36,10 @@ export class SocketContentEventPublisher implements ContentEventPublisher {
 
 	publishReplyCreated(event: ReplyCreatedEvent, authorId: string): void {
 		this.emit(REALTIME_MESSAGES.replyCreated, event, authorId);
+	}
+
+	publishPostLockChanged(event: PostLockChangedEvent): void {
+		this.emit(REALTIME_MESSAGES.postLockChanged, event, null);
 	}
 
 	publishReactionChanged(event: ReactionChangedEvent): void {
@@ -53,7 +61,7 @@ export class SocketContentEventPublisher implements ContentEventPublisher {
 	/** `excludedUserId` leaves out that account's sockets; null reaches the whole course. */
 	private emit(
 		message: string,
-		event: PostCreatedEvent | ReplyCreatedEvent | ReactionChangedEvent,
+		event: PostCreatedEvent | ReplyCreatedEvent | PostLockChangedEvent | ReactionChangedEvent,
 		excludedUserId: string | null
 	): void {
 		const socketServer = globalThis.academicPlatformSocketServer;

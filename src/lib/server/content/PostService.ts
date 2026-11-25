@@ -195,6 +195,10 @@ export class PostService {
 		// Locking again keeps the original time.
 		const lockedAt = isLocked ? (post.lockedAt ?? new Date()) : null;
 		if (!(await this.posts.setLockedAt(post._id, lockedAt))) return null;
+		this.events.publishPostLockChanged({
+			courseId: post.courseId.toHexString(),
+			postId: post._id.toHexString()
+		});
 		return PostResponseMapper.toDetailResponse({ ...post, lockedAt }, moderator, true);
 	}
 
