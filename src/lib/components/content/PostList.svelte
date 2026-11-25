@@ -30,6 +30,7 @@
 	} from '#lib/contracts/PostContract.ts';
 	import FilterChipSelect from '#lib/components/FilterChipSelect.svelte';
 	import { THREAD_ROUTE_IDS } from '#lib/client/navigation/CourseChannel.ts';
+	import { ScrollTargetReveal } from '#lib/client/navigation/ScrollTargetReveal.ts';
 	import {
 		PostListReadingPositions,
 		type PostListReadingPosition
@@ -143,7 +144,8 @@
 		const anchorLink = [...listElement.querySelectorAll<HTMLElement>('a[id^="post-"]')].find(
 			(link) => link.getBoundingClientRect().bottom > 0
 		);
-		if (!anchorLink) return;
+		// A thread opened from elsewhere, such as the composer, isn't a place in this list.
+		if (!anchorLink || !posts.some((post) => post.id === to.params?.postId)) return;
 		PostListReadingPositions.save(courseId, kind, {
 			filter,
 			reviewFilters,
@@ -155,17 +157,14 @@
 		});
 	});
 
-	/** Input from the reader while pages load, which cancels the restore; the browser's own scrolling doesn't. */
+	/** Input from the reader while pages load ends the restore; the browser's own scrolling doesn't. */
 	const READER_INPUT_EVENTS = ['wheel', 'touchmove', 'keydown', 'pointerdown'] as const;
-	let hasReaderInteracted = false;
 	$effect(() => {
 		if (!restoringPosition) return;
-		hasReaderInteracted = false;
-		const noteReaderInput = () => (hasReaderInteracted = true);
-		for (const type of READER_INPUT_EVENTS) window.addEventListener(type, noteReaderInput, true);
+		const cancelRestore = () => (restoringPosition = null);
+		for (const type of READER_INPUT_EVENTS) window.addEventListener(type, cancelRestore, true);
 		return () => {
-			for (const type of READER_INPUT_EVENTS)
-				window.removeEventListener(type, noteReaderInput, true);
+			for (const type of READER_INPUT_EVENTS) window.removeEventListener(type, cancelRestore, true);
 		};
 	});
 
@@ -202,7 +201,7 @@
 			return;
 		}
 		restoringPosition = null;
-		if (hasReaderInteracted || document.activeElement !== document.body) return;
+		if (document.activeElement !== document.body) return;
 		if (anchorLink) {
 			window.scrollBy({
 				top: anchorLink.getBoundingClientRect().top - position.anchorTop,
@@ -211,7 +210,11 @@
 		}
 		// A post that moved off screen while the reader was away isn't focused out of sight.
 		const openedBounds = openedLink?.getBoundingClientRect();
-		if (openedBounds && openedBounds.bottom > 0 && openedBounds.top < window.innerHeight) {
+		const isOpenedPostVisible =
+			openedBounds &&
+			openedBounds.bottom > 0 &&
+			openedBounds.top < ScrollTargetReveal.visibleAreaBottom();
+		if (isOpenedPostVisible) {
 			openedLink?.focus({ preventScroll: true });
 		}
 	});
