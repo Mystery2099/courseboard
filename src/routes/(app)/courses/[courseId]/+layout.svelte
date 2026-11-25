@@ -87,6 +87,21 @@
 			courseId: data.course.id
 		})}`
 	);
+	/** Scrolls the phone's channel strip sideways, never the page, so the current chip is in view. */
+	function revealCurrentChannelChip(strip: HTMLElement) {
+		void currentChannel;
+		const reveal = () => {
+			const chip = strip.querySelector<HTMLElement>('[aria-current="page"]');
+			if (!chip) return;
+			const overflowRight =
+				chip.getBoundingClientRect().right - strip.getBoundingClientRect().right;
+			if (overflowRight > 0)
+				strip.scrollLeft += overflowRight + parseFloat(getComputedStyle(strip).paddingRight);
+		};
+		reveal();
+		// The chips widen once the web font loads on a first visit.
+		void document.fonts.ready.then(reveal);
+	}
 	const followActionUrl = $derived(
 		`${resolve('/(app)/courses/[courseId]', { courseId: data.course.id })}?/${data.course.isFollowed ? 'unfollow' : 'follow'}`
 	);
@@ -214,6 +229,7 @@
 					<nav
 						aria-label={m.course_space_channels_short()}
 						class="-mx-4 mt-2.5 flex scroll-px-4 [scrollbar-width:none] gap-2 overflow-x-auto px-4 py-1.5 desktop:hidden"
+						{@attach revealCurrentChannelChip}
 					>
 						<!-- One scrolling row, since the four chips are wider than a phone and wrapped one alone. -->
 						{#each COURSE_CHANNELS as channel (channel)}

@@ -133,7 +133,11 @@ export class SearchService {
 		limit: number
 	): Promise<SearchSection<PostSearchResult>> {
 		const text = query.q;
-		const courseIds = query.courseId ? [new ObjectId(query.courseId)] : scope.institutionCourseIds;
+		// Everything has no Course chip, so only the Posts scope narrows to a course.
+		const courseIds =
+			query.courseId && query.scope === 'posts'
+				? [new ObjectId(query.courseId)]
+				: scope.institutionCourseIds;
 		const rows = await this.posts.searchPublished(text, courseIds, skip, limit + 1);
 		return SearchService.toSection(rows, limit, (row) => ({
 			id: row._id.toHexString(),
