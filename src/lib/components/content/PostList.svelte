@@ -168,8 +168,9 @@
 		};
 	});
 
-	// Only a return from the thread opened here restores the place; arriving any other way, or after
-	// the position expired, starts at the top, even where the browser's Back would restore its own.
+	// Only a return from the thread opened here restores the place. A return from any thread of this
+	// course without a live position starts at the top, even by Back; other arrivals keep the
+	// browser's usual behavior.
 	afterNavigate(({ from }) => {
 		if (!isThreadInThisCourse(from)) return;
 		const position = PostListReadingPositions.take(courseId, kind);
@@ -192,7 +193,8 @@
 			restoringPosition = null;
 			return;
 		}
-		if (postsQuery.isPending || postsQuery.isFetchingNextPage) return;
+		// A refresh of stale pages can still move rows, so the place is found after it settles.
+		if (postsQuery.isPending || postsQuery.isFetching) return;
 		const findLoadedLink = (postId: string) =>
 			posts.some((post) => post.id === postId) ? document.getElementById(`post-${postId}`) : null;
 		const anchorLink = findLoadedLink(position.anchorPostId);
@@ -202,7 +204,11 @@
 			postsQuery.hasNextPage &&
 			!postsQuery.isFetchNextPageError &&
 			loadedPageCount < position.loadedPageCount;
-		if ((!anchorLink || !openedLink) && canLoadMore) {
+		const scrollTarget =
+			window.scrollY + (anchorLink?.getBoundingClientRect().top ?? 0) - position.anchorTop;
+		const isTargetReachable =
+			scrollTarget <= document.documentElement.scrollHeight - window.innerHeight;
+		if ((!anchorLink || !openedLink || !isTargetReachable) && canLoadMore) {
 			void postsQuery.fetchNextPage({ cancelRefetch: false });
 			return;
 		}
