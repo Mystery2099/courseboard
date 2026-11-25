@@ -35,6 +35,7 @@
 		type PostListReadingPosition
 	} from '#lib/client/navigation/PostListReadingPosition.ts';
 	import ThreadKindBadge from './ThreadKindBadge.svelte';
+	import PostListSkeleton from './PostListSkeleton.svelte';
 	import ReviewFacts from './ReviewFacts.svelte';
 	import NewActivityNotice from './NewActivityNotice.svelte';
 	import { getCourseActivityNotices } from '#lib/client/realtime/CourseActivityNotices.svelte.ts';
@@ -262,7 +263,7 @@
 />
 
 {#if postsQuery.isPending}
-	<p class="mt-4 text-sm text-on-surface-variant">{m.common_loading()}</p>
+	<PostListSkeleton />
 {:else if postsQuery.isError && posts.length === 0}
 	<p class="mt-4 text-sm text-error" role="alert">
 		{m.post_list_load_failed()}
