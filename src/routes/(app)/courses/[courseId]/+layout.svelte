@@ -93,10 +93,13 @@
 		const reveal = () => {
 			const chip = strip.querySelector<HTMLElement>('[aria-current="page"]');
 			if (!chip) return;
-			const overflowRight =
-				chip.getBoundingClientRect().right - strip.getBoundingClientRect().right;
-			if (overflowRight > 0)
-				strip.scrollLeft += overflowRight + parseFloat(getComputedStyle(strip).paddingRight);
+			const chipBounds = chip.getBoundingClientRect();
+			const stripBounds = strip.getBoundingClientRect();
+			const padding = parseFloat(getComputedStyle(strip).paddingRight);
+			const overflowLeft = stripBounds.left + padding - chipBounds.left;
+			const overflowRight = chipBounds.right - (stripBounds.right - padding);
+			if (overflowLeft > 0) strip.scrollLeft -= overflowLeft;
+			else if (overflowRight > 0) strip.scrollLeft += overflowRight;
 		};
 		reveal();
 		// The chips widen once the web font loads on a first visit.

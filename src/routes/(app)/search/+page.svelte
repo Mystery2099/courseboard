@@ -58,8 +58,12 @@
 		const form = event.currentTarget.form;
 		if (!form) return;
 		const formData = new FormData(form);
+		// A course belongs to one school, so choosing another school clears it.
+		const isSchoolChange = event.currentTarget.name === 'institutionId';
 		const parameters = new URLSearchParams(
-			[...formData.entries()].map(([key, value]) => [key, String(value)])
+			[...formData.entries()]
+				.filter(([key]) => !(isSchoolChange && key === 'courseId'))
+				.map(([key, value]) => [key, String(value)])
 		);
 		// The path comes from resolve(); only the query string is added.
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
