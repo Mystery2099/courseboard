@@ -5,6 +5,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery, useQueryClient } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
+	import { afterNavigate, beforeNavigate, type NavigationTarget } from '$app/navigation';
 	import Check from 'lucide-svelte/icons/check';
 	import Lock from 'lucide-svelte/icons/lock';
 	import {
@@ -29,6 +30,10 @@
 	} from '#lib/contracts/PostContract.ts';
 	import FilterChipSelect from '#lib/components/FilterChipSelect.svelte';
 	import { THREAD_ROUTE_IDS } from '#lib/client/navigation/CourseChannel.ts';
+	import {
+		PostListReadingPositions,
+		type PostListReadingPosition
+	} from '#lib/client/navigation/PostListReadingPosition.ts';
 	import ThreadKindBadge from './ThreadKindBadge.svelte';
 	import ReviewFacts from './ReviewFacts.svelte';
 	import NewActivityNotice from './NewActivityNotice.svelte';
@@ -124,6 +129,63 @@
 			}
 		);
 	}
+
+	const threadRouteIds = new Set<string>(Object.values(THREAD_ROUTE_IDS));
+	const isThreadInThisCourse = (target: NavigationTarget | null) =>
+		threadRouteIds.has(target?.route.id ?? '') && target?.params?.courseId === courseId;
+
+	let listElement = $state<HTMLElement>();
+	let restoringPosition = $state<PostListReadingPosition | null>(null);
+
+	beforeNavigate(({ to, willUnload }) => {
+		if (willUnload || !to?.params?.postId || !isThreadInThisCourse(to) || !listElement) return;
+		const anchorLink = [...listElement.querySelectorAll<HTMLElement>('a[id^="post-"]')].find(
+			(link) => link.getBoundingClientRect().bottom > 0
+		);
+		if (!anchorLink) return;
+		PostListReadingPositions.save(courseId, kind, {
+			filter,
+			reviewFilters,
+			anchorPostId: anchorLink.id.slice('post-'.length),
+			anchorTop: anchorLink.getBoundingClientRect().top,
+			openedPostId: to.params.postId,
+			loadedPageCount: postsQuery.data?.pages.length ?? 1,
+			savedAt: Date.now()
+		});
+	});
+
+	// Only a return from a thread restores the place; arriving any other way starts at the top.
+	afterNavigate(({ from }) => {
+		if (!isThreadInThisCourse(from)) return;
+		const position = PostListReadingPositions.take(courseId, kind);
+		if (!position) return;
+		filter = position.filter;
+		reviewFilters = position.reviewFilters;
+		restoringPosition = position;
+	});
+
+	// Loads as many pages as the reader had, at most, until the post they were looking at is back.
+	$effect(() => {
+		const position = restoringPosition;
+		if (!position || postsQuery.isPending || postsQuery.isFetchingNextPage) return;
+		const anchorLink = posts.some((post) => post.id === position.anchorPostId)
+			? document.getElementById(`post-${position.anchorPostId}`)
+			: null;
+		const loadedPageCount = postsQuery.data?.pages.length ?? 0;
+		if (!anchorLink && postsQuery.hasNextPage && loadedPageCount < position.loadedPageCount) {
+			if (!postsQuery.isFetchNextPageError) void postsQuery.fetchNextPage({ cancelRefetch: false });
+			else restoringPosition = null;
+			return;
+		}
+		restoringPosition = null;
+		if (anchorLink) {
+			window.scrollBy({
+				top: anchorLink.getBoundingClientRect().top - position.anchorTop,
+				behavior: 'instant'
+			});
+		}
+		document.getElementById(`post-${position.openedPostId}`)?.focus({ preventScroll: true });
+	});
 
 	/** Loads the next page when the end of the list scrolls into view; Load more stays as fallback. */
 	function loadWhenVisible(sentinel: HTMLElement) {
@@ -224,7 +286,7 @@
 		{filter === 'unanswered' ? m.post_list_all_answered() : emptyMessage}
 	</p>
 {:else}
-	<ul class="mt-4 divide-y overflow-hidden rounded-card border bg-surface">
+	<ul class="mt-4 divide-y overflow-hidden rounded-card border bg-surface" bind:this={listElement}>
 		{#each posts as post (post.id)}
 			<li>
 				<a
