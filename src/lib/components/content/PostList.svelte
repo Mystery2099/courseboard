@@ -186,7 +186,13 @@
 	// they opened are both back.
 	$effect(() => {
 		const position = restoringPosition;
-		if (!position || postsQuery.isPending || postsQuery.isFetchingNextPage) return;
+		if (!position) return;
+		// Choosing another order or filter, by any means, ends the restore too.
+		if (filter !== position.filter || reviewFilters !== position.reviewFilters) {
+			restoringPosition = null;
+			return;
+		}
+		if (postsQuery.isPending || postsQuery.isFetchingNextPage) return;
 		const findLoadedLink = (postId: string) =>
 			posts.some((post) => post.id === postId) ? document.getElementById(`post-${postId}`) : null;
 		const anchorLink = findLoadedLink(position.anchorPostId);
