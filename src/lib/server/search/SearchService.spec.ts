@@ -58,7 +58,7 @@ function createService() {
 	const service = new SearchService(institutions, courses, posts, people);
 	const search = (query: SearchQuery, actor: ApplicationUser | null = searcher) =>
 		service.search(searchQuerySchema.parse(query), actor);
-	return { search, searchByCodePrefix, searchByText, searchPosts, searchPeople };
+	return { search, courses, searchByCodePrefix, searchByText, searchPosts, searchPeople };
 }
 
 afterEach(() => vi.restoreAllMocks());
@@ -142,6 +142,21 @@ describe('search service', () => {
 		expect(matching.courseOptions).toEqual([
 			{ id: schoolCourse._id.toHexString(), code: 'CISY 7013', title: 'NoSQL Data Systems' }
 		]);
+	});
+
+	it('searches only one course’s posts when a course is chosen', async () => {
+		const { search, courses, searchPosts } = createService();
+		const otherCourse = { _id: new ObjectId(), code: 'CISY 8503', title: 'Applied Databases' };
+		vi.spyOn(courses, 'findOptionsByInstitution').mockResolvedValue([schoolCourse, otherCourse]);
+
+		const response = await search({
+			q: 'index',
+			scope: 'posts',
+			courseId: schoolCourse._id.toHexString()
+		});
+
+		expect(searchPosts).toHaveBeenCalledWith('index', [schoolCourse._id], 0, SEARCH_PAGE_SIZE + 1);
+		expect(response.courseOptions).toHaveLength(2);
 	});
 
 	it('refuses a suspended account', async () => {

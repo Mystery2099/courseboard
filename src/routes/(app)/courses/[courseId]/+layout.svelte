@@ -7,6 +7,7 @@
 	import { resolve } from '$app/paths';
 	import Check from 'lucide-svelte/icons/check';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
+	import SearchIcon from 'lucide-svelte/icons/search';
 	import HistoryEntryEditorDialog from '#lib/components/history/HistoryEntryEditorDialog.svelte';
 	import {
 		COURSE_CHANNELS,
@@ -78,6 +79,32 @@
 		void CourseNavigationApiClient.recordVisit(data.course.id).catch(() => undefined);
 	});
 	let isFollowPending = $state(false);
+	// Opens post search narrowed to this course, at its school so the course filter applies.
+	const courseSearchUrl = $derived(
+		`${resolve('/(app)/search')}?${new URLSearchParams({
+			scope: 'posts',
+			institutionId: data.course.institution.id,
+			courseId: data.course.id
+		})}`
+	);
+	/** Scrolls the phone's channel strip sideways, never the page, so the current chip is in view. */
+	function revealCurrentChannelChip(strip: HTMLElement) {
+		void currentChannel;
+		const reveal = () => {
+			const chip = strip.querySelector<HTMLElement>('[aria-current="page"]');
+			if (!chip) return;
+			const chipBounds = chip.getBoundingClientRect();
+			const stripBounds = strip.getBoundingClientRect();
+			const padding = parseFloat(getComputedStyle(strip).paddingRight);
+			const overflowLeft = stripBounds.left + padding - chipBounds.left;
+			const overflowRight = chipBounds.right - (stripBounds.right - padding);
+			if (overflowLeft > 0) strip.scrollLeft -= overflowLeft;
+			else if (overflowRight > 0) strip.scrollLeft += overflowRight;
+		};
+		reveal();
+		// The chips widen once the web font loads on a first visit.
+		void document.fonts.ready.then(reveal);
+	}
 	const followActionUrl = $derived(
 		`${resolve('/(app)/courses/[courseId]', { courseId: data.course.id })}?/${data.course.isFollowed ? 'unfollow' : 'follow'}`
 	);
@@ -141,11 +168,23 @@
 		{:else}
 			<header class="border-b bg-blueprint-grid">
 				<div class="mx-auto max-w-3xl px-4 pt-8 pb-4 desktop:pb-6">
-					<div class="flex flex-wrap items-baseline justify-between gap-x-2">
+					<div class="flex items-center justify-between gap-x-2">
 						<p class="font-mono text-sm font-semibold text-primary">
 							{data.course.code} · {data.course.institution.name}
 						</p>
-						{@render reconnectingStatus()}
+						<div class="-my-3 flex items-center gap-2">
+							{@render reconnectingStatus()}
+							<!-- An icon on phones, so the header doesn't gain a row there. -->
+							<Button
+								variant="text"
+								size="compact"
+								href={courseSearchUrl}
+								class="max-tablet:size-11 max-tablet:px-0"
+								><SearchIcon size={20} /><span class="sr-only tablet:not-sr-only"
+									>{m.course_space_search()}</span
+								></Button
+							>
+						</div>
 					</div>
 					<h1 class="mt-1 text-headline font-bold">{data.course.title}</h1>
 					<p class="mt-2 text-on-surface-variant">{data.course.description}</p>
@@ -192,13 +231,16 @@
 					{/if}
 					<nav
 						aria-label={m.course_space_channels_short()}
-						class="mt-2.5 flex flex-wrap gap-2 py-1.5 desktop:hidden"
+						class="-mx-4 mt-2.5 flex scroll-px-4 [scrollbar-width:none] gap-2 overflow-x-auto px-4 py-1.5 desktop:hidden"
+						{@attach revealCurrentChannelChip}
 					>
+						<!-- One scrolling row, since the four chips are wider than a phone and wrapped one alone. -->
 						{#each COURSE_CHANNELS as channel (channel)}
 							<a
 								href={resolve(COURSE_CHANNEL_ROUTE_IDS[channel], { courseId: data.course.id })}
 								aria-current={channel === currentChannel ? 'page' : undefined}
-								class={toggleVariants({ variant: 'chip' })}>{COURSE_CHANNEL_LABELS[channel]()}</a
+								class={[toggleVariants({ variant: 'chip' }), 'shrink-0']}
+								>{COURSE_CHANNEL_LABELS[channel]()}</a
 							>
 						{/each}
 					</nav>

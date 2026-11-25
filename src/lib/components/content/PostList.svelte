@@ -5,6 +5,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { createInfiniteQuery, useQueryClient } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
+	import { afterNavigate, beforeNavigate, type NavigationTarget } from '$app/navigation';
 	import Check from 'lucide-svelte/icons/check';
 	import Lock from 'lucide-svelte/icons/lock';
 	import {
@@ -29,7 +30,13 @@
 	} from '#lib/contracts/PostContract.ts';
 	import FilterChipSelect from '#lib/components/FilterChipSelect.svelte';
 	import { THREAD_ROUTE_IDS } from '#lib/client/navigation/CourseChannel.ts';
+	import { ScrollTargetReveal } from '#lib/client/navigation/ScrollTargetReveal.ts';
+	import {
+		PostListReadingPositions,
+		type PostListReadingPosition
+	} from '#lib/client/navigation/PostListReadingPosition.ts';
 	import ThreadKindBadge from './ThreadKindBadge.svelte';
+	import PostListSkeleton from './PostListSkeleton.svelte';
 	import ReviewFacts from './ReviewFacts.svelte';
 	import NewActivityNotice from './NewActivityNotice.svelte';
 	import { getCourseActivityNotices } from '#lib/client/realtime/CourseActivityNotices.svelte.ts';
@@ -125,6 +132,105 @@
 		);
 	}
 
+	const threadRouteIds = new Set<string>(Object.values(THREAD_ROUTE_IDS));
+	const isThreadInThisCourse = (target: NavigationTarget | null) =>
+		threadRouteIds.has(target?.route.id ?? '') && target?.params?.courseId === courseId;
+
+	let listElement = $state<HTMLElement>();
+	let restoringPosition = $state<PostListReadingPosition | null>(null);
+
+	beforeNavigate(({ to, willUnload }) => {
+		if (willUnload || !to?.params?.postId || !isThreadInThisCourse(to) || !listElement) return;
+		const anchorLink = [...listElement.querySelectorAll<HTMLElement>('a[id^="post-"]')].find(
+			(link) => link.getBoundingClientRect().bottom > 0
+		);
+		// A thread opened from elsewhere, such as the composer, isn't a place in this list.
+		if (!anchorLink || !posts.some((post) => post.id === to.params?.postId)) return;
+		PostListReadingPositions.save(courseId, kind, {
+			filter,
+			reviewFilters,
+			anchorPostId: anchorLink.id.slice('post-'.length),
+			anchorTop: anchorLink.getBoundingClientRect().top,
+			openedPostId: to.params.postId,
+			loadedPageCount: postsQuery.data?.pages.length ?? 1,
+			savedAt: Date.now()
+		});
+	});
+
+	/** Input from the reader while pages load ends the restore; the browser's own scrolling doesn't. */
+	const READER_INPUT_EVENTS = ['wheel', 'touchmove', 'keydown', 'pointerdown'] as const;
+	$effect(() => {
+		if (!restoringPosition) return;
+		const cancelRestore = () => (restoringPosition = null);
+		for (const type of READER_INPUT_EVENTS) window.addEventListener(type, cancelRestore, true);
+		return () => {
+			for (const type of READER_INPUT_EVENTS) window.removeEventListener(type, cancelRestore, true);
+		};
+	});
+
+	// Only a return from the thread opened here restores the place. A return from any thread of this
+	// course without a live position starts at the top, even by Back; other arrivals keep the
+	// browser's usual behavior.
+	afterNavigate(({ from }) => {
+		if (!isThreadInThisCourse(from)) return;
+		const position = PostListReadingPositions.take(courseId, kind);
+		if (!position || position.openedPostId !== from?.params?.postId) {
+			window.scrollTo({ top: 0, behavior: 'instant' });
+			return;
+		}
+		filter = position.filter;
+		reviewFilters = position.reviewFilters;
+		restoringPosition = position;
+	});
+
+	// Loads as many pages as the reader had, at most, until the row they were looking at and the post
+	// they opened are both back.
+	$effect(() => {
+		const position = restoringPosition;
+		if (!position) return;
+		// Choosing another order or filter, by any means, ends the restore too.
+		if (filter !== position.filter || reviewFilters !== position.reviewFilters) {
+			restoringPosition = null;
+			return;
+		}
+		// A refresh of stale pages can still move rows, so the place is found after it settles.
+		if (postsQuery.isPending || postsQuery.isFetching) return;
+		const findLoadedLink = (postId: string) =>
+			posts.some((post) => post.id === postId) ? document.getElementById(`post-${postId}`) : null;
+		const anchorLink = findLoadedLink(position.anchorPostId);
+		const openedLink = findLoadedLink(position.openedPostId);
+		const loadedPageCount = postsQuery.data?.pages.length ?? 0;
+		const canLoadMore =
+			postsQuery.hasNextPage &&
+			!postsQuery.isFetchNextPageError &&
+			loadedPageCount < position.loadedPageCount;
+		const scrollTarget =
+			window.scrollY + (anchorLink?.getBoundingClientRect().top ?? 0) - position.anchorTop;
+		const isTargetReachable =
+			scrollTarget <= document.documentElement.scrollHeight - window.innerHeight;
+		if ((!anchorLink || !openedLink || !isTargetReachable) && canLoadMore) {
+			void postsQuery.fetchNextPage({ cancelRefetch: false });
+			return;
+		}
+		restoringPosition = null;
+		if (document.activeElement !== document.body) return;
+		if (anchorLink) {
+			window.scrollBy({
+				top: anchorLink.getBoundingClientRect().top - position.anchorTop,
+				behavior: 'instant'
+			});
+		}
+		// A post that moved off screen while the reader was away isn't focused out of sight.
+		const openedBounds = openedLink?.getBoundingClientRect();
+		const isOpenedPostVisible =
+			openedBounds &&
+			openedBounds.bottom > 0 &&
+			openedBounds.top < ScrollTargetReveal.visibleAreaBottom();
+		if (isOpenedPostVisible) {
+			openedLink?.focus({ preventScroll: true });
+		}
+	});
+
 	/** Loads the next page when the end of the list scrolls into view; Load more stays as fallback. */
 	function loadWhenVisible(sentinel: HTMLElement) {
 		const observer = new IntersectionObserver(([entry]) => {
@@ -200,7 +306,10 @@
 />
 
 {#if postsQuery.isPending}
-	<p class="mt-4 text-sm text-on-surface-variant">{m.common_loading()}</p>
+	<!-- Keyed, so a filter chosen during another's load gets its own full second. -->
+	{#key JSON.stringify([filter, reviewFilters])}
+		<PostListSkeleton />
+	{/key}
 {:else if postsQuery.isError && posts.length === 0}
 	<p class="mt-4 text-sm text-error" role="alert">
 		{m.post_list_load_failed()}
@@ -224,7 +333,7 @@
 		{filter === 'unanswered' ? m.post_list_all_answered() : emptyMessage}
 	</p>
 {:else}
-	<ul class="mt-4 divide-y overflow-hidden rounded-card border bg-surface">
+	<ul class="mt-4 divide-y overflow-hidden rounded-card border bg-surface" bind:this={listElement}>
 		{#each posts as post (post.id)}
 			<li>
 				<a

@@ -58,8 +58,12 @@
 		const form = event.currentTarget.form;
 		if (!form) return;
 		const formData = new FormData(form);
+		// A course belongs to one school, so choosing another school clears it.
+		const isSchoolChange = event.currentTarget.name === 'institutionId';
 		const parameters = new URLSearchParams(
-			[...formData.entries()].map(([key, value]) => [key, String(value)])
+			[...formData.entries()]
+				.filter(([key]) => !(isSchoolChange && key === 'courseId'))
+				.map(([key, value]) => [key, String(value)])
 		);
 		// The path comes from resolve(); only the query string is added.
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
@@ -141,23 +145,23 @@
 				}))
 			]}
 		/>
+		{#if search.courseOptions.length > 0}
+			<FilterChipSelect
+				label={m.search_course()}
+				name="courseId"
+				form="search-form"
+				onchange={applyFilters}
+				options={[
+					{ value: '', label: m.search_any_course(), isSelected: !query.courseId },
+					...search.courseOptions.map((course) => ({
+						value: course.id,
+						label: `${course.code} · ${course.title}`,
+						isSelected: course.id === query.courseId
+					}))
+				]}
+			/>
+		{/if}
 		{#if query.scope === 'people'}
-			{#if search.courseOptions.length > 0}
-				<FilterChipSelect
-					label={m.search_course()}
-					name="courseId"
-					form="search-form"
-					onchange={applyFilters}
-					options={[
-						{ value: '', label: m.search_any_course(), isSelected: !query.courseId },
-						...search.courseOptions.map((course) => ({
-							value: course.id,
-							label: `${course.code} · ${course.title}`,
-							isSelected: course.id === query.courseId
-						}))
-					]}
-				/>
-			{/if}
 			<FilterChipSelect
 				label={m.search_status()}
 				name="status"
@@ -186,7 +190,7 @@
 			<p class="font-heading text-xl font-bold">
 				{#if query.scope === 'people' && !query.q}
 					{m.search_no_people()}
-				{:else if search.institution}
+				{:else if search.institution && !query.courseId}
 					{m.search_no_results_at_school({ query: query.q, school: search.institution.name })}
 				{:else}
 					{m.search_no_results({ query: query.q })}

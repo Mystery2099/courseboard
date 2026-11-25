@@ -78,7 +78,7 @@ export class SearchService {
 
 		const [courses, posts, people] = await Promise.all([
 			wants('courses') && query.q ? this.searchCourses(query.q, scope, skip, limit) : null,
-			wants('posts') && query.q ? this.searchPosts(query.q, scope, skip, limit) : null,
+			wants('posts') && query.q ? this.searchPosts(query, scope, skip, limit) : null,
 			wants('people') && hasPeopleFilter ? this.searchPeople(query, scope, skip, limit) : null
 		]);
 		return {
@@ -90,7 +90,7 @@ export class SearchService {
 			posts,
 			people,
 			courseOptions:
-				query.scope === 'people'
+				query.scope === 'posts' || query.scope === 'people'
 					? (institutionCourses ?? []).map((course) => ({
 							id: course._id.toHexString(),
 							code: course.code,
@@ -127,17 +127,18 @@ export class SearchService {
 	}
 
 	private async searchPosts(
-		text: string,
+		query: ParsedSearchQuery,
 		scope: ResolvedScope,
 		skip: number,
 		limit: number
 	): Promise<SearchSection<PostSearchResult>> {
-		const rows = await this.posts.searchPublished(
-			text,
-			scope.institutionCourseIds,
-			skip,
-			limit + 1
-		);
+		const text = query.q;
+		// Everything has no Course chip, so only the Posts scope narrows to a course.
+		const courseIds =
+			query.courseId && query.scope === 'posts'
+				? [new ObjectId(query.courseId)]
+				: scope.institutionCourseIds;
+		const rows = await this.posts.searchPublished(text, courseIds, skip, limit + 1);
 		return SearchService.toSection(rows, limit, (row) => ({
 			id: row._id.toHexString(),
 			courseId: row.courseId.toHexString(),
