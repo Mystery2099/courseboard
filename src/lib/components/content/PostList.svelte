@@ -155,8 +155,19 @@
 		});
 	});
 
-	/** Where the page was when the reader came back, so a scroll of their own cancels the restore. */
-	let scrollYOnReturn = 0;
+	/** Input from the reader while pages load, which cancels the restore; the browser's own scrolling doesn't. */
+	const READER_INPUT_EVENTS = ['wheel', 'touchmove', 'keydown', 'pointerdown'] as const;
+	let hasReaderInteracted = false;
+	$effect(() => {
+		if (!restoringPosition) return;
+		hasReaderInteracted = false;
+		const noteReaderInput = () => (hasReaderInteracted = true);
+		for (const type of READER_INPUT_EVENTS) window.addEventListener(type, noteReaderInput, true);
+		return () => {
+			for (const type of READER_INPUT_EVENTS)
+				window.removeEventListener(type, noteReaderInput, true);
+		};
+	});
 
 	// Only a return from the thread opened here restores the place; arriving any other way, or after
 	// the position expired, starts at the top, even where the browser's Back would restore its own.
@@ -169,7 +180,6 @@
 		}
 		filter = position.filter;
 		reviewFilters = position.reviewFilters;
-		scrollYOnReturn = window.scrollY;
 		restoringPosition = position;
 	});
 
@@ -192,16 +202,18 @@
 			return;
 		}
 		restoringPosition = null;
-		const hasReaderMoved =
-			window.scrollY !== scrollYOnReturn || document.activeElement !== document.body;
-		if (hasReaderMoved) return;
+		if (hasReaderInteracted || document.activeElement !== document.body) return;
 		if (anchorLink) {
 			window.scrollBy({
 				top: anchorLink.getBoundingClientRect().top - position.anchorTop,
 				behavior: 'instant'
 			});
 		}
-		openedLink?.focus({ preventScroll: true });
+		// A post that moved off screen while the reader was away isn't focused out of sight.
+		const openedBounds = openedLink?.getBoundingClientRect();
+		if (openedBounds && openedBounds.bottom > 0 && openedBounds.top < window.innerHeight) {
+			openedLink?.focus({ preventScroll: true });
+		}
 	});
 
 	/** Loads the next page when the end of the list scrolls into view; Load more stays as fallback. */
