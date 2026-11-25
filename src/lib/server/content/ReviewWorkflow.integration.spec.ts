@@ -168,7 +168,7 @@ it.skipIf(!testMongoDbUri)(
 			await database.collection('posts').insertMany(hiddenReviews);
 			// A removed or deleted post can't be locked, even by a caller that read it moments before.
 			for (const review of hiddenReviews) {
-				expect(await postRepository.setLockedAt(review._id, new Date())).toBe(false);
+				expect(await postRepository.setLockedAt(review._id, new Date())).toBeNull();
 			}
 			expect(await database.collection('posts').countDocuments({ lockedAt: { $ne: null } })).toBe(
 				0

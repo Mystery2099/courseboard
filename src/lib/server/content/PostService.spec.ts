@@ -53,6 +53,7 @@ function createEventPublisher() {
 	return {
 		publishPostCreated: vi.fn(),
 		publishReplyCreated: vi.fn(),
+		publishPostLockChanged: vi.fn(),
 		publishReactionChanged: vi.fn(),
 		publishMentionCreated: vi.fn()
 	};
@@ -229,24 +230,46 @@ describe('post service', () => {
 	});
 
 	it('lets administrators lock a thread, without changing its activity', async () => {
-		const { service, posts } = createService();
-		const setLockedAt = vi.spyOn(posts, 'setLockedAt').mockResolvedValue(true);
+		const { service, posts, events } = createService();
+		const setLockedAt = vi.spyOn(posts, 'setLockedAt').mockResolvedValue({ lockedAt: null });
 
 		await expect(service.setLocked(postId.toHexString(), true, asker)).rejects.toBeInstanceOf(
 			AccessDeniedError
 		);
 		expect(setLockedAt).not.toHaveBeenCalled();
+		expect(events.publishPostLockChanged).not.toHaveBeenCalled();
 
 		const locked = await service.setLocked(postId.toHexString(), true, administrator);
 		expect(locked).toMatchObject({
 			isLocked: true,
 			lastActivityAt: question.lastActivityAt.toISOString()
 		});
+		expect(events.publishPostLockChanged).toHaveBeenCalledExactlyOnceWith({
+			courseId: courseId.toHexString(),
+			postId: postId.toHexString()
+		});
+	});
+
+	it('announces a lock change only when the write found the post and changed it', async () => {
+		const { service, posts, events } = createService();
+		const setLockedAt = vi.spyOn(posts, 'setLockedAt').mockResolvedValue(null);
+
+		expect(await service.setLocked(postId.toHexString(), false, administrator)).toBeNull();
+		expect(events.publishPostLockChanged).not.toHaveBeenCalled();
+
+		setLockedAt.mockResolvedValue({ lockedAt: null });
+		await service.setLocked(postId.toHexString(), false, administrator);
+		expect(events.publishPostLockChanged).not.toHaveBeenCalled();
+
+		// Read as unlocked, but another moderator's lock committed before this unlock replaced it.
+		setLockedAt.mockResolvedValue({ lockedAt: new Date() });
+		await service.setLocked(postId.toHexString(), false, administrator);
+		expect(events.publishPostLockChanged).toHaveBeenCalledOnce();
 	});
 
 	it("lets a course's moderators lock only that course's threads", async () => {
 		const { service, posts, isAssigned } = createService();
-		const setLockedAt = vi.spyOn(posts, 'setLockedAt').mockResolvedValue(true);
+		const setLockedAt = vi.spyOn(posts, 'setLockedAt').mockResolvedValue({ lockedAt: null });
 		isAssigned.mockImplementation(
 			async (userId, assignedCourseId) =>
 				userId.equals(moderator.id) && assignedCourseId.equals(courseId)
@@ -271,7 +294,7 @@ describe('post service', () => {
 	it('refuses moderators of another course', async () => {
 		const otherCourseQuestion = { ...question, courseId: new ObjectId('000000000000000000000008') };
 		const { service, posts, isAssigned } = createService(otherCourseQuestion);
-		const setLockedAt = vi.spyOn(posts, 'setLockedAt').mockResolvedValue(true);
+		const setLockedAt = vi.spyOn(posts, 'setLockedAt').mockResolvedValue({ lockedAt: null });
 		isAssigned.mockImplementation(async (_userId, assignedCourseId) =>
 			assignedCourseId.equals(courseId)
 		);

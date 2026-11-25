@@ -439,6 +439,7 @@
 	"keyboard_shortcut_code": "Código en línea",
 	"settings_keyboard_shortcuts": "Atajos de teclado",
 	"settings_keyboard_shortcuts_hint": "Muestra los atajos para moverte y escribir.",
+	"realtime_reconnecting": "Reconectando…",
 	"realtime_show_new_posts": [
 		{
 			"declarations": ["input count", "local countPlural = count: plural"],

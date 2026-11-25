@@ -284,7 +284,48 @@
 		replyTarget ? composerDrafts.open(replyDraftTarget(replyTarget.parentReplyId)) : null
 	);
 	let dockedReplyComposer = $state<ReturnType<typeof DockedReplyComposer> | null>(null);
+	let threadReplyComposer = $state<ReturnType<typeof ReplyComposer> | null>(null);
+	let threadReplyComposerContainer = $state<HTMLDivElement | null>(null);
 	let branchReplyComposer = $state<ReturnType<typeof ReplyComposer> | null>(null);
+	let lockedNotice = $state<HTMLParagraphElement | null>(null);
+
+	/**
+	 * A disabled control, such as the Lock button waiting for its request, is never one the swap
+	 * displaced, and measuring it would make the browser move focus off it.
+	 */
+	const isStillShown = (element: Element) =>
+		element.matches(':disabled') || element.getClientRects().length > 0;
+
+	// Locking or unlocking, from here or elsewhere, swaps the reply composers for the locked notice.
+	// When that removes or hides the focused element, such as a control in the phone's navigation
+	// dock, focus moves to whatever took its place.
+	let wasLocked = untrack(() => post.isLocked);
+	let wasWritingThreadReply = false;
+	$effect.pre(() => {
+		const isLocked = post.isLocked;
+		if (isLocked === wasLocked) return;
+		wasLocked = isLocked;
+		const focusedBeforeSwap = document.activeElement;
+		if (!focusedBeforeSwap || focusedBeforeSwap === document.body) return;
+		if (isLocked) {
+			wasWritingThreadReply = threadReplyComposerContainer?.contains(focusedBeforeSwap) ?? false;
+		}
+		void tick().then(() => {
+			if (focusedBeforeSwap.isConnected && isStillShown(focusedBeforeSwap)) return;
+			if (isLocked) {
+				lockedNotice?.focus();
+				return;
+			}
+			// Phones write in the dock; desktops return to the composer that was in use. Focusing
+			// whichever is hidden does nothing.
+			dockedReplyComposer?.focus();
+			// The branch may have left the page meanwhile, such as after opening another reply's link.
+			const desktopComposer =
+				(replyTarget && !wasWritingThreadReply && branchReplyComposer) || threadReplyComposer;
+			desktopComposer?.focus();
+			wasWritingThreadReply = false;
+		});
+	});
 
 	function setReplyTarget(reply: ReplyResponse) {
 		replyTarget = {
@@ -750,12 +791,18 @@
 	</div>
 
 	{#if post.isLocked}
-		<p class="mt-6 rounded-2xl bg-surface-container p-4 text-sm" role="status">
+		<p
+			bind:this={lockedNotice}
+			class="mt-6 rounded-2xl bg-surface-container p-4 text-sm"
+			role="status"
+			tabindex="-1"
+		>
 			{m.thread_locked_notice()}
 		</p>
 	{:else}
-		<div class="mt-6 hidden desktop:block">
+		<div bind:this={threadReplyComposerContainer} class="mt-6 hidden desktop:block">
 			<ReplyComposer
+				bind:this={threadReplyComposer}
 				label={m.thread_your_reply()}
 				draft={threadReplyDraft}
 				onSubmit={(bodyMarkdown) => sendReply(bodyMarkdown, null)}

@@ -44,6 +44,7 @@
 
 	const queryClient = useQueryClient();
 	const getRealtimeConnection = getRealtimeConnectionAccessor();
+	const isReconnecting = $derived(getRealtimeConnection()?.status === 'disconnected');
 	const courseActivityNotices = new CourseActivityNotices();
 	setCourseActivityNotices(courseActivityNotices);
 
@@ -55,6 +56,10 @@
 		if (!connection) return;
 		return connection.subscribeToCourse(courseId, {
 			onPostCreated: (event) => courseActivityNotices.recordPost(event),
+			// Refetching the post swaps the reply composers; their drafts are kept per thread.
+			// Lists aren't refetched, since that would also load the new posts a notice is holding back.
+			onPostLockChanged: (event) =>
+				void queryClient.invalidateQueries({ queryKey: postQueryKeys.detail(event.postId) }),
 			onReplyCreated: (event) => courseActivityNotices.recordReply(event),
 			// Counts change in place without moving anything, so they refresh without a notice.
 			onReactionChanged: (event) =>
@@ -79,6 +84,16 @@
 </script>
 
 <svelte:head><title>{data.course.code} · {data.course.title}</title></svelte:head>
+
+<!-- Shown in whichever header is on screen; the live region below announces it. -->
+{#snippet reconnectingStatus()}
+	<p class="shrink-0 text-xs text-on-surface-variant" aria-hidden="true">
+		{isReconnecting ? m.realtime_reconnecting() : ''}
+	</p>
+{/snippet}
+
+<!-- Outside the headers, so swapping between them doesn't replace it and lose the announcement. -->
+<p class="sr-only" role="status">{isReconnecting ? m.realtime_reconnecting() : ''}</p>
 
 <div class="desktop:flex">
 	<nav
@@ -120,14 +135,18 @@
 							· {COURSE_CHANNEL_LABELS[currentChannel]()}</span
 						>
 					</p>
+					<div class="ml-auto">{@render reconnectingStatus()}</div>
 				</div>
 			</header>
 		{:else}
 			<header class="border-b bg-blueprint-grid">
 				<div class="mx-auto max-w-3xl px-4 pt-8 pb-4 desktop:pb-6">
-					<p class="font-mono text-sm font-semibold text-primary">
-						{data.course.code} · {data.course.institution.name}
-					</p>
+					<div class="flex flex-wrap items-baseline justify-between gap-x-2">
+						<p class="font-mono text-sm font-semibold text-primary">
+							{data.course.code} · {data.course.institution.name}
+						</p>
+						{@render reconnectingStatus()}
+					</div>
 					<h1 class="mt-1 text-headline font-bold">{data.course.title}</h1>
 					<p class="mt-2 text-on-surface-variant">{data.course.description}</p>
 					<div class="mt-4 flex flex-wrap gap-2">

@@ -194,7 +194,15 @@ export class PostService {
 		await this.moderation.requireModerator(moderator, post.courseId);
 		// Locking again keeps the original time.
 		const lockedAt = isLocked ? (post.lockedAt ?? new Date()) : null;
-		if (!(await this.posts.setLockedAt(post._id, lockedAt))) return null;
+		const beforeWrite = await this.posts.setLockedAt(post._id, lockedAt);
+		if (!beforeWrite) return null;
+		// Compared with the state the write replaced, so a lock committed since the read still counts.
+		if (isLocked !== (beforeWrite.lockedAt !== null)) {
+			this.events.publishPostLockChanged({
+				courseId: post.courseId.toHexString(),
+				postId: post._id.toHexString()
+			});
+		}
 		return PostResponseMapper.toDetailResponse({ ...post, lockedAt }, moderator, true);
 	}
 

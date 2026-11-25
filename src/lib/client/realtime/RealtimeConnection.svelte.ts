@@ -4,6 +4,7 @@ import {
 	type CourseSubscriptionResult,
 	type MentionCreatedEvent,
 	type PostCreatedEvent,
+	type PostLockChangedEvent,
 	type ReactionChangedEvent,
 	type ReplyCreatedEvent
 } from '#lib/contracts/RealtimeContract.ts';
@@ -17,6 +18,7 @@ const RETRY_DELAY_MILLISECONDS = 5_000;
 /** Receives the events of the one course this tab listens to. */
 export interface CourseActivityListener {
 	onPostCreated(event: PostCreatedEvent): void;
+	onPostLockChanged(event: PostLockChangedEvent): void;
 	onReplyCreated(event: ReplyCreatedEvent): void;
 	onReactionChanged(event: ReactionChangedEvent): void;
 	/**
@@ -73,6 +75,11 @@ export class RealtimeConnection {
 		this.socket.on(REALTIME_MESSAGES.postCreated, (event: PostCreatedEvent) => {
 			if (event.courseId === this.courseSubscription?.courseId) {
 				this.courseSubscription.listener.onPostCreated(event);
+			}
+		});
+		this.socket.on(REALTIME_MESSAGES.postLockChanged, (event: PostLockChangedEvent) => {
+			if (event.courseId === this.courseSubscription?.courseId) {
+				this.courseSubscription.listener.onPostLockChanged(event);
 			}
 		});
 		this.socket.on(REALTIME_MESSAGES.replyCreated, (event: ReplyCreatedEvent) => {

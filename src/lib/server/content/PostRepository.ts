@@ -175,12 +175,16 @@ export class PostRepository {
 		return result.matchedCount === 1;
 	}
 
-	async setLockedAt(postId: ObjectId, lockedAt: Date | null): Promise<boolean> {
-		const result = await this.collection().updateOne(
+	/** Returns the lock time the post had before this write, or null when no post matched. */
+	async setLockedAt(
+		postId: ObjectId,
+		lockedAt: Date | null
+	): Promise<Pick<PostDocument, 'lockedAt'> | null> {
+		return this.collection().findOneAndUpdate(
 			{ _id: postId, ...VISIBLE_POST_FILTER },
-			{ $set: { lockedAt } }
+			{ $set: { lockedAt } },
+			{ projection: { _id: 0, lockedAt: 1 }, returnDocument: 'before' }
 		);
-		return result.matchedCount === 1;
 	}
 }
 
