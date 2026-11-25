@@ -290,7 +290,8 @@
 	let lockedNotice = $state<HTMLParagraphElement | null>(null);
 
 	// Locking or unlocking, from here or elsewhere, swaps the reply composers for the locked notice.
-	// When that removes the focused element, focus moves to whatever took its place.
+	// When that removes or hides the focused element, such as a control in the phone's navigation
+	// dock, focus moves to whatever took its place.
 	let wasLocked = untrack(() => post.isLocked);
 	let wasWritingThreadReply = false;
 	$effect.pre(() => {
@@ -303,7 +304,7 @@
 			wasWritingThreadReply = threadReplyComposerContainer?.contains(focusedBeforeSwap) ?? false;
 		}
 		void tick().then(() => {
-			if (focusedBeforeSwap.isConnected) return;
+			if (focusedBeforeSwap.isConnected && focusedBeforeSwap.checkVisibility()) return;
 			if (isLocked) {
 				lockedNotice?.focus();
 				return;
