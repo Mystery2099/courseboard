@@ -155,37 +155,53 @@
 		});
 	});
 
-	// Only a return from a thread restores the place; arriving any other way starts at the top.
+	/** Where the page was when the reader came back, so a scroll of their own cancels the restore. */
+	let scrollYOnReturn = 0;
+
+	// Only a return from the thread opened here restores the place; arriving any other way, or after
+	// the position expired, starts at the top, even where the browser's Back would restore its own.
 	afterNavigate(({ from }) => {
 		if (!isThreadInThisCourse(from)) return;
 		const position = PostListReadingPositions.take(courseId, kind);
-		if (!position) return;
+		if (!position || position.openedPostId !== from?.params?.postId) {
+			window.scrollTo({ top: 0, behavior: 'instant' });
+			return;
+		}
 		filter = position.filter;
 		reviewFilters = position.reviewFilters;
+		scrollYOnReturn = window.scrollY;
 		restoringPosition = position;
 	});
 
-	// Loads as many pages as the reader had, at most, until the post they were looking at is back.
+	// Loads as many pages as the reader had, at most, until the row they were looking at and the post
+	// they opened are both back.
 	$effect(() => {
 		const position = restoringPosition;
 		if (!position || postsQuery.isPending || postsQuery.isFetchingNextPage) return;
-		const anchorLink = posts.some((post) => post.id === position.anchorPostId)
-			? document.getElementById(`post-${position.anchorPostId}`)
-			: null;
+		const findLoadedLink = (postId: string) =>
+			posts.some((post) => post.id === postId) ? document.getElementById(`post-${postId}`) : null;
+		const anchorLink = findLoadedLink(position.anchorPostId);
+		const openedLink = findLoadedLink(position.openedPostId);
 		const loadedPageCount = postsQuery.data?.pages.length ?? 0;
-		if (!anchorLink && postsQuery.hasNextPage && loadedPageCount < position.loadedPageCount) {
-			if (!postsQuery.isFetchNextPageError) void postsQuery.fetchNextPage({ cancelRefetch: false });
-			else restoringPosition = null;
+		const canLoadMore =
+			postsQuery.hasNextPage &&
+			!postsQuery.isFetchNextPageError &&
+			loadedPageCount < position.loadedPageCount;
+		if ((!anchorLink || !openedLink) && canLoadMore) {
+			void postsQuery.fetchNextPage({ cancelRefetch: false });
 			return;
 		}
 		restoringPosition = null;
+		const hasReaderMoved =
+			window.scrollY !== scrollYOnReturn || document.activeElement !== document.body;
+		if (hasReaderMoved) return;
 		if (anchorLink) {
 			window.scrollBy({
 				top: anchorLink.getBoundingClientRect().top - position.anchorTop,
 				behavior: 'instant'
 			});
 		}
-		document.getElementById(`post-${position.openedPostId}`)?.focus({ preventScroll: true });
+		openedLink?.focus({ preventScroll: true });
 	});
 
 	/** Loads the next page when the end of the list scrolls into view; Load more stays as fallback. */
@@ -263,7 +279,10 @@
 />
 
 {#if postsQuery.isPending}
-	<PostListSkeleton />
+	<!-- Keyed, so a filter chosen during another's load gets its own full second. -->
+	{#key JSON.stringify([filter, reviewFilters])}
+		<PostListSkeleton />
+	{/key}
 {:else if postsQuery.isError && posts.length === 0}
 	<p class="mt-4 text-sm text-error" role="alert">
 		{m.post_list_load_failed()}
