@@ -2,8 +2,8 @@
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { Badge } from '#lib/components/ui/badge/index.js';
 	import { m } from '#lib/paraglide/messages.js';
-	import Check from 'lucide-svelte/icons/check';
 	import CornerLeftUp from 'lucide-svelte/icons/corner-left-up';
+	import Star from 'lucide-svelte/icons/star';
 	import { describeRequestFailure } from '#lib/client/ErrorPresentation.ts';
 	import type { ReplyAction } from '#lib/client/content/ReplyAction.ts';
 	import { longPress } from '#lib/client/gestures/LongPressGesture.ts';
@@ -57,7 +57,8 @@
 	tabindex="-1"
 	class={[
 		'rounded-2xl p-3 pointer-coarse:select-none pointer-coarse:[-webkit-touch-callout:none] pointer-coarse:[&_a]:[-webkit-touch-callout:default]',
-		isAccepted ? 'bg-success-container' : 'bg-surface-container',
+		// Replies read as a chat timeline; only the accepted answer gets a tinted panel.
+		isAccepted && 'bg-success-container',
 		isLinked && 'ring-2 ring-primary'
 	]}
 	{@attach longPress((article) => onOpenActionSheet(article))}
@@ -76,7 +77,10 @@
 	<div class="flex flex-wrap items-center justify-between gap-2">
 		<ContentByline author={reply.author} createdAt={reply.createdAt} />
 		{#if isAccepted}
-			<Badge variant="success"><Check size={14} /> {m.thread_accepted_answer()}</Badge>
+			<Badge variant="success"
+				><Star size={14} class="fill-gold stroke-on-success-container" />
+				{m.thread_accepted_answer()}</Badge
+			>
 		{/if}
 	</div>
 	<MarkdownBody

@@ -85,7 +85,7 @@
 		<Drawer.Trigger
 			{@attach isInCourseChannel ? horizontalSwipe(moveToChannelInSwipeDirection) : null}
 			class={[
-				'flex h-12 min-w-0 flex-1 items-center gap-2 rounded-full state-layer bg-primary-container px-4 text-left text-on-primary-container transition-colors duration-150 [--state-base:var(--primary-container)] [--state-color:var(--on-primary-container)]',
+				'flex h-12 min-w-0 flex-1 items-center gap-2 rounded-full state-layer bg-primary px-4 text-left text-on-primary transition-colors duration-150 [--state-base:var(--primary)] [--state-color:var(--on-surface)]',
 				isInCourseChannel && 'touch-pan-y touch-pinch-zoom'
 			]}
 			aria-current={currentCourse ? 'page' : undefined}

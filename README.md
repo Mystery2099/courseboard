@@ -47,7 +47,7 @@ General communities, Experience posts, presence, a notification inbox, Focus mod
 | Markdown | markdown-it | Render posts and replies safely, the same way on the server and in the browser |
 | Keyboard shortcuts | TanStack Hotkeys | Declare every shortcut in one place and list them in a shortcuts dialog |
 | Images | Sharp, binary storage in a separate MongoDB collection | Process small attachments without adding another storage provider |
-| UI | Tailwind CSS, Bits UI, selected shadcn-svelte components, Lucide | Build the Blueprint interface with accessible behavior |
+| UI | Tailwind CSS, Bits UI, selected shadcn-svelte components, Lucide | Build the Pioneer interface with accessible behavior |
 | Hosting | Render Free | Run the application separately from Atlas and my personal server |
 | Search | MongoDB text indexes and ordinary indexes | Basic text search, exact course-code lookup, and structured filters |
 
@@ -63,7 +63,7 @@ That way a mobile or desktop client could use the same API later, although only 
 
 ## Priorities
 
-I care about low memory usage, fast transitions and loading, and perceived responsiveness. Privacy has to hold on the server, not just in the UI: a Clerk account alone doesn't grant access, and even administrators can't read another student's private history through the app. Everything must stay free, without a payment method or overage billing, and Render's cold starts are an accepted tradeoff. The design stays **Blueprint**, including its light/dark themes and typography.
+I care about low memory usage, fast transitions and loading, and perceived responsiveness. Privacy has to hold on the server, not just in the UI: a Clerk account alone doesn't grant access, and even administrators can't read another student's private history through the app. Everything must stay free, without a payment method or overage billing, and Render's cold starts are an accepted tradeoff. The design is **Pioneer**, built on Alfred State's colors, with light and dark themes; Blueprint's layouts and interactions still apply.
 
 ## Where to start
 
@@ -87,13 +87,14 @@ Run local checks with `pnpm check`, `pnpm lint`, `pnpm exec vitest run`, and `pn
 | [MongoDB model](docs/technical/mongodb-model.md) | Candidate documents, indexes, queries, and aggregation work |
 | [Security and recovery](docs/technical/security-and-recovery.md) | OWASP Top 10 coverage, abuse limits, backups, and recovery |
 | [Diagrams](docs/technical/diagrams.md) | System context, collections, request checks, admission, realtime, post lifecycle, and review eligibility |
-| [Blueprint handoff](docs/design/blueprint-handoff.md) | Design tokens, components, layout, interactions, and which artboards are current |
+| [Pioneer style](docs/design/pioneer-style.md) | Colors, type, shapes, and the components restyled for them |
+| [Blueprint handoff](docs/design/blueprint-handoff.md) | Components, layout, interactions, and which artboards are current |
 | [Roadmap and acceptance](docs/implementation/roadmap-and-acceptance.md) | Build order, verification, and the assignment demonstration |
 | [Verification log](docs/implementation/verification-log.md) | What has been checked on the deployed app, how, and what hasn't been yet |
 | [Development notes](docs/implementation/development-notes.md) | Problems that cost real time, what I tried, and what stuck, for the development reflections |
 
 ## When documents disagree
 
-The assignment and requirements Professor Enke explicitly approves come first. Newer decisions I've made supersede older proposals. Use the product spec and decision register for behavior and scope, and the Blueprint handoff for visual details that haven't been superseded. The original needs assessment and some screenshots still show deferred features; a screen export doesn't make a feature required, implemented, or tested.
+The assignment and requirements Professor Enke explicitly approves come first. Newer decisions I've made supersede older proposals. Use the product spec and decision register for behavior and scope, the [Pioneer style](docs/design/pioneer-style.md) for colors, type, and shapes, and the Blueprint handoff for layouts and interactions that haven't been superseded. The original needs assessment and some screenshots still show deferred features; a screen export doesn't make a feature required, implemented, or tested.
 
 This is separate from my PostgreSQL Capstone Ticket System and TicketTinker. Their requirements and architectures don't carry over automatically.

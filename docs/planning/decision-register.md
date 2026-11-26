@@ -44,8 +44,8 @@ When we settle something, add it here with what we chose, what we rejected, and 
 | Security standard | OWASP Top 10 (2021), CSP and security headers, in-memory rate limits, `pnpm audit` in CI (November 8, 2026) | Answers the self-review security questions. See the [security and recovery plan](../technical/security-and-recovery.md) |
 | Backups | Manual `mongodump` exports kept off the repository, with a tested restore (November 8, 2026) | Atlas Free has no automated backups, and the exports contain email addresses |
 | Sign-in page | Briefly explains the platform and that access is by invitation (November 8, 2026) | It's the only page logged-out visitors can see |
-| Visual direction | Blueprint, light/dark, Material 3 Expressive influence | Kept over a true-black/minimal style. Tokens live in the [handoff](../design/blueprint-handoff.md) |
-| Typography | Space Grotesk headings, Inter UI/replies, Literata longer posts, IBM Plex Mono course codes | Don't substitute font roles arbitrarily |
+| Visual direction | Pioneer: Alfred State's navy, light blue, and gold, light/dark, with chat-app structure | Replaced Blueprint's look on Nov 26, 2026; Blueprint's layouts and interactions still apply. Tokens live in the [Pioneer style](../design/pioneer-style.md) |
+| Typography | Roboto Condensed headings, Atkinson Hyperlegible Next UI/replies, Literata longer posts, IBM Plex Mono course codes | Don't substitute font roles arbitrarily |
 | Mobile | One-row floating dock, space/channel switcher, full-screen editor | Old two-row dock designs are superseded; 360px needs to work |
 
 ## What we turned down

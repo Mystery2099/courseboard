@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { toggleVariants } from '#lib/components/ui/toggle/index.js';
 	import { Button } from '#lib/components/ui/button/index.js';
 	import { m } from '#lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
@@ -11,6 +10,7 @@
 	import HistoryEntryEditorDialog from '#lib/components/history/HistoryEntryEditorDialog.svelte';
 	import {
 		COURSE_CHANNELS,
+		COURSE_CHANNEL_ICONS,
 		COURSE_CHANNEL_LABELS,
 		COURSE_CHANNEL_ROUTE_IDS,
 		findCourseChannel
@@ -87,24 +87,6 @@
 			courseId: data.course.id
 		})}`
 	);
-	/** Scrolls the phone's channel strip sideways, never the page, so the current chip is in view. */
-	function revealCurrentChannelChip(strip: HTMLElement) {
-		void currentChannel;
-		const reveal = () => {
-			const chip = strip.querySelector<HTMLElement>('[aria-current="page"]');
-			if (!chip) return;
-			const chipBounds = chip.getBoundingClientRect();
-			const stripBounds = strip.getBoundingClientRect();
-			const padding = parseFloat(getComputedStyle(strip).paddingRight);
-			const overflowLeft = stripBounds.left + padding - chipBounds.left;
-			const overflowRight = chipBounds.right - (stripBounds.right - padding);
-			if (overflowLeft > 0) strip.scrollLeft -= overflowLeft;
-			else if (overflowRight > 0) strip.scrollLeft += overflowRight;
-		};
-		reveal();
-		// The chips widen once the web font loads on a first visit.
-		void document.fonts.ready.then(reveal);
-	}
 	const followActionUrl = $derived(
 		`${resolve('/(app)/courses/[courseId]', { courseId: data.course.id })}?/${data.course.isFollowed ? 'unfollow' : 'follow'}`
 	);
@@ -125,19 +107,26 @@
 <div class="desktop:flex">
 	<nav
 		aria-label={m.course_space_channels({ courseCode: data.course.code })}
-		class="sticky top-0 hidden h-dvh w-64 shrink-0 border-r bg-surface-sidebar px-3 py-6 desktop:block"
+		class="sticky top-0 hidden h-dvh w-64 shrink-0 border-r bg-surface-sidebar desktop:block"
 	>
-		<p class="px-3 font-mono text-sm font-semibold text-primary">{data.course.code}</p>
-		<p class="mt-0.5 px-3 font-heading text-lg leading-snug font-bold">{data.course.title}</p>
-		<ul class="mt-6 flex flex-col gap-1">
+		<!-- The course banner, like a community banner atop a chat app's channel list. -->
+		<div class="bg-(image:--banner) px-6 pt-6 pb-5 text-on-rail">
+			<p class="font-mono text-sm font-semibold">{data.course.code}</p>
+			<p class="mt-0.5 font-heading text-xl leading-snug font-bold">{data.course.title}</p>
+			<p class="mt-1 text-sm">{data.course.institution.name}</p>
+		</div>
+		<ul class="mt-3 flex flex-col gap-1 px-3">
 			{#each COURSE_CHANNELS as channel (channel)}
+				{@const ChannelIcon = COURSE_CHANNEL_ICONS[channel]}
 				<li>
 					<a
 						href={resolve(COURSE_CHANNEL_ROUTE_IDS[channel], { courseId: data.course.id })}
 						aria-current={channel === currentChannel ? 'page' : undefined}
-						class="flex min-h-11 items-center rounded-xl navigation-item px-3"
-						>{COURSE_CHANNEL_LABELS[channel]()}</a
+						class="flex min-h-11 items-center gap-3 rounded-xl navigation-item px-3"
 					>
+						<ChannelIcon size={18} aria-hidden="true" />
+						{COURSE_CHANNEL_LABELS[channel]()}
+					</a>
 				</li>
 			{/each}
 		</ul>
@@ -146,7 +135,7 @@
 	<div class="min-w-0 flex-1">
 		{#if isReadingThread && currentChannel}
 			<!-- Threads keep the course header small so the post comes first, as in the thread designs. -->
-			<header class="border-b bg-blueprint-grid">
+			<header class="border-b bg-surface">
 				<div class="mx-auto flex max-w-3xl items-center gap-2 px-2 py-2 desktop:px-4">
 					<Button
 						variant="ghost"
@@ -166,7 +155,7 @@
 				</div>
 			</header>
 		{:else}
-			<header class="border-b bg-blueprint-grid">
+			<header class="border-b bg-surface">
 				<div class="mx-auto max-w-3xl px-4 pt-8 pb-4 desktop:pb-6">
 					<div class="flex items-center justify-between gap-x-2">
 						<p class="font-mono text-sm font-semibold text-primary">
@@ -229,17 +218,16 @@
 							{m.course_space_added_to_history()}
 						</p>
 					{/if}
+					<!-- Underlined tabs, as in Teams, so all four channels fit across a phone. -->
 					<nav
 						aria-label={m.course_space_channels_short()}
-						class="-mx-4 mt-2.5 flex scroll-px-4 [scrollbar-width:none] gap-2 overflow-x-auto px-4 py-1.5 desktop:hidden"
-						{@attach revealCurrentChannelChip}
+						class="-mx-4 mt-3 -mb-4 grid grid-cols-4 desktop:hidden"
 					>
-						<!-- One scrolling row, since the four chips are wider than a phone and wrapped one alone. -->
 						{#each COURSE_CHANNELS as channel (channel)}
 							<a
 								href={resolve(COURSE_CHANNEL_ROUTE_IDS[channel], { courseId: data.course.id })}
 								aria-current={channel === currentChannel ? 'page' : undefined}
-								class={[toggleVariants({ variant: 'chip' }), 'shrink-0']}
+								class="relative flex min-h-12 items-center justify-center state-layer px-1 py-1 text-center text-sm font-semibold [overflow-wrap:anywhere] text-on-surface-variant transition-colors duration-150 focus-visible:-outline-offset-2 aria-[current=page]:font-bold aria-[current=page]:text-on-surface aria-[current=page]:after:absolute aria-[current=page]:after:inset-x-3 aria-[current=page]:after:bottom-0 aria-[current=page]:after:h-[3px] aria-[current=page]:after:rounded-t-full aria-[current=page]:after:bg-indicator"
 								>{COURSE_CHANNEL_LABELS[channel]()}</a
 							>
 						{/each}

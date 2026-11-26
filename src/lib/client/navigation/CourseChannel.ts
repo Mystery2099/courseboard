@@ -1,5 +1,9 @@
 import { m } from '#lib/paraglide/messages.js';
 import type { PostKind } from '#lib/contracts/PostContract.ts';
+import CircleHelp from 'lucide-svelte/icons/circle-help';
+import Hash from 'lucide-svelte/icons/hash';
+import LayoutGrid from 'lucide-svelte/icons/layout-grid';
+import Star from 'lucide-svelte/icons/star';
 
 /** The fixed views of every course space, in display order. */
 export const COURSE_CHANNELS = ['overview', 'questions', 'reviews', 'discussion'] as const;
@@ -12,6 +16,14 @@ export const COURSE_CHANNEL_LABELS: Record<CourseChannel, () => string> = {
 	questions: m.course_channel_questions,
 	reviews: m.course_channel_reviews,
 	discussion: m.course_channel_discussion
+};
+
+/** Shown beside each channel name, as chat apps mark channel types. Always decorative. */
+export const COURSE_CHANNEL_ICONS: Record<CourseChannel, typeof Hash> = {
+	overview: LayoutGrid,
+	questions: CircleHelp,
+	reviews: Star,
+	discussion: Hash
 };
 
 /** Route ids to pass to `resolve()` together with `{ courseId }`. */

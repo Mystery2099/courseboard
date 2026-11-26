@@ -8,6 +8,8 @@
 	import { afterNavigate, beforeNavigate, type NavigationTarget } from '$app/navigation';
 	import Check from 'lucide-svelte/icons/check';
 	import Lock from 'lucide-svelte/icons/lock';
+	import MessageCircle from 'lucide-svelte/icons/message-circle';
+	import UserAvatar from '#lib/components/UserAvatar.svelte';
 	import {
 		NO_REVIEW_FILTERS,
 		PostApiClient,
@@ -333,33 +335,53 @@
 		{filter === 'unanswered' ? m.post_list_all_answered() : emptyMessage}
 	</p>
 {:else}
-	<ul class="mt-4 divide-y overflow-hidden rounded-card border bg-surface" bind:this={listElement}>
+	<!-- Conversation cards, as in Teams: who started it, what it is, and how many have replied. -->
+	<ul class="mt-4 flex flex-col gap-2.5" bind:this={listElement}>
 		{#each posts as post (post.id)}
 			<li>
 				<a
 					id="post-{post.id}"
 					href={resolve(THREAD_ROUTE_IDS[post.kind], { courseId, postId: post.id })}
-					class="block list-row px-4 py-3 [--state-base:var(--surface)]"
+					class="block rounded-card border list-row bg-surface px-4 pt-3 [--state-base:var(--surface)]"
 				>
-					<span class="flex flex-wrap items-center gap-2">
-						{#if kind === null}<ThreadKindBadge kind={post.kind} />{/if}
-						{#if post.hasAcceptedReply}
-							<Badge variant="success"><Check size={14} /> {m.post_badge_answered()}</Badge>
-						{/if}
-						{#if post.isLocked}
-							<Badge variant="neutral"><Lock size={14} /> {m.post_badge_locked()}</Badge>
-						{/if}
+					<span class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm">
+						<span class="flex min-w-0 items-center gap-2.5">
+							<UserAvatar
+								username={post.author.username}
+								displayName={post.author.displayName}
+								size={28}
+							/>
+							<span class="min-w-0 font-semibold [overflow-wrap:anywhere]"
+								>{post.author.displayName}</span
+							>
+						</span>
+						<time class="text-on-surface-variant" datetime={post.lastActivityAt}
+							>{formatRelativeTime(post.lastActivityAt)}</time
+						>
 					</span>
-					<span class="mt-1 block font-heading text-lg leading-snug font-bold wrap-break-word"
+					{#if kind === null || post.hasAcceptedReply || post.isLocked}
+						<span class="mt-2.5 flex flex-wrap items-center gap-2">
+							{#if kind === null}<ThreadKindBadge kind={post.kind} />{/if}
+							{#if post.hasAcceptedReply}
+								<Badge variant="success"><Check size={14} /> {m.post_badge_answered()}</Badge>
+							{/if}
+							{#if post.isLocked}
+								<Badge variant="neutral"><Lock size={14} /> {m.post_badge_locked()}</Badge>
+							{/if}
+						</span>
+					{/if}
+					<span class="mt-1.5 block font-heading text-lg leading-snug font-bold wrap-break-word"
 						>{post.title}</span
 					>
-					<span class="mt-1 block text-sm text-on-surface-variant">
-						{post.author.displayName} · {formatReplyCount(post.replyCount)} ·
-						<time datetime={post.lastActivityAt}>{formatRelativeTime(post.lastActivityAt)}</time>
-					</span>
 					{#if post.reviewData}
 						<ReviewFacts review={post.reviewData} />
 					{/if}
+					<span
+						class="-mx-4 mt-3 flex min-h-11 items-center gap-2 border-t px-4 text-sm font-semibold text-primary"
+					>
+						<MessageCircle size={16} aria-hidden="true" />
+						{formatReplyCount(post.replyCount)}
+					</span>
 				</a>
 			</li>
 		{/each}
