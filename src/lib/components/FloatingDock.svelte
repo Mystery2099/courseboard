@@ -16,6 +16,11 @@
 		COURSE_CHANNEL_ROUTE_IDS,
 		type CourseChannel
 	} from '#lib/client/navigation/CourseChannel.ts';
+	import { navigateToAdjacentCourseChannel } from '#lib/client/navigation/CourseChannelNavigation.ts';
+	import {
+		horizontalSwipe,
+		type SwipeDirection
+	} from '#lib/client/gestures/HorizontalSwipeGesture.ts';
 	import CourseCodeTile from './CourseCodeTile.svelte';
 	import UserAvatar from './UserAvatar.svelte';
 
@@ -44,6 +49,18 @@
 	let isSwitcherOpen = $state(false);
 
 	afterNavigate(() => (isSwitcherOpen = false));
+
+	const isInCourseChannel = $derived(currentCourse !== null && currentChannel !== null);
+
+	// Like turning a page: the finger moving left brings the next channel in.
+	function moveToChannelInSwipeDirection(direction: SwipeDirection) {
+		if (!currentCourse || !currentChannel) return;
+		navigateToAdjacentCourseChannel(
+			currentCourse.id,
+			currentChannel,
+			direction === 'left' ? 1 : -1
+		);
+	}
 </script>
 
 <!--
@@ -66,7 +83,11 @@
 	</a>
 	<Drawer.Root bind:open={isSwitcherOpen}>
 		<Drawer.Trigger
-			class="flex h-12 min-w-0 flex-1 items-center gap-2 rounded-full state-layer bg-primary-container px-4 text-left text-on-primary-container transition-colors duration-150 [--state-base:var(--primary-container)] [--state-color:var(--on-primary-container)]"
+			{@attach isInCourseChannel ? horizontalSwipe(moveToChannelInSwipeDirection) : null}
+			class={[
+				'flex h-12 min-w-0 flex-1 items-center gap-2 rounded-full state-layer bg-primary-container px-4 text-left text-on-primary-container transition-colors duration-150 [--state-base:var(--primary-container)] [--state-color:var(--on-primary-container)]',
+				isInCourseChannel && 'touch-pan-y touch-pinch-zoom'
+			]}
 			aria-current={currentCourse ? 'page' : undefined}
 		>
 			{#if currentCourse}

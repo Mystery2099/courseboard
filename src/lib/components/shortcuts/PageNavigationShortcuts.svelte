@@ -5,11 +5,9 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { KEYBOARD_SHORTCUTS } from '#lib/client/hotkeys/KeyboardShortcuts.ts';
-	import {
-		COURSE_CHANNELS,
-		COURSE_CHANNEL_ROUTE_IDS,
-		type CourseChannel
-	} from '#lib/client/navigation/CourseChannel.ts';
+	import type { CourseChannel } from '#lib/client/navigation/CourseChannel.ts';
+	import { navigateToAdjacentCourseChannel } from '#lib/client/navigation/CourseChannelNavigation.ts';
+	import { findNeighbor } from '#lib/client/navigation/ListNeighbor.ts';
 	import { SEARCH_QUERY_FIELD_ID } from '#lib/client/navigation/SearchField.ts';
 	import type { FollowedCourseResponse } from '#lib/contracts/CourseFollowingContract.ts';
 
@@ -22,12 +20,6 @@
 		currentCourseId: string | null;
 		currentChannel: CourseChannel | null;
 	} = $props();
-
-	/** The item `offset` steps from the current one, wrapping around; the first or last without one. */
-	function findNeighbor<T>(items: readonly T[], currentIndex: number, offset: 1 | -1): T {
-		if (currentIndex === -1) return items[offset === 1 ? 0 : items.length - 1];
-		return items[(currentIndex + offset + items.length) % items.length];
-	}
 
 	async function openSearch() {
 		if (page.route.id !== '/(app)/search') await goto(resolve('/(app)/search'));
@@ -43,8 +35,7 @@
 
 	function moveToChannel(offset: 1 | -1) {
 		if (!currentCourseId || !currentChannel) return;
-		const channel = findNeighbor(COURSE_CHANNELS, COURSE_CHANNELS.indexOf(currentChannel), offset);
-		void goto(resolve(COURSE_CHANNEL_ROUTE_IDS[channel], { courseId: currentCourseId }));
+		navigateToAdjacentCourseChannel(currentCourseId, currentChannel, offset);
 	}
 
 	const hasFollowedCourses = () => ({ enabled: followedCourses.length > 0 });
