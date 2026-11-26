@@ -345,14 +345,16 @@
 					class="block rounded-card border list-row bg-surface px-4 pt-3 [--state-base:var(--surface)]"
 				>
 					<span class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm">
-						<UserAvatar
-							username={post.author.username}
-							displayName={post.author.displayName}
-							size={28}
-						/>
-						<span class="min-w-0 font-semibold [overflow-wrap:anywhere]"
-							>{post.author.displayName}</span
-						>
+						<span class="flex min-w-0 items-center gap-2.5">
+							<UserAvatar
+								username={post.author.username}
+								displayName={post.author.displayName}
+								size={28}
+							/>
+							<span class="min-w-0 font-semibold [overflow-wrap:anywhere]"
+								>{post.author.displayName}</span
+							>
+						</span>
 						<time class="text-on-surface-variant" datetime={post.lastActivityAt}
 							>{formatRelativeTime(post.lastActivityAt)}</time
 						>
