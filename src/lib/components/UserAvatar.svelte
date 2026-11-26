@@ -37,8 +37,7 @@
 		]
 	);
 
-	// Blueprint's expressive avatar: round, with one squared-off top-left corner.
-	const SHAPE = 'rounded-full rounded-tl-[min(14px,30%)]';
+	const SHAPE = 'rounded-full';
 </script>
 
 {#if imageUrl}

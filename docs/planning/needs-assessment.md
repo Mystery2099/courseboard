@@ -68,7 +68,7 @@ The lab requirements come first, then the things that make the app usable. Anyth
 | Professor | WebSockets | New posts and replies appear in other sessions after they're saved |
 | Professor | Markdown | Safe Markdown rendering in posts and replies |
 | Usable | Search, images, and moderation tools | Course and post search, two images per post, reports, locking, and a profanity filter |
-| Usable | Responsive and accessible UI | WCAG 2.1 AA target for the main workflows, keyboard and screen-reader access, readable contrast, text zoom, and working layouts at 360px in Blueprint light/dark themes |
+| Usable | Responsive and accessible UI | WCAG 2.1 AA target for the main workflows, keyboard and screen-reader access, readable contrast, text zoom, and working layouts at 360px in the light and dark themes |
 | Deferred | Communities, Home feed, presence, Focus, split panes, command palette, grades, MFA | Useful later, but not needed to demonstrate the database |
 | Out of scope | DMs, voice/video, bots, verified enrollment | Far beyond what the lab is asking for |
 

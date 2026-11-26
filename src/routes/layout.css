@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import '@fontsource-variable/inter/wght.css';
-@import '@fontsource-variable/space-grotesk/wght.css';
+@import '@fontsource-variable/atkinson-hyperlegible-next/wght.css';
+@import '@fontsource-variable/roboto-condensed/wght.css';
 @import '@fontsource-variable/literata/wght.css';
 @import '@fontsource/ibm-plex-mono/500.css';
 @import '@fontsource/ibm-plex-mono/600.css';
@@ -9,44 +9,53 @@
 @plugin '@tailwindcss/typography';
 
 /*
- * Blueprint color roles from docs/design/blueprint-handoff.md. Light values are the default;
- * dark values follow the system setting. Components use the roles through Tailwind
- * (`bg-surface`, `text-on-surface-variant`), never raw palette colors.
+ * Pioneer color roles from docs/design/pioneer-style.md, built on Alfred State's navy, light blue
+ * and gold. Light values are the default; dark values follow the system setting. Components use
+ * the roles through Tailwind (`bg-surface`, `text-on-surface-variant`), never raw palette colors.
  */
 :root {
 	color-scheme: light;
-	--background: #f3f6ff;
+	--background: #f4f6f9;
 	--surface: #ffffff;
-	--surface-container: #e7ecfa;
-	--surface-sidebar: #eaeffc;
-	--on-surface: #0f1a33;
-	--on-surface-variant: #44506b;
-	--body: #1f2a44;
-	--primary: #1f4fd8;
+	--surface-container: #ecf0f5;
+	--surface-sidebar: #f7f9fb;
+	--on-surface: #141a22;
+	--on-surface-variant: #4f5a68;
+	--body: #222a35;
+	--primary: #003c71;
 	--on-primary: #ffffff;
-	--primary-container: #bdebff;
-	--on-primary-container: #00222e;
-	--secondary-container: #d5defa;
-	--on-secondary-container: #0f1a33;
-	--tertiary-container: #ffdcc2;
-	--on-tertiary-container: #5a2400;
-	--outline: #7883a0;
-	--outline-variant: #c9d2e8;
+	--primary-container: #d6e9f7;
+	--on-primary-container: #002849;
+	--secondary-container: #dbe6f1;
+	--on-secondary-container: #0f2236;
+	--tertiary-container: #fff0c2;
+	--on-tertiary-container: #3d3000;
+	--outline: #7a8594;
+	--outline-variant: #d5dce5;
 	--error: #b3261e;
 	--on-error: #ffffff;
 	--error-container: #ffdad6;
 	--on-error-container: #410e0b;
 	--warning-container: #ffe7b3;
 	--on-warning-container: #3d2a00;
-	--success-container: #c9f2da;
-	--on-success-container: #0b3d23;
-	--inverse-surface: #1f2a44;
-	--inverse-on-surface: #eef2ff;
-	--grid-line: rgb(31 79 216 / 0.07);
-	--scrim: rgb(15 26 51 / 0.45);
-	--floating-shadow: 0 6px 20px rgb(15 26 51 / 0.14);
-	--dialog-shadow: 0 24px 60px rgb(15 26 51 / 0.35);
-	--raised-shadow: 0 2px 6px rgb(15 26 51 / 0.2);
+	--success-container: #d7f0e1;
+	--on-success-container: #0b4d2e;
+	--inverse-surface: #1c2530;
+	--inverse-on-surface: #eef2f7;
+	/* The desktop space rail and course banner stay navy in both themes; gold marks where you are. */
+	--rail: #003c71;
+	--on-rail: #ffffff;
+	--gold: #ffcd00;
+	--on-gold: #002849;
+	--indicator: #0085ca;
+	/* Selected filter chips invert, so selection doesn't rest on a faint tint. */
+	--selected-chip: #141a22;
+	--on-selected-chip: #ffffff;
+	--banner: linear-gradient(135deg, #003c71, #005a96);
+	--scrim: rgb(20 26 34 / 0.45);
+	--floating-shadow: 0 6px 18px rgb(0 40 73 / 0.14);
+	--dialog-shadow: 0 24px 60px rgb(20 26 34 / 0.35);
+	--raised-shadow: 0 2px 6px rgb(20 26 34 / 0.2);
 
 	/*
 	 * State layers: how much of a control's content color is mixed over its background on hover
@@ -63,36 +72,40 @@
 @media (prefers-color-scheme: dark) {
 	:root {
 		color-scheme: dark;
-		--background: #0b1222;
-		--surface: #121c33;
-		--surface-container: #1a2642;
-		--surface-sidebar: #0f1830;
-		--on-surface: #e4ebff;
-		--on-surface-variant: #aab6d3;
-		--body: #d2dbf2;
-		--primary: #5ee1ff;
-		--on-primary: #002a35;
-		--primary-container: #26407a;
-		--on-primary-container: #dce5ff;
-		--secondary-container: #22305a;
-		--on-secondary-container: #e4ebff;
-		--tertiary-container: #ffa65c;
-		--on-tertiary-container: #3a1700;
-		--outline: #5b6888;
-		--outline-variant: #26324f;
+		--background: #121519;
+		--surface: #1a1e24;
+		--surface-container: #232831;
+		--surface-sidebar: #161a1f;
+		--on-surface: #eaeef3;
+		--on-surface-variant: #aeb7c3;
+		--body: #d7dde5;
+		--primary: #66c2f2;
+		--on-primary: #00243f;
+		--primary-container: #12406a;
+		--on-primary-container: #d6e9f7;
+		--secondary-container: #263a52;
+		--on-secondary-container: #eaeef3;
+		--tertiary-container: #4a3d00;
+		--on-tertiary-container: #fff0b3;
+		--outline: #7f8a99;
+		--outline-variant: #323843;
 		--error: #ffb4ab;
 		--on-error: #690005;
 		--error-container: #5c1a14;
 		--on-error-container: #ffdad6;
 		--warning-container: #4a3800;
 		--on-warning-container: #ffe7b3;
-		--success-container: #174a31;
-		--on-success-container: #c9f2da;
-		--inverse-surface: #e4ebff;
-		--inverse-on-surface: #1a2238;
-		--grid-line: rgb(94 225 255 / 0.06);
+		--success-container: #1c4732;
+		--on-success-container: #d3f1e0;
+		--inverse-surface: #eaeef3;
+		--inverse-on-surface: #1a1e24;
+		--rail: #0a2a4a;
+		--indicator: #ffcd00;
+		--selected-chip: #eaeef3;
+		--on-selected-chip: #1a1e24;
+		--banner: linear-gradient(135deg, #0a2a4a, #0f3a63);
 		--scrim: rgb(0 0 0 / 0.6);
-		--floating-shadow: 0 6px 20px rgb(0 0 0 / 0.5);
+		--floating-shadow: 0 6px 18px rgb(0 0 0 / 0.5);
 		--dialog-shadow: 0 24px 60px rgb(0 0 0 / 0.5);
 		--raised-shadow: 0 2px 6px rgb(0 0 0 / 0.55);
 	}
@@ -139,10 +152,16 @@
 	--color-inverse-surface: var(--inverse-surface);
 	--color-inverse-on-surface: var(--inverse-on-surface);
 	--color-scrim: var(--scrim);
-	--color-grid-line: var(--grid-line);
+	--color-rail: var(--rail);
+	--color-on-rail: var(--on-rail);
+	--color-gold: var(--gold);
+	--color-on-gold: var(--on-gold);
+	--color-indicator: var(--indicator);
+	--color-selected-chip: var(--selected-chip);
+	--color-on-selected-chip: var(--on-selected-chip);
 
 	/*
-	 * shadcn-svelte's names, aliased to Blueprint roles so generated components need no palette of
+	 * shadcn-svelte's names, aliased to the color roles so generated components need no palette of
 	 * their own. A new theme (such as high contrast) only redefines the roles above.
 	 */
 	--color-foreground: var(--on-surface);
@@ -160,15 +179,15 @@
 	--color-input: var(--outline);
 	--color-ring: var(--primary);
 
-	--font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-	--font-heading: 'Space Grotesk Variable', 'Inter Variable', ui-sans-serif, sans-serif;
+	--font-sans: 'Atkinson Hyperlegible Next Variable', ui-sans-serif, system-ui, sans-serif;
+	--font-heading: 'Roboto Condensed Variable', 'Atkinson Hyperlegible Next Variable', sans-serif;
 	--font-reading: 'Literata Variable', ui-serif, Georgia, serif;
 	--font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
 	--radius-chip: 8px;
-	--radius-field: 14px;
-	--radius-tile: 15px;
-	--radius-card: 20px;
+	--radius-field: 10px;
+	--radius-tile: 14px;
+	--radius-card: 12px;
 	--radius-sheet: 28px;
 
 	--shadow-floating: var(--floating-shadow);
@@ -335,21 +354,10 @@
 	}
 }
 
-/* The blueprint grid drawn behind headers. */
-@utility bg-blueprint-grid {
-	background-color: var(--surface-container);
-	background-image:
-		linear-gradient(var(--grid-line) 1px, transparent 1px),
-		linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-	background-size: 24px 24px;
-}
-
-/* Section labels ("FALL 2026 · ALFRED STATE"). */
+/* Section labels ("Fall 2026 · Alfred State"), in sentence case. */
 @utility text-overline {
-	font-size: 0.75rem;
+	font-size: 0.8125rem;
 	font-weight: 700;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
 }
 
 /*

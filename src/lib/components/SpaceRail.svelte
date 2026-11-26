@@ -34,16 +34,13 @@
 <Tooltip.Provider delayDuration={300}>
 	<nav
 		aria-label={m.navigation_spaces()}
-		class="sticky top-0 flex h-dvh w-[72px] shrink-0 flex-col items-center gap-3 border-r bg-surface-container py-4"
+		class="sticky top-0 flex h-dvh w-[72px] shrink-0 flex-col items-center gap-3 bg-rail py-4 text-on-rail [&_*]:outline-gold"
 	>
 		<a
 			href={resolve('/(app)/explore')}
 			aria-label={m.navigation_explore()}
 			aria-current={isExploreCurrent ? 'page' : undefined}
-			class={[
-				'flex size-12 items-center justify-center rounded-tile state-layer bg-surface transition-colors duration-150 [--state-base:var(--surface)]',
-				isExploreCurrent && 'ring-3 ring-primary'
-			]}
+			class={['rail-button', isExploreCurrent && 'rail-current']}
 		>
 			<Compass size={22} />
 		</a>
@@ -51,10 +48,7 @@
 			href={resolve('/(app)/search')}
 			aria-label={m.navigation_search()}
 			aria-current={isSearchCurrent ? 'page' : undefined}
-			class={[
-				'flex size-12 items-center justify-center rounded-tile state-layer bg-surface transition-colors duration-150 [--state-base:var(--surface)]',
-				isSearchCurrent && 'ring-3 ring-primary'
-			]}
+			class={['rail-button', isSearchCurrent && 'rail-current']}
 		>
 			<Search size={22} />
 		</a>
@@ -62,15 +56,12 @@
 			href={resolve('/(app)/mentions')}
 			aria-label={m.navigation_mentions()}
 			aria-current={isMentionsCurrent ? 'page' : undefined}
-			class={[
-				'flex size-12 items-center justify-center rounded-tile state-layer bg-surface transition-colors duration-150 [--state-base:var(--surface)]',
-				isMentionsCurrent && 'ring-3 ring-primary'
-			]}
+			class={['rail-button', isMentionsCurrent && 'rail-current']}
 		>
 			<AtSign size={22} />
 		</a>
-		<hr class="w-8" />
-		<ul class="flex min-h-0 flex-1 flex-col items-center gap-3 overflow-y-auto">
+		<hr class="w-8 border-on-rail/30" />
+		<ul class="flex min-h-0 w-full flex-1 flex-col items-center gap-3 overflow-y-auto">
 			{#each followedCourses as course (course.id)}
 				<li>
 					<Tooltip.Root>
@@ -78,12 +69,19 @@
 							{#snippet child({ props })}
 								<a
 									{...props}
-									class="group/tile block rounded-tile"
+									class={[
+										'group/tile relative block rounded-tile',
+										course.id === currentCourseId && 'rail-current'
+									]}
 									href={resolve('/(app)/courses/[courseId]', { courseId: course.id })}
 									aria-label="{course.code} {course.title}"
 									aria-current={course.id === currentCourseId ? 'page' : undefined}
 								>
-									<CourseCodeTile code={course.code} isCurrent={course.id === currentCourseId} />
+									<CourseCodeTile
+										code={course.code}
+										tone="rail"
+										isCurrent={course.id === currentCourseId}
+									/>
 								</a>
 							{/snippet}
 						</Tooltip.Trigger>
@@ -99,7 +97,7 @@
 			<a
 				href={resolve('/(app)/admin/invitations')}
 				aria-label={m.navigation_admin()}
-				class="flex size-12 items-center justify-center rounded-tile state-layer bg-inverse-surface text-inverse-on-surface transition-colors duration-150 [--state-base:var(--inverse-surface)] [--state-color:var(--inverse-on-surface)]"
+				class="rail-button"
 			>
 				<Shield size={22} />
 			</a>
@@ -109,8 +107,8 @@
 			aria-label={m.navigation_your_profile()}
 			aria-current={isProfileCurrent ? 'page' : undefined}
 			class={[
-				'flex size-12 items-center justify-center rounded-full state-layer transition-colors duration-150',
-				isProfileCurrent && 'ring-3 ring-primary'
+				'relative flex size-12 items-center justify-center rounded-full state-layer transition-colors duration-150 [--state-color:var(--on-rail)]',
+				isProfileCurrent && 'rail-current'
 			]}
 		>
 			<UserAvatar
@@ -121,3 +119,35 @@
 		</a>
 	</nav>
 </Tooltip.Provider>
+
+<style>
+	/* Rail controls sit on navy in both themes, so they tint with white instead of the surface roles. */
+	.rail-button {
+		position: relative;
+		display: flex;
+		width: 3rem;
+		height: 3rem;
+		align-items: center;
+		justify-content: center;
+		border-radius: var(--radius-tile);
+		background-color: color-mix(in oklab, var(--rail), var(--on-rail) 14%);
+		transition: background-color 150ms;
+
+		&:hover {
+			background-color: color-mix(in oklab, var(--rail), var(--on-rail) 24%);
+		}
+	}
+
+	/* Discord's pill: a gold bar on the rail's edge beside the current space. */
+	.rail-current::before {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: -0.75rem;
+		width: 0.375rem;
+		height: 2.5rem;
+		translate: 0 -50%;
+		border-radius: 0 0.375rem 0.375rem 0;
+		background-color: var(--gold);
+	}
+</style>

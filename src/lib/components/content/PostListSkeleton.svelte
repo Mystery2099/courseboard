@@ -14,12 +14,13 @@
 
 <p class="sr-only" role="status">{isShown ? m.common_loading() : ''}</p>
 {#if isShown}
-	<!-- Static, matching a post row's title and byline, as the spec asks: no shimmer or pulse. -->
-	<ul class="mt-4 divide-y overflow-hidden rounded-card border bg-surface" aria-hidden="true">
+	<!-- Static, matching a post card's byline, title and reply count, as the spec asks: no shimmer or pulse. -->
+	<ul class="mt-4 flex flex-col gap-2.5" aria-hidden="true">
 		{#each { length: PLACEHOLDER_ROW_COUNT }, index (index)}
-			<li class="px-4 py-3">
-				<span class="mt-1 block h-6 w-3/4 rounded-md bg-surface-container"></span>
-				<span class="mt-1.5 block h-4 w-2/5 rounded-md bg-surface-container"></span>
+			<li class="rounded-card border bg-surface px-4 py-3">
+				<span class="block h-4 w-2/5 rounded-md bg-surface-container"></span>
+				<span class="mt-2.5 block h-6 w-3/4 rounded-md bg-surface-container"></span>
+				<span class="mt-3 block h-4 w-1/4 rounded-md bg-surface-container"></span>
 			</li>
 		{/each}
 	</ul>

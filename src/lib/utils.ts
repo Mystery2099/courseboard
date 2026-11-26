@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from 'clsx';
 import { extendTailwindMerge } from 'tailwind-merge';
 
-// Blueprint's own theme names (layout.css), so merging never mistakes one for a color or weight.
+// The app's own theme names (layout.css), so merging never mistakes one for a color or weight.
 const twMerge = extendTailwindMerge({
 	extend: {
 		theme: {

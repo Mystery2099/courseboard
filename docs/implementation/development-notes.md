@@ -8,9 +8,9 @@ The screens had drifted from the exports in `docs/design/`, and buttons and chip
 
 ### Setting it up
 
-`shadcn-svelte init` only asks for a design preset interactively, so I wrote `components.json` by hand and used `add`. The generated components assume shadcn's palette (`foreground`, `muted`, `accent`), Tailwind's default breakpoints, `dark:` overrides, and their own focus rings. I aliased shadcn's color names to the Blueprint roles in `layout.css`, mapped `sm:` and `md:` to the app's tiers, and removed the `dark:` classes and focus rings so the roles and the one global `:focus-visible` ring stay in charge. A future theme, such as high contrast, only has to redefine the role variables.
+`shadcn-svelte init` only asks for a design preset interactively, so I wrote `components.json` by hand and used `add`. The generated components assume shadcn's palette (`foreground`, `muted`, `accent`), Tailwind's default breakpoints, `dark:` overrides, and their own focus rings. I aliased shadcn's color names to the app's color roles in `layout.css`, mapped `sm:` and `md:` to the app's tiers, and removed the `dark:` classes and focus rings so the roles and the one global `:focus-visible` ring stay in charge. A future theme, such as high contrast, only has to redefine the role variables.
 
-`tailwind-merge` doesn't know the Blueprint theme names, so `cn()` was quietly dropping `text-overline` next to a text color. `cn()` now extends it with the app's fonts, radii, shadows, and breakpoints.
+`tailwind-merge` doesn't know the app's theme names, so `cn()` was quietly dropping `text-overline` next to a text color. `cn()` now extends it with the app's fonts, radii, shadows, and breakpoints.
 
 ### Things that broke
 

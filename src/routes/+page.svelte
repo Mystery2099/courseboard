@@ -9,12 +9,12 @@
 </script>
 
 <!--
-	The sign-in design: a blueprint panel with the pitch beside the sign-in panel on desktop, stacked
+	The sign-in design: a tinted panel with the pitch beside the sign-in panel on desktop, stacked
 	on phones. Clerk's hosted page collects the email and password.
 -->
 <div class="min-h-dvh desktop:grid desktop:grid-cols-2">
 	<section
-		class="flex flex-col border-b bg-blueprint-grid px-4 py-8 tablet:px-10 desktop:border-r desktop:border-b-0 desktop:px-16 desktop:py-12"
+		class="flex flex-col border-b bg-surface-container px-4 py-8 tablet:px-10 desktop:border-r desktop:border-b-0 desktop:px-16 desktop:py-12"
 	>
 		<p class="font-mono text-sm font-semibold text-primary">{m.app_name()}</p>
 		<div class="my-auto pt-10 desktop:pt-0">

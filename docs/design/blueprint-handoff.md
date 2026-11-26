@@ -6,6 +6,8 @@ Nov 3, 2026 · @Mathew Kennedy-Brewer
 
 This is the detailed reference for the Blueprint designs I worked through with Claude for the academic discussion platform. I wanted a recognizable visual identity, both light and dark themes, and some Material 3 Expressive influence without making the app feel like a generic Material demo. The tables and numbers here are the actual handoff details, so they should be followed where the designs are canonical; an artboard doesn't settle anything listed as open in the [decision register](../planning/decision-register.md).
 
+**Pioneer replaced this look on November 26, 2026.** The [Pioneer style](pioneer-style.md) now sets colors, type, radii, and decorative shapes, so the color roles, typography, and expressive shapes below are historical. The components, layout, interactions, and accessibility rules here still apply.
+
 **This file is the visual reference, not the scope.** It was written before the November 5 scope decisions, so some screens and components here (Home, communities, Experience posts, presence and “Here now”, Focus, split panes, the command bar, the member list) are deferred. The [product spec](../product/product-spec.md) decides behavior and scope, including privacy and permissions; use this file for tokens, components, layout, and interaction details that haven't been superseded.
 
 **Where the designs actually live** (in Claude Design):
