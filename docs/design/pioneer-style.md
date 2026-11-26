@@ -57,7 +57,7 @@ Section labels (`text-overline`) are sentence case now, not tracked capitals.
 - **Space rail:** navy in both themes. The current space gets a gold tile and a gold pill on the rail's edge, as in Discord, instead of a ring.
 - **Course sidebar (desktop):** a banner with the code, title, and school, then the channels with icons (grid, question, star, #).
 - **Channel tabs (phone):** four equal tabs with an underline replace the scrolling chip strip, so every channel shows without scrolling.
-- **Post lists:** separate conversation cards with the author, badges, title, and a reply count row, as in Teams. The Questions channel doesn't repeat the Question badge.
+- **Post lists:** separate conversation cards with the author, badges, title, and a reply count row, as in Teams. The Questions channel doesn't repeat the Question badge. Cards don't show an excerpt yet, since the list API doesn't send post text.
 - **Replies:** no bubble; they read as a chat timeline. Only the accepted answer gets a tinted panel, with a gold star beside "Accepted answer".
 - **Dock:** the space chip is filled with `primary`.
 

@@ -63,16 +63,19 @@
 		<hr class="w-8 border-on-rail/30" />
 		<ul class="flex min-h-0 w-full flex-1 flex-col items-center gap-3 overflow-y-auto">
 			{#each followedCourses as course (course.id)}
-				<li>
+				<!-- The row spans the list, so its pill stays inside the list even beside a scrollbar. -->
+				<li
+					class={[
+						'relative flex w-full justify-center',
+						course.id === currentCourseId && 'rail-current rail-current-row'
+					]}
+				>
 					<Tooltip.Root>
 						<Tooltip.Trigger>
 							{#snippet child({ props })}
 								<a
 									{...props}
-									class={[
-										'group/tile relative block rounded-tile',
-										course.id === currentCourseId && 'rail-current'
-									]}
+									class="group/tile block rounded-tile"
 									href={resolve('/(app)/courses/[courseId]', { courseId: course.id })}
 									aria-label="{course.code} {course.title}"
 									aria-current={course.id === currentCourseId ? 'page' : undefined}
@@ -149,5 +152,9 @@
 		translate: 0 -50%;
 		border-radius: 0 0.375rem 0.375rem 0;
 		background-color: var(--gold);
+	}
+
+	.rail-current-row::before {
+		left: 0;
 	}
 </style>

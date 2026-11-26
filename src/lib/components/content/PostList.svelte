@@ -344,13 +344,15 @@
 					href={resolve(THREAD_ROUTE_IDS[post.kind], { courseId, postId: post.id })}
 					class="block rounded-card border list-row bg-surface px-4 pt-3 [--state-base:var(--surface)]"
 				>
-					<span class="flex items-center gap-2.5 text-sm">
+					<span class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm">
 						<UserAvatar
 							username={post.author.username}
 							displayName={post.author.displayName}
 							size={28}
 						/>
-						<span class="font-semibold">{post.author.displayName}</span>
+						<span class="min-w-0 font-semibold [overflow-wrap:anywhere]"
+							>{post.author.displayName}</span
+						>
 						<time class="text-on-surface-variant" datetime={post.lastActivityAt}
 							>{formatRelativeTime(post.lastActivityAt)}</time
 						>

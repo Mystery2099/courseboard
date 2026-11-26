@@ -227,7 +227,7 @@
 							<a
 								href={resolve(COURSE_CHANNEL_ROUTE_IDS[channel], { courseId: data.course.id })}
 								aria-current={channel === currentChannel ? 'page' : undefined}
-								class="relative flex min-h-12 items-center justify-center state-layer px-1 text-center text-sm font-semibold text-on-surface-variant transition-colors duration-150 focus-visible:-outline-offset-2 aria-[current=page]:font-bold aria-[current=page]:text-on-surface aria-[current=page]:after:absolute aria-[current=page]:after:inset-x-3 aria-[current=page]:after:bottom-0 aria-[current=page]:after:h-[3px] aria-[current=page]:after:rounded-t-full aria-[current=page]:after:bg-indicator"
+								class="relative flex min-h-12 items-center justify-center state-layer px-1 py-1 text-center text-sm font-semibold [overflow-wrap:anywhere] text-on-surface-variant transition-colors duration-150 focus-visible:-outline-offset-2 aria-[current=page]:font-bold aria-[current=page]:text-on-surface aria-[current=page]:after:absolute aria-[current=page]:after:inset-x-3 aria-[current=page]:after:bottom-0 aria-[current=page]:after:h-[3px] aria-[current=page]:after:rounded-t-full aria-[current=page]:after:bg-indicator"
 								>{COURSE_CHANNEL_LABELS[channel]()}</a
 							>
 						{/each}
