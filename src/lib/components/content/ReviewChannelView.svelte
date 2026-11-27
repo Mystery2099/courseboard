@@ -44,12 +44,12 @@
 </script>
 
 <h2 class="text-xl font-semibold">{m.reviews_heading()}</h2>
-<dl class="mt-4 grid grid-cols-3 gap-2">
-	<div class="rounded-2xl bg-surface-container px-3 py-2.5">
+<dl class="mt-3 grid grid-cols-3 gap-2">
+	<div class="rounded-card bg-surface-container px-3 py-2">
 		<dt class="text-xs text-on-surface-variant tablet:text-sm">{m.reviews_statistic_count()}</dt>
 		<dd class="mt-0.5 font-heading text-xl font-bold">{statistics.reviewCount}</dd>
 	</div>
-	<div class="rounded-2xl bg-surface-container px-3 py-2.5">
+	<div class="rounded-card bg-surface-container px-3 py-2">
 		<dt class="text-xs text-on-surface-variant tablet:text-sm">{m.reviews_statistic_workload()}</dt>
 		<dd class="mt-0.5 font-heading text-xl font-bold">
 			{statistics.averageWorkload === null
@@ -60,7 +60,7 @@
 				>{/if}
 		</dd>
 	</div>
-	<div class="rounded-2xl bg-surface-container px-3 py-2.5">
+	<div class="rounded-card bg-surface-container px-3 py-2">
 		<dt class="text-xs text-on-surface-variant tablet:text-sm">
 			{m.reviews_statistic_take_again()}
 		</dt>
@@ -107,20 +107,10 @@
 			postId: context.ownReviewId
 		})}>{m.reviews_open_or_edit_own()}</Button
 	>
-{:else if context.attempts.length === 0 && !isComposerOpen}
-	<div class="mt-4 rounded-card border p-4">
-		<p class="font-semibold">{m.reviews_history_required()}</p>
-		<p class="mt-1 text-sm text-on-surface-variant">
-			{m.reviews_history_required_detail()}
-		</p>
-		<Button variant="outlined" class="mt-3" onclick={() => (isHistoryEditorOpen = true)}
-			>{m.common_add_to_history()}</Button
-		>
-	</div>
 {:else}
 	<details
 		bind:open={isComposerOpen}
-		class="group/disclosure mt-4 rounded-card border bg-surface p-4"
+		class="group/disclosure mt-4 rounded-card border bg-surface px-4 py-2 open:pb-4"
 	>
 		<summary
 			class="-mx-3 flex min-h-11 items-center rounded-full state-layer-primary px-3 font-semibold text-primary transition-colors duration-150"
@@ -132,17 +122,30 @@
 				aria-hidden="true"
 			/>
 		</summary>
-		<div class="mt-4">
-			<ReviewForm
-				courseId={course.id}
-				attempts={context.attempts}
-				onSaved={(post) => {
-					savedReviewId = post.id;
-					isComposerOpen = false;
-				}}
-				onCancel={() => (isComposerOpen = false)}
-			/>
-		</div>
+		<!-- Who may review is explained once someone asks to write one, so reviews come first. -->
+		{#if context.attempts.length === 0}
+			<div class="mt-3">
+				<p class="font-semibold">{m.reviews_history_required()}</p>
+				<p class="mt-1 text-sm text-on-surface-variant">
+					{m.reviews_history_required_detail()}
+				</p>
+				<Button variant="outlined" class="mt-3" onclick={() => (isHistoryEditorOpen = true)}
+					>{m.common_add_to_history()}</Button
+				>
+			</div>
+		{:else}
+			<div class="mt-4">
+				<ReviewForm
+					courseId={course.id}
+					attempts={context.attempts}
+					onSaved={(post) => {
+						savedReviewId = post.id;
+						isComposerOpen = false;
+					}}
+					onCancel={() => (isComposerOpen = false)}
+				/>
+			</div>
+		{/if}
 	</details>
 {/if}
 
@@ -154,12 +157,8 @@
 	emptyMessage={m.reviews_empty()}
 />
 
-<HistoryEntryEditorDialog
-	bind:open={isHistoryEditorOpen}
-	presetCourse={course}
-	onSaved={() => {
-		// The form has already refreshed this context. A Planning entry doesn't make the course
-		// reviewable, so the gate stays until an entry that does.
-		isComposerOpen = !contextQuery.isError && contextQuery.data.attempts.length > 0;
-	}}
-/>
+<!--
+	The form refreshes this context when it saves, so an entry that makes the course reviewable swaps
+	the open disclosure's explanation for the review form. A Planning entry doesn't, so it stays.
+-->
+<HistoryEntryEditorDialog bind:open={isHistoryEditorOpen} presetCourse={course} />
