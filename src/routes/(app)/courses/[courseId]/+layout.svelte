@@ -250,8 +250,10 @@
 						isOverview ? 'desktop:py-6 wide:p-0' : 'desktop:p-0'
 					]}
 				>
-					<div class="flex items-center justify-between gap-x-2 desktop:hidden">
-						<p class="font-mono text-sm font-semibold text-primary">
+					<div class="flex flex-wrap items-center justify-between gap-x-2 desktop:hidden">
+						<p
+							class="min-w-0 font-mono text-sm font-semibold [overflow-wrap:anywhere] text-primary"
+						>
 							{data.course.code} · {data.course.institution.name}
 						</p>
 						<div class="-my-3 flex items-center gap-2">
@@ -330,7 +332,7 @@
 		>
 			<aside
 				aria-labelledby="course-about-heading"
-				class="hidden w-80 shrink-0 py-4 wide:order-last wide:block min-[1600px]:w-96"
+				class="hidden w-[320px] shrink-0 py-4 wide:order-last wide:block min-[1600px]:w-[384px]"
 			>
 				<div class="sticky top-4 rounded-card border bg-surface p-4">
 					<h2 id="course-about-heading" class="text-lg font-bold">{m.course_space_about()}</h2>

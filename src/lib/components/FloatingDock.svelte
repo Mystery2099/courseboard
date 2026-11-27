@@ -65,22 +65,25 @@
 
 <!--
 	One-row dock (design handoff): 60px tall, floating 24px above the bottom on tall phones. Icons only
-	on phones; tablets show labels, which the accessible names contain. Below 400px, Mentions moves into
+	on phones; tablets show labels, which the accessible names contain. Labels need the dock 40rem wide,
+	measured against the root font size, so enlarged text falls back to icons rather than overflowing. Below 400px, Mentions moves into
 	the switcher so the course code still fits. Buttons are sized in px, so enlarged text wraps the
 	course code onto a taller dock rather than pushing the buttons off screen.
 -->
 <nav
 	aria-label={m.navigation_main()}
-	class="fixed inset-x-3 bottom-[calc(10px+env(safe-area-inset-bottom))] z-40 mx-auto flex min-h-[60px] max-w-[560px] items-center gap-1 rounded-full border bg-surface px-1.5 shadow-floating tablet:max-w-[680px] [@media(min-height:700px)]:bottom-[calc(24px+env(safe-area-inset-bottom))]"
+	class="@container/dock fixed inset-x-3 bottom-[calc(10px+env(safe-area-inset-bottom))] z-40 mx-auto flex min-h-[60px] max-w-[560px] items-center gap-1 rounded-full border bg-surface px-1.5 shadow-floating tablet:max-w-[680px] [@media(min-height:700px)]:bottom-[calc(24px+env(safe-area-inset-bottom))]"
 >
 	<a
 		href={resolve('/(app)/explore')}
 		aria-label={m.navigation_explore()}
 		aria-current={isExploreCurrent ? 'page' : undefined}
-		class="flex size-[48px] shrink-0 items-center justify-center gap-2 rounded-full navigation-item text-on-surface tablet:w-auto tablet:px-3"
+		class="flex size-[48px] shrink-0 items-center justify-center gap-2 rounded-full navigation-item text-on-surface @min-[40rem]/dock:w-auto @min-[40rem]/dock:px-3"
 	>
 		<Compass size={24} />
-		<span class="hidden text-sm font-semibold tablet:inline">{m.navigation_explore()}</span>
+		<span class="hidden text-sm font-semibold @min-[40rem]/dock:inline"
+			>{m.navigation_explore()}</span
+		>
 	</a>
 	<Drawer.Root bind:open={isSwitcherOpen}>
 		<Drawer.Trigger
@@ -182,25 +185,29 @@
 		href={resolve('/(app)/search')}
 		aria-label={m.navigation_search()}
 		aria-current={isSearchCurrent ? 'page' : undefined}
-		class="flex size-[48px] shrink-0 items-center justify-center gap-2 rounded-full navigation-item text-on-surface tablet:w-auto tablet:px-3"
+		class="flex size-[48px] shrink-0 items-center justify-center gap-2 rounded-full navigation-item text-on-surface @min-[40rem]/dock:w-auto @min-[40rem]/dock:px-3"
 	>
 		<Search size={24} />
-		<span class="hidden text-sm font-semibold tablet:inline">{m.navigation_search()}</span>
+		<span class="hidden text-sm font-semibold @min-[40rem]/dock:inline"
+			>{m.navigation_search()}</span
+		>
 	</a>
 	<a
 		href={resolve('/(app)/mentions')}
 		aria-label={m.navigation_mentions()}
 		aria-current={isMentionsCurrent ? 'page' : undefined}
-		class="flex size-[48px] shrink-0 items-center justify-center gap-2 rounded-full navigation-item text-on-surface max-[399px]:hidden tablet:w-auto tablet:px-3"
+		class="flex size-[48px] shrink-0 items-center justify-center gap-2 rounded-full navigation-item text-on-surface max-[399px]:hidden @min-[40rem]/dock:w-auto @min-[40rem]/dock:px-3"
 	>
 		<AtSign size={24} />
-		<span class="hidden text-sm font-semibold tablet:inline">{m.navigation_mentions()}</span>
+		<span class="hidden text-sm font-semibold @min-[40rem]/dock:inline"
+			>{m.navigation_mentions()}</span
+		>
 	</a>
 	<a
 		href={resolve('/(app)/profile')}
 		aria-label={m.navigation_your_profile()}
 		aria-current={isProfileCurrent ? 'page' : undefined}
-		class="flex size-[48px] shrink-0 items-center justify-center gap-2 rounded-full navigation-item text-on-surface tablet:w-auto tablet:pr-3 tablet:pl-1.5"
+		class="flex size-[48px] shrink-0 items-center justify-center gap-2 rounded-full navigation-item text-on-surface @min-[40rem]/dock:w-auto @min-[40rem]/dock:pr-3 @min-[40rem]/dock:pl-1.5"
 	>
 		<UserAvatar
 			username={profile.username}
@@ -208,6 +215,8 @@
 			imageUrl={profile.imageUrl}
 			size={32}
 		/>
-		<span class="hidden text-sm font-semibold tablet:inline">{m.navigation_profile()}</span>
+		<span class="hidden text-sm font-semibold @min-[40rem]/dock:inline"
+			>{m.navigation_profile()}</span
+		>
 	</a>
 </nav>
