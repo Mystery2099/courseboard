@@ -80,6 +80,17 @@
 		void CourseNavigationApiClient.recordVisit(data.course.id).catch(() => undefined);
 	});
 	let isFollowPending = $state(false);
+	let isDescriptionExpanded = $state(false);
+	let isDescriptionTruncated = $state(false);
+
+	/** Tracks whether the phone's two-line description hides anything, so More shows only when needed. */
+	function measureDescriptionTruncation(element: HTMLElement) {
+		const observer = new ResizeObserver(() => {
+			isDescriptionTruncated = element.scrollHeight > element.clientHeight;
+		});
+		observer.observe(element);
+		return () => observer.disconnect();
+	}
 	// Opens post search narrowed to this course, at its school so the course filter applies.
 	const courseSearchUrl = $derived(
 		`${resolve('/(app)/search')}?${new URLSearchParams({
@@ -100,6 +111,52 @@
 	<p class="shrink-0 text-xs text-on-surface-variant" aria-hidden="true">
 		{isReconnecting ? m.realtime_reconnecting() : ''}
 	</p>
+{/snippet}
+
+{#snippet courseActions()}
+	<div class="flex flex-wrap gap-2">
+		<form
+			method="POST"
+			action={followActionUrl}
+			use:enhance={() => {
+				isFollowPending = true;
+				return async ({ update }) => {
+					try {
+						await update();
+					} finally {
+						isFollowPending = false;
+					}
+				};
+			}}
+		>
+			<Button
+				variant={data.course.isFollowed ? 'tonal' : 'filled'}
+				size="compact"
+				type="submit"
+				disabled={isFollowPending}
+				aria-busy={isFollowPending}
+			>
+				{#if data.course.isFollowed}<Check size={18} />
+					{m.course_space_following()}{:else}{m.course_space_follow()}{/if}
+			</Button>
+		</form>
+		<Button
+			variant="outlined"
+			size="compact"
+			onclick={() => {
+				wasAddedToHistory = false;
+				isHistoryEditorOpen = true;
+			}}>{m.course_space_add_to_history()}</Button
+		>
+	</div>
+	{#if page.form?.followingError}
+		<p class="mt-2 text-sm" role="alert">{describeErrorCode(page.form.followingError)}</p>
+	{/if}
+	{#if wasAddedToHistory}
+		<p class="mt-2 text-sm text-on-surface-variant" role="status">
+			{m.course_space_added_to_history()}
+		</p>
+	{/if}
 {/snippet}
 
 <!-- Outside the headers, so swapping between them doesn't replace it and lose the announcement. -->
@@ -148,8 +205,11 @@
 
 	<div class="min-w-0 flex-1">
 		{#if isReadingThread && currentChannel}
-			<!-- Threads keep the course header small so the post comes first, as in the thread designs. -->
-			<header class="border-b bg-surface">
+			<!--
+				Threads keep the course header small so the post comes first, as in the thread designs.
+				Desktop drops it, since the sidebar already shows the course and the current channel.
+			-->
+			<header class="border-b bg-surface desktop:hidden">
 				<div class="mx-auto flex max-w-3xl items-center gap-2 px-2 py-2 desktop:px-4">
 					<Button
 						variant="ghost"
@@ -173,9 +233,14 @@
 				The sidebar banner already names the course on desktop, so there only Overview keeps a
 				header, for the description and the course actions. Phones keep the name above the tabs.
 			-->
-			<header class={['bg-surface', isOverview ? 'border-b' : 'max-desktop:border-b']}>
+			<header
+				class={['bg-surface', isOverview ? 'border-b wide:border-b-0' : 'max-desktop:border-b']}
+			>
 				<div
-					class={['mx-auto max-w-3xl px-4 pt-5 pb-4', isOverview ? 'desktop:py-6' : 'desktop:p-0']}
+					class={[
+						'mx-auto max-w-3xl px-4 pt-5 pb-4',
+						isOverview ? 'desktop:py-6 wide:p-0' : 'desktop:p-0'
+					]}
 				>
 					<div class="flex items-center justify-between gap-x-2 desktop:hidden">
 						<p class="font-mono text-sm font-semibold text-primary">
@@ -199,48 +264,33 @@
 						{data.course.title}
 					</h1>
 					{#if isOverview}
-						<p class="mt-2 text-on-surface-variant desktop:mt-0">{data.course.description}</p>
-						<div class="mt-4 flex flex-wrap gap-2">
-							<form
-								method="POST"
-								action={followActionUrl}
-								use:enhance={() => {
-									isFollowPending = true;
-									return async ({ update }) => {
-										try {
-											await update();
-										} finally {
-											isFollowPending = false;
-										}
-									};
-								}}
+						<!-- From 1280px the About panel beside the posts holds these instead. -->
+						<div class="wide:hidden">
+							<p
+								id="course-description"
+								class={[
+									'mt-2 text-on-surface-variant desktop:mt-0',
+									!isDescriptionExpanded && 'line-clamp-2 desktop:line-clamp-none'
+								]}
+								{@attach measureDescriptionTruncation}
 							>
-								<Button
-									variant={data.course.isFollowed ? 'tonal' : 'filled'}
-									type="submit"
-									disabled={isFollowPending}
-									aria-busy={isFollowPending}
-								>
-									{#if data.course.isFollowed}<Check size={18} />
-										{m.course_space_following()}{:else}{m.course_space_follow()}{/if}
-								</Button>
-							</form>
-							<Button
-								variant="outlined"
-								onclick={() => {
-									wasAddedToHistory = false;
-									isHistoryEditorOpen = true;
-								}}>{m.course_space_add_to_history()}</Button
-							>
-						</div>
-						{#if page.form?.followingError}
-							<p class="mt-2 text-sm" role="alert">{describeErrorCode(page.form.followingError)}</p>
-						{/if}
-						{#if wasAddedToHistory}
-							<p class="mt-2 text-sm text-on-surface-variant" role="status">
-								{m.course_space_added_to_history()}
+								{data.course.description}
 							</p>
-						{/if}
+							{#if isDescriptionTruncated || isDescriptionExpanded}
+								<Button
+									variant="text"
+									size="compact"
+									class="-my-2 -ms-4 desktop:hidden"
+									aria-expanded={isDescriptionExpanded}
+									aria-controls="course-description"
+									onclick={() => (isDescriptionExpanded = !isDescriptionExpanded)}
+									>{isDescriptionExpanded
+										? m.course_space_description_less()
+										: m.course_space_description_more()}</Button
+								>
+							{/if}
+							<div class="mt-3">{@render courseActions()}</div>
+						</div>
 					{/if}
 					<!-- Underlined tabs, as in Teams, so all four channels fit across a phone. -->
 					<nav
@@ -259,9 +309,19 @@
 				</div>
 			</header>
 		{/if}
-		<main class="mx-auto max-w-3xl px-4 py-4">
-			{@render children()}
-		</main>
+		<!-- From 1280px an About panel sits beside the posts, as the design handoff asks. -->
+		<div class="wide:mx-auto wide:flex wide:max-w-[70rem] wide:gap-6 wide:px-4">
+			<main class="mx-auto max-w-3xl px-4 py-4 wide:mx-0 wide:min-w-0 wide:flex-1 wide:px-0">
+				{@render children()}
+			</main>
+			<aside aria-labelledby="course-about-heading" class="hidden w-72 shrink-0 py-4 wide:block">
+				<div class="sticky top-4 rounded-card border bg-surface p-4">
+					<h2 id="course-about-heading" class="text-lg font-bold">{m.course_space_about()}</h2>
+					<p class="mt-2 text-sm text-on-surface-variant">{data.course.description}</p>
+					<div class="mt-4">{@render courseActions()}</div>
+				</div>
+			</aside>
+		</div>
 	</div>
 </div>
 
