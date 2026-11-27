@@ -36,7 +36,7 @@
 
 <div class="mt-6 overflow-x-auto rounded-card border bg-surface">
 	<table class="w-full text-left text-sm">
-		<thead class="text-xs tracking-wider text-on-surface-variant uppercase">
+		<thead class="text-sm font-semibold text-on-surface-variant">
 			<tr>
 				<th scope="col" class="px-4 py-3">{m.admin_catalog_code()}</th>
 				<th scope="col" class="px-4">{m.admin_catalog_name()}</th>

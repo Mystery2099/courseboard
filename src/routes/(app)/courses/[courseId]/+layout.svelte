@@ -42,6 +42,7 @@
 
 	const currentChannel = $derived(findCourseChannel(page.route.id));
 	const isReadingThread = $derived(page.params.postId !== undefined);
+	const isOverview = $derived(currentChannel === 'overview');
 
 	const queryClient = useQueryClient();
 	const getRealtimeConnection = getRealtimeConnectionAccessor();
@@ -130,6 +131,19 @@
 				</li>
 			{/each}
 		</ul>
+		<div class="mx-3 mt-3 border-t pt-3">
+			<!-- The path is resolved; only the search query is added to it. -->
+			<!-- eslint-disable svelte/no-navigation-without-resolve -->
+			<a
+				href={courseSearchUrl}
+				class="flex min-h-11 items-center gap-3 rounded-xl navigation-item px-3"
+			>
+				<SearchIcon size={18} aria-hidden="true" />
+				{m.course_space_search()}
+			</a>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
+			<div class="px-3">{@render reconnectingStatus()}</div>
+		</div>
 	</nav>
 
 	<div class="min-w-0 flex-1">
@@ -151,13 +165,19 @@
 							· {COURSE_CHANNEL_LABELS[currentChannel]()}</span
 						>
 					</p>
-					<div class="ml-auto">{@render reconnectingStatus()}</div>
+					<div class="ml-auto desktop:hidden">{@render reconnectingStatus()}</div>
 				</div>
 			</header>
 		{:else}
-			<header class="border-b bg-surface">
-				<div class="mx-auto max-w-3xl px-4 pt-8 pb-4 desktop:pb-6">
-					<div class="flex items-center justify-between gap-x-2">
+			<!--
+				The sidebar banner already names the course on desktop, so there only Overview keeps a
+				header, for the description and the course actions. Phones keep the name above the tabs.
+			-->
+			<header class={['bg-surface', isOverview ? 'border-b' : 'max-desktop:border-b']}>
+				<div
+					class={['mx-auto max-w-3xl px-4 pt-5 pb-4', isOverview ? 'desktop:py-6' : 'desktop:p-0']}
+				>
+					<div class="flex items-center justify-between gap-x-2 desktop:hidden">
 						<p class="font-mono text-sm font-semibold text-primary">
 							{data.course.code} · {data.course.institution.name}
 						</p>
@@ -175,48 +195,52 @@
 							>
 						</div>
 					</div>
-					<h1 class="mt-1 text-headline font-bold">{data.course.title}</h1>
-					<p class="mt-2 text-on-surface-variant">{data.course.description}</p>
-					<div class="mt-4 flex flex-wrap gap-2">
-						<form
-							method="POST"
-							action={followActionUrl}
-							use:enhance={() => {
-								isFollowPending = true;
-								return async ({ update }) => {
-									try {
-										await update();
-									} finally {
-										isFollowPending = false;
-									}
-								};
-							}}
-						>
-							<Button
-								variant={data.course.isFollowed ? 'tonal' : 'filled'}
-								type="submit"
-								disabled={isFollowPending}
-								aria-busy={isFollowPending}
+					<h1 class="mt-1 text-2xl leading-tight font-bold desktop:sr-only">
+						{data.course.title}
+					</h1>
+					{#if isOverview}
+						<p class="mt-2 text-on-surface-variant desktop:mt-0">{data.course.description}</p>
+						<div class="mt-4 flex flex-wrap gap-2">
+							<form
+								method="POST"
+								action={followActionUrl}
+								use:enhance={() => {
+									isFollowPending = true;
+									return async ({ update }) => {
+										try {
+											await update();
+										} finally {
+											isFollowPending = false;
+										}
+									};
+								}}
 							>
-								{#if data.course.isFollowed}<Check size={18} />
-									{m.course_space_following()}{:else}{m.course_space_follow()}{/if}
-							</Button>
-						</form>
-						<Button
-							variant="outlined"
-							onclick={() => {
-								wasAddedToHistory = false;
-								isHistoryEditorOpen = true;
-							}}>{m.course_space_add_to_history()}</Button
-						>
-					</div>
-					{#if page.form?.followingError}
-						<p class="mt-2 text-sm" role="alert">{describeErrorCode(page.form.followingError)}</p>
-					{/if}
-					{#if wasAddedToHistory}
-						<p class="mt-2 text-sm text-on-surface-variant" role="status">
-							{m.course_space_added_to_history()}
-						</p>
+								<Button
+									variant={data.course.isFollowed ? 'tonal' : 'filled'}
+									type="submit"
+									disabled={isFollowPending}
+									aria-busy={isFollowPending}
+								>
+									{#if data.course.isFollowed}<Check size={18} />
+										{m.course_space_following()}{:else}{m.course_space_follow()}{/if}
+								</Button>
+							</form>
+							<Button
+								variant="outlined"
+								onclick={() => {
+									wasAddedToHistory = false;
+									isHistoryEditorOpen = true;
+								}}>{m.course_space_add_to_history()}</Button
+							>
+						</div>
+						{#if page.form?.followingError}
+							<p class="mt-2 text-sm" role="alert">{describeErrorCode(page.form.followingError)}</p>
+						{/if}
+						{#if wasAddedToHistory}
+							<p class="mt-2 text-sm text-on-surface-variant" role="status">
+								{m.course_space_added_to_history()}
+							</p>
+						{/if}
 					{/if}
 					<!-- Underlined tabs, as in Teams, so all four channels fit across a phone. -->
 					<nav
@@ -235,7 +259,7 @@
 				</div>
 			</header>
 		{/if}
-		<main class="mx-auto max-w-3xl px-4 py-6">
+		<main class="mx-auto max-w-3xl px-4 py-4">
 			{@render children()}
 		</main>
 	</div>
