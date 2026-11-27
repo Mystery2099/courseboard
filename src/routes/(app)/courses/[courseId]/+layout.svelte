@@ -173,7 +173,7 @@
 <div class="desktop:flex">
 	<nav
 		aria-label={m.course_space_channels({ courseCode: data.course.code })}
-		class="sticky top-0 hidden h-dvh w-64 shrink-0 border-r bg-surface-sidebar desktop:block"
+		class="sticky top-0 hidden h-dvh w-[256px] shrink-0 border-r bg-surface-sidebar desktop:block"
 	>
 		<!-- The course banner, like a community banner atop a chat app's channel list. -->
 		<div class="bg-(image:--banner) px-6 pt-6 pb-5 text-on-rail">

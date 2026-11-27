@@ -110,7 +110,7 @@
 			aria-label={m.navigation_your_profile()}
 			aria-current={isProfileCurrent ? 'page' : undefined}
 			class={[
-				'relative flex size-12 items-center justify-center rounded-full state-layer transition-colors duration-150 [--state-color:var(--on-rail)]',
+				'relative flex size-[48px] items-center justify-center rounded-full state-layer transition-colors duration-150 [--state-color:var(--on-rail)]',
 				isProfileCurrent && 'rail-current'
 			]}
 		>
@@ -124,12 +124,15 @@
 </Tooltip.Provider>
 
 <style>
-	/* Rail controls sit on navy in both themes, so they tint with white instead of the surface roles. */
+	/*
+	 * Rail controls sit on navy in both themes, so they tint with white instead of the surface roles.
+	 * Sized in px, like the 72px rail itself, so enlarged text doesn't push them past its edges.
+	 */
 	.rail-button {
 		position: relative;
 		display: flex;
-		width: 3rem;
-		height: 3rem;
+		width: 48px;
+		height: 48px;
 		align-items: center;
 		justify-content: center;
 		border-radius: var(--radius-tile);
@@ -146,11 +149,11 @@
 		content: '';
 		position: absolute;
 		top: 50%;
-		left: -0.75rem;
-		width: 0.375rem;
-		height: 2.5rem;
+		left: -12px;
+		width: 6px;
+		height: 40px;
 		translate: 0 -50%;
-		border-radius: 0 0.375rem 0.375rem 0;
+		border-radius: 0 6px 6px 0;
 		background-color: var(--gold);
 	}
 
