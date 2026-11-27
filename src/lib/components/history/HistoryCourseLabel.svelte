@@ -9,5 +9,5 @@
 	<span class="font-mono text-sm font-semibold text-primary desktop:w-28 desktop:shrink-0"
 		>{course.code}</span
 	>
-	<span class="truncate font-semibold">{course.title}</span>
+	<span class="min-w-0 font-semibold wrap-break-word">{course.title}</span>
 </span>

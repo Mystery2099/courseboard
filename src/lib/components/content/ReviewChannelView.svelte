@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button } from '#lib/components/ui/button/index.js';
-	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+	import Plus from 'lucide-svelte/icons/plus';
+	import { tick } from 'svelte';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
@@ -34,6 +35,14 @@
 	const context = $derived(contextQuery.data);
 	const statistics = $derived(context.statistics);
 	let isComposerOpen = $state(false);
+	let composerToggle = $state<HTMLElement | null>(null);
+	let publishedNotice = $state<HTMLElement | null>(null);
+
+	/** Closes the composer and returns focus to the button that opened it. */
+	function closeComposer() {
+		isComposerOpen = false;
+		composerToggle?.focus();
+	}
 	let isHistoryEditorOpen = $state(false);
 	let savedReviewId = $state<string | null>(null);
 	const decimalFormat = new Intl.NumberFormat(getLocale(), {
@@ -43,15 +52,42 @@
 	const percentFormat = new Intl.NumberFormat(getLocale(), { style: 'percent' });
 </script>
 
-<h2 class="text-xl font-semibold">{m.reviews_heading()}</h2>
-<dl class="mt-3 grid grid-cols-3 gap-2">
-	<div class="rounded-card bg-surface-container px-3 py-2">
-		<dt class="text-xs text-on-surface-variant tablet:text-sm">{m.reviews_statistic_count()}</dt>
-		<dd class="mt-0.5 font-heading text-xl font-bold">{statistics.reviewCount}</dd>
+<!-- Writing sits beside the heading, as Ask a question does, so it spends no row of its own. -->
+<div class="flex flex-wrap items-center justify-between gap-3">
+	<h2 class="text-xl font-semibold">{m.reviews_heading()}</h2>
+	{#if context.ownReviewId && !isComposerOpen}
+		<Button
+			variant="outlined"
+			size="compact"
+			class="max-w-full whitespace-normal"
+			href={resolve('/(app)/courses/[courseId]/reviews/[postId]', {
+				courseId: course.id,
+				postId: context.ownReviewId
+			})}>{m.reviews_open_or_edit_own()}</Button
+		>
+	{:else}
+		<Button
+			bind:ref={composerToggle}
+			variant={isComposerOpen ? 'tonal' : 'filled'}
+			size="compact"
+			class="max-w-full whitespace-normal"
+			aria-expanded={isComposerOpen}
+			aria-controls="review-composer"
+			onclick={() => (isComposerOpen = !isComposerOpen)}
+			><Plus size={18} />
+			{m.reviews_write()}</Button
+		>
+	{/if}
+</div>
+<!-- One line of facts rather than three tiles, so the reviews themselves start sooner. -->
+<dl class="mt-2 flex flex-wrap gap-x-5 gap-y-1">
+	<div class="flex items-baseline gap-1.5">
+		<dt class="text-sm text-on-surface-variant">{m.reviews_statistic_count()}</dt>
+		<dd class="font-heading text-lg font-bold">{statistics.reviewCount}</dd>
 	</div>
-	<div class="rounded-card bg-surface-container px-3 py-2">
-		<dt class="text-xs text-on-surface-variant tablet:text-sm">{m.reviews_statistic_workload()}</dt>
-		<dd class="mt-0.5 font-heading text-xl font-bold">
+	<div class="flex items-baseline gap-1.5">
+		<dt class="text-sm text-on-surface-variant">{m.reviews_statistic_workload()}</dt>
+		<dd class="font-heading text-lg font-bold">
 			{statistics.averageWorkload === null
 				? m.reviews_statistic_not_yet()
 				: decimalFormat.format(statistics.averageWorkload)}
@@ -60,20 +96,16 @@
 				>{/if}
 		</dd>
 	</div>
-	<div class="rounded-card bg-surface-container px-3 py-2">
-		<dt class="text-xs text-on-surface-variant tablet:text-sm">
-			{m.reviews_statistic_take_again()}
-		</dt>
-		<dd class="mt-0.5 font-heading text-xl font-bold">
+	<div class="flex items-baseline gap-1.5">
+		<dt class="text-sm text-on-surface-variant">{m.reviews_statistic_take_again()}</dt>
+		<dd class="font-heading text-lg font-bold">
 			{statistics.wouldTakeAgainPercentage === null
 				? m.reviews_statistic_not_yet()
 				: percentFormat.format(statistics.wouldTakeAgainPercentage / 100)}
 		</dd>
 	</div>
 </dl>
-<p class="mt-2 text-sm text-on-surface-variant">
-	{m.reviews_statistics_basis()}
-</p>
+<p class="mt-1 text-sm text-on-surface-variant">{m.reviews_statistics_basis()}</p>
 {#if contextQuery.isError}
 	<p class="mt-3 text-sm text-error" role="alert">
 		{m.reviews_context_refresh_failed()}
@@ -86,7 +118,7 @@
 {/if}
 
 {#if savedReviewId}
-	<p class="mt-4 text-sm" role="status">
+	<p class="mt-4 text-sm outline-none" role="status" tabindex="-1" bind:this={publishedNotice}>
 		{m.reviews_published()}
 		<a
 			class="font-semibold text-primary underline-offset-2 hover:underline"
@@ -98,55 +130,44 @@
 	</p>
 {/if}
 
-{#if context.ownReviewId && !isComposerOpen}
-	<Button
-		variant="outlined"
-		class="mt-4"
-		href={resolve('/(app)/courses/[courseId]/reviews/[postId]', {
-			courseId: course.id,
-			postId: context.ownReviewId
-		})}>{m.reviews_open_or_edit_own()}</Button
+<!--
+	Who may review is explained once someone asks to write one, so reviews come first. Hidden rather
+	than removed when closed, so a half-written review survives collapsing it.
+-->
+{#if !context.ownReviewId || isComposerOpen}
+	<section
+		id="review-composer"
+		aria-label={m.reviews_write()}
+		hidden={!isComposerOpen}
+		class="mt-4 rounded-card border bg-surface p-4"
 	>
-{:else}
-	<details
-		bind:open={isComposerOpen}
-		class="group/disclosure mt-4 rounded-card border bg-surface px-4 py-2 open:pb-4"
-	>
-		<summary
-			class="-mx-3 flex min-h-11 items-center rounded-full state-layer-primary px-3 font-semibold text-primary transition-colors duration-150"
-		>
-			{m.reviews_write()}
-			<ChevronDown
-				size={20}
-				class="ml-auto shrink-0 transition-transform duration-150 group-open/disclosure:rotate-180"
-				aria-hidden="true"
-			/>
-		</summary>
-		<!-- Who may review is explained once someone asks to write one, so reviews come first. -->
 		{#if context.attempts.length === 0}
-			<div class="mt-3">
-				<p class="font-semibold">{m.reviews_history_required()}</p>
-				<p class="mt-1 text-sm text-on-surface-variant">
-					{m.reviews_history_required_detail()}
-				</p>
-				<Button variant="outlined" class="mt-3" onclick={() => (isHistoryEditorOpen = true)}
-					>{m.common_add_to_history()}</Button
-				>
-			</div>
+			<p class="font-semibold">{m.reviews_history_required()}</p>
+			<p class="mt-1 text-sm text-on-surface-variant">
+				{m.reviews_history_required_detail()}
+			</p>
+			<Button
+				variant="outlined"
+				class="mt-3 max-w-full whitespace-normal"
+				onclick={() => (isHistoryEditorOpen = true)}>{m.common_add_to_history()}</Button
+			>
 		{:else}
-			<div class="mt-4">
+			<div>
 				<ReviewForm
 					courseId={course.id}
 					attempts={context.attempts}
-					onSaved={(post) => {
+					onSaved={async (post) => {
 						savedReviewId = post.id;
 						isComposerOpen = false;
+						// The form that had focus is gone, so focus moves to the notice with its link.
+						await tick();
+						publishedNotice?.focus();
 					}}
-					onCancel={() => (isComposerOpen = false)}
+					onCancel={closeComposer}
 				/>
 			</div>
 		{/if}
-	</details>
+	</section>
 {/if}
 
 <PostList

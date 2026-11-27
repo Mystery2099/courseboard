@@ -246,7 +246,17 @@
 </script>
 
 {#if kind === 'review'}
-	<div class="mt-4 flex flex-wrap gap-2">
+	<!-- Reviews have four orders and two filters, so the order is a select beside them, not a chip row. -->
+	<div class="mt-3 flex flex-wrap gap-2">
+		<FilterChipSelect
+			label={m.post_list_order()}
+			onchange={(event) => (filter = event.currentTarget.value as PostListFilter)}
+			options={filters.map((option) => ({
+				value: option,
+				label: POST_LIST_FILTER_LABELS[option](),
+				isSelected: option === filter
+			}))}
+		/>
 		<FilterChipSelect
 			label={m.reviews_filter_workload()}
 			onchange={(event) => {
@@ -288,7 +298,7 @@
 	</div>
 {/if}
 
-{#if filters.length > 0}
+{#if filters.length > 0 && kind !== 'review'}
 	<ToggleGroup.Root
 		type="single"
 		class="mt-3"
@@ -344,13 +354,23 @@
 					href={resolve(THREAD_ROUTE_IDS[post.kind], { courseId, postId: post.id })}
 					class="block rounded-card border list-row bg-surface px-4 py-3 [--state-base:var(--surface)]"
 				>
-					<span class="block font-heading text-lg leading-snug font-bold wrap-break-word"
-						>{post.title}</span
-					>
+					<!-- The reply count sits at the title's end, so it never needs a row of its own. -->
+					<span class="flex items-start gap-3">
+						<span class="min-w-0 flex-1 font-heading text-lg leading-snug font-bold wrap-break-word"
+							>{post.title}</span
+						>
+						<span
+							class="mt-0.5 flex shrink-0 items-center gap-1.5 text-sm font-semibold text-primary"
+						>
+							<MessageCircle size={16} aria-hidden="true" />
+							<span aria-hidden="true">{post.replyCount}</span>
+							<span class="sr-only">{formatReplyCount(post.replyCount)}</span>
+						</span>
+					</span>
 					{#if post.reviewData}
 						<ReviewFacts review={post.reviewData} />
 					{/if}
-					<!-- One meta row, with the reply count at its end, so a card spends no row on chrome. -->
+					<!-- One meta row for the author, time, and badges, so a card spends no row on chrome. -->
 					<span class="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm">
 						<span class="flex min-w-0 items-center gap-2">
 							<UserAvatar
@@ -372,10 +392,6 @@
 						{#if post.isLocked}
 							<Badge variant="neutral"><Lock size={14} /> {m.post_badge_locked()}</Badge>
 						{/if}
-						<span class="ml-auto flex items-center gap-1.5 font-semibold text-primary">
-							<MessageCircle size={16} aria-hidden="true" />
-							{formatReplyCount(post.replyCount)}
-						</span>
 					</span>
 				</a>
 			</li>

@@ -16,23 +16,30 @@
 
 <svelte:head><title>{m.profile_title()}</title></svelte:head>
 
-<!-- Desktop: an identity column beside the history, as in the profile designs. -->
-<main class="desktop:grid desktop:min-h-dvh desktop:grid-cols-[minmax(320px,400px)_minmax(0,1fr)]">
-	<div class="desktop:border-r desktop:bg-surface-sidebar">
-		<ProfileHeader
-			username={data.profile.username}
-			displayName={data.profile.displayName}
-			{imageUrl}
-			subtitle={data.profile.primaryInstitution.name}
-		/>
-		<div class="mx-auto max-w-3xl px-4 pt-6 desktop:px-8">
-			<Button variant="outlined" class="w-full text-on-surface" href={resolve('/(app)/settings')}
-				>{m.profile_edit_profile()}</Button
+<!--
+	One column like other people's profiles, widening at 1280px so history and activity sit side by side
+	instead of leaving the sides empty.
+-->
+<main class="mx-auto max-w-3xl pb-8 wide:max-w-7xl">
+	<ProfileHeader
+		username={data.profile.username}
+		displayName={data.profile.displayName}
+		{imageUrl}
+		subtitle={data.profile.primaryInstitution.name}
+	>
+		{#snippet actions()}
+			<Button
+				variant="outlined"
+				size="compact"
+				class="text-on-surface"
+				href={resolve('/(app)/settings')}>{m.profile_edit_profile()}</Button
 			>
-		</div>
-	</div>
+		{/snippet}
+	</ProfileHeader>
 
-	<div class="mx-auto w-full max-w-3xl px-4 py-8 desktop:mx-0 desktop:max-w-5xl desktop:px-8">
+	<div
+		class="px-4 pt-6 desktop:px-8 wide:grid wide:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] wide:items-start wide:gap-8"
+	>
 		<AcademicHistorySection
 			initialHistory={data.history}
 			initialHistoryLoadedAt={data.historyLoadedAt}

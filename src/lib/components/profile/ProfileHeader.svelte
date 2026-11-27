@@ -10,17 +10,33 @@
 		subtitle?: string | null;
 		/** School chips and similar details under the name. */
 		children?: Snippet;
+		/** Shown beside the name, such as Edit profile. */
+		actions?: Snippet;
 	}
 
-	let { username, displayName, imageUrl, subtitle = null, children }: Props = $props();
+	let { username, displayName, imageUrl, subtitle = null, children, actions }: Props = $props();
 </script>
 
+<!-- A short banner and avatar, so the history starts high on a phone. -->
 <header>
-	<div class="h-28 border-b bg-(image:--banner) desktop:h-36" aria-hidden="true"></div>
-	<div class="-mt-14 px-4 desktop:px-8">
-		<UserAvatar {username} {displayName} {imageUrl} size={104} class="ring-4 ring-background" />
-		<h1 class="mt-4 text-headline font-bold wrap-break-word">{displayName}</h1>
-		<p class="mt-1 text-on-surface-variant">
+	<div class="h-16 border-b bg-(image:--banner) desktop:h-24" aria-hidden="true"></div>
+	<div class="px-4 desktop:px-8">
+		<!--
+			Actions share the avatar's row rather than taking a row of their own. Only the avatar overlaps
+			the banner, so the actions always start below it, even with enlarged text.
+		-->
+		<div class="flex items-start justify-between gap-3">
+			<UserAvatar
+				{username}
+				{displayName}
+				{imageUrl}
+				size={80}
+				class="-mt-8 ring-4 ring-background"
+			/>
+			<div class="mt-3">{@render actions?.()}</div>
+		</div>
+		<h1 class="mt-2 text-2xl leading-tight font-bold wrap-break-word">{displayName}</h1>
+		<p class="mt-0.5 text-on-surface-variant">
 			@{username}{subtitle ? ` · ${subtitle}` : ''}
 		</p>
 		{@render children?.()}

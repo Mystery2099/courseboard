@@ -11,7 +11,7 @@
 
 <span
 	class={[
-		'flex size-12 shrink-0 flex-col items-center justify-center rounded-tile font-mono text-[11px] leading-tight font-semibold transition-colors duration-150',
+		'flex size-[48px] shrink-0 flex-col items-center justify-center rounded-tile font-mono text-[11px] leading-tight font-semibold transition-colors duration-150',
 		tone === 'surface' &&
 			'bg-primary-container text-on-primary-container group-hover/tile:bg-[color-mix(in_oklab,var(--primary-container),var(--on-primary-container)_var(--state-hover-tinted))] group-active/tile:bg-[color-mix(in_oklab,var(--primary-container),var(--on-primary-container)_var(--state-pressed-tinted))]',
 		tone === 'surface' && isCurrent && 'ring-3 ring-primary',

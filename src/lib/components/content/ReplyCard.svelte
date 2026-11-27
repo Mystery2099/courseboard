@@ -74,43 +74,52 @@
 			></Button
 		>
 	{/if}
-	<div class="flex flex-wrap items-center justify-between gap-2">
-		<ContentByline author={reply.author} createdAt={reply.createdAt} />
-		{#if isAccepted}
-			<Badge variant="success"
-				><Star size={14} class="fill-gold stroke-on-success-container" />
-				{m.thread_accepted_answer()}</Badge
-			>
-		{/if}
-	</div>
-	<MarkdownBody
-		class="mt-2"
-		markdown={reply.bodyMarkdown}
-		mentionedUsernames={reply.mentionedUsernames}
-		topHeadingLevel={3}
-	/>
-	<div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
-		{#if reactions}
-			<ReactionBar {reactions} onToggle={onToggleReaction} />
-		{/if}
-		{#each inlineActions as action (action.id)}
-			<Button
-				variant="outlined"
-				size="compact"
-				disabled={action.disabled}
-				onclick={() => {
-					action.run();
-					action.moveFocus?.();
-				}}>{action.label}</Button
-			>
-		{/each}
-		<span role="status" class="text-on-surface-variant">{copyNotice}</span>
-		<div class="ml-auto">
-			<ReplyActionMenuButton
-				label={m.thread_reply_actions({ name: reply.author.displayName })}
-				{actions}
-				onOpenSheet={onOpenActionSheet}
-			/>
+	<!--
+		From tablet up the actions share the byline's row, so a short reply spends no row on them. Phones
+		keep them under the text, where a thumb expects them.
+	-->
+	<div class="grid grid-cols-[minmax(0,1fr)_minmax(0,auto)] items-center gap-x-2">
+		<div class="flex flex-wrap items-center gap-2">
+			<ContentByline author={reply.author} createdAt={reply.createdAt} />
+			{#if isAccepted}
+				<Badge variant="success"
+					><Star size={14} class="fill-gold stroke-on-success-container" />
+					{m.thread_accepted_answer()}</Badge
+				>
+			{/if}
+		</div>
+		<MarkdownBody
+			class="col-span-2 row-start-2 mt-2 tablet:mt-1"
+			markdown={reply.bodyMarkdown}
+			mentionedUsernames={reply.mentionedUsernames}
+			topHeadingLevel={3}
+		/>
+		<div
+			class="col-span-2 row-start-3 mt-2 flex flex-wrap items-center gap-2 text-sm tablet:col-span-1 tablet:col-start-2 tablet:row-start-1 tablet:mt-0 tablet:justify-end"
+		>
+			{#if reactions}
+				<ReactionBar {reactions} onToggle={onToggleReaction} />
+			{/if}
+			{#each inlineActions as action (action.id)}
+				<Button
+					variant="outlined"
+					size="compact"
+					class="max-w-full whitespace-normal"
+					disabled={action.disabled}
+					onclick={() => {
+						action.run();
+						action.moveFocus?.();
+					}}>{action.label}</Button
+				>
+			{/each}
+			<span role="status" class="text-on-surface-variant">{copyNotice}</span>
+			<div class="ml-auto">
+				<ReplyActionMenuButton
+					label={m.thread_reply_actions({ name: reply.author.displayName })}
+					{actions}
+					onOpenSheet={onOpenActionSheet}
+				/>
+			</div>
 		</div>
 	</div>
 	{#if reactionError}

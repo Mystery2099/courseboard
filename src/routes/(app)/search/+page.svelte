@@ -85,9 +85,9 @@
 
 <svelte:head><title>{m.search_title()}</title></svelte:head>
 
-<main class="mx-auto max-w-3xl px-4 py-8 desktop:max-w-5xl desktop:px-8">
+<main class="mx-auto max-w-3xl px-4 py-8">
 	<h1 class="sr-only">{m.search_title()}</h1>
-	<form id="search-form" method="GET" role="search" class="relative desktop:max-w-3xl">
+	<form id="search-form" method="GET" role="search" class="relative">
 		<input type="hidden" name="scope" value={query.scope} />
 		<label class="relative block">
 			<span class="sr-only">{m.search_label()}</span>

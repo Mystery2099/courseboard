@@ -696,6 +696,7 @@
 			<Button
 				variant="tonal"
 				size="compact"
+				class="max-w-full whitespace-normal"
 				aria-disabled={loadingReplyJump !== null}
 				onclick={jumpToAcceptedReply}
 				><CircleCheck aria-hidden="true" />{loadingReplyJump !== null

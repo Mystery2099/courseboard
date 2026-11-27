@@ -50,7 +50,7 @@
 <svelte:head><title>{m.settings_title()}</title></svelte:head>
 
 <!-- Grouped rows under section labels, as in the Settings design. -->
-<main class="mx-auto max-w-2xl px-4 py-6 desktop:py-10">
+<main class="mx-auto max-w-3xl px-4 py-6 desktop:py-8">
 	<div class="flex items-center gap-2">
 		<Button
 			variant="ghost"
@@ -214,7 +214,8 @@
 			{m.settings_group_app()}
 		</h2>
 		<ul class="mt-2 divide-y overflow-hidden rounded-card border bg-surface">
-			<li class={ROW}>
+			<!-- Wraps, so the picker drops below its label when text is enlarged instead of being cut off. -->
+			<li class="{ROW} flex-wrap">
 				<span class="font-semibold" aria-hidden="true">{m.profile_language()}</span>
 				<LanguagePicker isLabelVisible={false} />
 			</li>

@@ -54,7 +54,7 @@
 	const isEmpty = $derived(type === 'replies' ? replies.length === 0 : posts.length === 0);
 </script>
 
-<section class="mt-10" aria-labelledby="activity-heading">
+<section class="mt-10 wide:mt-0" aria-labelledby="activity-heading">
 	<h2 id="activity-heading" class="text-xl font-semibold">{m.profile_activity_heading()}</h2>
 	<p class="mt-2 text-sm text-on-surface-variant">{m.profile_activity_explanation()}</p>
 

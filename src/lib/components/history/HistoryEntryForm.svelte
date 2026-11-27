@@ -160,7 +160,7 @@
 					<p class="font-mono text-sm font-semibold text-primary">
 						{course.code} · {course.institution.name}
 					</p>
-					<p class="truncate font-semibold">{course.title}</p>
+					<p class="font-semibold wrap-break-word">{course.title}</p>
 				</div>
 				{#if !editedEntry && !presetCourse}
 					<Button
@@ -181,9 +181,11 @@
 
 	<div class="flex flex-col gap-1.5">
 		<span class="text-sm font-semibold" id="history-status-label">{m.history_form_status()}</span>
+		<!-- Segments wrap onto a second line when enlarged text no longer fits them in one. -->
 		<ToggleGroup.Root
 			type="single"
 			variant="segment"
+			class="flex-wrap"
 			aria-labelledby="history-status-label"
 			bind:value={() => status, (option) => option && (status = option as HistoryStatus)}
 		>

@@ -208,6 +208,8 @@
 		background-color: var(--background);
 		color: var(--on-surface);
 		font-family: var(--font-sans);
+		/* Pages that scroll and pages that don't keep the same width, so content doesn't shift sideways. */
+		scrollbar-gutter: stable;
 		/* The phone dock, or a thread's reply bar, and the on-screen keyboard. */
 		--bottom-bar-clearance: calc(
 			var(--keyboard-inset, 0px) +

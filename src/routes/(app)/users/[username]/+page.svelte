@@ -71,7 +71,7 @@
 		</p>
 	{/if}
 
-	<section class="mt-8 px-4 desktop:px-8" aria-labelledby="history-heading">
+	<section class="mt-6 px-4 desktop:px-8" aria-labelledby="history-heading">
 		<h2 id="history-heading" class="text-xl font-semibold">{m.history_heading()}</h2>
 		<p class="mt-2 text-sm text-on-surface-variant">
 			{m.person_history_attribution({ displayName: data.person.displayName })}
