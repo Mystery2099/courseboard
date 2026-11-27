@@ -15,7 +15,7 @@
 
 <svelte:head><title>{m.explore_title()}</title></svelte:head>
 
-<main class="mx-auto max-w-3xl px-4 py-8">
+<main class="mx-auto max-w-5xl px-4 py-8">
 	<h1 class="text-headline font-bold">{m.explore_title()}</h1>
 
 	{#if !data.catalog}
@@ -62,12 +62,13 @@
 			{/if}
 		</div>
 
-		<ul class="mt-4 divide-y overflow-hidden rounded-card border bg-surface">
+		<!-- A grid of course cards from tablet up, as the design handoff asks, so wide screens show more. -->
+		<ul class="mt-4 grid gap-2 tablet:grid-cols-2 wide:grid-cols-3">
 			{#each data.catalog.courses as course (course.id)}
 				<li>
 					<a
 						href={resolve('/(app)/courses/[courseId]', { courseId: course.id })}
-						class="flex min-h-18 items-center gap-4 list-row px-4 py-3 [--state-base:var(--surface)]"
+						class="flex h-full min-h-18 items-center gap-4 rounded-card border list-row bg-surface px-4 py-3 [--state-base:var(--surface)]"
 					>
 						<CourseCodeTile code={course.code} />
 						<span class="min-w-0 flex-1">
@@ -84,7 +85,11 @@
 					</a>
 				</li>
 			{:else}
-				<li class="px-4 py-3 text-on-surface-variant">{m.explore_institution_empty()}</li>
+				<li
+					class="rounded-card border bg-surface px-4 py-3 text-on-surface-variant tablet:col-span-2"
+				>
+					{m.explore_institution_empty()}
+				</li>
 			{/each}
 		</ul>
 
