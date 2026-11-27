@@ -44,14 +44,15 @@
 </script>
 
 <h2 class="text-xl font-semibold">{m.reviews_heading()}</h2>
-<dl class="mt-3 grid grid-cols-3 gap-2">
-	<div class="rounded-card bg-surface-container px-3 py-2">
-		<dt class="text-xs text-on-surface-variant tablet:text-sm">{m.reviews_statistic_count()}</dt>
-		<dd class="mt-0.5 font-heading text-xl font-bold">{statistics.reviewCount}</dd>
+<!-- One line of facts rather than three tiles, so the reviews themselves start sooner. -->
+<dl class="mt-2 flex flex-wrap gap-x-5 gap-y-1">
+	<div class="flex items-baseline gap-1.5">
+		<dt class="text-sm text-on-surface-variant">{m.reviews_statistic_count()}</dt>
+		<dd class="font-heading text-lg font-bold">{statistics.reviewCount}</dd>
 	</div>
-	<div class="rounded-card bg-surface-container px-3 py-2">
-		<dt class="text-xs text-on-surface-variant tablet:text-sm">{m.reviews_statistic_workload()}</dt>
-		<dd class="mt-0.5 font-heading text-xl font-bold">
+	<div class="flex items-baseline gap-1.5">
+		<dt class="text-sm text-on-surface-variant">{m.reviews_statistic_workload()}</dt>
+		<dd class="font-heading text-lg font-bold">
 			{statistics.averageWorkload === null
 				? m.reviews_statistic_not_yet()
 				: decimalFormat.format(statistics.averageWorkload)}
@@ -60,20 +61,16 @@
 				>{/if}
 		</dd>
 	</div>
-	<div class="rounded-card bg-surface-container px-3 py-2">
-		<dt class="text-xs text-on-surface-variant tablet:text-sm">
-			{m.reviews_statistic_take_again()}
-		</dt>
-		<dd class="mt-0.5 font-heading text-xl font-bold">
+	<div class="flex items-baseline gap-1.5">
+		<dt class="text-sm text-on-surface-variant">{m.reviews_statistic_take_again()}</dt>
+		<dd class="font-heading text-lg font-bold">
 			{statistics.wouldTakeAgainPercentage === null
 				? m.reviews_statistic_not_yet()
 				: percentFormat.format(statistics.wouldTakeAgainPercentage / 100)}
 		</dd>
 	</div>
 </dl>
-<p class="mt-2 text-sm text-on-surface-variant">
-	{m.reviews_statistics_basis()}
-</p>
+<p class="mt-1 text-sm text-on-surface-variant">{m.reviews_statistics_basis()}</p>
 {#if contextQuery.isError}
 	<p class="mt-3 text-sm text-error" role="alert">
 		{m.reviews_context_refresh_failed()}

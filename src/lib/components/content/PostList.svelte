@@ -246,7 +246,17 @@
 </script>
 
 {#if kind === 'review'}
+	<!-- Reviews have four orders and two filters, so the order is a select beside them, not a chip row. -->
 	<div class="mt-4 flex flex-wrap gap-2">
+		<FilterChipSelect
+			label={m.post_list_order()}
+			onchange={(event) => (filter = event.currentTarget.value as PostListFilter)}
+			options={filters.map((option) => ({
+				value: option,
+				label: POST_LIST_FILTER_LABELS[option](),
+				isSelected: option === filter
+			}))}
+		/>
 		<FilterChipSelect
 			label={m.reviews_filter_workload()}
 			onchange={(event) => {
@@ -288,7 +298,7 @@
 	</div>
 {/if}
 
-{#if filters.length > 0}
+{#if filters.length > 0 && kind !== 'review'}
 	<ToggleGroup.Root
 		type="single"
 		class="mt-3"
