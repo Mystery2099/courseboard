@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button } from '#lib/components/ui/button/index.js';
 	import Plus from 'lucide-svelte/icons/plus';
+	import { tick } from 'svelte';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
@@ -35,6 +36,7 @@
 	const statistics = $derived(context.statistics);
 	let isComposerOpen = $state(false);
 	let composerToggle = $state<HTMLElement | null>(null);
+	let publishedNotice = $state<HTMLElement | null>(null);
 
 	/** Closes the composer and returns focus to the button that opened it. */
 	function closeComposer() {
@@ -116,7 +118,7 @@
 {/if}
 
 {#if savedReviewId}
-	<p class="mt-4 text-sm" role="status">
+	<p class="mt-4 text-sm outline-none" role="status" tabindex="-1" bind:this={publishedNotice}>
 		{m.reviews_published()}
 		<a
 			class="font-semibold text-primary underline-offset-2 hover:underline"
@@ -150,9 +152,12 @@
 				<ReviewForm
 					courseId={course.id}
 					attempts={context.attempts}
-					onSaved={(post) => {
+					onSaved={async (post) => {
 						savedReviewId = post.id;
 						isComposerOpen = false;
+						// The form that had focus is gone, so focus moves to the notice with its link.
+						await tick();
+						publishedNotice?.focus();
 					}}
 					onCancel={closeComposer}
 				/>

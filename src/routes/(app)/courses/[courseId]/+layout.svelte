@@ -287,7 +287,7 @@
 									{data.course.description}
 								</p>
 							{/key}
-							{#if isDescriptionTruncated}
+							{#if isDescriptionTruncated || isDescriptionExpanded}
 								<Button
 									variant="text"
 									size="compact"
@@ -321,7 +321,6 @@
 				</div>
 			</header>
 		{/if}
-		<!-- From 1280px an About panel sits beside the posts, as the design handoff asks. -->
 		<!--
 			From 1280px an About panel sits beside the posts, as the design handoff asks. It comes first in
 			the page so keyboard users reach the course actions before the feed, and is drawn on the right.

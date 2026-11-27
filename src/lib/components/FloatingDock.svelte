@@ -135,7 +135,7 @@
 						{m.navigation_in_course({ courseCode: currentCourse.code })}
 					</h2>
 					<!-- Two columns when the labels fit, so the four channels take two rows of the sheet, not four. -->
-					<ul class="mt-2 grid grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-1">
+					<ul class="mt-2 grid grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-1">
 						{#each COURSE_CHANNELS as channel (channel)}
 							<li>
 								<a
