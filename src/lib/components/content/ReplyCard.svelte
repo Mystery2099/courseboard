@@ -78,7 +78,7 @@
 		From tablet up the actions share the byline's row, so a short reply spends no row on them. Phones
 		keep them under the text, where a thumb expects them.
 	-->
-	<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2">
+	<div class="grid grid-cols-[minmax(0,1fr)_minmax(0,auto)] items-center gap-x-2">
 		<div class="flex flex-wrap items-center gap-2">
 			<ContentByline author={reply.author} createdAt={reply.createdAt} />
 			{#if isAccepted}
@@ -104,6 +104,7 @@
 				<Button
 					variant="outlined"
 					size="compact"
+					class="max-w-full whitespace-normal"
 					disabled={action.disabled}
 					onclick={() => {
 						action.run();
