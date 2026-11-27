@@ -80,13 +80,20 @@
 		void CourseNavigationApiClient.recordVisit(data.course.id).catch(() => undefined);
 	});
 	let isFollowPending = $state(false);
-	let isDescriptionExpanded = $state(false);
+	// Kept per course, since this layout stays mounted when moving between courses.
+	let expandedDescriptionCourseId = $state<string | null>(null);
+	const isDescriptionExpanded = $derived(expandedDescriptionCourseId === data.course.id);
 	let isDescriptionTruncated = $state(false);
 
-	/** Tracks whether the phone's two-line description hides anything, so More shows only when needed. */
+	/**
+	 * Tracks whether the two-line description hides anything, so Show more appears only when needed.
+	 * Measured only while clamped, so expanding doesn't remove the button that collapses it again.
+	 */
 	function measureDescriptionTruncation(element: HTMLElement) {
 		const observer = new ResizeObserver(() => {
-			isDescriptionTruncated = element.scrollHeight > element.clientHeight;
+			if (!isDescriptionExpanded) {
+				isDescriptionTruncated = element.scrollHeight > element.clientHeight;
+			}
 		});
 		observer.observe(element);
 		return () => observer.disconnect();
@@ -122,7 +129,8 @@
 				isFollowPending = true;
 				return async ({ update }) => {
 					try {
-						await update();
+						// Stay on the current channel or thread; the action itself lives on Overview.
+						await update({ navigate: false });
 					} finally {
 						isFollowPending = false;
 					}
@@ -266,24 +274,28 @@
 					{#if isOverview}
 						<!-- From 1280px the About panel beside the posts holds these instead. -->
 						<div class="wide:hidden">
-							<p
-								id="course-description"
-								class={[
-									'mt-2 text-on-surface-variant desktop:mt-0',
-									!isDescriptionExpanded && 'line-clamp-2 desktop:line-clamp-none'
-								]}
-								{@attach measureDescriptionTruncation}
-							>
-								{data.course.description}
-							</p>
-							{#if isDescriptionTruncated || isDescriptionExpanded}
+							<!-- Keyed, so another course's description is measured afresh. -->
+							{#key data.course.id}
+								<p
+									id="course-description"
+									class={[
+										'mt-2 text-on-surface-variant desktop:mt-0',
+										!isDescriptionExpanded && 'line-clamp-2'
+									]}
+									{@attach measureDescriptionTruncation}
+								>
+									{data.course.description}
+								</p>
+							{/key}
+							{#if isDescriptionTruncated}
 								<Button
 									variant="text"
 									size="compact"
-									class="-my-2 -ms-4 desktop:hidden"
+									class="-my-2 -ms-2 px-2"
 									aria-expanded={isDescriptionExpanded}
 									aria-controls="course-description"
-									onclick={() => (isDescriptionExpanded = !isDescriptionExpanded)}
+									onclick={() =>
+										(expandedDescriptionCourseId = isDescriptionExpanded ? null : data.course.id)}
 									>{isDescriptionExpanded
 										? m.course_space_description_less()
 										: m.course_space_description_more()}</Button
@@ -310,17 +322,26 @@
 			</header>
 		{/if}
 		<!-- From 1280px an About panel sits beside the posts, as the design handoff asks. -->
-		<div class="wide:mx-auto wide:flex wide:max-w-[70rem] wide:gap-6 wide:px-4">
-			<main class="mx-auto max-w-3xl px-4 py-4 wide:mx-0 wide:min-w-0 wide:flex-1 wide:px-0">
-				{@render children()}
-			</main>
-			<aside aria-labelledby="course-about-heading" class="hidden w-72 shrink-0 py-4 wide:block">
+		<!--
+			From 1280px an About panel sits beside the posts, as the design handoff asks. It comes first in
+			the page so keyboard users reach the course actions before the feed, and is drawn on the right.
+		-->
+		<div
+			class="wide:mx-auto wide:flex wide:max-w-[70rem] wide:gap-6 wide:px-4 min-[1600px]:max-w-[76rem]"
+		>
+			<aside
+				aria-labelledby="course-about-heading"
+				class="hidden w-72 shrink-0 py-4 wide:order-last wide:block min-[1600px]:w-96"
+			>
 				<div class="sticky top-4 rounded-card border bg-surface p-4">
 					<h2 id="course-about-heading" class="text-lg font-bold">{m.course_space_about()}</h2>
 					<p class="mt-2 text-sm text-on-surface-variant">{data.course.description}</p>
 					<div class="mt-4">{@render courseActions()}</div>
 				</div>
 			</aside>
+			<main class="mx-auto max-w-3xl px-4 py-4 wide:mx-0 wide:min-w-0 wide:flex-1 wide:px-0">
+				{@render children()}
+			</main>
 		</div>
 	</div>
 </div>
