@@ -102,7 +102,7 @@
 				>
 				{#if currentChannel}
 					<!-- Code only when the chip is short of room; the channel stays in the accessible name. -->
-					<span class="truncate text-sm @max-[200px]:sr-only"
+					<span class="truncate text-sm @max-[12rem]:sr-only"
 						>{COURSE_CHANNEL_LABELS[currentChannel]()}</span
 					>
 				{/if}

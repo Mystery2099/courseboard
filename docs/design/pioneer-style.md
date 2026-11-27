@@ -60,12 +60,12 @@ Section labels (`text-overline`) are sentence case now, not tracked capitals.
 - **Course header (phone and tablet):** the code, school, and title above the channel tabs. The description (clamped to two lines, with Show more) and the course buttons show only on Overview, so the other channels start with their posts.
 - **Channel tabs (phone):** four equal tabs with an underline replace the scrolling chip strip, so every channel shows without scrolling.
 - **Post lists:** separate conversation cards, as in Teams: the title with the reply count at its end (the number, with the words for screen readers), then one row with the author, time, and badges. The Questions channel doesn't repeat the Question badge. Cards don't show an excerpt yet, since the list API doesn't send post text.
-- **Reviews:** Write a review sits beside the heading, the statistics fit on one line, and the order is a select beside the filters, so reviews start high on a phone. Who may write one is explained when Write a review is opened.
+- **Reviews:** Write a review sits beside the heading, the statistics share one compact line (two on narrow phones), and the order is a select beside the filters, so reviews start high on a phone. Who may write one is explained when Write a review is opened.
 - **Replies:** no bubble; they read as a chat timeline. Only the accepted answer gets a tinted panel, with a gold star beside "Accepted answer". From tablet up, reactions, Reply, and the menu share the byline's row.
 - **Profiles:** one column with a short banner and an 80px avatar; Edit profile sits on the avatar's row. Your own profile shows History beside Your activity from 1280px.
 - **Explore:** course cards in a grid, two columns from tablet and three from 1280px.
 - **Page widths:** reading pages (course posts, threads, Search, Mentions, Settings, other people's profiles) are 768px wide; Explore and your own profile widen for their grids.
-- **Dock:** the space chip is filled with `primary`. Its buttons are sized in px, so enlarged text wraps the course code onto a taller dock instead of pushing buttons off screen.
+- **Dock:** the space chip is filled with `primary`. Its buttons are sized in px, and its text labels (tablets) and the chip's channel name show only when the dock or chip is wide enough in rem, so enlarged text falls back to icons and the course code, wrapping onto a taller dock rather than pushing buttons off screen.
 
 ## Accessibility
 
