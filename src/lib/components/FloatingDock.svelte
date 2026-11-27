@@ -134,14 +134,14 @@
 					<h2 class="mt-5 text-overline text-on-surface-variant">
 						{m.navigation_in_course({ courseCode: currentCourse.code })}
 					</h2>
-					<!-- Two columns, so the four channels take two rows of the sheet rather than four. -->
-					<ul class="mt-2 grid grid-cols-2 gap-1">
+					<!-- Two columns when the labels fit, so the four channels take two rows of the sheet, not four. -->
+					<ul class="mt-2 grid grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-1">
 						{#each COURSE_CHANNELS as channel (channel)}
 							<li>
 								<a
 									href={resolve(COURSE_CHANNEL_ROUTE_IDS[channel], { courseId: currentCourse.id })}
 									aria-current={channel === currentChannel ? 'page' : undefined}
-									class="flex min-h-12 items-center gap-2 rounded-2xl navigation-item px-4 text-lg"
+									class="flex min-h-12 items-center gap-2 rounded-2xl navigation-item px-4 text-lg [overflow-wrap:anywhere]"
 								>
 									{COURSE_CHANNEL_LABELS[channel]()}
 									{#if channel === currentChannel}<Check size={18} aria-hidden="true" />{/if}

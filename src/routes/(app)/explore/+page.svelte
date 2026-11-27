@@ -21,7 +21,7 @@
 	{#if !data.catalog}
 		<p class="mt-4 text-on-surface-variant">{m.explore_no_courses()}</p>
 	{:else}
-		<div class="mt-6 flex items-center justify-between gap-4">
+		<div class="mt-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
 			<h2 class="text-xl font-semibold">
 				{m.explore_courses_at({ institution: data.catalog.institution.name })}
 			</h2>
@@ -63,7 +63,7 @@
 		</div>
 
 		<!-- A grid of course cards from tablet up, as the design handoff asks, so wide screens show more. -->
-		<ul class="mt-4 grid gap-2 tablet:grid-cols-2 wide:grid-cols-3">
+		<ul class="mt-4 grid grid-cols-1 gap-2 tablet:grid-cols-2 wide:grid-cols-3">
 			{#each data.catalog.courses as course (course.id)}
 				<li>
 					<a
@@ -85,9 +85,7 @@
 					</a>
 				</li>
 			{:else}
-				<li
-					class="rounded-card border bg-surface px-4 py-3 text-on-surface-variant tablet:col-span-2"
-				>
+				<li class="col-span-full rounded-card border bg-surface px-4 py-3 text-on-surface-variant">
 					{m.explore_institution_empty()}
 				</li>
 			{/each}

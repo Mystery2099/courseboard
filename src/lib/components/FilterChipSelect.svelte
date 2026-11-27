@@ -21,7 +21,7 @@
 <label
 	class="{toggleVariants({
 		variant: 'chip'
-	})} max-w-full min-w-0 items-stretch gap-0 pr-2 outline-primary after:hidden focus-within:outline-2 focus-within:outline-offset-2"
+	})} max-w-full min-w-0 flex-wrap items-stretch gap-0 pr-2 outline-primary after:hidden focus-within:outline-2 focus-within:outline-offset-2"
 >
 	<span class="self-center whitespace-nowrap">{label}:</span>
 	<!-- Taller than the chip it sits in, so the select itself is a 44px target. -->
