@@ -173,7 +173,7 @@
 <div class="desktop:flex">
 	<nav
 		aria-label={m.course_space_channels({ courseCode: data.course.code })}
-		class="sticky top-0 hidden h-dvh w-[256px] shrink-0 border-r bg-surface-sidebar desktop:block"
+		class="sticky top-0 hidden h-dvh w-[256px] shrink-0 overflow-y-auto border-r bg-surface-sidebar desktop:block"
 	>
 		<!-- The course banner, like a community banner atop a chat app's channel list. -->
 		<div class="bg-(image:--banner) px-6 pt-6 pb-5 text-on-rail">
@@ -190,7 +190,7 @@
 						aria-current={channel === currentChannel ? 'page' : undefined}
 						class="flex min-h-11 items-center gap-3 rounded-xl navigation-item px-3"
 					>
-						<ChannelIcon size={18} aria-hidden="true" />
+						<ChannelIcon size={18} class="shrink-0" aria-hidden="true" />
 						{COURSE_CHANNEL_LABELS[channel]()}
 					</a>
 				</li>
@@ -203,7 +203,7 @@
 				href={courseSearchUrl}
 				class="flex min-h-11 items-center gap-3 rounded-xl navigation-item px-3"
 			>
-				<SearchIcon size={18} aria-hidden="true" />
+				<SearchIcon size={18} class="shrink-0" aria-hidden="true" />
 				{m.course_space_search()}
 			</a>
 			<!-- eslint-enable svelte/no-navigation-without-resolve -->
