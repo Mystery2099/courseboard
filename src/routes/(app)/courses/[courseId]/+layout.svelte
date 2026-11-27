@@ -165,7 +165,7 @@
 							· {COURSE_CHANNEL_LABELS[currentChannel]()}</span
 						>
 					</p>
-					<div class="ml-auto">{@render reconnectingStatus()}</div>
+					<div class="ml-auto desktop:hidden">{@render reconnectingStatus()}</div>
 				</div>
 			</header>
 		{:else}
