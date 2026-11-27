@@ -140,6 +140,7 @@
 			<Button
 				variant={data.course.isFollowed ? 'tonal' : 'filled'}
 				size="compact"
+				class="max-w-full whitespace-normal"
 				type="submit"
 				disabled={isFollowPending}
 				aria-busy={isFollowPending}
@@ -151,6 +152,7 @@
 		<Button
 			variant="outlined"
 			size="compact"
+			class="max-w-full whitespace-normal"
 			onclick={() => {
 				wasAddedToHistory = false;
 				isHistoryEditorOpen = true;
@@ -173,7 +175,7 @@
 <div class="desktop:flex">
 	<nav
 		aria-label={m.course_space_channels({ courseCode: data.course.code })}
-		class="sticky top-0 hidden h-dvh w-[256px] shrink-0 overflow-y-auto border-r bg-surface-sidebar desktop:block"
+		class="sticky top-0 hidden h-dvh w-[256px] shrink-0 overflow-x-hidden overflow-y-auto border-r bg-surface-sidebar [overflow-wrap:anywhere] desktop:block"
 	>
 		<!-- The course banner, like a community banner atop a chat app's channel list. -->
 		<div class="bg-(image:--banner) px-6 pt-6 pb-5 text-on-rail">
@@ -191,7 +193,7 @@
 						class="flex min-h-11 items-center gap-3 rounded-xl navigation-item px-3"
 					>
 						<ChannelIcon size={18} class="shrink-0" aria-hidden="true" />
-						{COURSE_CHANNEL_LABELS[channel]()}
+						<span class="min-w-0">{COURSE_CHANNEL_LABELS[channel]()}</span>
 					</a>
 				</li>
 			{/each}
@@ -204,7 +206,7 @@
 				class="flex min-h-11 items-center gap-3 rounded-xl navigation-item px-3"
 			>
 				<SearchIcon size={18} class="shrink-0" aria-hidden="true" />
-				{m.course_space_search()}
+				<span class="min-w-0">{m.course_space_search()}</span>
 			</a>
 			<!-- eslint-enable svelte/no-navigation-without-resolve -->
 			<div class="px-3">{@render reconnectingStatus()}</div>
