@@ -214,7 +214,8 @@
 			{m.settings_group_app()}
 		</h2>
 		<ul class="mt-2 divide-y overflow-hidden rounded-card border bg-surface">
-			<li class={ROW}>
+			<!-- Wraps, so the picker drops below its label when text is enlarged instead of being cut off. -->
+			<li class="{ROW} flex-wrap">
 				<span class="font-semibold" aria-hidden="true">{m.profile_language()}</span>
 				<LanguagePicker isLabelVisible={false} />
 			</li>

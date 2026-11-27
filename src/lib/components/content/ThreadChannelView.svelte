@@ -29,7 +29,11 @@
 	<h2 class="text-xl font-semibold">
 		{isQuestionChannel ? m.course_channel_questions() : m.course_channel_discussion()}
 	</h2>
-	<Button variant="filled" size="compact" onclick={() => (isComposerOpen = true)}
+	<Button
+		variant="filled"
+		size="compact"
+		class="max-w-full whitespace-normal"
+		onclick={() => (isComposerOpen = true)}
 		><Plus size={18} />
 		{isQuestionChannel
 			? m.post_composer_ask_question()

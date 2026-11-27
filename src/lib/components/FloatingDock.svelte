@@ -66,7 +66,8 @@
 <!--
 	One-row dock (design handoff): 60px tall, floating 24px above the bottom on tall phones. Icons only
 	on phones; tablets show labels, which the accessible names contain. Below 400px, Mentions moves into
-	the switcher so the course code still fits.
+	the switcher so the course code still fits. Buttons are sized in px, so enlarged text truncates the
+	course code rather than pushing the buttons off screen.
 -->
 <nav
 	aria-label={m.navigation_main()}
@@ -76,7 +77,7 @@
 		href={resolve('/(app)/explore')}
 		aria-label={m.navigation_explore()}
 		aria-current={isExploreCurrent ? 'page' : undefined}
-		class="flex size-12 shrink-0 items-center justify-center gap-2 rounded-full navigation-item text-on-surface tablet:w-auto tablet:px-3"
+		class="flex size-[48px] shrink-0 items-center justify-center gap-2 rounded-full navigation-item text-on-surface tablet:w-auto tablet:px-3"
 	>
 		<Compass size={24} />
 		<span class="hidden text-sm font-semibold tablet:inline">{m.navigation_explore()}</span>
@@ -91,9 +92,7 @@
 			aria-current={currentCourse ? 'page' : undefined}
 		>
 			{#if currentCourse}
-				<span class="shrink-0 font-mono text-sm font-semibold whitespace-nowrap"
-					>{currentCourse.code}</span
-				>
+				<span class="min-w-0 truncate font-mono text-sm font-semibold">{currentCourse.code}</span>
 				{#if currentChannel}
 					<!-- Code only on the narrowest phones; the channel stays in the accessible name. -->
 					<span class="truncate text-sm max-[399px]:sr-only"
@@ -175,7 +174,7 @@
 		href={resolve('/(app)/search')}
 		aria-label={m.navigation_search()}
 		aria-current={isSearchCurrent ? 'page' : undefined}
-		class="flex size-12 shrink-0 items-center justify-center gap-2 rounded-full navigation-item text-on-surface tablet:w-auto tablet:px-3"
+		class="flex size-[48px] shrink-0 items-center justify-center gap-2 rounded-full navigation-item text-on-surface tablet:w-auto tablet:px-3"
 	>
 		<Search size={24} />
 		<span class="hidden text-sm font-semibold tablet:inline">{m.navigation_search()}</span>
@@ -184,7 +183,7 @@
 		href={resolve('/(app)/mentions')}
 		aria-label={m.navigation_mentions()}
 		aria-current={isMentionsCurrent ? 'page' : undefined}
-		class="flex size-12 shrink-0 items-center justify-center gap-2 rounded-full navigation-item text-on-surface max-[399px]:hidden tablet:w-auto tablet:px-3"
+		class="flex size-[48px] shrink-0 items-center justify-center gap-2 rounded-full navigation-item text-on-surface max-[399px]:hidden tablet:w-auto tablet:px-3"
 	>
 		<AtSign size={24} />
 		<span class="hidden text-sm font-semibold tablet:inline">{m.navigation_mentions()}</span>
@@ -193,7 +192,7 @@
 		href={resolve('/(app)/profile')}
 		aria-label={m.navigation_your_profile()}
 		aria-current={isProfileCurrent ? 'page' : undefined}
-		class="flex size-12 shrink-0 items-center justify-center gap-2 rounded-full navigation-item text-on-surface tablet:w-auto tablet:pr-3 tablet:pl-1.5"
+		class="flex size-[48px] shrink-0 items-center justify-center gap-2 rounded-full navigation-item text-on-surface tablet:w-auto tablet:pr-3 tablet:pl-1.5"
 	>
 		<UserAvatar
 			username={profile.username}
