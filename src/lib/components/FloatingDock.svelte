@@ -134,7 +134,8 @@
 					<h2 class="mt-5 text-overline text-on-surface-variant">
 						{m.navigation_in_course({ courseCode: currentCourse.code })}
 					</h2>
-					<ul class="mt-2">
+					<!-- Two columns, so the four channels take two rows of the sheet rather than four. -->
+					<ul class="mt-2 grid grid-cols-2 gap-1">
 						{#each COURSE_CHANNELS as channel (channel)}
 							<li>
 								<a
@@ -150,7 +151,7 @@
 					</ul>
 				{/if}
 
-				<div class="mt-5 flex flex-col items-center gap-1">
+				<div class="mt-4 flex flex-wrap items-center justify-center gap-1">
 					<Button href={resolve('/(app)/explore')} variant="text"
 						>{m.navigation_explore_all_courses()}</Button
 					>
