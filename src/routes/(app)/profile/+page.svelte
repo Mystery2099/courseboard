@@ -16,8 +16,11 @@
 
 <svelte:head><title>{m.profile_title()}</title></svelte:head>
 
-<!-- One column, like other people's profiles, so the history sits beside nothing empty. -->
-<main class="mx-auto max-w-3xl pb-8">
+<!--
+	One column like other people's profiles, widening at 1280px so history and activity sit side by side
+	instead of leaving the sides empty.
+-->
+<main class="mx-auto max-w-3xl pb-8 wide:max-w-7xl">
 	<ProfileHeader
 		username={data.profile.username}
 		displayName={data.profile.displayName}
@@ -34,7 +37,9 @@
 		{/snippet}
 	</ProfileHeader>
 
-	<div class="px-4 pt-6 desktop:px-8">
+	<div
+		class="px-4 pt-6 desktop:px-8 wide:grid wide:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] wide:items-start wide:gap-8"
+	>
 		<AcademicHistorySection
 			initialHistory={data.history}
 			initialHistoryLoadedAt={data.historyLoadedAt}
