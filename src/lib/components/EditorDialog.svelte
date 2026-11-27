@@ -60,7 +60,7 @@
 				class={buttonVariants({ variant: 'ghost', size: 'icon' })}
 				aria-label={m.common_close()}><X size={22} /></Dialog.Close
 			>
-			<Dialog.Title class="min-w-0 flex-1 truncate">{title}</Dialog.Title>
+			<Dialog.Title class="min-w-0 flex-1 wrap-break-word">{title}</Dialog.Title>
 			<Button
 				type="submit"
 				form={formId}

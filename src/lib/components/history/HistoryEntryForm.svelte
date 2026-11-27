@@ -181,9 +181,11 @@
 
 	<div class="flex flex-col gap-1.5">
 		<span class="text-sm font-semibold" id="history-status-label">{m.history_form_status()}</span>
+		<!-- Segments wrap onto a second line when enlarged text no longer fits them in one. -->
 		<ToggleGroup.Root
 			type="single"
 			variant="segment"
+			class="flex-wrap"
 			aria-labelledby="history-status-label"
 			bind:value={() => status, (option) => option && (status = option as HistoryStatus)}
 		>
