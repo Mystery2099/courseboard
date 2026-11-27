@@ -341,7 +341,10 @@
 				aria-labelledby="course-about-heading"
 				class="hidden w-[320px] shrink-0 py-4 wide:order-last wide:block min-[1600px]:w-[384px]"
 			>
-				<div class="sticky top-4 rounded-card border bg-surface p-4">
+				<!-- Scrolls inside itself when a long description would push the buttons past the screen. -->
+				<div
+					class="sticky top-4 max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-card border bg-surface p-4"
+				>
 					<h2 id="course-about-heading" class="text-lg font-bold">{m.course_space_about()}</h2>
 					<p class="mt-2 text-sm text-on-surface-variant">{data.course.description}</p>
 					<div class="mt-4">{@render courseActions()}</div>
