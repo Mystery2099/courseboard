@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Button } from '#lib/components/ui/button/index.js';
-	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+	import Plus from 'lucide-svelte/icons/plus';
 	import { m } from '#lib/paraglide/messages.js';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { resolve } from '$app/paths';
@@ -34,6 +34,13 @@
 	const context = $derived(contextQuery.data);
 	const statistics = $derived(context.statistics);
 	let isComposerOpen = $state(false);
+	let composerToggle = $state<HTMLElement | null>(null);
+
+	/** Closes the composer and returns focus to the button that opened it. */
+	function closeComposer() {
+		isComposerOpen = false;
+		composerToggle?.focus();
+	}
 	let isHistoryEditorOpen = $state(false);
 	let savedReviewId = $state<string | null>(null);
 	const decimalFormat = new Intl.NumberFormat(getLocale(), {
@@ -43,7 +50,33 @@
 	const percentFormat = new Intl.NumberFormat(getLocale(), { style: 'percent' });
 </script>
 
-<h2 class="text-xl font-semibold">{m.reviews_heading()}</h2>
+<!-- Writing sits beside the heading, as Ask a question does, so it spends no row of its own. -->
+<div class="flex flex-wrap items-center justify-between gap-3">
+	<h2 class="text-xl font-semibold">{m.reviews_heading()}</h2>
+	{#if context.ownReviewId && !isComposerOpen}
+		<Button
+			variant="outlined"
+			size="compact"
+			class="max-w-full whitespace-normal"
+			href={resolve('/(app)/courses/[courseId]/reviews/[postId]', {
+				courseId: course.id,
+				postId: context.ownReviewId
+			})}>{m.reviews_open_or_edit_own()}</Button
+		>
+	{:else}
+		<Button
+			bind:ref={composerToggle}
+			variant={isComposerOpen ? 'tonal' : 'filled'}
+			size="compact"
+			class="max-w-full whitespace-normal"
+			aria-expanded={isComposerOpen}
+			aria-controls="review-composer"
+			onclick={() => (isComposerOpen = !isComposerOpen)}
+			><Plus size={18} />
+			{m.reviews_write()}</Button
+		>
+	{/if}
+</div>
 <!-- One line of facts rather than three tiles, so the reviews themselves start sooner. -->
 <dl class="mt-2 flex flex-wrap gap-x-5 gap-y-1">
 	<div class="flex items-baseline gap-1.5">
@@ -95,43 +128,25 @@
 	</p>
 {/if}
 
-{#if context.ownReviewId && !isComposerOpen}
-	<Button
-		variant="outlined"
-		class="mt-4"
-		href={resolve('/(app)/courses/[courseId]/reviews/[postId]', {
-			courseId: course.id,
-			postId: context.ownReviewId
-		})}>{m.reviews_open_or_edit_own()}</Button
+{#if isComposerOpen}
+	<!-- Who may review is explained once someone asks to write one, so reviews come first. -->
+	<section
+		id="review-composer"
+		aria-label={m.reviews_write()}
+		class="mt-4 rounded-card border bg-surface p-4"
 	>
-{:else}
-	<details
-		bind:open={isComposerOpen}
-		class="group/disclosure mt-4 rounded-card border bg-surface px-4 py-2 open:pb-4"
-	>
-		<summary
-			class="-mx-3 flex min-h-11 items-center rounded-full state-layer-primary px-3 font-semibold text-primary transition-colors duration-150"
-		>
-			{m.reviews_write()}
-			<ChevronDown
-				size={20}
-				class="ml-auto shrink-0 transition-transform duration-150 group-open/disclosure:rotate-180"
-				aria-hidden="true"
-			/>
-		</summary>
-		<!-- Who may review is explained once someone asks to write one, so reviews come first. -->
 		{#if context.attempts.length === 0}
-			<div class="mt-3">
-				<p class="font-semibold">{m.reviews_history_required()}</p>
-				<p class="mt-1 text-sm text-on-surface-variant">
-					{m.reviews_history_required_detail()}
-				</p>
-				<Button variant="outlined" class="mt-3" onclick={() => (isHistoryEditorOpen = true)}
-					>{m.common_add_to_history()}</Button
-				>
-			</div>
+			<p class="font-semibold">{m.reviews_history_required()}</p>
+			<p class="mt-1 text-sm text-on-surface-variant">
+				{m.reviews_history_required_detail()}
+			</p>
+			<Button
+				variant="outlined"
+				class="mt-3 max-w-full whitespace-normal"
+				onclick={() => (isHistoryEditorOpen = true)}>{m.common_add_to_history()}</Button
+			>
 		{:else}
-			<div class="mt-4">
+			<div>
 				<ReviewForm
 					courseId={course.id}
 					attempts={context.attempts}
@@ -139,11 +154,11 @@
 						savedReviewId = post.id;
 						isComposerOpen = false;
 					}}
-					onCancel={() => (isComposerOpen = false)}
+					onCancel={closeComposer}
 				/>
 			</div>
 		{/if}
-	</details>
+	</section>
 {/if}
 
 <PostList
