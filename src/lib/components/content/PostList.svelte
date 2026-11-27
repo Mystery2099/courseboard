@@ -342,14 +342,21 @@
 				<a
 					id="post-{post.id}"
 					href={resolve(THREAD_ROUTE_IDS[post.kind], { courseId, postId: post.id })}
-					class="block rounded-card border list-row bg-surface px-4 pt-3 [--state-base:var(--surface)]"
+					class="block rounded-card border list-row bg-surface px-4 py-3 [--state-base:var(--surface)]"
 				>
-					<span class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-sm">
-						<span class="flex min-w-0 items-center gap-2.5">
+					<span class="block font-heading text-lg leading-snug font-bold wrap-break-word"
+						>{post.title}</span
+					>
+					{#if post.reviewData}
+						<ReviewFacts review={post.reviewData} />
+					{/if}
+					<!-- One meta row, with the reply count at its end, so a card spends no row on chrome. -->
+					<span class="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-sm">
+						<span class="flex min-w-0 items-center gap-2">
 							<UserAvatar
 								username={post.author.username}
 								displayName={post.author.displayName}
-								size={28}
+								size={24}
 							/>
 							<span class="min-w-0 font-semibold [overflow-wrap:anywhere]"
 								>{post.author.displayName}</span
@@ -358,29 +365,17 @@
 						<time class="text-on-surface-variant" datetime={post.lastActivityAt}
 							>{formatRelativeTime(post.lastActivityAt)}</time
 						>
-					</span>
-					{#if kind === null || post.hasAcceptedReply || post.isLocked}
-						<span class="mt-2.5 flex flex-wrap items-center gap-2">
-							{#if kind === null}<ThreadKindBadge kind={post.kind} />{/if}
-							{#if post.hasAcceptedReply}
-								<Badge variant="success"><Check size={14} /> {m.post_badge_answered()}</Badge>
-							{/if}
-							{#if post.isLocked}
-								<Badge variant="neutral"><Lock size={14} /> {m.post_badge_locked()}</Badge>
-							{/if}
+						{#if kind === null}<ThreadKindBadge kind={post.kind} />{/if}
+						{#if post.hasAcceptedReply}
+							<Badge variant="success"><Check size={14} /> {m.post_badge_answered()}</Badge>
+						{/if}
+						{#if post.isLocked}
+							<Badge variant="neutral"><Lock size={14} /> {m.post_badge_locked()}</Badge>
+						{/if}
+						<span class="ml-auto flex items-center gap-1.5 font-semibold text-primary">
+							<MessageCircle size={16} aria-hidden="true" />
+							{formatReplyCount(post.replyCount)}
 						</span>
-					{/if}
-					<span class="mt-1.5 block font-heading text-lg leading-snug font-bold wrap-break-word"
-						>{post.title}</span
-					>
-					{#if post.reviewData}
-						<ReviewFacts review={post.reviewData} />
-					{/if}
-					<span
-						class="-mx-4 mt-3 flex min-h-11 items-center gap-2 border-t px-4 text-sm font-semibold text-primary"
-					>
-						<MessageCircle size={16} aria-hidden="true" />
-						{formatReplyCount(post.replyCount)}
 					</span>
 				</a>
 			</li>
