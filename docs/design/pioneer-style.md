@@ -55,13 +55,17 @@ Section labels (`text-overline`) are sentence case now, not tracked capitals.
 ## Components
 
 - **Space rail:** navy in both themes. The current space gets a gold tile and a gold pill on the rail's edge, as in Discord, instead of a ring.
-- **Course sidebar (desktop):** a banner with the code, title, and school, then the channels with icons (grid, question, star, #) and Search this course. Since the banner names the course, the main column has no course header there except on Overview, which keeps the description and the Follow and Add to my history buttons.
-- **Course header (phone and tablet):** the code, school, and title above the channel tabs. The description and course buttons show only on Overview, so the other channels start with their posts.
+- **Course sidebar (desktop):** a banner with the code, title, and school, then the channels with icons (grid, question, star, #) and Search this course. Since the banner names the course, the main column has no course header there, and threads have no back bar. From 900 to 1279px, Overview keeps a header with the description and the Follow and Add to my history buttons.
+- **About panel (1280px and up):** a card beside the posts with the description and the course buttons, on every channel and thread, so no course needs a header there. It's 320px wide, and 384px from 1600px. It comes first in the page for keyboards and is drawn on the right.
+- **Course header (phone and tablet):** the code, school, and title above the channel tabs. The description (clamped to two lines, with Show more) and the course buttons show only on Overview, so the other channels start with their posts.
 - **Channel tabs (phone):** four equal tabs with an underline replace the scrolling chip strip, so every channel shows without scrolling.
-- **Post lists:** separate conversation cards, as in Teams: the title, then one row with the author, time, badges, and the reply count at its end. The Questions channel doesn't repeat the Question badge. Cards don't show an excerpt yet, since the list API doesn't send post text.
-- **Reviews:** the statistics, then reviews. Who may write one is explained inside Write a review, not above the list.
-- **Replies:** no bubble; they read as a chat timeline. Only the accepted answer gets a tinted panel, with a gold star beside "Accepted answer".
-- **Dock:** the space chip is filled with `primary`.
+- **Post lists:** separate conversation cards, as in Teams: the title with the reply count at its end (the number, with the words for screen readers), then one row with the author, time, and badges. The Questions channel doesn't repeat the Question badge. Cards don't show an excerpt yet, since the list API doesn't send post text.
+- **Reviews:** Write a review sits beside the heading, the statistics fit on one line, and the order is a select beside the filters, so reviews start high on a phone. Who may write one is explained when Write a review is opened.
+- **Replies:** no bubble; they read as a chat timeline. Only the accepted answer gets a tinted panel, with a gold star beside "Accepted answer". From tablet up, reactions, Reply, and the menu share the byline's row.
+- **Profiles:** one column with a short banner and an 80px avatar; Edit profile sits on the avatar's row. Your own profile shows History beside Your activity from 1280px.
+- **Explore:** course cards in a grid, two columns from tablet and three from 1280px.
+- **Page widths:** reading pages (course posts, threads, Search, Mentions, Settings, other people's profiles) are 768px wide; Explore and your own profile widen for their grids.
+- **Dock:** the space chip is filled with `primary`. Its buttons are sized in px, so enlarged text wraps the course code onto a taller dock instead of pushing buttons off screen.
 
 ## Accessibility
 
