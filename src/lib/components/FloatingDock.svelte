@@ -66,12 +66,12 @@
 <!--
 	One-row dock (design handoff): 60px tall, floating 24px above the bottom on tall phones. Icons only
 	on phones; tablets show labels, which the accessible names contain. Below 400px, Mentions moves into
-	the switcher so the course code still fits. Buttons are sized in px, so enlarged text truncates the
-	course code rather than pushing the buttons off screen.
+	the switcher so the course code still fits. Buttons are sized in px, so enlarged text wraps the
+	course code onto a taller dock rather than pushing the buttons off screen.
 -->
 <nav
 	aria-label={m.navigation_main()}
-	class="fixed inset-x-3 bottom-[calc(10px+env(safe-area-inset-bottom))] z-40 mx-auto flex h-[60px] max-w-[560px] items-center gap-1 rounded-full border bg-surface px-1.5 shadow-floating [@media(min-height:700px)]:bottom-[calc(24px+env(safe-area-inset-bottom))]"
+	class="fixed inset-x-3 bottom-[calc(10px+env(safe-area-inset-bottom))] z-40 mx-auto flex min-h-[60px] max-w-[560px] items-center gap-1 rounded-full border bg-surface px-1.5 shadow-floating tablet:max-w-[680px] [@media(min-height:700px)]:bottom-[calc(24px+env(safe-area-inset-bottom))]"
 >
 	<a
 		href={resolve('/(app)/explore')}
@@ -86,23 +86,30 @@
 		<Drawer.Trigger
 			{@attach isInCourseChannel ? horizontalSwipe(moveToChannelInSwipeDirection) : null}
 			class={[
-				'flex h-12 min-w-0 flex-1 items-center gap-2 rounded-full state-layer bg-primary px-4 text-left text-on-primary transition-colors duration-150 [--state-base:var(--primary)] [--state-color:var(--on-surface)]',
+				'@container flex min-h-[48px] min-w-0 flex-1 items-center gap-2 rounded-full state-layer bg-primary px-[14px] py-1 text-left text-on-primary transition-colors duration-150 [--state-base:var(--primary)] [--state-color:var(--on-surface)]',
 				isInCourseChannel && 'touch-pan-y touch-pinch-zoom'
 			]}
 			aria-current={currentCourse ? 'page' : undefined}
 		>
 			{#if currentCourse}
-				<span class="min-w-0 truncate font-mono text-sm font-semibold">{currentCourse.code}</span>
+				<!-- Wraps rather than clips when text is enlarged; the dock grows to fit. -->
+				<span
+					class="min-w-0 font-mono text-sm leading-tight font-semibold [overflow-wrap:anywhere] tablet:shrink-0"
+					>{currentCourse.code}</span
+				>
 				{#if currentChannel}
-					<!-- Code only on the narrowest phones; the channel stays in the accessible name. -->
-					<span class="truncate text-sm max-[399px]:sr-only"
+					<!-- Code only when the chip is short of room; the channel stays in the accessible name. -->
+					<span class="truncate text-sm @max-[200px]:sr-only"
 						>{COURSE_CHANNEL_LABELS[currentChannel]()}</span
 					>
 				{/if}
 			{:else}
-				<span class="min-w-0 truncate font-semibold">{m.navigation_spaces()}</span>
+				<span class="min-w-0 font-semibold [overflow-wrap:anywhere] tablet:shrink-0"
+					>{m.navigation_spaces()}</span
+				>
 			{/if}
-			<ChevronUp size={20} class="ml-auto shrink-0" />
+			<!-- Decorative, so it gives way to the label when enlarged text leaves the chip short of room. -->
+			<ChevronUp size={20} class="ml-auto shrink-0 @max-[120px]:hidden" />
 		</Drawer.Trigger>
 		<Drawer.Content>
 			<div class="overflow-y-auto px-4 pt-4">
