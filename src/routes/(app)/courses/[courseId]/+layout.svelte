@@ -330,7 +330,7 @@
 		>
 			<aside
 				aria-labelledby="course-about-heading"
-				class="hidden w-72 shrink-0 py-4 wide:order-last wide:block min-[1600px]:w-96"
+				class="hidden w-80 shrink-0 py-4 wide:order-last wide:block min-[1600px]:w-96"
 			>
 				<div class="sticky top-4 rounded-card border bg-surface p-4">
 					<h2 id="course-about-heading" class="text-lg font-bold">{m.course_space_about()}</h2>

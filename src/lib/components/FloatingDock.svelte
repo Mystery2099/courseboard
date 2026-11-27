@@ -100,7 +100,7 @@
 					>
 				{/if}
 			{:else}
-				<span class="font-semibold">{m.navigation_spaces()}</span>
+				<span class="min-w-0 truncate font-semibold">{m.navigation_spaces()}</span>
 			{/if}
 			<ChevronUp size={20} class="ml-auto shrink-0" />
 		</Drawer.Trigger>

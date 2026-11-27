@@ -130,11 +130,15 @@
 	</p>
 {/if}
 
-{#if isComposerOpen}
-	<!-- Who may review is explained once someone asks to write one, so reviews come first. -->
+<!--
+	Who may review is explained once someone asks to write one, so reviews come first. Hidden rather
+	than removed when closed, so a half-written review survives collapsing it.
+-->
+{#if !context.ownReviewId || isComposerOpen}
 	<section
 		id="review-composer"
 		aria-label={m.reviews_write()}
+		hidden={!isComposerOpen}
 		class="mt-4 rounded-card border bg-surface p-4"
 	>
 		{#if context.attempts.length === 0}

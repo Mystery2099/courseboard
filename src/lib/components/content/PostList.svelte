@@ -247,7 +247,7 @@
 
 {#if kind === 'review'}
 	<!-- Reviews have four orders and two filters, so the order is a select beside them, not a chip row. -->
-	<div class="mt-4 flex flex-wrap gap-2">
+	<div class="mt-3 flex flex-wrap gap-2">
 		<FilterChipSelect
 			label={m.post_list_order()}
 			onchange={(event) => (filter = event.currentTarget.value as PostListFilter)}

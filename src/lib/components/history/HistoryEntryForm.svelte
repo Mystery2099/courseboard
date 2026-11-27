@@ -160,7 +160,7 @@
 					<p class="font-mono text-sm font-semibold text-primary">
 						{course.code} · {course.institution.name}
 					</p>
-					<p class="truncate font-semibold">{course.title}</p>
+					<p class="font-semibold wrap-break-word">{course.title}</p>
 				</div>
 				{#if !editedEntry && !presetCourse}
 					<Button
