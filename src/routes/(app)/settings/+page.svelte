@@ -50,7 +50,7 @@
 <svelte:head><title>{m.settings_title()}</title></svelte:head>
 
 <!-- Grouped rows under section labels, as in the Settings design. -->
-<main class="mx-auto max-w-2xl px-4 py-6 desktop:py-10">
+<main class="mx-auto max-w-3xl px-4 py-6 desktop:py-8">
 	<div class="flex items-center gap-2">
 		<Button
 			variant="ghost"
