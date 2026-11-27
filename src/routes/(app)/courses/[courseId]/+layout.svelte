@@ -250,20 +250,23 @@
 						isOverview ? 'desktop:py-6 wide:p-0' : 'desktop:p-0'
 					]}
 				>
-					<div class="flex flex-wrap items-center justify-between gap-x-2 desktop:hidden">
+					<div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-2 desktop:hidden">
 						<p
 							class="min-w-0 font-mono text-sm font-semibold [overflow-wrap:anywhere] text-primary"
 						>
 							{data.course.code} · {data.course.institution.name}
 						</p>
-						<div class="-my-3 flex items-center gap-2">
+						<div class="flex items-center gap-2">
 							{@render reconnectingStatus()}
-							<!-- An icon on phones, so the header doesn't gain a row there. -->
+							<!--
+								An icon on phones, so the header doesn't gain a row there. Drawn 32px tall with an
+								invisible extension to a 44px target, so its focus ring never covers the text around it.
+							-->
 							<Button
 								variant="text"
 								size="compact"
 								href={courseSearchUrl}
-								class="max-tablet:size-11 max-tablet:px-0"
+								class="relative min-h-8 after:absolute after:-inset-1.5 max-tablet:size-8 max-tablet:px-0"
 								><SearchIcon size={20} /><span class="sr-only tablet:not-sr-only"
 									>{m.course_space_search()}</span
 								></Button
