@@ -382,9 +382,11 @@
 						{#if post.isLocked}
 							<Badge variant="neutral"><Lock size={14} /> {m.post_badge_locked()}</Badge>
 						{/if}
+						<!-- The number alone, so the count stays on the byline row; the full words are read out. -->
 						<span class="ml-auto flex items-center gap-1.5 font-semibold text-primary">
 							<MessageCircle size={16} aria-hidden="true" />
-							{formatReplyCount(post.replyCount)}
+							<span aria-hidden="true">{post.replyCount}</span>
+							<span class="sr-only">{formatReplyCount(post.replyCount)}</span>
 						</span>
 					</span>
 				</a>
