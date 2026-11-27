@@ -115,9 +115,11 @@
 
 <!-- Shown in whichever header is on screen; the live region below announces it. -->
 {#snippet reconnectingStatus()}
-	<p class="shrink-0 text-xs text-on-surface-variant" aria-hidden="true">
-		{isReconnecting ? m.realtime_reconnecting() : ''}
-	</p>
+	{#if isReconnecting}
+		<p class="shrink-0 text-xs text-on-surface-variant" aria-hidden="true">
+			{m.realtime_reconnecting()}
+		</p>
+	{/if}
 {/snippet}
 
 {#snippet courseActions()}
@@ -178,19 +180,19 @@
 		class="sticky top-0 hidden h-dvh w-[256px] shrink-0 overflow-x-hidden overflow-y-auto border-r bg-surface-sidebar [overflow-wrap:anywhere] desktop:block"
 	>
 		<!-- The course banner, like a community banner atop a chat app's channel list. -->
-		<div class="bg-(image:--banner) px-6 pt-6 pb-5 text-on-rail">
+		<div class="bg-(image:--banner) px-[24px] pt-6 pb-5 text-on-rail">
 			<p class="font-mono text-sm font-semibold">{data.course.code}</p>
 			<p class="mt-0.5 font-heading text-xl leading-snug font-bold">{data.course.title}</p>
 			<p class="mt-1 text-sm">{data.course.institution.name}</p>
 		</div>
-		<ul class="mt-3 flex flex-col gap-1 px-3">
+		<ul class="mt-3 flex flex-col gap-1 px-[12px]">
 			{#each COURSE_CHANNELS as channel (channel)}
 				{@const ChannelIcon = COURSE_CHANNEL_ICONS[channel]}
 				<li>
 					<a
 						href={resolve(COURSE_CHANNEL_ROUTE_IDS[channel], { courseId: data.course.id })}
 						aria-current={channel === currentChannel ? 'page' : undefined}
-						class="flex min-h-11 items-center gap-3 rounded-xl navigation-item px-3"
+						class="flex min-h-11 items-center gap-[12px] rounded-xl navigation-item px-[12px]"
 					>
 						<ChannelIcon size={18} class="shrink-0" aria-hidden="true" />
 						<span class="min-w-0">{COURSE_CHANNEL_LABELS[channel]()}</span>
@@ -198,18 +200,18 @@
 				</li>
 			{/each}
 		</ul>
-		<div class="mx-3 mt-3 border-t pt-3">
+		<div class="mx-[12px] mt-3 border-t pt-3">
 			<!-- The path is resolved; only the search query is added to it. -->
 			<!-- eslint-disable svelte/no-navigation-without-resolve -->
 			<a
 				href={courseSearchUrl}
-				class="flex min-h-11 items-center gap-3 rounded-xl navigation-item px-3"
+				class="flex min-h-11 items-center gap-[12px] rounded-xl navigation-item px-[12px]"
 			>
 				<SearchIcon size={18} class="shrink-0" aria-hidden="true" />
 				<span class="min-w-0">{m.course_space_search()}</span>
 			</a>
 			<!-- eslint-enable svelte/no-navigation-without-resolve -->
-			<div class="px-3">{@render reconnectingStatus()}</div>
+			<div class="px-[12px]">{@render reconnectingStatus()}</div>
 		</div>
 	</nav>
 
